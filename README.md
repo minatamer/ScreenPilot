@@ -1,64 +1,126 @@
 # ScreenPilot
 
-> AI handles the first screen. Humans make the decision.
+> Pilot conducts the first screen. Humans make the decision.
 
-ScreenPilot is a stateless, privacy-minded demonstration of AI-assisted candidate screening. A candidate can start from a vacancy or add a CV, complete a disclosed voice interview, and receive a structured post-call summary with evidence links. The demo supports recruiter judgment; it does not make hiring decisions.
+ScreenPilot is a stateless, privacy-minded demonstration of AI-assisted candidate screening. It gives candidates a disclosed voice conversation with **Pilot**, organizes candidate-sourced facts into evidence-linked insights, and prepares a structured review for a human recruiter.
 
-## Current boundary
+ScreenPilot supports recruiter judgment. It does not rank candidates, issue pass/fail decisions, or automate hiring decisions.
 
-This repository is being implemented ticket by ticket. SP-002 adds the fast quality foundation to the Git and buildable workspace scaffold—no interview workflow, provider integration, persistence, authentication, or deployment behavior exists yet.
+## What the product does
 
-Public planning documents belong in [`docs/`](docs/). Local environment files, cloud credential downloads, and deliberately private documentation paths are ignored. API credentials must remain blank in committed templates and must never enter frontend code or Git history.
+Candidates can enter the same screening experience in two ways:
 
-## Workspace map
+- **CV-assisted:** upload a text-based CV so Pilot can prepare grounded discussion areas.
+- **Conversation-first:** begin without a CV and let Pilot discover relevant context through broader opening questions.
+
+The intended flow is:
+
+```text
+vacancy context
+  -> optional CV understanding or conversation-first preparation
+  -> disclosure, consent, and microphone preflight
+  -> live voice interview with captions and candidate-sourced insights
+  -> evidence-linked human review
+  -> explicit session clearing
+```
+
+Candidate content stays in the active browser/request lifecycle. The architecture deliberately has no candidate database, durable transcript store, analytics payload, background queue, or hidden server session.
+
+## Technology stack
+
+| Area                  | Technology                                                        | How ScreenPilot uses it                                                                                                                                |
+| --------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web application       | Next.js 16 App Router, React 19, TypeScript                       | Renders the responsive candidate flow and keeps browser-only session, microphone, transcript, and workflow behavior behind explicit client boundaries. |
+| API                   | Node.js 24 and Express 5                                          | Exposes a separately deployable REST boundary, validates requests, keeps provider credentials server-side, and coordinates stateless use cases.        |
+| Shared contracts      | Zod                                                               | Defines browser-safe request, response, provider-output, and public-runtime schemas used by both applications.                                         |
+| Voice interview       | ElevenLabs WebRTC / Agents                                        | Provides real-time speech, transcription, turn-taking, and Pilot's voice through short-lived server-issued access.                                     |
+| AI processing         | OpenAI Responses API                                              | Performs bounded CV analysis and post-interview organization through backend-only provider adapters.                                                   |
+| Abuse protection      | Cloudflare Turnstile                                              | Protects paid provider operations while keeping the managed widget inside a stable, accessible surrounding layout.                                     |
+| Monorepo tooling      | pnpm workspaces                                                   | Keeps the frontend, backend, and shared contracts independently buildable with one locked dependency graph.                                            |
+| Quality               | ESLint, Prettier, TypeScript strict mode, Vitest, Testing Library | Provides deterministic formatting, linting, typechecking, unit tests, and production builds before provider or deployment checks.                      |
+| Delivery architecture | GitHub Actions, Firebase Hosting, Google Cloud Run                | Supports one public origin with frontend/API routing and independently deployable containers without storing candidate data in the delivery layer.     |
+
+Provider integrations remain behind small typed adapters. Local development and automated checks use deterministic fake providers by default, so ordinary work cannot spend OpenAI or ElevenLabs credits.
+
+## Repository structure
 
 ```text
 apps/frontend       @screenpilot/frontend  Next.js browser application
-apps/backend        @screenpilot/backend   Node.js API application
-packages/contracts  @screenpilot/contracts Browser-safe cross-boundary contracts
+apps/backend        @screenpilot/backend   Node.js API and provider adapters
+packages/contracts  @screenpilot/contracts Browser-safe cross-boundary schemas
+docs                                      Product, design, and ticket documentation
 ```
 
-The only internal dependency direction is:
+The internal dependency direction is intentionally narrow:
 
 ```text
 frontend -> contracts <- backend
 ```
 
-The applications never import one another.
+The applications never import one another, and the contracts package cannot import browser UI, backend framework code, provider SDKs, or Node-only configuration.
 
 ## Prerequisites
 
 - Git
-- Node.js 24.20.0 (the current Node 24 LTS patch, declared in `.node-version`)
-- Corepack with pnpm 11.24.0 (locked by `packageManager`)
+- Node.js **24.20.0**, declared in [`.node-version`](.node-version)
+- Corepack with pnpm **11.24.0**, locked by `packageManager`
 
-## Git repository
+## Install
 
-SP-001 initializes the local repository on `main` and connects the existing GitHub repository over SSH:
+From the repository root:
 
-```powershell
-git branch --show-current
-git remote get-url origin
-ssh -T git@github.com
-```
-
-The expected remote is `git@github.com:minatamer/ScreenPilot.git`. SSH authentication and Git commit identity are machine-local setup; configuring them never requires committing a private key. Do not stage, commit, or push an implementation ticket until its working tree has been reviewed.
-
-## Setup and verification
-
-```powershell
+```bash
 corepack enable
 pnpm install --frozen-lockfile
+```
+
+No provider credentials are required for the default fake mode.
+
+## Run locally
+
+Start the Next.js application:
+
+```bash
+pnpm dev:frontend
+```
+
+Then open [http://localhost:3000](http://localhost:3000).
+
+When working on backend modules, start the backend workspace in TypeScript watch mode in a second terminal:
+
+```bash
+pnpm dev:backend
+```
+
+The frontend can proxy relative `/v1` requests to a local backend origin. The example value is `http://127.0.0.1:3001` in [`apps/frontend/.env.example`](apps/frontend/.env.example).
+
+## Configuration and provider modes
+
+Configuration templates live at:
+
+- [`apps/frontend/.env.example`](apps/frontend/.env.example)
+- [`apps/backend/.env.example`](apps/backend/.env.example)
+
+The backend supports two provider modes:
+
+- `PROVIDER_MODE=fake` is the safe local and CI default. Provider secrets remain blank and `PAID_DEMO_ENABLED=false`.
+- `PROVIDER_MODE=live` requires the documented OpenAI, ElevenLabs, Turnstile, and signing values. Live or paid testing must be explicitly authorized and configured before use.
+
+Never expose OpenAI, ElevenLabs, Turnstile secret, cookie, or signing values to browser code. The frontend calls relative `/v1` endpoints and receives only allow-listed public runtime configuration.
+
+## Verify the workspace
+
+Run the complete unpaid quality gate:
+
+```bash
 pnpm verify:quick
 ```
 
-`verify:quick` is the complete unpaid gate: formatting, linting, strict typechecking, unit tests, and production builds. The GitHub branch rule for `main` should require the exact `quality` status check emitted by `.github/workflows/ci.yml`.
+It runs formatting checks, linting, strict typechecking, unit tests, and production builds across the workspace.
 
-The root `tests/fixtures` tree, when its owning tickets add it, is reserved for reusable synthetic inputs. Unit tests remain beside the source modules they exercise.
+Individual checks are also available:
 
-The individual fast gates are:
-
-```powershell
+```bash
 pnpm format:check
 pnpm lint
 pnpm typecheck
@@ -66,25 +128,18 @@ pnpm test:unit
 pnpm build
 ```
 
-The first dependency resolution that creates `pnpm-lock.yaml` uses `pnpm install`; later clean installs use `pnpm install --frozen-lockfile`.
+Focused package commands follow the same pattern, for example:
 
-Useful focused commands:
-
-```powershell
-pnpm dev:frontend
-pnpm dev:backend
-pnpm build:frontend
-pnpm build:backend
-pnpm build:contracts
+```bash
 pnpm typecheck:frontend
-pnpm typecheck:backend
-pnpm typecheck:contracts
-pnpm lint:frontend
-pnpm lint:backend
-pnpm lint:contracts
-pnpm test:unit:frontend
 pnpm test:unit:backend
-pnpm test:unit:contracts
+pnpm build:contracts
 ```
 
-Implementation authority and constraints are in [`docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md). Ticket packets are indexed in [`docs/tickets/README.md`](docs/tickets/README.md).
+## Design and documentation
+
+- [Signal Canvas HTML design-system reference](docs/SCREENPILOT_DESIGN_SYSTEM.html)
+- [ScreenPilot demo source of truth](docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
+- [Implementation ticket index](docs/tickets/README.md)
+
+Committed examples use synthetic content only. Never commit a real CV, transcript, interview audio, generated candidate summary, API key, service-account file, or provider secret.
