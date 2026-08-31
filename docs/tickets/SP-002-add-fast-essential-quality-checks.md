@@ -1,6 +1,8 @@
 # SP-002 — Add fast essential quality checks
 
 Status: Required  
+Implementation state: Implemented and verified locally; awaiting user review before staging
+
 Milestone: Milestone 0 — repository and visual foundations  
 Last synchronized: 2026-08-31  
 Depends on: SP-001  
@@ -36,35 +38,47 @@ Provide fast, focused linting, formatting, type, unit-test, and build gates that
 
 ## Implementation checklist
 
-- [ ] Configure ESLint and the chosen deterministic formatter for all packages.
-- [ ] Create the exact quality/configuration filenames assigned to SP-002 in the parent filesystem blueprint; do not scatter per-folder lint/format configs.
-- [ ] Enable strict unsafe-type and import/boundary rules appropriate to TypeScript, React, and Node.
-- [ ] Enforce `frontend -> contracts <- backend`, declared contract subpath exports, application-local aliases, and browser/server environment boundaries.
-- [ ] Configure Vitest for small package/file-level unit tests with deterministic defaults.
-- [ ] Co-locate representative unit tests with their owning modules and document that root `tests/fixtures` contains shared inputs only.
-- [ ] Add documented per-package targeted commands plus root `lint`, `format:check`, `test:unit`, and `verify:quick` commands; every command must execute a real check.
-- [ ] Create `.github/workflows/ci.yml` for pull requests and pushes to `main` with a `quality` job only.
-- [ ] Pin or lock the Node.js/pnpm setup, use `pnpm install --frozen-lockfile`, and cache the pnpm store safely.
-- [ ] Run lint, typecheck, focused unit tests, and build in CI without Playwright.
-- [ ] Give CI read-only repository permissions, no deployment identity, and no provider secrets.
-- [ ] Document the exact named `quality` status check expected by branch protection.
+- [x] Configure ESLint and the chosen deterministic formatter for all packages.
+- [x] Create the exact quality/configuration filenames assigned to SP-002 in the parent filesystem blueprint; do not scatter per-folder lint/format configs.
+- [x] Enable strict unsafe-type and import/boundary rules appropriate to TypeScript, React, and Node.
+- [x] Enforce `frontend -> contracts <- backend`, declared contract subpath exports, application-local aliases, and browser/server environment boundaries.
+- [x] Configure Vitest for small package/file-level unit tests with deterministic defaults.
+- [x] Co-locate representative unit tests with their owning modules and document that root `tests/fixtures` contains shared inputs only.
+- [x] Add documented per-package targeted commands plus root `lint`, `format:check`, `test:unit`, and `verify:quick` commands; every command must execute a real check.
+- [x] Create `.github/workflows/ci.yml` for pull requests and pushes to `main` with a `quality` job only.
+- [x] Pin or lock the Node.js/pnpm setup, use `pnpm install --frozen-lockfile`, and cache the pnpm store safely.
+- [x] Run lint, typecheck, focused unit tests, and build in CI without Playwright.
+- [x] Give CI read-only repository permissions, no deployment identity, and no provider secrets.
+- [x] Document the exact named `quality` status check expected by branch protection.
 
 ## Acceptance criteria
 
-- [ ] Each package can run its smallest relevant check independently.
-- [ ] `verify:quick` runs format checking, lint, typecheck, unit tests, and build as the complete unpaid fast gate and has a stable exit code.
-- [ ] A temporary forbidden app-to-app import, contracts-to-app import, package-source deep import, and Node-only frontend import each fail the relevant automated check.
-- [ ] Pull requests and `main` pushes run the same `quality` job.
-- [ ] No code path in default CI can instantiate a live OpenAI, ElevenLabs, or production Turnstile call.
-- [ ] No E2E, visual snapshot, AI persona, deploy, or cloud-auth job exists yet.
+- [x] Each package can run its smallest relevant check independently.
+- [x] `verify:quick` runs format checking, lint, typecheck, unit tests, and build as the complete unpaid fast gate and has a stable exit code.
+- [x] A temporary forbidden app-to-app import, contracts-to-app import, package-source deep import, and Node-only frontend import each fail the relevant automated check.
+- [x] Pull requests and `main` pushes run the same `quality` job.
+- [x] No code path in default CI can instantiate a live OpenAI, ElevenLabs, or production Turnstile call.
+- [x] No E2E, visual snapshot, AI persona, deploy, or cloud-auth job exists yet.
 
 ## Focused verification
 
-- [ ] Run each targeted command once against its owning package.
-- [ ] Run `verify:quick` once.
-- [ ] Prove the boundary rules with temporary failing imports, then remove those probes.
-- [ ] Validate the workflow syntax and inspect its permissions, events, cache key, and frozen install.
-- [ ] Temporarily omit any provider environment values and confirm the quality gate still succeeds using no paid adapter.
+- [x] Run each targeted command once against its owning package.
+- [x] Run `verify:quick` once.
+- [x] Prove the boundary rules with temporary failing imports, then remove those probes.
+- [x] Validate the workflow syntax and inspect its permissions, events, cache key, and frozen install.
+- [x] Temporarily omit any provider environment values and confirm the quality gate still succeeds using no paid adapter.
+
+## Implementation record
+
+- Implemented on 2026-08-31 with the exact SP-001 toolchain: Node.js 24.20.0 (official portable archive SHA-256 verified) and pnpm 11.24.0. A frozen offline install succeeded after the final lockfile update.
+- Root tooling resolved ESLint 10.9.1, TypeScript ESLint 8.68.0, Prettier 3.9.6, Vitest 4.1.11, jsdom 30.0.1, Testing Library, the official React Hooks and Next.js lint plugins, import-boundary rules, and the Vite React transform needed for the real TSX unit test. ESLint 10 was chosen because the registry marks the ESLint 9 maintenance line unsupported.
+- `pnpm-workspace.yaml` explicitly denies the optional `unrs-resolver` postinstall script through pnpm 11's `allowBuilds` policy. The package's platform bindings are delivered as optional packages, so the quality checks do not require that script.
+- The `quality` job pins `actions/checkout` v7.0.1 and `pnpm/setup` v2.0.2 by full commit SHA, locks pnpm 11.24.0 and Node.js 24.20.0, restores only the pnpm store keyed by `pnpm-lock.yaml`, performs an explicit frozen install, and runs format, lint, typecheck, unit-test, and build steps with only `contents: read` permission.
+- The frontend has one co-located scaffold test. Backend and contracts run real Vitest discovery with `--passWithNoTests` until their owning feature tickets add behavior and co-located tests; no placeholder product behavior or fake assertion was added to make those empty SP-001 entry points green.
+- All targeted lint, typecheck, unit-test, and build commands passed. `verify:quick` passed with OpenAI, ElevenLabs, and Turnstile provider values removed from the verification process.
+- Temporary probes produced the required failures for frontend-to-backend, contracts-to-frontend, backend-to-contract-source deep import, frontend-to-`node:fs`, and parent-directory traversal through the frontend `@/*` alias. The probes were removed and lint passed afterward.
+- Workflow syntax was parsed by Prettier and its events, exact `quality` name, read-only permission, action/tool pins, cache input, frozen install, and five gates were asserted locally. Full and production `pnpm audit` checks reported no known vulnerabilities.
+- A hosted GitHub Actions run and the repository's branch-protection setting remain unobserved because this ticket is intentionally unstaged and unpushed pending user review. The required branch-protection check name is documented as `quality`.
 
 ## Commit boundary
 

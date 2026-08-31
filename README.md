@@ -6,7 +6,7 @@ ScreenPilot is a stateless, privacy-minded demonstration of AI-assisted candidat
 
 ## Current boundary
 
-This repository is being implemented ticket by ticket. SP-001 provides only the Git and buildable workspace foundation—no interview workflow, provider integration, persistence, authentication, or deployment behavior exists yet.
+This repository is being implemented ticket by ticket. SP-002 adds the fast quality foundation to the Git and buildable workspace scaffold—no interview workflow, provider integration, persistence, authentication, or deployment behavior exists yet.
 
 Public planning documents belong in [`docs/`](docs/). Local environment files, cloud credential downloads, and deliberately private documentation paths are ignored. API credentials must remain blank in committed templates and must never enter frontend code or Git history.
 
@@ -49,7 +49,20 @@ The expected remote is `git@github.com:minatamer/ScreenPilot.git`. SSH authentic
 ```powershell
 corepack enable
 pnpm install --frozen-lockfile
+pnpm verify:quick
+```
+
+`verify:quick` is the complete unpaid gate: formatting, linting, strict typechecking, unit tests, and production builds. The GitHub branch rule for `main` should require the exact `quality` status check emitted by `.github/workflows/ci.yml`.
+
+The root `tests/fixtures` tree, when its owning tickets add it, is reserved for reusable synthetic inputs. Unit tests remain beside the source modules they exercise.
+
+The individual fast gates are:
+
+```powershell
+pnpm format:check
+pnpm lint
 pnpm typecheck
+pnpm test:unit
 pnpm build
 ```
 
@@ -66,6 +79,12 @@ pnpm build:contracts
 pnpm typecheck:frontend
 pnpm typecheck:backend
 pnpm typecheck:contracts
+pnpm lint:frontend
+pnpm lint:backend
+pnpm lint:contracts
+pnpm test:unit:frontend
+pnpm test:unit:backend
+pnpm test:unit:contracts
 ```
 
 Implementation authority and constraints are in [`docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md). Ticket packets are indexed in [`docs/tickets/README.md`](docs/tickets/README.md).

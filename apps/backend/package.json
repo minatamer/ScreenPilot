@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "tsc --watch --preserveWatchOutput",
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "test:unit": "vitest run --passWithNoTests"
   },
   "dependencies": {
     "@screenpilot/contracts": "workspace:*"
   }
 }
-

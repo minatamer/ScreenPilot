@@ -11,6 +11,11 @@
   "scripts": {
     "build": "pnpm --recursive --workspace-concurrency=1 run build",
     "typecheck": "pnpm --recursive --workspace-concurrency=1 run typecheck",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test:unit": "pnpm --recursive --workspace-concurrency=1 run test:unit",
+    "verify:quick": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build",
     "dev:frontend": "pnpm --filter @screenpilot/frontend dev",
     "dev:backend": "pnpm --filter @screenpilot/backend dev",
     "build:frontend": "pnpm --filter @screenpilot/frontend... run build",
@@ -18,10 +23,30 @@
     "build:contracts": "pnpm --filter @screenpilot/contracts run build",
     "typecheck:frontend": "pnpm --filter @screenpilot/frontend run typecheck",
     "typecheck:backend": "pnpm --filter @screenpilot/backend run typecheck",
-    "typecheck:contracts": "pnpm --filter @screenpilot/contracts run typecheck"
+    "typecheck:contracts": "pnpm --filter @screenpilot/contracts run typecheck",
+    "lint:frontend": "pnpm --filter @screenpilot/frontend run lint",
+    "lint:backend": "pnpm --filter @screenpilot/backend run lint",
+    "lint:contracts": "pnpm --filter @screenpilot/contracts run lint",
+    "test:unit:frontend": "pnpm --filter @screenpilot/frontend run test:unit",
+    "test:unit:backend": "pnpm --filter @screenpilot/backend run test:unit",
+    "test:unit:contracts": "pnpm --filter @screenpilot/contracts run test:unit"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@next/eslint-plugin-next": "^16.3.3",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
     "@types/node": "^24.0.0",
-    "typescript": "^5.9.0"
+    "@vitejs/plugin-react": "^6.1.1",
+    "eslint": "^10.9.1",
+    "eslint-import-resolver-node": "^0.4.0",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "jsdom": "^30.0.1",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
   }
 }

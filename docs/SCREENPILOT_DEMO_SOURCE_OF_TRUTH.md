@@ -2966,7 +2966,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-002 — Add fast essential quality checks](tickets/SP-002-add-fast-essential-quality-checks.md)
 
-**Outcome:** Every package has quick, focused checks that protect basic code quality without making each ticket wait for a browser suite.
+**Outcome:** Complete locally and awaiting user review before staging. Every package has quick, focused checks that protect basic code quality without making each ticket wait for a browser suite; the initial read-only `quality` workflow contains no paid-provider or deployment path.
 
 **Depends on:** SP-001.
 
@@ -2974,15 +2974,15 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Configure ESLint, formatting, and strict unsafe-type rules.
-- [ ] Enforce the workspace dependency graph, declared contract exports, application-local aliases, and browser/server import boundaries.
-- [ ] Configure Vitest for small package/file-level unit tests.
-- [ ] Co-locate unit tests with owning modules, reserve root `tests/fixtures` for shared synthetic inputs, and add documented targeted commands plus a complete `verify:quick` milestone command.
-- [ ] Create the initial `.github/workflows/ci.yml` with a `quality` job for pull requests and pushes to `main`; pin/lock the Node.js and pnpm setup, use `pnpm install --frozen-lockfile`, cache pnpm safely, and run lint, typecheck, unit tests, and build without Playwright. SP-026 will extend this same file with production jobs rather than create another workflow.
-- [ ] Give CI read-only repository permissions, no deployment identity, no provider secrets, and no route by which OpenAI or ElevenLabs can be called; document the required named GitHub branch-protection check.
-- [ ] Do not configure E2E, visual-regression, or AI-eval automation in this ticket.
-- [ ] Cache pnpm safely.
-- [ ] Make paid AI impossible in default CI.
+- [x] Configure ESLint, formatting, and strict unsafe-type rules.
+- [x] Enforce the workspace dependency graph, declared contract exports, application-local aliases, and browser/server import boundaries.
+- [x] Configure Vitest for small package/file-level unit tests.
+- [x] Co-locate unit tests with owning modules, reserve root `tests/fixtures` for shared synthetic inputs, and add documented targeted commands plus a complete `verify:quick` milestone command.
+- [x] Create the initial `.github/workflows/ci.yml` with a `quality` job for pull requests and pushes to `main`; pin/lock the Node.js and pnpm setup, use `pnpm install --frozen-lockfile`, cache pnpm safely, and run lint, typecheck, unit tests, and build without Playwright. SP-026 will extend this same file with production jobs rather than create another workflow.
+- [x] Give CI read-only repository permissions, no deployment identity, no provider secrets, and no route by which OpenAI or ElevenLabs can be called; document the required named GitHub branch-protection check.
+- [x] Do not configure E2E, visual-regression, or AI-eval automation in this ticket.
+- [x] Cache pnpm safely.
+- [x] Make paid AI impossible in default CI.
 
 #### [SP-003 — Add validated configuration and provider fakes](tickets/SP-003-add-validated-configuration-and-provider-fakes.md)
 
