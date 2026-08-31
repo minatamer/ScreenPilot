@@ -1,0 +1,2616 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='10' fill='%23070A12'/%3E%3Cpath d='M8 19c3-7 6-7 8 0s5 7 8 0' fill='none' stroke='%2335D4E7' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+    <meta
+      name="description"
+      content="ScreenPilot Signal Canvas design-system reference: tokens, responsive rules, accessible states, and compact composition samples."
+    />
+    <title>ScreenPilot — Signal Canvas design-system reference</title>
+    <style>
+      :root {
+        color-scheme: light;
+
+        /* Locked Signal Canvas color tokens */
+        --ink-950: #070a12;
+        --ink-900: #0d1220;
+        --paper-50: #f7f8fc;
+        --paper-0: #ffffff;
+        --violet-500: #7c5cfc;
+        --cyan-400: #35d4e7;
+        --mint-400: #52d6a2;
+        --amber-400: #f1b84b;
+        --rose-400: #f06a8a;
+        --slate-500: #667085;
+
+        /* Surface-specific supporting values */
+        --light-border: #dfe3ec;
+        --light-border-strong: #c9d0de;
+        --dark-border: #273047;
+        --dark-border-strong: #3b4762;
+        --light-text: var(--ink-950);
+        --light-muted: var(--slate-500);
+        --dark-text: var(--paper-50);
+        --dark-muted: #adb7ca;
+        --focus-ring: var(--cyan-400);
+
+        /* One 8 px rhythm, with 4 px reserved for optical micro-spacing */
+        --space-0-5: 4px;
+        --space-1: 8px;
+        --space-2: 16px;
+        --space-3: 24px;
+        --space-4: 32px;
+        --space-6: 48px;
+        --space-8: 64px;
+        --space-12: 96px;
+
+        --radius-control: 12px;
+        --radius-card-sm: 18px;
+        --radius-card: 20px;
+        --radius-card-lg: 22px;
+        --radius-canvas: 28px;
+
+        --shadow-soft: 0 18px 50px rgb(18 24 40 / 8%);
+        --shadow-dark: 0 24px 80px rgb(0 0 0 / 24%);
+        --content-max: 1200px;
+        --reading-max: 720px;
+        --gutter: clamp(16px, 4vw, 48px);
+
+        --motion-fast: 180ms;
+        --motion-default: 220ms;
+        --motion-insight: 400ms;
+        --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+        font-family:
+          "Geist Sans",
+          Geist,
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        font-synthesis: none;
+        text-rendering: optimizeLegibility;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-width: 0;
+        margin: 0;
+        overflow-x: hidden;
+        background: var(--paper-50);
+        color: var(--light-text);
+        font-size: 16px;
+        line-height: 1.5625;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button,
+      a,
+      input {
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      [tabindex]:focus-visible {
+        outline: 3px solid var(--focus-ring);
+        outline-offset: 3px;
+      }
+
+      a {
+        color: inherit;
+        text-underline-offset: 0.18em;
+      }
+
+      svg {
+        display: block;
+      }
+
+      .skip-link {
+        position: fixed;
+        z-index: 100;
+        inset: 12px auto auto 12px;
+        min-height: 44px;
+        padding: 10px 16px;
+        translate: 0 -160%;
+        border-radius: var(--radius-control);
+        background: var(--paper-0);
+        color: var(--ink-950);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .skip-link:focus {
+        translate: 0;
+      }
+
+      .site-header {
+        position: sticky;
+        z-index: 20;
+        top: 0;
+        border-bottom: 1px solid rgb(201 208 222 / 78%);
+        background: rgb(247 248 252 / 88%);
+        backdrop-filter: blur(14px);
+      }
+
+      .header-inner,
+      .shell {
+        width: min(100% - (2 * var(--gutter)), var(--content-max));
+        margin-inline: auto;
+      }
+
+      .header-inner {
+        min-height: 68px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-2);
+      }
+
+      .brand {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--ink-950);
+        font-size: 15px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        text-decoration: none;
+      }
+
+      .brand-mark {
+        width: 30px;
+        height: 30px;
+      }
+
+      .header-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 4px;
+      }
+
+      .header-nav a {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 12px;
+        border-radius: 10px;
+        color: var(--slate-500);
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      .header-nav a:hover {
+        background: var(--paper-0);
+        color: var(--ink-950);
+      }
+
+      .hero {
+        position: relative;
+        isolation: isolate;
+        padding-block: clamp(64px, 10vw, 120px) clamp(56px, 8vw, 96px);
+      }
+
+      .hero::before {
+        position: absolute;
+        z-index: -1;
+        width: min(760px, 90vw);
+        height: 420px;
+        top: 22px;
+        left: 50%;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 30% 45%, rgb(124 92 252 / 22%), transparent 48%),
+          radial-gradient(circle at 72% 35%, rgb(53 212 231 / 18%), transparent 44%);
+        filter: blur(40px);
+        content: "";
+        translate: -50% 0;
+      }
+
+      .eyebrow,
+      .metadata {
+        font-family:
+          "Geist Mono",
+          "SFMono-Regular",
+          Consolas,
+          "Liberation Mono",
+          monospace;
+        font-size: 12px;
+        font-weight: 550;
+        line-height: 18px;
+        letter-spacing: 0.03em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 var(--space-2);
+        color: #5135c5;
+      }
+
+      .eyebrow::before {
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--violet-500);
+        box-shadow: 0 0 0 5px rgb(124 92 252 / 12%);
+        content: "";
+      }
+
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 880px;
+        margin-bottom: var(--space-3);
+        font-size: clamp(38px, 6vw, 56px);
+        font-weight: 600;
+        line-height: 1.0714;
+        letter-spacing: -0.055em;
+        text-wrap: balance;
+      }
+
+      h2 {
+        margin-bottom: var(--space-2);
+        font-size: clamp(26px, 4vw, 32px);
+        font-weight: 600;
+        line-height: 1.1875;
+        letter-spacing: -0.035em;
+        text-wrap: balance;
+      }
+
+      h3 {
+        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: 650;
+        line-height: 20px;
+        letter-spacing: -0.01em;
+      }
+
+      .hero-copy {
+        max-width: 720px;
+        margin-bottom: var(--space-4);
+        color: var(--slate-500);
+        font-size: 18px;
+        line-height: 28px;
+      }
+
+      .thesis-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .thesis-step {
+        min-height: 112px;
+        padding: 20px;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card);
+        background: rgb(255 255 255 / 78%);
+        box-shadow: 0 8px 28px rgb(18 24 40 / 4%);
+      }
+
+      .thesis-step p {
+        margin: 0;
+        color: var(--slate-500);
+        font-size: 14px;
+        line-height: 21px;
+      }
+
+      .section {
+        padding-block: clamp(56px, 8vw, 96px);
+        border-top: 1px solid var(--light-border);
+      }
+
+      .section-heading {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
+        gap: var(--space-4);
+        align-items: end;
+        margin-bottom: var(--space-4);
+      }
+
+      .section-heading p {
+        margin-bottom: 0;
+        color: var(--slate-500);
+      }
+
+      .kicker {
+        margin-bottom: 8px;
+        color: #5135c5;
+      }
+
+      .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .swatch {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-sm);
+        background: var(--paper-0);
+      }
+
+      .swatch-color {
+        min-height: 112px;
+        display: flex;
+        align-items: flex-end;
+        padding: 14px;
+        background: var(--swatch);
+        color: var(--swatch-fg);
+      }
+
+      .swatch-color span {
+        padding: 4px 8px;
+        border: 1px solid currentcolor;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 650;
+        line-height: 18px;
+      }
+
+      .swatch-copy {
+        padding: 14px;
+      }
+
+      .swatch-copy strong,
+      .swatch-copy code {
+        display: block;
+      }
+
+      .swatch-copy strong {
+        font-size: 14px;
+      }
+
+      .swatch-copy code,
+      .token-line code {
+        color: var(--slate-500);
+        font-family:
+          "Geist Mono",
+          "SFMono-Regular",
+          Consolas,
+          monospace;
+        font-size: 12px;
+      }
+
+      .swatch-copy p {
+        margin: 8px 0 0;
+        color: var(--slate-500);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .surface-pair,
+      .type-grid,
+      .geometry-grid,
+      .entry-grid,
+      .sample-grid,
+      .motion-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--space-2);
+      }
+
+      .entry-grid {
+        grid-auto-rows: 1fr;
+      }
+
+      .surface-pair {
+        margin-top: var(--space-2);
+      }
+
+      .surface-card,
+      .type-panel,
+      .geometry-panel,
+      .sample-panel,
+      .motion-panel {
+        min-width: 0;
+        padding: clamp(20px, 3vw, 32px);
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-lg);
+        background: var(--paper-0);
+      }
+
+      .surface-card.dark,
+      .type-panel.dark {
+        border-color: var(--dark-border);
+        background: var(--ink-950);
+        color: var(--dark-text);
+        box-shadow: var(--shadow-dark);
+      }
+
+      .surface-card p,
+      .type-panel p,
+      .geometry-panel p,
+      .sample-panel > p,
+      .motion-panel p {
+        color: var(--slate-500);
+      }
+
+      .surface-card.dark p,
+      .type-panel.dark p {
+        color: var(--dark-muted);
+      }
+
+      .type-display {
+        margin-bottom: 22px;
+        font-size: clamp(38px, 5vw, 56px);
+        font-weight: 600;
+        line-height: 1.0714;
+        letter-spacing: -0.05em;
+      }
+
+      .type-title {
+        margin-bottom: 16px;
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 38px;
+        letter-spacing: -0.035em;
+      }
+
+      .type-body {
+        max-width: 58ch;
+        margin-bottom: 16px;
+        font-size: 16px;
+        line-height: 25px;
+      }
+
+      .font-stack {
+        margin: 20px 0 0;
+        padding-top: 16px;
+        border-top: 1px solid var(--light-border);
+        color: var(--slate-500);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .dark .font-stack {
+        border-color: var(--dark-border);
+        color: var(--dark-muted);
+      }
+
+      .scale-strip {
+        display: flex;
+        align-items: end;
+        gap: clamp(8px, 2vw, 20px);
+        min-height: 128px;
+        padding: 20px;
+        overflow: hidden;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-lg);
+        background: var(--paper-0);
+      }
+
+      .space-token {
+        min-width: 34px;
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        color: var(--slate-500);
+        font: 500 11px/16px "Geist Mono", Consolas, monospace;
+      }
+
+      .space-bar {
+        width: 26px;
+        height: var(--measure);
+        max-height: 96px;
+        border-radius: 6px 6px 2px 2px;
+        background: linear-gradient(180deg, var(--violet-500), var(--cyan-400));
+      }
+
+      .layout-rules {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: var(--space-2);
+      }
+
+      .rule-card {
+        padding: 18px;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-sm);
+        background: var(--paper-0);
+      }
+
+      .rule-card p {
+        margin: 0;
+        color: var(--slate-500);
+        font-size: 13px;
+        line-height: 20px;
+      }
+
+      .anchor-table-wrap {
+        margin-top: var(--space-2);
+        overflow-x: auto;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-sm);
+        background: var(--paper-0);
+      }
+
+      table {
+        width: 100%;
+        min-width: 720px;
+        border-collapse: collapse;
+        text-align: left;
+      }
+
+      th,
+      td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--light-border);
+        vertical-align: top;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      th {
+        color: var(--slate-500);
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      td {
+        font-size: 13px;
+      }
+
+      .radius-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        gap: 12px;
+        margin-block: 22px;
+      }
+
+      .radius-sample {
+        min-width: 72px;
+        min-height: 72px;
+        display: grid;
+        place-items: center;
+        padding: 8px;
+        border: 1px solid var(--light-border-strong);
+        background: var(--paper-50);
+        color: var(--slate-500);
+        font: 500 11px/16px "Geist Mono", Consolas, monospace;
+      }
+
+      .border-demo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .border-demo div {
+        min-height: 92px;
+        display: grid;
+        place-items: center;
+        padding: 16px;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card);
+        color: var(--slate-500);
+        font-size: 13px;
+        text-align: center;
+      }
+
+      .border-demo .elevated {
+        border-color: transparent;
+        background: var(--paper-0);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .gradient-rule {
+        min-height: 130px;
+        display: flex;
+        align-items: flex-end;
+        margin-top: 12px;
+        padding: 18px;
+        border: 1px solid var(--dark-border);
+        border-radius: var(--radius-canvas);
+        background:
+          radial-gradient(circle at 25% 25%, rgb(124 92 252 / 28%), transparent 35%),
+          radial-gradient(circle at 75% 45%, rgb(53 212 231 / 16%), transparent 32%),
+          var(--ink-950);
+        color: var(--paper-50);
+      }
+
+      .gradient-rule span {
+        padding: 8px 10px;
+        border: 1px solid rgb(255 255 255 / 14%);
+        border-radius: 10px;
+        background: rgb(13 18 32 / 74%);
+        font-size: 12px;
+        backdrop-filter: blur(8px);
+      }
+
+      .icon-policy {
+        display: grid;
+        grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
+        gap: var(--space-2);
+      }
+
+      .icon-rules,
+      .icon-gallery {
+        padding: clamp(20px, 3vw, 32px);
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-lg);
+        background: var(--paper-0);
+      }
+
+      .icon-rules ul,
+      .motion-panel ul {
+        margin: 16px 0 0;
+        padding-left: 20px;
+        color: var(--slate-500);
+      }
+
+      .icon-gallery {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .icon-item {
+        min-height: 100px;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 10px;
+        padding: 12px;
+        border: 1px solid var(--light-border);
+        border-radius: 14px;
+        color: var(--ink-950);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .icon {
+        width: 20px;
+        height: 20px;
+        fill: none;
+        stroke: currentcolor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.75;
+      }
+
+      .button-grid,
+      .state-grid,
+      .card-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .component-cluster {
+        margin-top: var(--space-4);
+      }
+
+      .component-cluster:first-child {
+        margin-top: 0;
+      }
+
+      .cluster-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .cluster-heading h3,
+      .cluster-heading p {
+        margin: 0;
+      }
+
+      .cluster-heading p {
+        color: var(--slate-500);
+        font-size: 12px;
+      }
+
+      .state-sample,
+      .card,
+      .field-sample,
+      .turnstile-shell,
+      .error-panel {
+        min-width: 0;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-sm);
+        background: var(--paper-0);
+      }
+
+      .state-sample {
+        min-height: 120px;
+        display: grid;
+        align-content: space-between;
+        gap: 14px;
+        padding: 16px;
+      }
+
+      .state-sample > span:first-child {
+        color: var(--slate-500);
+        font-size: 12px;
+      }
+
+      .btn {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        padding: 10px 16px;
+        border: 1px solid transparent;
+        border-radius: var(--radius-control);
+        background: var(--violet-500);
+        color: var(--ink-950);
+        font-weight: 650;
+        line-height: 22px;
+        cursor: pointer;
+        transition:
+          translate var(--motion-fast) var(--ease-standard),
+          box-shadow var(--motion-fast) var(--ease-standard),
+          background var(--motion-fast) var(--ease-standard);
+      }
+
+      .btn:hover,
+      .btn.is-hover {
+        background: #8a70ff;
+        box-shadow: 0 10px 28px rgb(124 92 252 / 24%);
+        translate: 0 -1px;
+      }
+
+      .btn.is-focus {
+        outline: 3px solid var(--focus-ring);
+        outline-offset: 3px;
+      }
+
+      .btn.secondary {
+        border-color: var(--light-border-strong);
+        background: var(--paper-0);
+        color: var(--ink-950);
+        box-shadow: none;
+      }
+
+      .btn.danger {
+        border-color: rgb(240 106 138 / 44%);
+        background: rgb(240 106 138 / 12%);
+        color: #9d294a;
+      }
+
+      .btn:disabled,
+      .btn.is-disabled {
+        border-color: var(--light-border);
+        background: #eceff5;
+        color: #8992a4;
+        box-shadow: none;
+        cursor: not-allowed;
+        translate: none;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgb(7 10 18 / 28%);
+        border-top-color: var(--ink-950);
+        border-radius: 50%;
+        animation: spin 800ms linear infinite;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .field-sample {
+        padding: 16px;
+      }
+
+      .field-sample label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .field-sample input {
+        width: 100%;
+        min-height: 44px;
+        padding: 10px 12px;
+        border: 1px solid var(--light-border-strong);
+        border-radius: var(--radius-control);
+        background: var(--paper-0);
+        color: var(--ink-950);
+      }
+
+      .field-sample.focus input {
+        border-color: var(--cyan-400);
+        outline: 3px solid rgb(53 212 231 / 28%);
+      }
+
+      .field-sample.error input {
+        border-color: var(--rose-400);
+      }
+
+      .field-note {
+        margin: 8px 0 0;
+        color: var(--slate-500);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .field-sample.error .field-note {
+        color: #9d294a;
+      }
+
+      .entry-card {
+        min-height: 296px;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(20px, 3vw, 28px);
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-lg);
+        background: var(--paper-0);
+        box-shadow: 0 12px 36px rgb(18 24 40 / 5%);
+      }
+
+      .entry-icon {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 24px;
+        border: 1px solid rgb(124 92 252 / 22%);
+        border-radius: 14px;
+        background: rgb(124 92 252 / 10%);
+        color: #5135c5;
+      }
+
+      .entry-card h3 {
+        font-size: 20px;
+        line-height: 27px;
+      }
+
+      .entry-card p {
+        margin-bottom: 20px;
+        color: var(--slate-500);
+      }
+
+      .entry-card ul {
+        margin: 0 0 24px;
+        padding-left: 20px;
+        color: var(--slate-500);
+        font-size: 13px;
+      }
+
+      .entry-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: auto;
+      }
+
+      .card {
+        min-height: 180px;
+        padding: 18px;
+      }
+
+      .card-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 18px;
+      }
+
+      .badge,
+      .status,
+      .evidence-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 650;
+        line-height: 18px;
+      }
+
+      .badge {
+        min-height: 28px;
+        padding: 4px 9px;
+        border: 1px solid var(--light-border);
+        background: var(--paper-50);
+        color: var(--slate-500);
+      }
+
+      .badge.violet {
+        border-color: rgb(124 92 252 / 30%);
+        background: rgb(124 92 252 / 10%);
+        color: #5135c5;
+      }
+
+      .status {
+        min-height: 30px;
+        padding: 5px 10px;
+      }
+
+      .status.confirmed {
+        background: rgb(82 214 162 / 18%);
+        color: #176a4c;
+      }
+
+      .status.clarification {
+        background: rgb(241 184 75 / 20%);
+        color: #79520a;
+      }
+
+      .status.corrected {
+        background: rgb(53 212 231 / 18%);
+        color: #0b6874;
+      }
+
+      .status.error {
+        background: rgb(240 106 138 / 16%);
+        color: #9d294a;
+      }
+
+      .status .icon {
+        width: 15px;
+        height: 15px;
+        stroke-width: 2;
+      }
+
+      .card p {
+        color: var(--slate-500);
+        font-size: 14px;
+        line-height: 21px;
+      }
+
+      .evidence-chip {
+        min-height: 44px;
+        padding: 10px;
+        border: 1px solid rgb(124 92 252 / 28%);
+        background: rgb(124 92 252 / 8%);
+        color: #5135c5;
+        text-decoration: none;
+      }
+
+      .state-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .semantic-state {
+        min-height: 116px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px;
+        border: 1px solid var(--light-border);
+        border-left: 4px solid var(--state-color);
+        border-radius: var(--radius-card-sm);
+        background: var(--paper-0);
+      }
+
+      .semantic-state p {
+        margin: 0;
+        color: var(--slate-500);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .feedback-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 12px;
+      }
+
+      .error-panel,
+      .turnstile-shell {
+        min-height: 202px;
+        padding: 20px;
+      }
+
+      .error-panel {
+        border-color: rgb(240 106 138 / 42%);
+        background: rgb(240 106 138 / 7%);
+      }
+
+      .panel-heading {
+        display: flex;
+        gap: 12px;
+      }
+
+      .panel-heading > .icon {
+        flex: 0 0 auto;
+        margin-top: 2px;
+        color: #9d294a;
+      }
+
+      .panel-heading p {
+        margin-bottom: 16px;
+        color: var(--ink-950);
+        font-size: 13px;
+        line-height: 20px;
+      }
+
+      .turnstile-shell {
+        display: flex;
+        flex-direction: column;
+        border-style: dashed;
+      }
+
+      .turnstile-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .turnstile-slot {
+        min-height: 74px;
+        display: grid;
+        place-items: center;
+        margin-top: auto;
+        padding: 14px;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-control);
+        background: var(--paper-50);
+        color: var(--slate-500);
+        font-size: 12px;
+        line-height: 18px;
+        text-align: center;
+      }
+
+      .turnstile-slot strong {
+        color: var(--ink-950);
+      }
+
+      .composition-board {
+        position: relative;
+        padding: clamp(12px, 2vw, 24px);
+        overflow: hidden;
+        border: 1px solid var(--dark-border);
+        border-radius: var(--radius-canvas);
+        background:
+          radial-gradient(circle at 28% 34%, rgb(53 212 231 / 5%), transparent 30%),
+          radial-gradient(circle at 76% 16%, rgb(124 92 252 / 6%), transparent 28%),
+          #02040a;
+        box-shadow: var(--shadow-dark);
+      }
+
+      .composition-labels {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .composition-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 292px;
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .desktop-frame,
+      .mobile-frame {
+        overflow: hidden;
+        border: 1px solid var(--dark-border-strong);
+        background:
+          radial-gradient(circle at 32% 18%, rgb(53 212 231 / 4%), transparent 26%),
+          var(--ink-950);
+        color: var(--paper-50);
+        box-shadow:
+          inset 0 1px rgb(255 255 255 / 4%),
+          0 20px 60px rgb(0 0 0 / 32%);
+      }
+
+      .desktop-frame {
+        min-height: 760px;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(14px, 1.6vw, 20px);
+        border-radius: 22px;
+      }
+
+      .sample-appbar,
+      .sp-lockup,
+      .mode-pill,
+      .agent-status,
+      .insight-title,
+      .insight-symbol,
+      .mobile-elapsed {
+        display: flex;
+        align-items: center;
+      }
+
+      .sample-appbar {
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .desktop-appbar {
+        min-height: 50px;
+        margin-bottom: 14px;
+        padding: 0 4px 14px;
+        border-bottom: 1px solid var(--dark-border);
+      }
+
+      .sp-lockup {
+        gap: 10px;
+        color: var(--paper-50);
+        font-size: 15px;
+        font-weight: 680;
+        letter-spacing: -0.02em;
+      }
+
+      .mini-mark {
+        height: 24px;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
+      .mini-mark span {
+        width: 3px;
+        height: var(--mark-height);
+        border-radius: 99px;
+        background: linear-gradient(180deg, var(--cyan-400), var(--violet-400));
+        box-shadow: 0 0 12px rgb(124 92 252 / 32%);
+      }
+
+      .mode-pill {
+        min-height: 30px;
+        gap: 7px;
+        padding: 5px 10px;
+        border: 1px solid rgb(166 92 255 / 68%);
+        border-radius: 999px;
+        color: var(--paper-50);
+        font-size: 11px;
+        font-weight: 550;
+      }
+
+      .mode-pill .icon {
+        width: 14px;
+        height: 14px;
+      }
+
+      .workspace-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--dark-muted);
+        font-size: 11px;
+      }
+
+      .desktop-body {
+        min-height: 0;
+        flex: 1;
+        display: grid;
+        grid-template-columns: 42fr 58fr;
+        gap: 14px;
+      }
+
+      .voice-pane {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(16px, 2vw, 22px);
+        border: 1px solid var(--dark-border);
+        border-radius: 16px;
+        background:
+          radial-gradient(circle at 50% 23%, rgb(53 212 231 / 5%), transparent 26%),
+          rgb(7 10 18 / 54%);
+      }
+
+      .live-topline {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        color: var(--dark-muted);
+      }
+
+      .agent-status {
+        gap: 9px;
+        color: var(--paper-50);
+        font-size: 12px;
+      }
+
+      .agent-icon {
+        width: 32px;
+        height: 32px;
+        display: grid;
+        place-items: center;
+        border: 1px solid var(--dark-border-strong);
+        border-radius: 50%;
+        color: var(--paper-50);
+      }
+
+      .agent-icon .icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      .agent-listening {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--cyan-400);
+        white-space: nowrap;
+      }
+
+      .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11px;
+        font-weight: 650;
+      }
+
+      .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 99px;
+        background: var(--cyan-400);
+        box-shadow: 0 0 0 5px rgb(53 212 231 / 12%);
+      }
+
+      .voice-signal {
+        position: relative;
+        width: clamp(150px, 18vw, 194px);
+        aspect-ratio: 1;
+        display: grid;
+        place-items: center;
+        margin: clamp(20px, 3.4vw, 38px) auto 14px;
+        border: 1px solid rgb(124 92 252 / 38%);
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, rgb(124 92 252 / 18%) 0 22%, transparent 23%),
+          rgb(13 18 32 / 72%);
+        box-shadow:
+          inset 0 0 34px rgb(124 92 252 / 14%),
+          0 0 70px rgb(53 212 231 / 14%);
+        animation: signal-breathe 3.2s var(--ease-standard) infinite;
+      }
+
+      .voice-signal::before,
+      .voice-signal::after {
+        position: absolute;
+        content: "";
+        border-radius: inherit;
+        pointer-events: none;
+      }
+
+      .voice-signal::before {
+        inset: -8px;
+        background: repeating-conic-gradient(from 3deg, var(--cyan-400) 0deg 1.8deg, transparent 1.8deg 4.8deg);
+        mask: radial-gradient(circle, transparent 62%, #000 63% 68%, transparent 69%);
+      }
+
+      .voice-signal::after {
+        inset: 9px;
+        border: 1px dotted rgb(166 92 255 / 82%);
+      }
+
+      .signal-bars {
+        position: relative;
+        z-index: 1;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .signal-bars span {
+        width: 5px;
+        height: var(--bar-height);
+        border-radius: 999px;
+        background: linear-gradient(180deg, #a66cff, var(--violet-400));
+        box-shadow: 0 0 12px rgb(124 92 252 / 48%);
+      }
+
+      .listening-copy {
+        margin-bottom: 8px;
+        color: var(--cyan-400);
+        font-size: 13px;
+        font-weight: 650;
+        text-align: center;
+      }
+
+      .caption {
+        max-width: 38ch;
+        margin: 0;
+        color: var(--paper-50);
+        font-size: clamp(17px, 2vw, 21px);
+        line-height: 1.42;
+        text-align: left;
+      }
+
+      .caption-panel {
+        margin-top: 18px;
+        padding: clamp(16px, 2vw, 22px);
+        border: 1px solid var(--dark-border);
+        border-radius: var(--radius-card-sm);
+        background: rgb(13 18 32 / 62%);
+      }
+
+      .caption-meta,
+      .elapsed-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .caption-meta {
+        margin-bottom: 12px;
+        color: var(--dark-muted);
+        font-size: 11px;
+      }
+
+      .caption-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .caption-status .live-dot {
+        width: 6px;
+        height: 6px;
+        box-shadow: none;
+      }
+
+      .caption-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 22px;
+        color: var(--dark-muted);
+        font-size: 11px;
+      }
+
+      .caption-footer span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .caption-footer .icon {
+        width: 14px;
+        height: 14px;
+      }
+
+      .elapsed-row {
+        margin-top: 14px;
+        padding: 12px 4px;
+        border-block: 1px solid var(--dark-border);
+        color: var(--dark-muted);
+        font-size: 12px;
+      }
+
+      .elapsed-copy {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .elapsed-copy .icon {
+        width: 16px;
+        height: 16px;
+      }
+
+      .interview-controls {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .control-button {
+        min-width: 48px;
+        min-height: 48px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border: 1px solid var(--dark-border-strong);
+        border-radius: var(--radius-control);
+        background: var(--ink-900);
+        color: var(--paper-50);
+        font-weight: 650;
+      }
+
+      .control-button.mute-control {
+        min-width: 0;
+        flex: 0 1 112px;
+      }
+
+      .control-button.end-control {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .control-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      .control-copy small {
+        color: var(--dark-muted);
+        font: inherit;
+        font-weight: 400;
+      }
+
+      .control-button.end {
+        border-color: rgb(240 106 138 / 40%);
+        background: rgb(240 106 138 / 12%);
+        color: #ffb0c3;
+      }
+
+      .insight-pane {
+        min-width: 0;
+        padding: clamp(16px, 2vw, 20px);
+        border: 1px solid var(--dark-border);
+        border-radius: 16px;
+        background: rgb(7 10 18 / 42%);
+      }
+
+      .insight-heading {
+        margin-bottom: 16px;
+      }
+
+      .insight-heading h3 {
+        margin: 0;
+        font-size: 16px;
+      }
+
+      .insight-heading > p {
+        margin: 5px 0 0;
+        color: var(--dark-muted);
+        font-size: 11px;
+      }
+
+      .insight-title {
+        gap: 9px;
+      }
+
+      .insight-title .icon {
+        color: #a66cff;
+      }
+
+      .insight-constellation {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .dark-insight {
+        min-width: 0;
+        min-height: 96px;
+        display: grid;
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        grid-template-areas:
+          "icon copy status"
+          "icon copy evidence";
+        align-items: center;
+        column-gap: 14px;
+        padding: 13px 14px;
+        border: 1px solid var(--dark-border);
+        border-radius: 13px;
+        background: rgb(7 10 18 / 72%);
+      }
+
+      .insight-symbol {
+        grid-area: icon;
+        width: 48px;
+        height: 48px;
+        justify-content: center;
+        border: 1px solid rgb(82 214 162 / 34%);
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgb(82 214 162 / 30%), rgb(82 214 162 / 11%));
+        color: var(--paper-50);
+        font-size: 25px;
+        box-shadow: inset 0 1px rgb(255 255 255 / 7%);
+      }
+
+      .dark-insight.role .insight-symbol,
+      .mobile-selected .insight-symbol {
+        border-color: rgb(166 92 255 / 42%);
+        background: linear-gradient(145deg, rgb(124 92 252 / 40%), rgb(124 92 252 / 13%));
+      }
+
+      .symbol-code {
+        font-family: "Geist Mono", Consolas, monospace;
+        font-size: 16px;
+      }
+
+      .insight-copy {
+        grid-area: copy;
+      }
+
+      .dark-insight .status {
+        grid-area: status;
+        justify-self: end;
+        margin: 0;
+        padding-inline: 0;
+        background: transparent;
+      }
+
+      .dark-insight .status.confirmed {
+        color: var(--mint-400);
+      }
+
+      .desktop-frame .badge.violet,
+      .mobile-frame .badge.violet {
+        color: var(--paper-50);
+      }
+
+      .dark-insight h4 {
+        margin: 0 0 4px;
+        font-size: 14px;
+        line-height: 20px;
+      }
+
+      .dark-insight p {
+        margin: 0;
+        color: var(--dark-muted);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .evidence-cue {
+        grid-area: evidence;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        justify-self: end;
+        color: var(--dark-muted);
+        font-size: 11px;
+      }
+
+      .evidence-cue .icon {
+        width: 14px;
+        height: 14px;
+      }
+
+      .mobile-frame {
+        min-height: 760px;
+        display: flex;
+        flex-direction: column;
+        border-radius: 26px;
+      }
+
+      .mobile-appbar {
+        min-height: 62px;
+        padding: 14px 14px 12px;
+        border-bottom: 1px solid var(--dark-border);
+      }
+
+      .mobile-appbar .sp-lockup {
+        font-size: 13px;
+      }
+
+      .mobile-appbar .mode-pill {
+        min-height: 28px;
+        padding-inline: 8px;
+        font-size: 10px;
+      }
+
+      .mobile-live {
+        margin: 0 12px;
+        padding: 14px 12px 12px;
+        border: 1px solid var(--dark-border);
+        border-radius: 14px;
+        background:
+          radial-gradient(circle at 50% 22%, rgb(53 212 231 / 5%), transparent 34%),
+          rgb(7 10 18 / 54%);
+      }
+
+      .mobile-frame .voice-signal {
+        width: 100px;
+        margin: 18px auto 12px;
+      }
+
+      .mobile-frame .caption {
+        font-size: 16px;
+        line-height: 23px;
+      }
+
+      .mobile-frame .caption-panel {
+        margin-top: 14px;
+        padding: 14px;
+      }
+
+      .mobile-frame .caption-footer {
+        margin-top: 18px;
+      }
+
+      .mobile-insights {
+        flex: 1;
+        padding: 14px 12px 12px;
+        background: transparent;
+      }
+
+      .mobile-insight-heading h3 {
+        margin: 0;
+        font-size: 13px;
+      }
+
+      .mobile-insight-heading p {
+        margin: 3px 0 0;
+        color: var(--dark-muted);
+        font-size: 10px;
+      }
+
+      .mobile-card-rail {
+        display: grid;
+        grid-template-columns: 52px minmax(0, 1fr) 52px;
+        gap: 8px;
+        align-items: stretch;
+        margin: 12px -12px 0;
+        overflow: hidden;
+      }
+
+      .mobile-preview,
+      .mobile-selected {
+        min-width: 0;
+        border: 1px solid var(--dark-border);
+        background: rgb(13 18 32 / 72%);
+      }
+
+      .mobile-preview {
+        min-height: 210px;
+        padding: 12px 8px;
+        overflow: hidden;
+        color: var(--dark-muted);
+        font-size: 10px;
+        line-height: 15px;
+      }
+
+      .mobile-selected {
+        min-height: 226px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 14px 10px;
+        border-color: rgb(166 92 255 / 82%);
+        border-radius: 14px;
+        text-align: center;
+        box-shadow: 0 0 34px rgb(124 92 252 / 10%);
+      }
+
+      .mobile-preview:first-child {
+        border-left: 0;
+        border-radius: 0 12px 12px 0;
+      }
+
+      .mobile-preview:last-child {
+        border-right: 0;
+        border-radius: 12px 0 0 12px;
+      }
+
+      .mobile-preview .insight-symbol {
+        width: 38px;
+        height: 38px;
+        margin-bottom: 12px;
+        font-size: 19px;
+      }
+
+      .mobile-selected .insight-symbol {
+        width: 46px;
+        height: 46px;
+        flex: 0 0 auto;
+        margin-bottom: 12px;
+      }
+
+      .mobile-selected p {
+        margin: 6px 0 12px;
+        color: var(--dark-muted);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .mobile-selected .status.confirmed {
+        margin-top: auto;
+        background: transparent;
+        color: var(--mint-400);
+      }
+
+      .mobile-selected .evidence-cue {
+        margin-top: 7px;
+      }
+
+      .rail-dots {
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        margin-top: 10px;
+      }
+
+      .rail-dots span {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--slate-500);
+      }
+
+      .rail-dots span:first-child {
+        background: #a66cff;
+      }
+
+      .mobile-controls {
+        position: sticky;
+        bottom: 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+        align-items: stretch;
+        gap: 8px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+        border-top: 1px solid var(--dark-border);
+        background: rgb(7 10 18 / 92%);
+        backdrop-filter: blur(10px);
+      }
+
+      .mobile-controls .control-button {
+        min-width: 0;
+        padding: 8px;
+        font-size: 11px;
+      }
+
+      .mobile-controls .end-control {
+        min-width: 0;
+      }
+
+      .mobile-elapsed {
+        flex-direction: column;
+        justify-content: center;
+        color: var(--dark-muted);
+        font-size: 9px;
+      }
+
+      .mobile-elapsed .metadata {
+        color: var(--paper-50);
+        font-size: 13px;
+      }
+
+      .token-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--light-border);
+      }
+
+      .concept-reference {
+        margin: var(--space-4) 0 0;
+        padding: clamp(16px, 3vw, 28px);
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-lg);
+        background: var(--paper-0);
+        box-shadow: var(--shadow-soft);
+      }
+
+      .concept-reference-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 20px;
+        margin-bottom: 18px;
+      }
+
+      .concept-reference-heading h3,
+      .concept-reference-heading p {
+        margin: 0;
+      }
+
+      .concept-reference-heading p,
+      .concept-reference figcaption {
+        color: var(--slate-500);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .concept-image {
+        width: 100%;
+        height: auto;
+        display: block;
+        border: 1px solid var(--dark-border);
+        border-radius: var(--radius-card-sm);
+        background: var(--ink-950);
+      }
+
+      .concept-reference figcaption {
+        margin-top: 14px;
+      }
+
+      .motion-sample {
+        min-height: 88px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 18px;
+        padding: 16px;
+        overflow: hidden;
+        border: 1px solid var(--dark-border);
+        border-radius: var(--radius-card-sm);
+        background: var(--ink-950);
+        color: var(--paper-50);
+      }
+
+      .motion-node {
+        width: 40px;
+        height: 40px;
+        flex: 0 0 auto;
+        border-radius: 14px;
+        background: var(--mint-400);
+        box-shadow: 0 0 28px rgb(82 214 162 / 18%);
+        animation: insight-arrive 3s var(--ease-standard) infinite;
+      }
+
+      .motion-copy {
+        color: var(--dark-muted);
+        font-size: 12px;
+      }
+
+      .do-dont {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: var(--space-2);
+      }
+
+      .guidance {
+        padding: 18px;
+        border: 1px solid var(--light-border);
+        border-radius: var(--radius-card-sm);
+        background: var(--paper-0);
+      }
+
+      .guidance strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+
+      .guidance p {
+        margin: 0;
+        color: var(--slate-500);
+        font-size: 13px;
+      }
+
+      .footer {
+        padding-block: 40px;
+        border-top: 1px solid var(--light-border);
+      }
+
+      .footer-inner {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .footer p {
+        max-width: 720px;
+        margin: 0;
+        color: var(--slate-500);
+        font-size: 13px;
+      }
+
+      @keyframes spin {
+        to {
+          rotate: 1turn;
+        }
+      }
+
+      @keyframes signal-breathe {
+        0%,
+        100% {
+          scale: 0.98;
+          opacity: 0.88;
+        }
+        50% {
+          scale: 1.025;
+          opacity: 1;
+        }
+      }
+
+      @keyframes insight-arrive {
+        0%,
+        22% {
+          opacity: 0;
+          translate: -20px 0;
+          scale: 0.96;
+        }
+        36%,
+        82% {
+          opacity: 1;
+          translate: 0;
+          scale: 1;
+        }
+        100% {
+          opacity: 0;
+        }
+      }
+
+      @media (max-width: 1240px) {
+        .swatch-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .composition-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .mobile-frame {
+          width: min(390px, 100%);
+          margin-inline: auto;
+        }
+      }
+
+      @media (max-width: 820px) {
+        .section-heading,
+        .icon-policy {
+          grid-template-columns: 1fr;
+        }
+
+        .section-heading {
+          gap: 8px;
+        }
+
+        .thesis-grid,
+        .layout-rules,
+        .button-grid,
+        .field-grid,
+        .card-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .state-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .desktop-body {
+          grid-template-columns: 1fr;
+        }
+
+        .voice-pane {
+          min-height: 620px;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .composition-board {
+          padding: 6px;
+        }
+
+        .site-header {
+          position: static;
+        }
+
+        .header-inner,
+        .footer-inner {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .header-inner {
+          padding-block: 14px;
+        }
+
+        .header-nav {
+          width: 100%;
+          justify-content: flex-start;
+          overflow-x: auto;
+          scrollbar-width: thin;
+        }
+
+        .hero {
+          padding-top: 48px;
+        }
+
+        .thesis-grid,
+        .swatch-grid,
+        .surface-pair,
+        .type-grid,
+        .geometry-grid,
+        .entry-grid,
+        .sample-grid,
+        .motion-grid,
+        .feedback-grid,
+        .do-dont,
+        .button-grid,
+        .field-grid,
+        .card-grid,
+        .state-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .thesis-step {
+          min-height: 0;
+        }
+
+        .entry-card {
+          min-height: 0;
+        }
+
+        .scale-strip {
+          align-items: start;
+          overflow-x: auto;
+        }
+
+        .icon-gallery {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .desktop-frame {
+          display: none;
+          min-height: 0;
+        }
+
+        .voice-pane {
+          min-height: 560px;
+        }
+
+        .desktop-appbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .dark-insight {
+          grid-template-columns: 42px minmax(0, 1fr);
+          grid-template-areas:
+            "icon copy"
+            "status evidence";
+          row-gap: 10px;
+        }
+
+        .insight-symbol {
+          width: 42px;
+          height: 42px;
+        }
+
+        .dark-insight .status {
+          justify-self: start;
+        }
+
+        .interview-controls {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .interview-controls .control-button {
+          min-width: 0;
+        }
+
+        .caption-footer {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .composition-labels {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .cluster-heading {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .concept-reference-heading {
+          align-items: flex-start;
+          flex-direction: column;
+          gap: 6px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+        }
+
+        .voice-signal,
+        .motion-node,
+        .spinner {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to design-system content</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="ScreenPilot Signal Canvas reference home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <defs>
+              <linearGradient id="mark-gradient" x1="3" y1="5" x2="28" y2="27" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#7C5CFC" />
+                <stop offset="1" stop-color="#35D4E7" />
+              </linearGradient>
+            </defs>
+            <rect x="2" y="2" width="28" height="28" rx="10" fill="#070A12" />
+            <path d="M9 18.5c2.7-5.8 5.2-5.8 7.4 0 2.1 5.5 4.5 5.5 6.6-.2" fill="none" stroke="url(#mark-gradient)" stroke-linecap="round" stroke-width="2.3" />
+            <circle cx="9" cy="18.5" r="1.6" fill="#52D6A2" />
+          </svg>
+          <span>ScreenPilot / Signal Canvas</span>
+        </a>
+        <nav class="header-nav" aria-label="Reference sections">
+          <a href="#tokens">Tokens</a>
+          <a href="#components">Components</a>
+          <a href="#composition">Composition</a>
+          <a href="#motion">Motion &amp; access</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="hero shell" id="top" aria-labelledby="hero-title">
+        <p class="eyebrow">Living style guide · SP-004</p>
+        <h1 id="hero-title">Calm surfaces. Live signals. Human judgment.</h1>
+        <p class="hero-copy">
+          Signal Canvas is ScreenPilot’s implementable visual language: a precise, transparent AI workspace that moves from a light document surface into a dark live signal field, then returns to a clear evidence review.
+        </p>
+        <div class="thesis-grid" aria-label="Experience narrative">
+          <article class="thesis-step">
+            <h3>01 · Document surface</h3>
+            <p>Structure emerges on quiet paper surfaces with borders doing most of the separation.</p>
+          </article>
+          <article class="thesis-step">
+            <h3>02 · Live signal field</h3>
+            <p>Voice activates in a dark canvas while facts crystallize into explicit, sourced cards.</p>
+          </article>
+          <article class="thesis-step">
+            <h3>03 · Evidence canvas</h3>
+            <p>The conversation settles into human-readable notes that support recruiter interpretation.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="tokens" aria-labelledby="tokens-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">01 / FOUNDATIONS</p>
+              <h2 id="tokens-title">Color is semantic, never ornamental</h2>
+            </div>
+            <p>Exact core values are locked. Text/icon pairings below meet WCAG AA for normal text where a ratio is stated; violet uses ink foreground because white is only 4.38:1.</p>
+          </div>
+
+          <div class="swatch-grid" aria-label="Signal Canvas color tokens">
+            <article class="swatch" style="--swatch: #070a12; --swatch-fg: #ffffff">
+              <div class="swatch-color"><span>White · 19.79:1</span></div>
+              <div class="swatch-copy"><strong>ink-950</strong><code>#070A12</code><p>Full-height interview canvas.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #0d1220; --swatch-fg: #ffffff">
+              <div class="swatch-color"><span>White · 18.68:1</span></div>
+              <div class="swatch-copy"><strong>ink-900</strong><code>#0D1220</code><p>Elevated dark surfaces.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #f7f8fc; --swatch-fg: #070a12">
+              <div class="swatch-color"><span>Ink · 18.65:1</span></div>
+              <div class="swatch-copy"><strong>paper-50</strong><code>#F7F8FC</code><p>Landing and review canvas.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #ffffff; --swatch-fg: #070a12">
+              <div class="swatch-color"><span>Ink · 19.79:1</span></div>
+              <div class="swatch-copy"><strong>paper-0</strong><code>#FFFFFF</code><p>Primary light cards.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #7c5cfc; --swatch-fg: #070a12">
+              <div class="swatch-color"><span>Ink · 4.52:1</span></div>
+              <div class="swatch-copy"><strong>violet-500</strong><code>#7C5CFC</code><p>Primary action and AI signal.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #35d4e7; --swatch-fg: #070a12">
+              <div class="swatch-color"><span>Ink · 11.05:1</span></div>
+              <div class="swatch-copy"><strong>cyan-400</strong><code>#35D4E7</code><p>Listening and data accent.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #52d6a2; --swatch-fg: #070a12">
+              <div class="swatch-color"><span>Ink · 10.84:1</span></div>
+              <div class="swatch-copy"><strong>mint-400</strong><code>#52D6A2</code><p>Confirmed insight.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #f1b84b; --swatch-fg: #070a12">
+              <div class="swatch-color"><span>Ink · 11.02:1</span></div>
+              <div class="swatch-copy"><strong>amber-400</strong><code>#F1B84B</code><p>Needs clarification.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #f06a8a; --swatch-fg: #070a12">
+              <div class="swatch-color"><span>Ink · 6.72:1</span></div>
+              <div class="swatch-copy"><strong>rose-400</strong><code>#F06A8A</code><p>Error and end attention only.</p></div>
+            </article>
+            <article class="swatch" style="--swatch: #667085; --swatch-fg: #ffffff">
+              <div class="swatch-color"><span>White · 4.97:1</span></div>
+              <div class="swatch-copy"><strong>slate-500</strong><code>#667085</code><p>Secondary text on light.</p></div>
+            </article>
+          </div>
+
+          <div class="surface-pair" aria-label="Light and dark surface combinations">
+            <article class="surface-card">
+              <p class="metadata">LIGHT / DOCUMENT</p>
+              <h3>Evidence should feel organized, not scored.</h3>
+              <p>Ink text on paper, slate secondary copy, violet for selected AI actions, and semantic color only when its label or icon is also present.</p>
+            </article>
+            <article class="surface-card dark">
+              <p class="metadata">DARK / LIVE SIGNAL</p>
+              <h3>Pilot is listening</h3>
+              <p>Paper text and muted blue-gray copy stay readable while cyan communicates live listening and mint confirms captured facts.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="type" aria-labelledby="type-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">02 / TYPOGRAPHY</p>
+              <h2 id="type-title">One calm voice, one technical register</h2>
+            </div>
+            <p>Geist Sans carries product language. Geist Mono appears only for compact timing, provenance, IDs, and technical metadata.</p>
+          </div>
+          <div class="type-grid">
+            <article class="type-panel">
+              <p class="type-display">A clearer screen starts with a conversation.</p>
+              <p class="type-title">What ScreenPilot will explore</p>
+              <h3>Relevant frontend experience</h3>
+              <p class="type-body">We’ll confirm role direction during the call and keep every insight linked to its source.</p>
+              <p class="metadata">02:14 · CANDIDATE EVIDENCE</p>
+              <p class="font-stack"><strong>Sans fallback:</strong> Geist Sans → Geist → Inter → UI/system sans. Display 56/60 desktop, 38/44 mobile · 600. Section 32/38 · 600. Card 15/20 · 600. Body 16/25 · 400. Metadata 12/18 · 500.</p>
+            </article>
+            <article class="type-panel dark">
+              <p class="metadata">LIVE INTERVIEW · 02:14</p>
+              <p class="type-title">Pilot is listening</p>
+              <p class="type-body">“Frontend is the closest match, but I’ve worked across the full stack.”</p>
+              <h3>Requested Full Stack; screening against Frontend</h3>
+              <p class="font-stack"><strong>Mono fallback:</strong> Geist Mono → SFMono-Regular → Consolas → Liberation Mono → monospace. Use sparingly; do not set long labels in all caps.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="layout" aria-labelledby="layout-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">03 / LAYOUT</p>
+              <h2 id="layout-title">An 8 px rhythm with fluid pressure relief</h2>
+            </div>
+            <p>Breakpoints respond to content pressure. They are verification anchors, not separate device themes.</p>
+          </div>
+          <div class="scale-strip" aria-label="Spacing scale">
+            <div class="space-token"><span class="space-bar" style="--measure: 4px"></span><span>4</span></div>
+            <div class="space-token"><span class="space-bar" style="--measure: 8px"></span><span>8</span></div>
+            <div class="space-token"><span class="space-bar" style="--measure: 16px"></span><span>16</span></div>
+            <div class="space-token"><span class="space-bar" style="--measure: 24px"></span><span>24</span></div>
+            <div class="space-token"><span class="space-bar" style="--measure: 32px"></span><span>32</span></div>
+            <div class="space-token"><span class="space-bar" style="--measure: 48px"></span><span>48</span></div>
+            <div class="space-token"><span class="space-bar" style="--measure: 64px"></span><span>64</span></div>
+            <div class="space-token"><span class="space-bar" style="--measure: 96px"></span><span>96</span></div>
+          </div>
+          <div class="layout-rules">
+            <article class="rule-card"><h3>Content width</h3><p>1200 px system maximum; 720 px reading maximum. Large monitors add deliberate whitespace, not stretched copy.</p></article>
+            <article class="rule-card"><h3>Gutters</h3><p>16 px at 320–390, then fluidly expand up to 48 px. Controls and captions respect safe-area insets.</p></article>
+            <article class="rule-card"><h3>Density</h3><p>Compact metadata, comfortable body rhythm, and bounded cards. Never remove meaning to solve a narrow viewport.</p></article>
+          </div>
+          <div class="anchor-table-wrap">
+            <table>
+              <thead><tr><th>Reference</th><th>Width</th><th>Composition pressure to verify</th><th>Required continuity</th></tr></thead>
+              <tbody>
+                <tr><td>Small phone</td><td>320 px</td><td>Single-column cards, compact navigation, Turnstile fallback</td><td>No clipping, 44 px targets, full recovery copy</td></tr>
+                <tr><td>Standard phone</td><td>360 / 390 px</td><td>Paired entry cards stack equally; insight rail</td><td>Same content, status, controls, and evidence meaning</td></tr>
+                <tr><td>Tablet</td><td>768 / 820 px</td><td>Content-driven one/two-column transition</td><td>No awkward empty band or missing source relationship</td></tr>
+                <tr><td>Compact landscape</td><td>1024 px</td><td>Readable density and operable controls</td><td>Portrait and landscape both remain complete</td></tr>
+                <tr><td>Desktop</td><td>1280 / 1440 px</td><td>42% conversation / 58% insight composition</td><td>Captions remain dominant and unobscured</td></tr>
+                <tr><td>Large monitor</td><td>1920 / 2560+ px</td><td>Bounded reading widths and deliberate whitespace</td><td>Expand composition, not paragraph line length</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="geometry" aria-labelledby="geometry-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">04 / SHAPE &amp; DEPTH</p>
+              <h2 id="geometry-title">Borders first, atmosphere second</h2>
+            </div>
+            <p>Soft elevation is reserved for hierarchy. Glass and gradients live only around selected AI atmosphere and the live overlay.</p>
+          </div>
+          <div class="geometry-grid">
+            <article class="geometry-panel">
+              <h3>Radius hierarchy</h3>
+              <div class="radius-row" aria-label="Radius token examples">
+                <div class="radius-sample" style="border-radius: 12px">12<br />control</div>
+                <div class="radius-sample" style="border-radius: 18px">18<br />compact</div>
+                <div class="radius-sample" style="border-radius: 20px">20<br />card</div>
+                <div class="radius-sample" style="border-radius: 22px">22<br />feature</div>
+                <div class="radius-sample" style="border-radius: 28px">28<br />canvas</div>
+              </div>
+              <p>Nested radii step down. Do not apply the 28 px canvas radius to every element.</p>
+            </article>
+            <article class="geometry-panel">
+              <h3>Separation and atmosphere</h3>
+              <div class="border-demo"><div>1 px neutral border<br />default separation</div><div class="elevated">Sparse soft shadow<br />raised hierarchy only</div></div>
+              <div class="gradient-rule"><span>Limited gradient + accessible dark glass</span></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="icons" aria-labelledby="icons-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">05 / ICONS</p>
+              <h2 id="icons-title">Lucide-aligned, literal, always supported by language</h2>
+            </div>
+            <p>Icons improve scanning; they never carry hiring meaning or state by themselves.</p>
+          </div>
+          <div class="icon-policy">
+            <article class="icon-rules">
+              <h3>Policy</h3>
+              <ul>
+                <li>16 px inline, 20 px standard, 24 px emphasis; 1.75 px stroke.</li>
+                <li>Use simple line icons with round caps and joins.</li>
+                <li>Decorative icons use <code>aria-hidden="true"</code>.</li>
+                <li>Icon-only controls require an accessible name and at least 44 × 44 px.</li>
+                <li>Confirmed, clarification, corrected, and error states pair icon + label + color.</li>
+              </ul>
+            </article>
+            <div class="icon-gallery" aria-label="Approved icon meanings">
+              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M8 8l4-5 4 5M8 16l4 5 4-5" /></svg><span>Voice signal</span></div>
+              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3" /></svg><span>Microphone</span></div>
+              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg><span>Confirmed</span></div>
+              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.8 2.4 18a2 2 0 0 0 1.8 3h15.6a2 2 0 0 0 1.8-3L13.7 3.8a2 2 0 0 0-3.4 0Z" /></svg><span>Clarify / error</span></div>
+              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.7L20 7" /><path d="M20 3v4h-4" /></svg><span>Correction / retry</span></div>
+              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1" /></svg><span>Evidence link</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="components" aria-labelledby="components-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">06 / PRIMITIVES &amp; STATES</p>
+              <h2 id="components-title">Compact examples, not application screens</h2>
+            </div>
+            <p>Every state stays explicit, actionable, and consistent across light and dark surfaces.</p>
+          </div>
+
+          <div class="component-cluster">
+            <div class="cluster-heading"><h3>Action states</h3><p>Actual keyboard focus is visible on each interactive example.</p></div>
+            <div class="button-grid">
+              <div class="state-sample"><span>Default</span><button class="btn" type="button">Continue</button></div>
+              <div class="state-sample"><span>Hover</span><button class="btn is-hover" type="button">Continue</button></div>
+              <div class="state-sample"><span>Focus-visible</span><button class="btn is-focus" type="button">Continue</button></div>
+              <div class="state-sample"><span>Disabled</span><button class="btn" type="button" disabled>Start AI interview</button></div>
+              <div class="state-sample"><span>Loading</span><button class="btn" type="button" aria-label="Preparing conversation"><span class="spinner" aria-hidden="true"></span>Preparing</button></div>
+              <div class="state-sample"><span>Secondary / destructive</span><button class="btn danger" type="button">End interview</button></div>
+            </div>
+          </div>
+
+          <div class="component-cluster">
+            <div class="cluster-heading"><h3>Field states</h3><p>Labels and recovery text are never replaced by color.</p></div>
+            <div class="field-grid">
+              <div class="field-sample"><label for="field-default">Expected compensation</label><input id="field-default" value="€48,000–€52,000" readonly /><p class="field-note">Default · candidate stated</p></div>
+              <div class="field-sample focus"><label for="field-focus">Preferred role</label><input id="field-focus" value="Frontend Developer" readonly /><p class="field-note">Focus-visible · cyan ring</p></div>
+              <div class="field-sample error"><label for="field-error">CV document</label><input id="field-error" value="portfolio.png" aria-describedby="field-error-copy" aria-invalid="true" readonly /><p class="field-note" id="field-error-copy">Use a text-based PDF up to 5 MB.</p></div>
+            </div>
+          </div>
+
+          <div class="component-cluster">
+            <div class="cluster-heading"><h3>Equal-priority entry modes</h3><p>Same prominence, complete explanation, non-competitive copy.</p></div>
+            <div class="entry-grid">
+              <article class="entry-card">
+                <div class="entry-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6M8 13h8M8 17h6" /></svg></div>
+                <h3>Use a CV</h3>
+                <p>For a more focused screen grounded in the document you choose.</p>
+                <ul><li>Text-based PDF or bundled sample</li><li>Evidence-linked preparation</li></ul>
+                <div class="entry-actions"><button class="btn" type="button">Choose PDF</button><button class="btn secondary" type="button">Use sample</button></div>
+              </article>
+              <article class="entry-card">
+                <div class="entry-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /><path d="M8 9h8M8 13h5" /></svg></div>
+                <h3>Start without a CV</h3>
+                <p>For the fastest, most open experience; ScreenPilot learns through conversation.</p>
+                <ul><li>One click; no document or form</li><li>Broader discovery first</li></ul>
+                <div class="entry-actions"><button class="btn" type="button">Start conversation-first</button></div>
+              </article>
+            </div>
+          </div>
+
+          <div class="component-cluster">
+            <div class="cluster-heading"><h3>Cards, badges, and evidence</h3><p>Provenance stays readable in every viewport.</p></div>
+            <div class="card-grid">
+              <article class="card"><div class="card-topline"><span class="badge">CV fact</span><span class="metadata">CV</span></div><h3>React and TypeScript</h3><p>“Built accessible interfaces using React and TypeScript.”</p><a class="evidence-chip" href="#composition"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7" /></svg>Source excerpt</a></article>
+              <article class="card"><div class="card-topline"><span class="badge violet">Standard screen</span><span class="metadata">TOPIC</span></div><h3>Availability and work pattern</h3><p>Confirm timing and Remote-within-Europe constraints conversationally.</p></article>
+              <article class="card"><div class="card-topline"><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Confirmed</span><span class="metadata">CANDIDATE</span></div><h3>English proficiency</h3><p>B2, candidate-stated. Language context is descriptive, not a score.</p><a class="evidence-chip" href="#composition">Caption · 02:14</a></article>
+            </div>
+          </div>
+
+          <div class="component-cluster">
+            <div class="cluster-heading"><h3>Semantic insight states</h3><p>Icon + text + color; never color alone.</p></div>
+            <div class="state-grid">
+              <article class="semantic-state" style="--state-color: #52d6a2"><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Confirmed</span><p>Candidate explicitly verified the information.</p></article>
+              <article class="semantic-state" style="--state-color: #f1b84b"><span class="status clarification"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.8 2.4 18a2 2 0 0 0 1.8 3h15.6a2 2 0 0 0 1.8-3L13.7 3.8a2 2 0 0 0-3.4 0Z" /></svg>Needs clarification</span><p>The evidence is incomplete or ambiguous.</p></article>
+              <article class="semantic-state" style="--state-color: #35d4e7"><span class="status corrected"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.7L20 7" /><path d="M20 3v4h-4" /></svg>Corrected</span><p>The latest candidate statement replaces an earlier fact.</p></article>
+              <article class="semantic-state" style="--state-color: #f06a8a"><span class="status error"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><circle cx="12" cy="12" r="9" /></svg>Error</span><p>The blocking problem keeps a clear Retry or Back action.</p></article>
+            </div>
+          </div>
+
+          <div class="component-cluster">
+            <div class="cluster-heading"><h3>Recovery and paid-action fallback</h3><p>The fallback reserves stable height and styles only ScreenPilot’s surrounding copy.</p></div>
+            <div class="feedback-grid">
+              <article class="error-panel" role="group" aria-labelledby="error-title">
+                <div class="panel-heading"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><circle cx="12" cy="12" r="9" /></svg><div><h3 id="error-title">We couldn’t prepare the conversation</h3><p>Your chosen entry mode is preserved. Retry preparation or return to the two choices.</p><div class="entry-actions"><button class="btn" type="button">Retry</button><button class="btn secondary" type="button">Back to choices</button></div></div></div>
+              </article>
+              <article class="turnstile-shell" aria-labelledby="turnstile-title">
+                <div class="turnstile-status"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg><div><h3 id="turnstile-title">One quick security check may appear</h3><p class="field-note">It stays inline, keyboard reachable, and does not contact a paid provider until verification succeeds.</p></div></div>
+                <div class="turnstile-slot" tabindex="0"><span><strong>Reserved Cloudflare-managed area</strong><br />ScreenPilot does not imitate, restyle, hide, or alter widget internals.</span></div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="composition" aria-labelledby="composition-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">07 / RESPONSIVE COMPOSITION</p>
+              <h2 id="composition-title">The same interview moment, continuously adapted</h2>
+            </div>
+            <p>This coded pair follows the selected concept’s workspace framing, voice presence, vertical insight rhythm, caption containment, and mobile carousel. Exact tokens, semantics, focus behavior, and responsive rules remain explicit in HTML.</p>
+          </div>
+          <div class="composition-board">
+            <div class="composition-labels"><span class="metadata">DESKTOP SAMPLE · 42 / 58</span><span class="metadata">MOBILE SAMPLE · SAME MEANING</span></div>
+            <div class="composition-grid">
+              <article class="desktop-frame" aria-label="Desktop active-interview composition sample">
+                <header class="sample-appbar desktop-appbar">
+                  <div class="sp-lockup"><span class="mini-mark" aria-hidden="true"><span style="--mark-height: 11px"></span><span style="--mark-height: 20px"></span><span style="--mark-height: 25px"></span><span style="--mark-height: 17px"></span><span style="--mark-height: 9px"></span></span><span>ScreenPilot</span><span class="mode-pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="5" /><path d="M8 10h.01M12 10h.01M8 15l3-2" /></svg>Conversation-first</span></div>
+                  <span class="workspace-meta"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg>Remote within Europe</span>
+                </header>
+                <div class="desktop-body">
+                  <section class="voice-pane" aria-label="Live interview conversation">
+                    <div class="agent-status" aria-label="Pilot is interviewing. Listening."><span class="agent-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="11" rx="3" /><path d="M9 3h6M12 3v4M9 12h.01M15 12h.01M9 16h6" /></svg></span><span>Pilot is interviewing</span><span class="agent-listening"><span class="live-dot" aria-hidden="true"></span>Listening</span></div>
+                    <div class="voice-signal" aria-hidden="true"><div class="signal-bars"><span style="--bar-height: 18px"></span><span style="--bar-height: 34px"></span><span style="--bar-height: 24px"></span><span style="--bar-height: 44px"></span><span style="--bar-height: 28px"></span><span style="--bar-height: 38px"></span><span style="--bar-height: 20px"></span></div></div>
+                    <p class="listening-copy">Pilot is listening…</p>
+                    <div class="caption-panel"><div class="caption-meta"><span class="caption-status"><span class="live-dot" aria-hidden="true"></span>Live</span></div><p class="caption">Frontend is the closest fit. My expected range is €48,000–€52,000, and my English is B2.</p><div class="caption-footer"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M9 10H7a2 2 0 0 0 0 4h2M17 10h-2a2 2 0 0 0 0 4h2" /></svg>Auto-caption on</span><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></div></div>
+                    <div class="elapsed-row"><span class="elapsed-copy"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v6l4 2" /></svg>Elapsed</span><span class="metadata">04:32</span></div>
+                    <div class="interview-controls"><button class="control-button mute-control" type="button" aria-label="Mute microphone"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3" /></svg><span class="control-copy">Mute<small>Off</small></span></button><button class="control-button end end-control" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>End interview</button></div>
+                  </section>
+                  <section class="insight-pane" aria-label="Candidate-sourced insights">
+                    <div class="insight-heading"><div class="insight-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5Z" /><path d="m19 16 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7Z" /></svg><h3>Candidate-sourced insights</h3></div><p>Facts captured from candidate responses.</p></div>
+                    <div class="insight-constellation">
+                      <article class="dark-insight role"><span class="insight-symbol symbol-code" aria-hidden="true">&lt;/&gt;</span><div class="insight-copy"><h4>Role preference</h4><p>Requested Full Stack; screening against Frontend</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
+                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true">€</span><div class="insight-copy"><h4>Compensation expectation</h4><p>€48,000–€52,000</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
+                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg></span><div class="insight-copy"><h4>English proficiency</h4><p>B2</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
+                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></svg></span><div class="insight-copy"><h4>Availability</h4><p>Four weeks</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
+                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2" /><path d="M8 22h8M12 18v4M8 9l-2 2 2 2M16 9l2 2-2 2M13 8l-2 6" /></svg></span><div class="insight-copy"><h4>Relevant frontend experience</h4><p>React, TypeScript, accessibility</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
+                    </div>
+                  </section>
+                </div>
+              </article>
+
+              <article class="mobile-frame" aria-label="Mobile active-interview composition sample">
+                <header class="sample-appbar mobile-appbar"><div class="sp-lockup"><span class="mini-mark" aria-hidden="true"><span style="--mark-height: 10px"></span><span style="--mark-height: 18px"></span><span style="--mark-height: 23px"></span><span style="--mark-height: 16px"></span><span style="--mark-height: 8px"></span></span><span>ScreenPilot</span></div><span class="mode-pill">Conversation-first</span></header>
+                <div class="mobile-live">
+                  <div class="agent-status" aria-label="Pilot is interviewing. Listening."><span class="agent-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="11" rx="3" /><path d="M9 3h6M12 3v4M9 12h.01M15 12h.01M9 16h6" /></svg></span><span>Pilot is interviewing</span><span class="agent-listening"><span class="live-dot" aria-hidden="true"></span>Listening</span></div>
+                  <div class="voice-signal" aria-hidden="true"><div class="signal-bars"><span style="--bar-height: 15px"></span><span style="--bar-height: 27px"></span><span style="--bar-height: 20px"></span><span style="--bar-height: 36px"></span><span style="--bar-height: 22px"></span><span style="--bar-height: 30px"></span><span style="--bar-height: 16px"></span></div></div>
+                  <p class="listening-copy">Pilot is listening…</p>
+                  <div class="caption-panel"><div class="caption-meta"><span class="caption-status"><span class="live-dot" aria-hidden="true"></span>Live</span></div><p class="caption">Frontend is the closest fit. My expected range is €48,000–€52,000, and my English is B2.</p><div class="caption-footer"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M9 10H7a2 2 0 0 0 0 4h2M17 10h-2a2 2 0 0 0 0 4h2" /></svg>Auto-caption on</span><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></div></div>
+                </div>
+                <div class="mobile-insights">
+                  <div class="mobile-insight-heading"><h3>Candidate-sourced insights</h3><p>Swipe to explore</p></div>
+                  <div class="mobile-card-rail" aria-label="Swipeable candidate insight cards">
+                    <article class="mobile-preview" aria-label="Compensation preview"><span class="insight-symbol" aria-hidden="true">€</span><strong>Compensation</strong><br />€48,000–€52,000</article>
+                    <article class="mobile-selected"><span class="insight-symbol symbol-code" aria-hidden="true">&lt;/&gt;</span><h3>Role preference</h3><p>Requested Full Stack; screening against Frontend</p><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
+                    <article class="mobile-preview" aria-label="English proficiency preview"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg></span><strong>English</strong><br />B2</article>
+                  </div>
+                  <div class="rail-dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+                </div>
+                <div class="mobile-controls"><button class="control-button mute-control" type="button" aria-label="Mute microphone"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3" /></svg><span class="control-copy">Mute<small>Off</small></span></button><span class="mobile-elapsed">Elapsed<span class="metadata">04:32</span></span><button class="control-button end end-control" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>End interview</button></div>
+              </article>
+            </div>
+          </div>
+          <div class="token-line" aria-label="Composition rules"><code>full-height field + centered bounded workspace</code><code>desktop: 42% conversation / 58% insights</code><code>mobile: signal → captions → insight rail → safe controls</code><code>still atmosphere + localized signal/card motion</code><code>dynamic viewport + safe-area insets</code><code>no horizontal page scroll</code></div>
+          <figure class="concept-reference" id="concept-reference">
+            <div class="concept-reference-heading"><div><p class="metadata kicker">PRIMARY VISUAL REFERENCE</p><h3>Refined paired active-interview concept</h3></div><p>Image-led composition · explicit HTML rules govern behavior and access</p></div>
+            <img class="concept-image" src="assets/screenpilot-active-interview-concept.png" width="1536" height="1024" loading="lazy" alt="Selected ScreenPilot Signal Canvas concept board showing the same active interview in a wide desktop workspace and a coordinated mobile layout, with a violet and cyan voice signal, readable caption panel, candidate-sourced insight cards, and mute and end controls." />
+            <figcaption>The coded sample now follows the concept’s framed app shell, vertical desktop insight stack, spacious caption panel, large voice presence, separated controls, and selected-card mobile rail. The HTML remains authoritative for exact tokens, content, semantics, keyboard behavior, reduced motion, and continuous responsive reflow; incidental bitmap measurements are not requirements.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="section" id="motion" aria-labelledby="motion-title">
+        <div class="shell">
+          <div class="section-heading">
+            <div>
+              <p class="metadata kicker">08 / MOTION &amp; ACCESS</p>
+              <h2 id="motion-title">Motion explains change, then gets out of the way</h2>
+            </div>
+            <p>Spatial travel and pulsing disappear when reduced motion is requested. State, label, layout, and evidence remain.</p>
+          </div>
+          <div class="motion-grid">
+            <article class="motion-panel">
+              <h3>Timing and easing</h3>
+              <ul><li>Background atmosphere remains still; it does not drift, pulse, or compete with captions.</li><li>Default transitions: 180–240 ms.</li><li>Insight appearance: 320–450 ms with opacity, small scale, and short connector draw.</li><li>Correction: border/color morph; never shake.</li><li>Voice signal: smooth response; no rapid flashing.</li></ul>
+              <div class="motion-sample" aria-label="Insight appearance motion example"><span class="motion-node" aria-hidden="true"></span><span class="motion-copy">A short, calm arrival from signal to structured insight.</span></div>
+            </article>
+            <article class="motion-panel">
+              <h3>Reduced-motion contract</h3>
+              <ul><li>Remove spatial travel and continuous pulsing.</li><li>Use immediate opacity/state changes.</li><li>Keep live status text and final captions available.</li><li>Never autoplay microphone or voice.</li></ul>
+              <p class="font-stack">This document honors <code>prefers-reduced-motion: reduce</code> for its voice, loading, scrolling, and insight demonstrations.</p>
+            </article>
+          </div>
+          <div class="do-dont">
+            <article class="guidance"><strong>Use</strong><p>Semantic headings and landmarks, visible focus, 44 px targets, labelled insight states, readable captions, and stable inline recovery.</p></article>
+            <article class="guidance"><strong>Avoid</strong><p>Hiring scores, decorative analytics, neon cyberpunk, robots, generic HR dashboards, hidden mobile features, excessive glow, and excessive glass.</p></article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="shell footer-inner">
+        <a class="brand" href="#top">ScreenPilot / Signal Canvas</a>
+        <p>This lightweight reference governs visual foundations only. Product behavior, scope, accessibility, and responsive requirements remain authoritative in the ScreenPilot demo source of truth. The interface supports recruiter judgment and never makes an automated hiring decision.</p>
+      </div>
+    </footer>
+  </body>
+</html>

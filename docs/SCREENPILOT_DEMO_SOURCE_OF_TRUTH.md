@@ -2509,6 +2509,13 @@ Use gradients only for the voice signal, selected AI accents, and hero atmospher
 - No hamburger on desktop; mobile uses a compact actions menu.
 - No Dashboard, Jobs, Candidates, Pricing, Login, or Signup navigation.
 
+### Interviewer naming and AI transparency
+
+- The visible interviewer name is **Pilot**.
+- Moment-to-moment interface status uses Pilot by name: **Pilot is interviewing** and **Pilot is listening…**. Do not use “AI” as the agent's display name or as the subject of a live-status sentence.
+- Transparency is not removed: disclosure, consent, privacy, and explanatory product copy must state clearly that Pilot is an AI interviewer and that provider processing occurs. Use “AI” for that factual explanation, not as the conversational persona label.
+- Accessible names and announcements use Pilot consistently while preserving the state or action, for example **Pilot is listening** and **Mute Pilot's microphone input**.
+
 ### Screen design
 
 #### Landing
@@ -2557,8 +2564,12 @@ Use gradients only for the voice signal, selected AI accents, and hero atmospher
 #### Active interview
 
 - Dark `ink-950` full-height canvas.
-- Left 42%: voice signal, agent status, captions, timer, mute/end controls.
-- Right 58%: fixed-layout insight constellation.
+- The background field fills the dynamic viewport, while wide screens center a bounded interview workspace instead of stretching panels and copy across the display.
+- Left 42%: voice signal, Pilot status, captions, timer, mute/end controls.
+- Right 58%: a calm vertical stack of roomy candidate-sourced insight cards with category icons, explicit confirmation states, and caption-evidence affordances.
+- Place readable live captions inside a distinct bordered `ink-900` panel below the signal, with the elapsed-time row and primary controls separated beneath it.
+- Place a compact ScreenPilot/mode header above two clearly bordered work areas so the bounded workspace reads as one composed application shell rather than two unrelated panels.
+- Follow the approved raster's spacious vertical insight rhythm on desktop; keep card content concise enough that role, compensation, English, availability, and relevant experience remain visible without turning the panel into a dense dashboard.
 - New cards emerge from the signal area with a short path animation.
 - Conversation-first begins with an intentionally open insight canvas and fills it from candidate answers; CV-assisted may begin with clearly marked CV facts. The empty state must feel purposeful, not unfinished.
 - The current speaking party is visually obvious without relying on color alone.
@@ -2595,6 +2606,7 @@ Use gradients only for the voice signal, selected AI accents, and hero atmospher
 
 ### Motion
 
+- Background atmosphere remains still; do not animate the full canvas or decorative gradient field.
 - Default transition: 180–240 ms.
 - Insight appearance: 320–450 ms with opacity, scale, and short connector draw.
 - Correction: brief border/color morph, not shake.
@@ -2661,13 +2673,20 @@ approved HTML Design System Reference
 
 Rules:
 
-- Generate only this one paired concept during the demo design phase.
+- Retain only one approved paired concept artifact during the demo design phase. Corrective refinements of the same direction may replace that artifact when the user explicitly requests closer image-led alignment; do not branch into competing directions or additional screen concepts.
 - The concept must use the approved Signal Canvas colors, type character, spacing, shapes, icon rules, component states, content, and responsive requirements; it may not invent a new visual language.
 - Use the bitmap for visual direction—especially composition, balance, atmosphere, and information density—not for exact text, measurements, accessibility values, or interaction behavior.
 - The Markdown and HTML reference remain authoritative for scope, tokens, responsive rules, accessibility, and behavior.
 - Any generated idea we accept must be written back into the explicit design documentation before it is treated as an implementation requirement.
 - Ignore or correct malformed text, impossible controls, inconsistent spacing, inaccessible contrast, invented features, and desktop/mobile mismatches commonly produced by image generation.
 - Do not generate separate landing, CV input, analysis, plan, preflight, review, error, or latency concepts. Those screens inherit the same approved visual system during implementation.
+
+SP-004 approved concept reconciliation (2026-08-31):
+
+- Approved artifact: `docs/assets/screenpilot-active-interview-concept.png`; the user explicitly preferred the image-led UI/UX and authorized one corrective refinement of the same paired concept, which replaces the earlier rendition rather than creating a second direction.
+- Treat the approved raster as the primary authority for composition, hierarchy, density, and atmosphere: use its compact branded app header, two bordered desktop work areas, substantial voice presence, spacious caption containment, separated timer/controls, calm vertical insight-card stack, and mobile selected-card rail.
+- Retain from the HTML reference the exact tokens and type rules, grounded product copy, semantic structure, keyboard and target requirements, evidence semantics, continuous responsive behavior, reduced-motion behavior, and the still background atmosphere.
+- Explicitly rejected from generated drafts: an invented company label, unsupported privacy/training claims, phone-call control metaphors, evidence counts, unspecified availability/experience details, device chrome as an implementation requirement, and generated measurements or text as normative values.
 
 ### Ready-to-use generation prompt
 
@@ -2678,7 +2697,7 @@ Create one polished product-design concept board for ScreenPilot, a browser-base
 
 Follow the approved “Signal Canvas” visual language exactly: precise, calm, modern, transparent, technically credible, and candidate-friendly; dark ink-950 (#070A12) interview canvas; ink-900 (#0D1220) elevated surfaces; violet-500 (#7C5CFC) primary AI signal; cyan-400 (#35D4E7) listening/data accent; mint-400 (#52D6A2) confirmed insight; amber-400 (#F1B84B) clarification; rose-400 (#F06A8A) error/end attention; Geist-like sans typography with mono metadata; 8 px spacing rhythm; 12 px controls, 18–22 px cards, 28 px main canvas; subtle borders and sparse soft elevation; limited accessible glass only around the live interview overlay; restrained Lucide-like line icons. Avoid neon cyberpunk, robots, stock photos, generic HR dashboards, decorative analytics charts, excessive glow, and excessive glassmorphism.
 
-Depict ScreenPilot interviewing a synthetic candidate for the unnamed demo company, Remote within Europe. The company has confirmed Frontend Developer and Backend Developer openings. The candidate is using conversation-first mode, initially asked about Full Stack, has just chosen Frontend as the screening anchor, and has also stated an expected salary of €48,000–€52,000 and B2 English proficiency. Show a clearly listening AI voice signal, agent status, readable live caption, elapsed timer, mute and End interview controls, a subtle Conversation-first mode badge, and an insight area containing candidate-sourced cards for role preference (“Requested Full Stack; screening against Frontend”), compensation expectation, English proficiency, availability, and relevant frontend experience. Mark confirmed information with both text/icon and color. Include a small evidence cue without exposing a full transcript. Do not invent a company or candidate name. Do not show hiring scores, rankings, pass/fail decisions, sentiment, emotion, login, recruiter navigation, job management, phone controls, or unsupported features.
+Depict Pilot, ScreenPilot's AI interviewer, interviewing a synthetic candidate for the unnamed demo company, Remote within Europe. The company has confirmed Frontend Developer and Backend Developer openings. The candidate is using conversation-first mode, initially asked about Full Stack, has just chosen Frontend as the screening anchor, and has also stated an expected salary of €48,000–€52,000 and B2 English proficiency. Show a clearly listening Pilot voice signal, Pilot status using the exact visible phrases “Pilot is interviewing” and “Pilot is listening…”, readable live caption, elapsed timer, mute and End interview controls, a subtle Conversation-first mode badge, and an insight area containing candidate-sourced cards for role preference (“Requested Full Stack; screening against Frontend”), compensation expectation, English proficiency, availability, and relevant frontend experience. Mark confirmed information with both text/icon and color. Include a small evidence cue without exposing a full transcript. Do not invent a company or candidate name. Do not use “AI” as the visible interviewer label, and do not show hiring scores, rankings, pass/fail decisions, sentiment, emotion, login, recruiter navigation, job management, phone controls, or unsupported features.
 
 Desktop composition: full-height dark canvas; approximately 42% left voice/caption/control area and 58% right fixed-layout insight constellation; cards emerge visually from the voice area but never cover captions. Mobile composition: compact voice signal at top, readable captions, swipeable insight-card rail with one selected card expanded, and sticky safe-area-aware mute/end controls. Preserve the same content, status, actions, visual identity, and evidence meaning in both views rather than removing mobile features. All interactive targets should look at least 44 × 44 px and status must never rely on color alone.
 
