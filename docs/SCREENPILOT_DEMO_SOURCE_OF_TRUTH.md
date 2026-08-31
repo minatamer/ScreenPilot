@@ -1665,6 +1665,19 @@ TURNSTILE_ALLOWED_HOSTNAMES=
 # Locally generated application secrets; use different values
 INTERVIEW_GRANT_SIGNING_SECRET=
 ANONYMOUS_COOKIE_SECRET=
+
+# Bounded request, expiry, and per-instance rate-limit settings
+HTTP_JSON_BODY_MAX_BYTES=65536
+PROVIDER_REQUEST_TIMEOUT_MS=30000
+INTERVIEW_GRANT_TTL_SECONDS=900
+ANONYMOUS_COOKIE_TTL_SECONDS=7200
+RATE_LIMIT_WINDOW_SECONDS=60
+RATE_LIMIT_MAX_ENTRIES=10000
+RATE_LIMIT_BOOTSTRAP_REQUESTS=120
+RATE_LIMIT_PREPARE_REQUESTS=30
+RATE_LIMIT_CV_ANALYZE_REQUESTS=10
+RATE_LIMIT_VOICE_TOKEN_REQUESTS=3
+RATE_LIMIT_SUMMARY_REQUESTS=10
 ```
 
 The LLM/STT/TTS model identifiers and the three Turnstile actions are source-controlled locked constants, not extra secret fields. `ELEVENLABS_AGENT_ID` and `ELEVENLABS_VOICE_ID` are non-secret provider identifiers but remain blank until the user creates/selects them. `TURNSTILE_SITE_KEY` is browser-safe but is returned through bootstrap from backend configuration; it does not belong in the frontend environment.
@@ -2994,15 +3007,15 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Separate server-only and browser-safe environment schemas.
-- [ ] Add OpenAI, ElevenLabs, Cloudflare Turnstile public-site-key/server-secret/allowed-hostname/action, origin, limit, and feature-flag settings; document that Turnstile Free is $0 and independent of the domain registrar/proxy.
-- [ ] Lock GPT-5.4 mini/reasoning-none and ElevenLabs agent/STT/TTS/voice identifiers.
-- [ ] Add deterministic fake OpenAI, ElevenLabs, and Turnstile Siteverify adapters plus Cloudflare's published non-production test-key configuration; paid calls remain impossible in default CI.
-- [ ] Replace the temporary contracts entry point with the explicit browser-safe `api/public-runtime-config` subpath export; keep package internals private.
-- [ ] Add the exact app-scoped blank `.env.example` templates from Section 11: no plausible placeholders or usable values; public bootstrap configuration remains distinct from backend secrets.
-- [ ] Make `PROVIDER_MODE=fake`/`PAID_DEMO_ENABLED=false` the safe default, validate complete credential groups only for live/production, and verify both user-filled `.env.local` paths remain ignored.
-- [ ] Load environment values only in the owning config/composition boundary and inject typed configuration/adapters into features and use cases.
-- [ ] Test missing/invalid configuration and client-secret exclusion.
+- [x] Separate server-only and browser-safe environment schemas.
+- [x] Add OpenAI, ElevenLabs, Cloudflare Turnstile public-site-key/server-secret/allowed-hostname/action, origin, limit, and feature-flag settings; document that Turnstile Free is $0 and independent of the domain registrar/proxy.
+- [x] Lock GPT-5.4 mini/reasoning-none and ElevenLabs agent/STT/TTS/voice identifiers.
+- [x] Add deterministic fake OpenAI, ElevenLabs, and Turnstile Siteverify adapters plus Cloudflare's published non-production test-key configuration; paid calls remain impossible in default CI.
+- [x] Replace the temporary contracts entry point with the explicit browser-safe `api/public-runtime-config` subpath export; keep package internals private.
+- [x] Add the exact app-scoped blank `.env.example` templates from Section 11: no plausible placeholders or usable values; public bootstrap configuration remains distinct from backend secrets.
+- [x] Make `PROVIDER_MODE=fake`/`PAID_DEMO_ENABLED=false` the safe default, validate complete credential groups only for live/production, and verify both user-filled `.env.local` paths remain ignored.
+- [x] Load environment values only in the owning config/composition boundary and inject typed configuration/adapters into features and use cases.
+- [x] Test missing/invalid configuration and client-secret exclusion.
 
 #### [SP-004 — Create and approve the visual design references](tickets/SP-004-create-and-approve-visual-design-references.md)
 

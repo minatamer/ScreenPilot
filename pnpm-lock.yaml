@@ -62,6 +62,9 @@ importers:
       '@screenpilot/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
 
   apps/frontend:
     dependencies:
@@ -85,7 +88,11 @@ importers:
         specifier: ^19.0.0
         version: 19.2.5(@types/react@19.2.18)
 
-  packages/contracts: {}
+  packages/contracts:
+    dependencies:
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
 
 packages:
 

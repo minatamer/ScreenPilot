@@ -3,13 +3,11 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./src/index.ts",
   "exports": {
-    ".": {
-      "types": "./src/index.ts",
-      "development": "./src/index.ts",
-      "default": "./dist/index.js"
+    "./api/public-runtime-config": {
+      "types": "./src/api/public-runtime-config.ts",
+      "development": "./src/api/public-runtime-config.ts",
+      "default": "./dist/api/public-runtime-config.js"
     }
   },
   "files": [
@@ -20,6 +18,9 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
-    "test:unit": "vitest run --passWithNoTests"
+    "test:unit": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^4.5.4"
   }
 }

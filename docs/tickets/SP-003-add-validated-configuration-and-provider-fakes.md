@@ -1,6 +1,8 @@
 # SP-003 — Add validated configuration and provider fakes
 
 Status: Required  
+Implementation state: Implemented and verified locally; awaiting user review before staging
+
 Milestone: Milestone 0 — repository and visual foundations  
 Last synchronized: 2026-08-31  
 Depends on: SP-001  
@@ -43,35 +45,49 @@ Establish typed server/public configuration and deterministic provider seams so 
 
 ## Implementation checklist
 
-- [ ] Create one validated backend configuration boundary under `apps/backend/src/config` and the explicitly browser-safe `packages/contracts/src/api/public-runtime-config.ts` subpath export.
-- [ ] Add OpenAI, ElevenLabs, Turnstile site-key/secret/hostname/actions, origins, size/time/rate limits, and paid-demo feature flags.
-- [ ] Lock provider model, agent, STT, TTS, and voice identifiers in typed configuration.
-- [ ] Define the filename-level `use-cases/ports` interfaces independent of Express and provider SDK payloads, then inject fake/live implementations through the backend composition root.
-- [ ] Add deterministic fake OpenAI, ElevenLabs, and Turnstile Siteverify adapters.
-- [ ] Remove the temporary contracts `src/index.ts`; expose only declared browser-safe contract subpaths and keep internal package files private.
-- [ ] Support Cloudflare's published non-production Turnstile test keys without permitting a production bypass.
-- [ ] Add the two application-scoped `.env.example` files with the exact blank credential fields and fake defaults from the manual gate; never add a usable or plausible credential.
-- [ ] Keep browser HTTP calls relative to `/v1`; configure the local frontend rewrite/proxy at its server boundary rather than exposing a public API-base variable to features.
-- [ ] Fail startup/readiness clearly for missing or invalid required configuration while allowing an explicitly fake local/test mode.
-- [ ] Test secret/public separation and invalid enum, URL, numeric-bound, hostname, and action values.
+- [x] Create one validated backend configuration boundary under `apps/backend/src/config` and the explicitly browser-safe `packages/contracts/src/api/public-runtime-config.ts` subpath export.
+- [x] Add OpenAI, ElevenLabs, Turnstile site-key/secret/hostname/actions, origins, size/time/rate limits, and paid-demo feature flags.
+- [x] Lock provider model, agent, STT, TTS, and voice identifiers in typed configuration.
+- [x] Define the filename-level `use-cases/ports` interfaces independent of Express and provider SDK payloads, then inject fake/live implementations through the backend composition root.
+- [x] Add deterministic fake OpenAI, ElevenLabs, and Turnstile Siteverify adapters.
+- [x] Remove the temporary contracts `src/index.ts`; expose only declared browser-safe contract subpaths and keep internal package files private.
+- [x] Support Cloudflare's published non-production Turnstile test keys without permitting a production bypass.
+- [x] Add the two application-scoped `.env.example` files with the exact blank credential fields and fake defaults from the manual gate; never add a usable or plausible credential.
+- [x] Keep browser HTTP calls relative to `/v1`; configure the local frontend rewrite/proxy at its server boundary rather than exposing a public API-base variable to features.
+- [x] Fail configuration loading clearly for missing or invalid required values while allowing an explicitly fake local/test mode; literal process-startup and `/health/ready` integration remain owned by SP-009.
+- [x] Test secret/public separation and invalid enum, URL, numeric-bound, hostname, and action values.
 
 ## Acceptance criteria
 
-- [ ] Frontend code can import only an allow-listed public configuration shape.
-- [ ] Feature and use-case modules can be tested with explicit config/adapter inputs without mutating `process.env` or relying on module-cache resets.
-- [ ] Backend startup fails with a safe field-level configuration error and never prints secret values.
-- [ ] Fake mode is explicit, deterministic, and cannot accidentally call a live provider.
-- [ ] Production mode rejects test/bypass configuration.
-- [ ] No candidate content or runtime token is represented as static configuration.
+- [x] Frontend code can import only an allow-listed public configuration shape.
+- [x] Feature and use-case modules can be tested with explicit config/adapter inputs without mutating `process.env` or relying on module-cache resets.
+- [x] Backend configuration loading fails with a safe field-level error and never prints secret values; process-startup and readiness-route behavior are deferred to SP-009.
+- [x] Fake mode is explicit, deterministic, and cannot accidentally call a live provider.
+- [x] Production mode rejects test/bypass configuration.
+- [x] No candidate content or runtime token is represented as static configuration.
 
 ## Focused verification
 
-- [ ] Run configuration unit tests for valid local, test, and production examples.
-- [ ] Run missing/invalid-secret and malformed-limit cases.
-- [ ] Build the frontend and search its output for server-only variable names and sample secret values.
-- [ ] Search source for direct `process.env`/environment-reader usage outside approved configuration and framework-config boundaries.
-- [ ] Exercise each fake adapter once and confirm stable, content-safe fixtures.
-- [ ] Verify both `.env.local` paths are ignored, both blank `.env.example` files remain trackable, and no secret-like value appears in the staged diff or frontend build.
+- [x] Run configuration unit tests for valid local, test, and production examples.
+- [x] Run missing/invalid-secret and malformed-limit cases.
+- [x] Build the frontend and search its output for server-only variable names and sample secret values.
+- [x] Search source for direct `process.env`/environment-reader usage outside approved configuration and framework-config boundaries.
+- [x] Exercise each fake adapter once and confirm stable, content-safe fixtures.
+- [x] Verify both `.env.local` paths are ignored, both blank `.env.example` files remain trackable, and no secret-like value appears in the staged diff or frontend build.
+
+## Implementation record
+
+- Implemented on 2026-08-31 with the repository-pinned Node.js 24.20.0 and pnpm 11.24.0 toolchain. The single offline install reused the existing store and updated only workspace importer metadata in `pnpm-lock.yaml`.
+- Added Zod 4.5.4 as a direct runtime dependency of backend and contracts. It owns strict environment/public-boundary validation and was already resolved transitively in the lockfile, so no second environment library or provider SDK was added.
+- The backend loader accepts an explicit environment record, performs no work at module import, reports safe field paths/messages without values, and projects browser-safe runtime data through the strict contract schema. Production requires live mode, complete credential groups, HTTPS origins, non-local hostnames, different application secrets, and non-test Turnstile keys; fake mode rejects paid-demo enablement.
+- Locked GPT-5.4 mini with reasoning `none`/`store: false`, ElevenAgents, Scribe v2 Realtime, Flash v2.5, Turnstile Siteverify URL/actions, public limits, request/expiry bounds, and per-instance rate-limit settings in typed configuration. User-owned agent, voice, site-key, and secret fields remain exactly blank in the committed template.
+- Added Express/SDK-independent use-case ports plus dependency-free fake OpenAI, ElevenLabs, and Turnstile adapters. Fake selection creates no network-capable client; live mode throws unless the later composition root injects an adapter set explicitly.
+- `createProviderAdapters` currently accepts the general `ProviderAdapters` type for live injection, so TypeScript does not distinguish genuine live adapters from fakes; the unit test deliberately injects the fake set in live mode to prove explicit injection is honored. This is not a silent fallback or an SP-003 blocker, but SP-009/later live composition should construct or brand genuine live adapters so the invariant is clearer.
+- Removed the contracts root entry point. The declared public subpath resolves from the frontend workspace, while the package root remains blocked by `exports`.
+- Configuration/adapter unit tests passed for local fake, test fake, non-production published Turnstile test keys, and production live examples; missing groups, secret redaction, enums, URLs, numeric bounds, hostnames, actions, fake/live selection, and stable content-safe fake outputs are covered. Contracts reported 3 passing tests and backend reported 19.
+- Targeted contracts/backend lint, contracts/backend/frontend typecheck, backend/contracts build, package-export probes, ignore/blank-template checks, source environment-reader scan, frontend build-output secret scan, and `pnpm verify:quick` passed. No UI behavior changed, so responsive visual verification was not applicable.
+- The loader's fail-safe behavior was exercised directly, but literal backend process startup and `GET /health/ready` were not exercised because `app.ts`, `server.ts`, and the readiness route are owned by SP-009. SP-009 must call this loader at composition/startup and expose the resulting readiness behavior without printing values.
+- Live OpenAI, ElevenLabs, real-host Turnstile, and paid-call checks remain blocked by **waiting for user-supplied credentials and permission for paid testing**. No usable `.env.local` file or provider call was created.
 
 ## Commit boundary
 
@@ -89,3 +105,8 @@ Keep SP-003 reviewable as one logical change represented by `feat(config): valid
 ## Completion handoff
 
 Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
+
+Non-blocking follow-ups carried into later tickets:
+
+- SP-009 must wire configuration loading into actual process composition and verify `/health/ready`; SP-003 verified the loader rather than a server route that does not yet exist.
+- Live composition should construct or brand genuine live adapters instead of relying only on the structural `ProviderAdapters` type. Explicit injection already prevents a silent fake fallback, but the type alone cannot prove the injected set is live.

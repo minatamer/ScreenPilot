@@ -193,6 +193,20 @@ export default tseslint.config(
     },
   },
   {
+    files: ["apps/backend/src/**/*.test.ts"],
+    rules: {
+      "import-x/no-extraneous-dependencies": [
+        "error",
+        {
+          devDependencies: true,
+          optionalDependencies: false,
+          packageDir: [backendPackageDirectory, repositoryRoot],
+          peerDependencies: false,
+        },
+      ],
+    },
+  },
+  {
     files: ["packages/contracts/src/**/*.ts"],
     rules: {
       "import-x/no-extraneous-dependencies": [
@@ -261,6 +275,20 @@ export default tseslint.config(
                 "Contracts are a browser-safe dependency leaf and use package-relative imports only.",
             },
           ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["packages/contracts/src/**/*.test.ts"],
+    rules: {
+      "import-x/no-extraneous-dependencies": [
+        "error",
+        {
+          devDependencies: true,
+          optionalDependencies: false,
+          packageDir: [contractsPackageDirectory, repositoryRoot],
+          peerDependencies: false,
         },
       ],
     },
