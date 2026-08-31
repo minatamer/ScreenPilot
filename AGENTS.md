@@ -1,0 +1,111 @@
+# ScreenPilot repository instructions
+
+These instructions apply to the entire repository. The implementation authority is `docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`; work from the relevant `docs/tickets/SP-*.md` packet and update both when a material architecture or product decision changes.
+
+## Scope and privacy
+
+- ScreenPilot is a stateless, privacy-minded AI-assisted screening demo. It supports recruiter judgment and never makes an automated hiring decision.
+- Keep candidate content in the active browser/request lifecycle only. Do not add a database, ORM, cache, queue, object storage, candidate registry, hidden filesystem persistence, analytics payload, or durable server session.
+- Never commit or expose a usable API key, provider secret, service-account file, candidate CV, transcript, interview audio, or generated candidate summary. Committed environment examples keep user-owned credentials and identifiers exactly blank.
+- Provider secrets stay backend-only. Browser code calls relative `/v1` endpoints and never receives OpenAI or ElevenLabs credentials.
+- Default development and CI must be deterministic, fake, and unable to spend provider credits unless a later ticket and the user explicitly authorize live testing.
+- Treat public `docs/` as source-controlled project documentation. Keep deliberate private notes/exports only in the narrow paths excluded by `.gitignore`.
+- Do not stage, commit, push, or rewrite Git history unless the user explicitly asks for that Git action.
+
+## Repository map and dependency direction
+
+```text
+apps/frontend       @screenpilot/frontend  Next.js application
+apps/backend        @screenpilot/backend   Express/Node.js application
+packages/contracts  @screenpilot/contracts Browser-safe cross-boundary contracts
+```
+
+The only internal dependency direction is `frontend -> contracts <- backend`. Applications never import one another. `packages/contracts` cannot import React, Next.js, Express, Node-only APIs, environment readers, provider SDKs, fixtures, or application code.
+
+Do not pre-create the target tree. Each ticket creates only the files and directories it owns with real behavior.
+
+## Structure and responsibility
+
+- Organize frontend code by product feature (`session`, `entry`, `cv`, `plan`, `preflight`, `interview`, `transcript`, `review`, `privacy`) rather than one large generic component folder.
+- Organize backend code by use case (`bootstrap`, `interview-preparation`, `cv-analysis`, `voice-token`, `summary`) with provider adapters separated from HTTP transport.
+- Keep Next.js `app` route files thin: they compose feature entry points, metadata, and framework boundaries rather than owning workflow/provider logic.
+- Give every module, function, hook, and component one clear responsibility.
+- Keep route handlers thin: validate, call a use-case function, and map the result to an HTTP response.
+- Keep provider SDK details behind small typed adapters so OpenAI/ElevenLabs payloads do not spread through product code.
+- Keep browser side effects—storage, microphone, timers, SDK subscriptions, and network calls—behind explicit hooks/services with cleanup behavior.
+- Prefer pure functions for parsing, normalization, validation, reducers, evidence linking, and cost/timing calculations.
+- Do not create catch-all `utils`, `helpers`, `common`, or `misc` modules. Name modules after the domain behavior they own.
+
+## Modularity and reuse
+
+- Before adding a component, hook, schema, token, helper, or constant, search for an existing equivalent and extend it when responsibilities align.
+- Reuse design primitives, field/error patterns, loading states, provider-error panels, evidence chips, and responsive layout utilities instead of copying markup or styles.
+- Put only cross-application API/interview/tool/provider-output schemas in `packages/contracts`; do not move frontend-only workflow or persistence models there merely to make them look shared.
+- Enforce the dependency graph: applications may import `@screenpilot/contracts`, contracts import neither application, and applications never import one another.
+- Extract a shared component when it is reused, represents a stable design-system primitive, or must behave consistently across stages.
+- Do not force unrelated components into an overly generic abstraction merely to avoid a few repeated lines. Prefer clear duplication over the wrong abstraction, then extract once the shared contract is real.
+- Use composition and variants instead of large components controlled by many unrelated boolean props.
+- Do not create separate device-class feature implementations. Share components/state/semantics and adapt composition continuously through responsive layout primitives.
+
+## React/frontend quality
+
+- Keep page and stage components focused on composition; move stateful browser/provider behavior into named hooks or feature services.
+- Keep the canonical demo reducer as the only workflow-stage authority; do not mirror stage state across unrelated local states.
+- Persist through an explicit allow-listed projection schema; never serialize the complete reducer/runtime object and attempt to remove forbidden fields afterward.
+- Keep browser-only APIs behind client boundaries so server rendering and initial hydration never read `window`, `sessionStorage`, `File`, or media devices.
+- Derive values instead of storing duplicate state that can become inconsistent.
+- Use stable semantic keys and explicit discriminated unions for async/loading/success/error states.
+- Always unsubscribe SDK listeners, stop timers/media tracks, revoke temporary object URLs, and cancel obsolete requests on cleanup.
+- Lazy-load heavy PDF and voice dependencies only when their stage needs them.
+- Avoid unnecessary renders and repeated parsing/serialization, but do not add memoization without a measurable or structurally obvious benefit.
+- Build accessibility and desktop/mobile parity into the component API; do not bolt them on as separate patches later.
+
+## Backend/API quality
+
+- Validate every external boundary with the shared Zod contract before business logic runs.
+- Keep Express middleware order explicit and documented: request ID and structured logging, security headers, restricted CORS, bounded parsers/cookies, routes, not-found handling, then the terminal error mapper.
+- Construct the Express application separately from the listening process so routes can be tested through Supertest without opening a network port.
+- Use Express 5 async-handler rejection propagation and one terminal error middleware; never send a response and then call `next()`.
+- Use typed domain errors and one stable API error mapper; never scatter ad hoc error response shapes.
+- Set explicit timeouts, body/output limits, abort propagation, and retry rules for provider calls.
+- Never retry validation, authentication, rate-limit, or non-retryable provider failures.
+- Avoid duplicate OpenAI/ElevenLabs calls: one user action produces at most the documented provider operation unless the bounded retry policy explicitly applies.
+- Pass only the minimum required CV/transcript context to a provider and release large request references after use.
+- Keep configuration and model/provider identifiers centralized and validated; no magic environment reads inside feature modules.
+- Pass configuration and provider implementations into application/use-case composition; importing a module must not open a port, read candidate data, or start a network call.
+- Make statelessness visible in code: no repository/data-access layer, hidden filesystem cache, in-memory candidate registry, or persistence-shaped abstraction.
+
+## Efficiency and dependency discipline
+
+- Optimize the high-impact path first: bundle size, PDF parsing, WebRTC startup, prompt/context size, transcript updates, and insight-card rendering.
+- Avoid repeated full-array scans or complete session rewrites on high-frequency live events when an indexed or incremental update is clearer.
+- Bound every user/provider collection and text field before copying, transforming, rendering, or sending it onward.
+- Prefer platform/framework capabilities and existing approved dependencies over adding a new package for a small helper.
+- Every new dependency must have a clear owner/use, acceptable browser/server footprint, and no duplication of an existing capability.
+- Remove unused dependencies, exports, feature flags, dead branches, stale TODOs, and superseded components as part of the ticket that makes them obsolete.
+- Do not perform speculative optimization that obscures the code; measure latency/render/bundle problems and document material tradeoffs.
+
+## Readability and maintainability
+
+- Use explicit domain names such as `interviewGrant`, `finalTranscriptTurn`, and `voiceConnectionState`; avoid vague names such as `data`, `item`, `handler`, or `process` when a precise name exists.
+- Keep functions short enough that their contract and failure behavior are visible without scrolling through unrelated work.
+- Replace unexplained literals with named constants from the owning feature/config module.
+- Comments explain intent, privacy constraints, unusual provider behavior, or tradeoffs—not code that is already obvious.
+- Do not swallow errors, use empty catches, leave unhandled promises, or log-and-continue when state correctness is uncertain.
+- Prefer early returns and explicit branches over deeply nested conditionals.
+- Keep public exports narrow; do not expose internal implementation details through package barrel files.
+
+## Ticket completion quality check
+
+Before considering a ticket complete:
+
+1. Search for newly introduced duplicate components, schemas, constants, styles, and provider calls.
+2. Confirm module boundaries and dependency direction still match the source of truth.
+3. Confirm no dead code, debug output, unsafe cast, secret, candidate content, or stale TODO was introduced.
+4. Check cleanup for listeners, timers, requests, object URLs, microphone tracks, and voice sessions touched by the ticket.
+5. Check changed UI manually at the relevant phone, tablet, laptop/desktop, and large-monitor anchors plus at least one intermediate drag-resized width.
+6. Run only the smallest relevant targeted typecheck/test command under the plan's verification matrix.
+7. Update contracts/documentation when behavior or a public boundary changed.
+
+Report every verification performed and leave anything requiring credentials, paid calls, visual approval, or user-only setup explicitly unchecked with its blocker.
+

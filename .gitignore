@@ -1,0 +1,47 @@
+# Dependencies and package-manager state
+node_modules/
+.pnpm-store/
+
+# Generated application and package output
+.next/
+dist/
+out/
+coverage/
+*.tsbuildinfo
+
+# Test and browser-run artifacts
+playwright-report/
+test-results/
+
+# Logs and local process files
+*.log
+*.pid
+*.pid.lock
+
+# Local environment files; commit only blank templates
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Never commit downloaded cloud credentials
+**/service-account*.json
+**/*service-account-key*.json
+**/gcp-credentials*.json
+**/application_default_credentials.json
+
+# Keep public project docs tracked; ignore only private local notes/exports
+docs/private/
+docs/**/*.local.md
+docs/operations/private/
+docs/operations/provider-exports/
+
+# Local editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+

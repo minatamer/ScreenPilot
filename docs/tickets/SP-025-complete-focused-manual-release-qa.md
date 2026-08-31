@@ -1,0 +1,96 @@
+# SP-025 — Complete focused manual release QA
+
+Status: Required  
+Milestone: Milestone 4 — public-demo hardening  
+Last synchronized: 2026-08-31  
+Depends on: SP-017, SP-018, SP-021, SP-022, SP-023, SP-024  
+Suggested commit: `test: complete focused demo release checks`  
+Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
+Ticket index: [`README.md`](README.md)
+
+---
+
+## Objective
+
+Run the complete focused manual acceptance pass and one fast release gate, resolve every release blocker, and approve the demo without requiring the optional comprehensive automation suite.
+
+## Standalone implementation context
+
+- Manual approval is intentionally primary. SP-028 remains optional and cannot block release.
+- Run the smallest relevant targeted checks while investigating; run the full quick gate once at this release boundary.
+- One controlled live ElevenLabs/OpenAI smoke interview is required per entry mode, with explicit permission/cost awareness.
+- The pre-measurement reserve is $0.80 per standard eight-minute flow or $1.40 if burst is deliberately enabled. The base estimate is about $0.70, but release evidence must use the provider dashboards rather than restating the estimate as measured fact.
+- All complete paths must be reviewed on phone, tablet, compact laptop, laptop/desktop, large monitor, and intermediate drag-resized widths.
+- Release requires measured latency gates, privacy/retention alignment, Turnstile recovery, provider failures, and natural HR-only conversation.
+
+## Manual live-credential gate
+
+- Run all unpaid/fake release checks before asking for live values. The controlled live pass needs the complete user-supplied OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit permission to incur provider charges.
+- Confirm both local `.env.local` paths are ignored and absent from `git status` before the user fills the backend file. Never record secret values in the manual matrix, defect evidence, screenshots, network exports, or provider-revision notes.
+- If credentials, account balance, production widget, or paid-test permission are unavailable, do not fake a live pass. Record every unpaid result, mark the two live smoke interviews/real-host challenges blocked, and withhold release approval until the manual gate is satisfied.
+
+## Scope boundaries
+
+- Do not expand this into Playwright/visual/AI automation, a device lab, new features, or portfolio packaging.
+- Do not waive a release blocker because the happy path works on one desktop.
+- Do not use real applicant data or publish unmeasured latency/cost claims.
+- Do not make uncontrolled repeated paid calls.
+- Do not turn QA fixes into unrelated refactors or adjacent ticket scope.
+
+## Implementation checklist
+
+- [ ] Verify sample CV → local extraction → protected analysis → grounded plan preview → shared preflight.
+- [ ] Verify a different uploaded text PDF produces materially different grounded facts/topics and no sample leakage.
+- [ ] Verify conversation-first skips CV/provider preparation, begins open, focuses progressively, and yields Candidate-only review.
+- [ ] Verify missing/incorrect name, suggested-role confirmation, opposite-role correction, Frontend, Backend, both, Full Stack redirection, and neither-role general follow-up.
+- [ ] Verify invalid/scanned PDF failure remains local and does not affect conversation-first.
+- [ ] Verify consent, microphone, valid grant, and Turnstile readiness prevent premature voice-token requests.
+- [ ] Verify fake/controlled live voice produces captions, evidence-linked insight cards, corrections, transcript, summary, and review in both modes.
+- [ ] Verify mid-call disconnect/refresh produces honest partial review and never auto-reconnects.
+- [ ] Verify Turnstile missing/invalid/replayed/expired/wrong-host/action blocks paid providers and fresh retry preserves safe local state.
+- [ ] Verify summary failure preserves transcript/insights and can retry.
+- [ ] Verify Clear session removes all browser candidate content.
+- [ ] Verify both complete flows and all error/retry states at every responsive anchor and intermediate widths, including portrait/landscape, safe areas, virtual keyboard, long captions, sticky controls, reduced motion, 200% zoom, and keyboard.
+- [ ] Read representative agent turns aloud: 8–25-word target, normal 35-word ceiling, one question, direct tone, no canned acknowledgement/praise/tool narration.
+- [ ] Verify candidate counterquestions are answered first, unclear audio is clarified without evidence, and timing/interruption settings—not prompt filler—handle latency.
+- [ ] Verify normal 8–10-prompt HR coverage, multi-field answer credit, one broad role-context clarification maximum, and zero technical follow-up chains.
+- [ ] Run the smallest targeted release-critical unit/backend checks, then the complete fast default commands once.
+- [ ] Run one controlled live smoke interview per entry mode and record provider revision, date, measured behavior, and cost.
+- [ ] Create `docs/operations/full-flow-cost-baseline.md` from a blank sanitized template and record each flow's date, mode, revision, connection duration, direct OpenAI usage, ElevenLabs standard/burst minute charge, live-LLM Detailed costs, credits/free minutes applied, infrastructure overage, and total.
+- [ ] Run at least three complete flows before publishing a portfolio unit-cost claim; compare estimated versus actual totals and explain any variance greater than 20%.
+- [ ] Record, fix, and retest every release-blocking functional, responsive, privacy, security, latency, and provider issue.
+
+## Acceptance criteria
+
+- [ ] Every required Section 18 manual scenario has a recorded pass across the relevant responsive matrix.
+- [ ] The complete quick gate passes once on the release candidate.
+- [ ] Both controlled live entry-mode smokes pass without retention/privacy/scope drift.
+- [ ] No release-blocking conversation, latency, evidence, Turnstile, responsive, accessibility, privacy, or provider defect remains.
+- [ ] Any non-blocking known limitation is documented honestly and does not contradict definition of done.
+- [ ] SP-026 can deploy the exact approved release candidate.
+
+## Focused verification
+
+- [ ] Run `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, and `pnpm build` once.
+- [ ] Use a written manual matrix recording environment, viewport/browser, scenario, result, evidence, and defect link.
+- [ ] Re-run the smallest affected scenario/check after each fix and the complete quick gate only at the final boundary.
+- [ ] Review provider dashboards/logs/browser storage after controlled live smokes for cost and privacy expectations.
+- [ ] Verify the cost file contains no CV/transcript text, candidate identity, API key, account ID, Turnstile token, or secret-bearing billing screenshot.
+- [ ] Obtain explicit user approval of the release candidate and unresolved non-blocking limitations.
+
+## Commit boundary
+
+Keep SP-025 reviewable as one logical change represented by `test: complete focused demo release checks`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
+
+## Precision references
+
+- [Required manual acceptance sheet](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#required-manual-acceptance-sheet)
+- [Performance gates](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#performance-gates)
+- [Definition of done](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#20-definition-of-done)
+- [Lean verification rules](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#18-lean-verification-strategy)
+- [Credential acquisition and paid-test gate](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup)
+- [Full-flow cost assumptions, free allowances, and reconciliation](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#13-elevenlabs--openai-research-and-cost-plan)
+
+## Completion handoff
+
+Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.

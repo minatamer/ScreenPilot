@@ -1,0 +1,15 @@
+{
+  "name": "@screenpilot/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsc --watch --preserveWatchOutput",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@screenpilot/contracts": "workspace:*"
+  }
+}
+

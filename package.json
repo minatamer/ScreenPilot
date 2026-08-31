@@ -1,0 +1,27 @@
+{
+  "name": "screen-pilot",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Stateless AI-assisted candidate-screening demo workspace.",
+  "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": "11.24.0"
+  },
+  "scripts": {
+    "build": "pnpm --recursive --workspace-concurrency=1 run build",
+    "typecheck": "pnpm --recursive --workspace-concurrency=1 run typecheck",
+    "dev:frontend": "pnpm --filter @screenpilot/frontend dev",
+    "dev:backend": "pnpm --filter @screenpilot/backend dev",
+    "build:frontend": "pnpm --filter @screenpilot/frontend... run build",
+    "build:backend": "pnpm --filter @screenpilot/backend... run build",
+    "build:contracts": "pnpm --filter @screenpilot/contracts run build",
+    "typecheck:frontend": "pnpm --filter @screenpilot/frontend run typecheck",
+    "typecheck:backend": "pnpm --filter @screenpilot/backend run typecheck",
+    "typecheck:contracts": "pnpm --filter @screenpilot/contracts run typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
