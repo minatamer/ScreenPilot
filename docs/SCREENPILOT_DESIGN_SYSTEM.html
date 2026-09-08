@@ -3,82 +3,54 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light dark" />
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='10' fill='%23070A12'/%3E%3Cpath d='M8 19c3-7 6-7 8 0s5 7 8 0' fill='none' stroke='%2335D4E7' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E"
-    />
     <meta
       name="description"
-      content="ScreenPilot Signal Canvas design-system reference: tokens, responsive rules, accessible states, and compact composition samples."
+      content="The approved ScreenPilot visual reference: final landing hero, color theme, typography, layout, components, and active-interview direction."
     />
-    <title>ScreenPilot — Signal Canvas design-system reference</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>ScreenPilot — Visual design reference</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%2318243A'/%3E%3Cpath d='M7 9.5 25 5l-5.2 20-4.4-7.2-8.4-8.3Z' fill='%23F26B5B'/%3E%3C/svg%3E"
+    />
     <style>
       :root {
         color-scheme: light;
 
-        /* Locked Signal Canvas color tokens */
-        --ink-950: #070a12;
-        --ink-900: #0d1220;
-        --paper-50: #f7f8fc;
+        /* Approved ScreenPilot palette */
+        --ink-950: #18243a;
+        --ink-900: #22314b;
+        --paper-50: #fafaf8;
         --paper-0: #ffffff;
-        --violet-500: #7c5cfc;
-        --cyan-400: #35d4e7;
-        --mint-400: #52d6a2;
-        --amber-400: #f1b84b;
-        --rose-400: #f06a8a;
+        --coral-300: #fca39a;
+        --coral-500: #f26b5b;
+        --coral-700: #cc493f;
+        --coral-800: #b93831;
+        --coral-100: #fde8e4;
         --slate-500: #667085;
+        --line-200: #e4e7ec;
+        --line-strong: #7d899b;
 
-        /* Surface-specific supporting values */
-        --light-border: #dfe3ec;
-        --light-border-strong: #c9d0de;
-        --dark-border: #273047;
-        --dark-border-strong: #3b4762;
-        --light-text: var(--ink-950);
-        --light-muted: var(--slate-500);
-        --dark-text: var(--paper-50);
-        --dark-muted: #adb7ca;
-        --focus-ring: var(--cyan-400);
+        /* Separate status colors */
+        --success-600: #067647;
+        --success-400: #52d6a2;
+        --warning-700: #8a4b0f;
+        --warning-400: #f79009;
+        --danger-600: #b42318;
+        --danger-400: #f97066;
 
-        /* One 8 px rhythm, with 4 px reserved for optical micro-spacing */
-        --space-0-5: 4px;
-        --space-1: 8px;
-        --space-2: 16px;
-        --space-3: 24px;
-        --space-4: 32px;
-        --space-6: 48px;
-        --space-8: 64px;
-        --space-12: 96px;
-
+        --dark-text: #fafaf8;
+        --dark-muted: #d0d5dd;
+        --dark-line: rgb(253 232 228 / 18%);
+        --dark-line-strong: rgb(242 107 91 / 56%);
+        --shadow-soft: 0 18px 56px rgb(24 36 58 / 10%);
+        --shadow-coral: 0 12px 30px rgb(204 73 63 / 24%);
         --radius-control: 12px;
-        --radius-card-sm: 18px;
         --radius-card: 20px;
-        --radius-card-lg: 22px;
         --radius-canvas: 28px;
-
-        --shadow-soft: 0 18px 50px rgb(18 24 40 / 8%);
-        --shadow-dark: 0 24px 80px rgb(0 0 0 / 24%);
-        --content-max: 1200px;
-        --reading-max: 720px;
-        --gutter: clamp(16px, 4vw, 48px);
-
-        --motion-fast: 180ms;
-        --motion-default: 220ms;
-        --motion-insight: 400ms;
-        --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
-
-        font-family:
-          "Geist Sans",
-          Geist,
-          Inter,
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          sans-serif;
-        font-synthesis: none;
-        text-rendering: optimizeLegibility;
+        --content: 1200px;
+        --reading: 720px;
+        --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
       }
 
       *,
@@ -92,13 +64,22 @@
       }
 
       body {
-        min-width: 0;
         margin: 0;
-        overflow-x: hidden;
         background: var(--paper-50);
-        color: var(--light-text);
+        color: var(--ink-950);
+        font-family:
+          Geist,
+          "Geist Sans",
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
         font-size: 16px;
-        line-height: 1.5625;
+        line-height: 1.56;
+        text-rendering: optimizeLegibility;
       }
 
       button,
@@ -107,160 +88,21 @@
       }
 
       button,
-      a,
-      input {
+      a {
         -webkit-tap-highlight-color: transparent;
-      }
-
-      button:focus-visible,
-      a:focus-visible,
-      input:focus-visible,
-      [tabindex]:focus-visible {
-        outline: 3px solid var(--focus-ring);
-        outline-offset: 3px;
       }
 
       a {
         color: inherit;
-        text-underline-offset: 0.18em;
       }
 
+      img,
       svg {
         display: block;
       }
 
-      .skip-link {
-        position: fixed;
-        z-index: 100;
-        inset: 12px auto auto 12px;
-        min-height: 44px;
-        padding: 10px 16px;
-        translate: 0 -160%;
-        border-radius: var(--radius-control);
-        background: var(--paper-0);
-        color: var(--ink-950);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .skip-link:focus {
-        translate: 0;
-      }
-
-      .site-header {
-        position: sticky;
-        z-index: 20;
-        top: 0;
-        border-bottom: 1px solid rgb(201 208 222 / 78%);
-        background: rgb(247 248 252 / 88%);
-        backdrop-filter: blur(14px);
-      }
-
-      .header-inner,
-      .shell {
-        width: min(100% - (2 * var(--gutter)), var(--content-max));
-        margin-inline: auto;
-      }
-
-      .header-inner {
-        min-height: 68px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--space-2);
-      }
-
-      .brand {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        color: var(--ink-950);
-        font-size: 15px;
-        font-weight: 650;
-        letter-spacing: -0.02em;
-        text-decoration: none;
-      }
-
-      .brand-mark {
-        width: 30px;
-        height: 30px;
-      }
-
-      .header-nav {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 4px;
-      }
-
-      .header-nav a {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
-        padding: 8px 12px;
-        border-radius: 10px;
-        color: var(--slate-500);
-        font-size: 13px;
-        font-weight: 600;
-        text-decoration: none;
-      }
-
-      .header-nav a:hover {
-        background: var(--paper-0);
-        color: var(--ink-950);
-      }
-
-      .hero {
-        position: relative;
-        isolation: isolate;
-        padding-block: clamp(64px, 10vw, 120px) clamp(56px, 8vw, 96px);
-      }
-
-      .hero::before {
-        position: absolute;
-        z-index: -1;
-        width: min(760px, 90vw);
-        height: 420px;
-        top: 22px;
-        left: 50%;
-        border-radius: 50%;
-        background:
-          radial-gradient(circle at 30% 45%, rgb(124 92 252 / 22%), transparent 48%),
-          radial-gradient(circle at 72% 35%, rgb(53 212 231 / 18%), transparent 44%);
-        filter: blur(40px);
-        content: "";
-        translate: -50% 0;
-      }
-
-      .eyebrow,
-      .metadata {
-        font-family:
-          "Geist Mono",
-          "SFMono-Regular",
-          Consolas,
-          "Liberation Mono",
-          monospace;
-        font-size: 12px;
-        font-weight: 550;
-        line-height: 18px;
-        letter-spacing: 0.03em;
-      }
-
-      .eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        margin: 0 0 var(--space-2);
-        color: #5135c5;
-      }
-
-      .eyebrow::before {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: var(--violet-500);
-        box-shadow: 0 0 0 5px rgb(124 92 252 / 12%);
-        content: "";
+      img {
+        max-width: 100%;
       }
 
       h1,
@@ -270,431 +112,288 @@
         margin-top: 0;
       }
 
-      h1 {
-        max-width: 880px;
-        margin-bottom: var(--space-3);
-        font-size: clamp(38px, 6vw, 56px);
-        font-weight: 600;
-        line-height: 1.0714;
-        letter-spacing: -0.055em;
+      h1,
+      h2,
+      h3 {
         text-wrap: balance;
       }
 
-      h2 {
-        margin-bottom: var(--space-2);
-        font-size: clamp(26px, 4vw, 32px);
+      h1 {
+        max-width: 760px;
+        margin-bottom: 20px;
+        font-size: clamp(38px, 5vw, 56px);
         font-weight: 600;
-        line-height: 1.1875;
+        line-height: 1.07;
+        letter-spacing: -0.05em;
+      }
+
+      h2 {
+        margin-bottom: 12px;
+        font-size: clamp(28px, 3.5vw, 32px);
+        font-weight: 600;
+        line-height: 1.19;
         letter-spacing: -0.035em;
-        text-wrap: balance;
       }
 
       h3 {
         margin-bottom: 8px;
-        font-size: 15px;
+        font-size: 16px;
         font-weight: 650;
-        line-height: 20px;
-        letter-spacing: -0.01em;
+        line-height: 1.35;
+        letter-spacing: -0.015em;
       }
 
-      .hero-copy {
-        max-width: 720px;
-        margin-bottom: var(--space-4);
-        color: var(--slate-500);
-        font-size: 18px;
-        line-height: 28px;
+      .skip-link {
+        position: fixed;
+        z-index: 100;
+        top: 12px;
+        left: 12px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: var(--ink-950);
+        color: var(--paper-0);
+        transform: translateY(-160%);
       }
 
-      .thesis-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+      .skip-link:focus {
+        transform: translateY(0);
       }
 
-      .thesis-step {
-        min-height: 112px;
-        padding: 20px;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card);
-        background: rgb(255 255 255 / 78%);
-        box-shadow: 0 8px 28px rgb(18 24 40 / 4%);
+      :focus-visible {
+        outline: 3px solid var(--coral-700);
+        outline-offset: 3px;
       }
 
-      .thesis-step p {
-        margin: 0;
-        color: var(--slate-500);
-        font-size: 14px;
-        line-height: 21px;
+      .shell {
+        width: min(calc(100% - clamp(32px, 7vw, 96px)), var(--content));
+        margin-inline: auto;
       }
 
-      .section {
-        padding-block: clamp(56px, 8vw, 96px);
-        border-top: 1px solid var(--light-border);
+      .site-header {
+        position: relative;
+        z-index: 10;
+        border-bottom: 1px solid var(--line-200);
+        background: rgb(250 250 248 / 92%);
+        backdrop-filter: blur(12px);
       }
 
-      .section-heading {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
-        gap: var(--space-4);
-        align-items: end;
-        margin-bottom: var(--space-4);
-      }
-
-      .section-heading p {
-        margin-bottom: 0;
-        color: var(--slate-500);
-      }
-
-      .kicker {
-        margin-bottom: 8px;
-        color: #5135c5;
-      }
-
-      .swatch-grid {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
-        gap: 12px;
-      }
-
-      .swatch {
-        min-width: 0;
-        overflow: hidden;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-sm);
-        background: var(--paper-0);
-      }
-
-      .swatch-color {
-        min-height: 112px;
+      .header-inner {
+        min-height: 72px;
         display: flex;
-        align-items: flex-end;
-        padding: 14px;
-        background: var(--swatch);
-        color: var(--swatch-fg);
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
       }
 
-      .swatch-color span {
-        padding: 4px 8px;
-        border: 1px solid currentcolor;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 650;
-        line-height: 18px;
+      .brand {
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        font-weight: 700;
+        letter-spacing: -0.025em;
       }
 
-      .swatch-copy {
-        padding: 14px;
+      .brand-mark {
+        width: 30px;
+        height: 30px;
       }
 
-      .swatch-copy strong,
-      .swatch-copy code {
-        display: block;
-      }
-
-      .swatch-copy strong {
+      .guide-nav {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        color: var(--slate-500);
         font-size: 14px;
       }
 
-      .swatch-copy code,
-      .token-line code {
-        color: var(--slate-500);
+      .guide-nav a {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+      }
+
+      .guide-nav a:hover {
+        color: var(--ink-950);
+      }
+
+      .guide-label,
+      .eyebrow,
+      .meta {
         font-family:
           "Geist Mono",
           "SFMono-Regular",
           Consolas,
           monospace;
         font-size: 12px;
-      }
-
-      .swatch-copy p {
-        margin: 8px 0 0;
-        color: var(--slate-500);
-        font-size: 12px;
+        font-weight: 600;
         line-height: 18px;
+        letter-spacing: 0.035em;
       }
 
-      .surface-pair,
-      .type-grid,
-      .geometry-grid,
-      .entry-grid,
-      .sample-grid,
-      .motion-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--space-2);
-      }
-
-      .entry-grid {
-        grid-auto-rows: 1fr;
-      }
-
-      .surface-pair {
-        margin-top: var(--space-2);
-      }
-
-      .surface-card,
-      .type-panel,
-      .geometry-panel,
-      .sample-panel,
-      .motion-panel {
-        min-width: 0;
-        padding: clamp(20px, 3vw, 32px);
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-lg);
+      .guide-label {
+        padding: 5px 9px;
+        border: 1px solid var(--line-200);
+        border-radius: 999px;
         background: var(--paper-0);
-      }
-
-      .surface-card.dark,
-      .type-panel.dark {
-        border-color: var(--dark-border);
-        background: var(--ink-950);
-        color: var(--dark-text);
-        box-shadow: var(--shadow-dark);
-      }
-
-      .surface-card p,
-      .type-panel p,
-      .geometry-panel p,
-      .sample-panel > p,
-      .motion-panel p {
         color: var(--slate-500);
       }
 
-      .surface-card.dark p,
-      .type-panel.dark p {
-        color: var(--dark-muted);
-      }
-
-      .type-display {
-        margin-bottom: 22px;
-        font-size: clamp(38px, 5vw, 56px);
-        font-weight: 600;
-        line-height: 1.0714;
-        letter-spacing: -0.05em;
-      }
-
-      .type-title {
-        margin-bottom: 16px;
-        font-size: 32px;
-        font-weight: 600;
-        line-height: 38px;
-        letter-spacing: -0.035em;
-      }
-
-      .type-body {
-        max-width: 58ch;
-        margin-bottom: 16px;
-        font-size: 16px;
-        line-height: 25px;
-      }
-
-      .font-stack {
-        margin: 20px 0 0;
-        padding-top: 16px;
-        border-top: 1px solid var(--light-border);
-        color: var(--slate-500);
-        font-size: 12px;
-        line-height: 18px;
-      }
-
-      .dark .font-stack {
-        border-color: var(--dark-border);
-        color: var(--dark-muted);
-      }
-
-      .scale-strip {
-        display: flex;
-        align-items: end;
-        gap: clamp(8px, 2vw, 20px);
-        min-height: 128px;
-        padding: 20px;
+      .landing-sample {
+        position: relative;
+        isolation: isolate;
+        padding-block: clamp(48px, 8vw, 96px);
         overflow: hidden;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-lg);
-        background: var(--paper-0);
       }
 
-      .space-token {
-        min-width: 34px;
-        display: grid;
-        justify-items: center;
-        gap: 8px;
-        color: var(--slate-500);
-        font: 500 11px/16px "Geist Mono", Consolas, monospace;
+      .landing-sample::before {
+        position: absolute;
+        z-index: -1;
+        width: min(820px, 95vw);
+        height: 460px;
+        top: 10px;
+        left: 50%;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle at 28% 40%, rgb(242 107 91 / 20%), transparent 46%),
+          radial-gradient(circle at 73% 36%, rgb(253 232 228 / 92%), transparent 42%);
+        filter: blur(34px);
+        content: "";
+        translate: -50% 0;
       }
 
-      .space-bar {
-        width: 26px;
-        height: var(--measure);
-        max-height: 96px;
-        border-radius: 6px 6px 2px 2px;
-        background: linear-gradient(180deg, var(--violet-500), var(--cyan-400));
-      }
-
-      .layout-rules {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
-        margin-top: var(--space-2);
-      }
-
-      .rule-card {
-        padding: 18px;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-sm);
-        background: var(--paper-0);
-      }
-
-      .rule-card p {
-        margin: 0;
-        color: var(--slate-500);
-        font-size: 13px;
-        line-height: 20px;
-      }
-
-      .anchor-table-wrap {
-        margin-top: var(--space-2);
-        overflow-x: auto;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-sm);
-        background: var(--paper-0);
-      }
-
-      table {
-        width: 100%;
-        min-width: 720px;
-        border-collapse: collapse;
-        text-align: left;
-      }
-
-      th,
-      td {
-        padding: 14px 16px;
-        border-bottom: 1px solid var(--light-border);
-        vertical-align: top;
-      }
-
-      tr:last-child td {
-        border-bottom: 0;
-      }
-
-      th {
-        color: var(--slate-500);
-        font-size: 12px;
-        font-weight: 650;
-      }
-
-      td {
-        font-size: 13px;
-      }
-
-      .radius-row {
+      .sample-tag {
+        width: fit-content;
         display: flex;
-        flex-wrap: wrap;
-        align-items: end;
-        gap: 12px;
-        margin-block: 22px;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 22px;
+        color: var(--coral-800);
       }
 
-      .radius-sample {
-        min-width: 72px;
-        min-height: 72px;
+      .sample-tag::before {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--coral-500);
+        box-shadow: 0 0 0 5px rgb(242 107 91 / 14%);
+        content: "";
+      }
+
+      .hero-grid {
         display: grid;
-        place-items: center;
-        padding: 8px;
-        border: 1px solid var(--light-border-strong);
-        background: var(--paper-50);
+        grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr);
+        gap: clamp(28px, 5vw, 64px);
+        align-items: start;
+      }
+
+      .hero-copy {
+        max-width: 670px;
+        margin-bottom: 0;
         color: var(--slate-500);
-        font: 500 11px/16px "Geist Mono", Consolas, monospace;
+        font-size: 18px;
+        line-height: 28px;
       }
 
-      .border-demo {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-      }
-
-      .border-demo div {
-        min-height: 92px;
-        display: grid;
-        place-items: center;
-        padding: 16px;
-        border: 1px solid var(--light-border);
+      .context-card {
+        padding: 22px;
+        border: 1px solid var(--line-200);
         border-radius: var(--radius-card);
-        color: var(--slate-500);
-        font-size: 13px;
-        text-align: center;
-      }
-
-      .border-demo .elevated {
-        border-color: transparent;
-        background: var(--paper-0);
+        background: rgb(255 255 255 / 90%);
         box-shadow: var(--shadow-soft);
       }
 
-      .gradient-rule {
-        min-height: 130px;
+      .context-top {
         display: flex;
-        align-items: flex-end;
-        margin-top: 12px;
-        padding: 18px;
-        border: 1px solid var(--dark-border);
-        border-radius: var(--radius-canvas);
-        background:
-          radial-gradient(circle at 25% 25%, rgb(124 92 252 / 28%), transparent 35%),
-          radial-gradient(circle at 75% 45%, rgb(53 212 231 / 16%), transparent 32%),
-          var(--ink-950);
-        color: var(--paper-50);
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
       }
 
-      .gradient-rule span {
-        padding: 8px 10px;
-        border: 1px solid rgb(255 255 255 / 14%);
-        border-radius: 10px;
-        background: rgb(13 18 32 / 74%);
-        font-size: 12px;
-        backdrop-filter: blur(8px);
-      }
-
-      .icon-policy {
-        display: grid;
-        grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr);
-        gap: var(--space-2);
-      }
-
-      .icon-rules,
-      .icon-gallery {
-        padding: clamp(20px, 3vw, 32px);
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-lg);
-        background: var(--paper-0);
-      }
-
-      .icon-rules ul,
-      .motion-panel ul {
-        margin: 16px 0 0;
-        padding-left: 20px;
+      .context-card p {
+        margin-bottom: 16px;
         color: var(--slate-500);
+        font-size: 14px;
       }
 
-      .icon-gallery {
+      .pill,
+      .status,
+      .evidence-chip {
+        width: fit-content;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 650;
+        line-height: 18px;
+      }
+
+      .pill {
+        background: var(--coral-100);
+        color: var(--coral-800);
+      }
+
+      .context-list {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 10px;
       }
 
-      .icon-item {
-        min-height: 100px;
+      .context-row {
+        display: flex;
+        align-items: start;
+        gap: 10px;
+        font-size: 14px;
+      }
+
+      .dot-check {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
         display: grid;
         place-items: center;
-        align-content: center;
-        gap: 10px;
-        padding: 12px;
-        border: 1px solid var(--light-border);
+        margin-top: 2px;
+        border-radius: 50%;
+        background: var(--coral-100);
+        color: var(--coral-800);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .entry-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 32px;
+      }
+
+      .entry-card {
+        min-height: 250px;
+        display: flex;
+        flex-direction: column;
+        padding: clamp(22px, 3vw, 30px);
+        border: 1px solid var(--line-200);
+        border-radius: var(--radius-card);
+        background: var(--paper-0);
+        box-shadow: 0 12px 36px rgb(24 36 58 / 6%);
+      }
+
+      .entry-icon {
+        width: 44px;
+        height: 44px;
+        display: grid;
+        place-items: center;
+        margin-bottom: 20px;
+        border: 1px solid rgb(242 107 91 / 28%);
         border-radius: 14px;
-        color: var(--ink-950);
-        font-size: 12px;
-        text-align: center;
+        background: var(--coral-100);
+        color: var(--coral-800);
       }
 
       .icon {
@@ -707,124 +406,405 @@
         stroke-width: 1.75;
       }
 
-      .button-grid,
-      .state-grid,
-      .card-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 12px;
+      .entry-card h2 {
+        margin-bottom: 8px;
+        font-size: 22px;
+        line-height: 28px;
       }
 
-      .component-cluster {
-        margin-top: var(--space-4);
+      .entry-card p {
+        max-width: 48ch;
+        margin-bottom: 22px;
+        color: var(--slate-500);
+        font-size: 14px;
       }
 
-      .component-cluster:first-child {
-        margin-top: 0;
-      }
-
-      .cluster-heading {
+      .entry-actions {
         display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 16px;
-        margin-bottom: 14px;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: auto;
       }
 
-      .cluster-heading h3,
-      .cluster-heading p {
-        margin: 0;
-      }
-
-      .cluster-heading p {
-        color: var(--slate-500);
-        font-size: 12px;
-      }
-
-      .state-sample,
-      .card,
-      .field-sample,
-      .turnstile-shell,
-      .error-panel {
-        min-width: 0;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-sm);
-        background: var(--paper-0);
-      }
-
-      .state-sample {
-        min-height: 120px;
-        display: grid;
-        align-content: space-between;
-        gap: 14px;
-        padding: 16px;
-      }
-
-      .state-sample > span:first-child {
-        color: var(--slate-500);
-        font-size: 12px;
-      }
-
-      .btn {
+      .button {
         min-height: 44px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 9px;
+        gap: 8px;
         padding: 10px 16px;
         border: 1px solid transparent;
         border-radius: var(--radius-control);
-        background: var(--violet-500);
-        color: var(--ink-950);
+        background: var(--coral-700);
+        color: var(--paper-0);
         font-weight: 650;
         line-height: 22px;
         cursor: pointer;
         transition:
-          translate var(--motion-fast) var(--ease-standard),
-          box-shadow var(--motion-fast) var(--ease-standard),
-          background var(--motion-fast) var(--ease-standard);
+          translate 180ms var(--ease),
+          background 180ms var(--ease),
+          box-shadow 180ms var(--ease);
       }
 
-      .btn:hover,
-      .btn.is-hover {
-        background: #8a70ff;
-        box-shadow: 0 10px 28px rgb(124 92 252 / 24%);
+      .button:hover,
+      .button.is-hover {
+        background: var(--coral-800);
+        box-shadow: var(--shadow-coral);
         translate: 0 -1px;
       }
 
-      .btn.is-focus {
-        outline: 3px solid var(--focus-ring);
-        outline-offset: 3px;
-      }
-
-      .btn.secondary {
-        border-color: var(--light-border-strong);
+      .button.secondary {
+        border-color: var(--line-strong);
         background: var(--paper-0);
         color: var(--ink-950);
         box-shadow: none;
       }
 
-      .btn.danger {
-        border-color: rgb(240 106 138 / 44%);
-        background: rgb(240 106 138 / 12%);
-        color: #9d294a;
+      .button.danger {
+        border-color: rgb(180 35 24 / 34%);
+        background: rgb(180 35 24 / 8%);
+        color: var(--danger-600);
+        box-shadow: none;
       }
 
-      .btn:disabled,
-      .btn.is-disabled {
-        border-color: var(--light-border);
-        background: #eceff5;
-        color: #8992a4;
+      .button:disabled,
+      .button.is-disabled {
+        border-color: var(--line-200);
+        background: #eef0f3;
+        color: #7d899b;
         box-shadow: none;
         cursor: not-allowed;
         translate: none;
       }
 
+      .section {
+        padding-block: clamp(56px, 8vw, 88px);
+        border-top: 1px solid var(--line-200);
+      }
+
+      .section-heading {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(260px, 0.7fr);
+        gap: 32px;
+        align-items: end;
+        margin-bottom: 32px;
+      }
+
+      .section-heading p {
+        margin-bottom: 0;
+        color: var(--slate-500);
+      }
+
+      .eyebrow {
+        margin-bottom: 7px;
+        color: var(--coral-800);
+      }
+
+      .swatch-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .swatch {
+        overflow: hidden;
+        border: 1px solid var(--line-200);
+        border-radius: 16px;
+        background: var(--paper-0);
+      }
+
+      .swatch-color {
+        min-height: 104px;
+        display: flex;
+        align-items: flex-end;
+        padding: 14px;
+        background: var(--swatch);
+        color: var(--foreground);
+      }
+
+      .swatch-color span {
+        padding: 4px 7px;
+        border: 1px solid currentcolor;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .swatch-copy {
+        padding: 13px 14px 15px;
+      }
+
+      .swatch-copy strong,
+      .swatch-copy code {
+        display: block;
+      }
+
+      .swatch-copy strong {
+        font-size: 14px;
+      }
+
+      .swatch-copy code {
+        margin-top: 2px;
+        color: var(--slate-500);
+        font-size: 12px;
+      }
+
+      .plain-note {
+        margin: 18px 0 0;
+        padding: 16px 18px;
+        border-left: 4px solid var(--coral-500);
+        border-radius: 0 12px 12px 0;
+        background: var(--coral-100);
+        color: var(--ink-950);
+      }
+
+      .plain-note strong {
+        color: var(--coral-800);
+      }
+
+      .type-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+        gap: 16px;
+      }
+
+      .panel {
+        min-width: 0;
+        padding: clamp(22px, 3vw, 30px);
+        border: 1px solid var(--line-200);
+        border-radius: var(--radius-card);
+        background: var(--paper-0);
+      }
+
+      .type-display {
+        margin-bottom: 20px;
+        font-size: clamp(38px, 5vw, 56px);
+        font-weight: 600;
+        line-height: 1.07;
+        letter-spacing: -0.05em;
+      }
+
+      .type-section {
+        margin-bottom: 18px;
+        font-size: 32px;
+        font-weight: 600;
+        line-height: 38px;
+        letter-spacing: -0.035em;
+      }
+
+      .type-body {
+        max-width: 58ch;
+        margin-bottom: 16px;
+      }
+
+      .type-meta {
+        margin-bottom: 0;
+        color: var(--slate-500);
+        font: 600 12px/18px "Geist Mono", Consolas, monospace;
+      }
+
+      .simple-list {
+        margin: 14px 0 0;
+        padding-left: 20px;
+        color: var(--slate-500);
+      }
+
+      .simple-list li + li {
+        margin-top: 8px;
+      }
+
+      .token-list {
+        display: grid;
+        gap: 0;
+        margin: 18px 0 0;
+      }
+
+      .token-row {
+        display: grid;
+        grid-template-columns: minmax(120px, 0.65fr) minmax(0, 1.35fr);
+        gap: 16px;
+        padding-block: 13px;
+        border-top: 1px solid var(--line-200);
+      }
+
+      .token-row dt {
+        font-weight: 650;
+      }
+
+      .token-row dd {
+        margin: 0;
+        color: var(--slate-500);
+      }
+
+      .layout-grid,
+      .page-feel,
+      .state-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .rule-card,
+      .state-card {
+        min-width: 0;
+        padding: 20px;
+        border: 1px solid var(--line-200);
+        border-radius: 16px;
+        background: var(--paper-0);
+      }
+
+      .rule-card p,
+      .state-card p {
+        margin-bottom: 0;
+        color: var(--slate-500);
+        font-size: 14px;
+      }
+
+      .space-strip {
+        display: flex;
+        align-items: end;
+        gap: clamp(8px, 2vw, 20px);
+        min-height: 132px;
+        margin-top: 16px;
+        padding: 20px;
+        overflow: hidden;
+        border: 1px solid var(--line-200);
+        border-radius: var(--radius-card);
+        background: var(--paper-0);
+      }
+
+      .space {
+        min-width: 30px;
+        display: grid;
+        justify-items: center;
+        gap: 7px;
+        color: var(--slate-500);
+        font: 600 11px/16px "Geist Mono", Consolas, monospace;
+      }
+
+      .space::before {
+        width: 24px;
+        height: var(--size);
+        max-height: 88px;
+        border-radius: 6px 6px 2px 2px;
+        background: linear-gradient(180deg, var(--coral-500), var(--coral-700));
+        content: "";
+      }
+
+      .viewport-table {
+        width: 100%;
+        margin-top: 16px;
+        overflow: hidden;
+        border: 1px solid var(--line-200);
+        border-radius: 16px;
+        background: var(--paper-0);
+        border-spacing: 0;
+      }
+
+      .viewport-table th,
+      .viewport-table td {
+        padding: 13px 15px;
+        border-bottom: 1px solid var(--line-200);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      .viewport-table tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .viewport-table th {
+        color: var(--slate-500);
+        font-size: 12px;
+      }
+
+      .viewport-table td {
+        font-size: 14px;
+      }
+
+      .page-card {
+        min-height: 190px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 20px;
+        border-radius: var(--radius-card);
+      }
+
+      .page-card p {
+        margin-bottom: 0;
+        font-size: 14px;
+      }
+
+      .page-card.light {
+        border: 1px solid var(--line-200);
+        background: var(--paper-0);
+      }
+
+      .page-card.light p {
+        color: var(--slate-500);
+      }
+
+      .page-card.dark {
+        border: 1px solid var(--dark-line);
+        background:
+          radial-gradient(circle at 85% 15%, rgb(242 107 91 / 13%), transparent 30%),
+          var(--ink-950);
+        color: var(--dark-text);
+      }
+
+      .page-card.dark p {
+        color: var(--dark-muted);
+      }
+
+      .component-stack {
+        display: grid;
+        gap: 16px;
+      }
+
+      .component-row {
+        padding: 22px;
+        border: 1px solid var(--line-200);
+        border-radius: var(--radius-card);
+        background: var(--paper-0);
+      }
+
+      .row-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .row-heading h3,
+      .row-heading p {
+        margin: 0;
+      }
+
+      .row-heading p {
+        color: var(--slate-500);
+        font-size: 13px;
+      }
+
+      .button-row,
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .button.is-focus {
+        outline: 3px solid var(--coral-700);
+        outline-offset: 3px;
+      }
+
       .spinner {
         width: 16px;
         height: 16px;
-        border: 2px solid rgb(7 10 18 / 28%);
-        border-top-color: var(--ink-950);
+        border: 2px solid rgb(255 255 255 / 42%);
+        border-top-color: var(--paper-0);
         border-radius: 50%;
         animation: spin 800ms linear infinite;
       }
@@ -835,13 +815,9 @@
         gap: 12px;
       }
 
-      .field-sample {
-        padding: 16px;
-      }
-
       .field-sample label {
         display: block;
-        margin-bottom: 8px;
+        margin-bottom: 7px;
         font-size: 13px;
         font-weight: 650;
       }
@@ -850,1094 +826,430 @@
         width: 100%;
         min-height: 44px;
         padding: 10px 12px;
-        border: 1px solid var(--light-border-strong);
+        border: 1px solid var(--line-strong);
         border-radius: var(--radius-control);
         background: var(--paper-0);
         color: var(--ink-950);
       }
 
       .field-sample.focus input {
-        border-color: var(--cyan-400);
-        outline: 3px solid rgb(53 212 231 / 28%);
+        border-color: var(--coral-700);
+        outline: 3px solid rgb(204 73 63 / 22%);
       }
 
       .field-sample.error input {
-        border-color: var(--rose-400);
+        border-color: var(--danger-600);
       }
 
       .field-note {
-        margin: 8px 0 0;
+        margin: 7px 0 0;
         color: var(--slate-500);
         font-size: 12px;
-        line-height: 18px;
       }
 
       .field-sample.error .field-note {
-        color: #9d294a;
-      }
-
-      .entry-card {
-        min-height: 296px;
-        display: flex;
-        flex-direction: column;
-        padding: clamp(20px, 3vw, 28px);
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-lg);
-        background: var(--paper-0);
-        box-shadow: 0 12px 36px rgb(18 24 40 / 5%);
-      }
-
-      .entry-icon {
-        width: 44px;
-        height: 44px;
-        display: grid;
-        place-items: center;
-        margin-bottom: 24px;
-        border: 1px solid rgb(124 92 252 / 22%);
-        border-radius: 14px;
-        background: rgb(124 92 252 / 10%);
-        color: #5135c5;
-      }
-
-      .entry-card h3 {
-        font-size: 20px;
-        line-height: 27px;
-      }
-
-      .entry-card p {
-        margin-bottom: 20px;
-        color: var(--slate-500);
-      }
-
-      .entry-card ul {
-        margin: 0 0 24px;
-        padding-left: 20px;
-        color: var(--slate-500);
-        font-size: 13px;
-      }
-
-      .entry-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: auto;
-      }
-
-      .card {
-        min-height: 180px;
-        padding: 18px;
-      }
-
-      .card-topline {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 18px;
-      }
-
-      .badge,
-      .status,
-      .evidence-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 650;
-        line-height: 18px;
-      }
-
-      .badge {
-        min-height: 28px;
-        padding: 4px 9px;
-        border: 1px solid var(--light-border);
-        background: var(--paper-50);
-        color: var(--slate-500);
-      }
-
-      .badge.violet {
-        border-color: rgb(124 92 252 / 30%);
-        background: rgb(124 92 252 / 10%);
-        color: #5135c5;
-      }
-
-      .status {
-        min-height: 30px;
-        padding: 5px 10px;
+        color: var(--danger-600);
       }
 
       .status.confirmed {
-        background: rgb(82 214 162 / 18%);
-        color: #176a4c;
+        background: rgb(6 118 71 / 10%);
+        color: var(--success-600);
       }
 
-      .status.clarification {
-        background: rgb(241 184 75 / 20%);
-        color: #79520a;
+      .status.clarify {
+        background: rgb(247 144 9 / 13%);
+        color: var(--warning-700);
       }
 
       .status.corrected {
-        background: rgb(53 212 231 / 18%);
-        color: #0b6874;
+        background: var(--coral-100);
+        color: var(--coral-800);
       }
 
       .status.error {
-        background: rgb(240 106 138 / 16%);
-        color: #9d294a;
-      }
-
-      .status .icon {
-        width: 15px;
-        height: 15px;
-        stroke-width: 2;
-      }
-
-      .card p {
-        color: var(--slate-500);
-        font-size: 14px;
-        line-height: 21px;
+        background: rgb(180 35 24 / 9%);
+        color: var(--danger-600);
       }
 
       .evidence-chip {
         min-height: 44px;
-        padding: 10px;
-        border: 1px solid rgb(124 92 252 / 28%);
-        background: rgb(124 92 252 / 8%);
-        color: #5135c5;
+        border: 1px solid var(--line-strong);
+        background: var(--paper-0);
+        color: var(--ink-950);
         text-decoration: none;
       }
 
       .state-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .semantic-state {
-        min-height: 116px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 16px;
-        border: 1px solid var(--light-border);
-        border-left: 4px solid var(--state-color);
-        border-radius: var(--radius-card-sm);
-        background: var(--paper-0);
-      }
-
-      .semantic-state p {
-        margin: 0;
-        color: var(--slate-500);
-        font-size: 12px;
-        line-height: 18px;
-      }
-
-      .feedback-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: 12px;
-      }
-
-      .error-panel,
-      .turnstile-shell {
-        min-height: 202px;
-        padding: 20px;
-      }
-
-      .error-panel {
-        border-color: rgb(240 106 138 / 42%);
-        background: rgb(240 106 138 / 7%);
-      }
-
-      .panel-heading {
-        display: flex;
-        gap: 12px;
-      }
-
-      .panel-heading > .icon {
-        flex: 0 0 auto;
-        margin-top: 2px;
-        color: #9d294a;
-      }
-
-      .panel-heading p {
-        margin-bottom: 16px;
-        color: var(--ink-950);
-        font-size: 13px;
-        line-height: 20px;
-      }
-
-      .turnstile-shell {
-        display: flex;
-        flex-direction: column;
-        border-style: dashed;
-      }
-
-      .turnstile-status {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 14px;
-      }
-
-      .turnstile-slot {
-        min-height: 74px;
-        display: grid;
-        place-items: center;
-        margin-top: auto;
-        padding: 14px;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-control);
-        background: var(--paper-50);
-        color: var(--slate-500);
-        font-size: 12px;
-        line-height: 18px;
-        text-align: center;
-      }
-
-      .turnstile-slot strong {
-        color: var(--ink-950);
-      }
-
-      .composition-board {
-        position: relative;
-        padding: clamp(12px, 2vw, 24px);
-        overflow: hidden;
-        border: 1px solid var(--dark-border);
-        border-radius: var(--radius-canvas);
-        background:
-          radial-gradient(circle at 28% 34%, rgb(53 212 231 / 5%), transparent 30%),
-          radial-gradient(circle at 76% 16%, rgb(124 92 252 / 6%), transparent 28%),
-          #02040a;
-        box-shadow: var(--shadow-dark);
-      }
-
-      .composition-labels {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        padding: 0;
-        overflow: hidden;
-        clip: rect(0, 0, 0, 0);
-        white-space: nowrap;
-        border: 0;
-      }
-
-      .composition-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 292px;
-        gap: 14px;
-        align-items: stretch;
-      }
-
-      .desktop-frame,
-      .mobile-frame {
-        overflow: hidden;
-        border: 1px solid var(--dark-border-strong);
-        background:
-          radial-gradient(circle at 32% 18%, rgb(53 212 231 / 4%), transparent 26%),
-          var(--ink-950);
-        color: var(--paper-50);
-        box-shadow:
-          inset 0 1px rgb(255 255 255 / 4%),
-          0 20px 60px rgb(0 0 0 / 32%);
-      }
-
-      .desktop-frame {
-        min-height: 760px;
-        display: flex;
-        flex-direction: column;
-        padding: clamp(14px, 1.6vw, 20px);
-        border-radius: 22px;
-      }
-
-      .sample-appbar,
-      .sp-lockup,
-      .mode-pill,
-      .agent-status,
-      .insight-title,
-      .insight-symbol,
-      .mobile-elapsed {
-        display: flex;
-        align-items: center;
-      }
-
-      .sample-appbar {
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .desktop-appbar {
-        min-height: 50px;
-        margin-bottom: 14px;
-        padding: 0 4px 14px;
-        border-bottom: 1px solid var(--dark-border);
-      }
-
-      .sp-lockup {
-        gap: 10px;
-        color: var(--paper-50);
-        font-size: 15px;
-        font-weight: 680;
-        letter-spacing: -0.02em;
-      }
-
-      .mini-mark {
-        height: 24px;
-        display: flex;
-        align-items: center;
-        gap: 2px;
-      }
-
-      .mini-mark span {
-        width: 3px;
-        height: var(--mark-height);
-        border-radius: 99px;
-        background: linear-gradient(180deg, var(--cyan-400), var(--violet-400));
-        box-shadow: 0 0 12px rgb(124 92 252 / 32%);
-      }
-
-      .mode-pill {
-        min-height: 30px;
-        gap: 7px;
-        padding: 5px 10px;
-        border: 1px solid rgb(166 92 255 / 68%);
-        border-radius: 999px;
-        color: var(--paper-50);
-        font-size: 11px;
-        font-weight: 550;
-      }
-
-      .mode-pill .icon {
-        width: 14px;
-        height: 14px;
-      }
-
-      .workspace-meta {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        color: var(--dark-muted);
-        font-size: 11px;
-      }
-
-      .desktop-body {
-        min-height: 0;
-        flex: 1;
-        display: grid;
-        grid-template-columns: 42fr 58fr;
-        gap: 14px;
-      }
-
-      .voice-pane {
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        padding: clamp(16px, 2vw, 22px);
-        border: 1px solid var(--dark-border);
-        border-radius: 16px;
-        background:
-          radial-gradient(circle at 50% 23%, rgb(53 212 231 / 5%), transparent 26%),
-          rgb(7 10 18 / 54%);
-      }
-
-      .live-topline {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        color: var(--dark-muted);
-      }
-
-      .agent-status {
-        gap: 9px;
-        color: var(--paper-50);
-        font-size: 12px;
-      }
-
-      .agent-icon {
-        width: 32px;
-        height: 32px;
-        display: grid;
-        place-items: center;
-        border: 1px solid var(--dark-border-strong);
-        border-radius: 50%;
-        color: var(--paper-50);
-      }
-
-      .agent-icon .icon {
-        width: 16px;
-        height: 16px;
-      }
-
-      .agent-listening {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        color: var(--cyan-400);
-        white-space: nowrap;
-      }
-
-      .live-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 7px;
-        font-size: 11px;
-        font-weight: 650;
-      }
-
-      .live-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 99px;
-        background: var(--cyan-400);
-        box-shadow: 0 0 0 5px rgb(53 212 231 / 12%);
-      }
-
-      .voice-signal {
-        position: relative;
-        width: clamp(150px, 18vw, 194px);
-        aspect-ratio: 1;
-        display: grid;
-        place-items: center;
-        margin: clamp(20px, 3.4vw, 38px) auto 14px;
-        border: 1px solid rgb(124 92 252 / 38%);
-        border-radius: 50%;
-        background:
-          radial-gradient(circle, rgb(124 92 252 / 18%) 0 22%, transparent 23%),
-          rgb(13 18 32 / 72%);
-        box-shadow:
-          inset 0 0 34px rgb(124 92 252 / 14%),
-          0 0 70px rgb(53 212 231 / 14%);
-        animation: signal-breathe 3.2s var(--ease-standard) infinite;
-      }
-
-      .voice-signal::before,
-      .voice-signal::after {
-        position: absolute;
-        content: "";
-        border-radius: inherit;
-        pointer-events: none;
-      }
-
-      .voice-signal::before {
-        inset: -8px;
-        background: repeating-conic-gradient(from 3deg, var(--cyan-400) 0deg 1.8deg, transparent 1.8deg 4.8deg);
-        mask: radial-gradient(circle, transparent 62%, #000 63% 68%, transparent 69%);
-      }
-
-      .voice-signal::after {
-        inset: 9px;
-        border: 1px dotted rgb(166 92 255 / 82%);
-      }
-
-      .signal-bars {
-        position: relative;
-        z-index: 1;
-        height: 42px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-
-      .signal-bars span {
-        width: 5px;
-        height: var(--bar-height);
-        border-radius: 999px;
-        background: linear-gradient(180deg, #a66cff, var(--violet-400));
-        box-shadow: 0 0 12px rgb(124 92 252 / 48%);
-      }
-
-      .listening-copy {
-        margin-bottom: 8px;
-        color: var(--cyan-400);
-        font-size: 13px;
-        font-weight: 650;
-        text-align: center;
-      }
-
-      .caption {
-        max-width: 38ch;
-        margin: 0;
-        color: var(--paper-50);
-        font-size: clamp(17px, 2vw, 21px);
-        line-height: 1.42;
-        text-align: left;
-      }
-
-      .caption-panel {
-        margin-top: 18px;
-        padding: clamp(16px, 2vw, 22px);
-        border: 1px solid var(--dark-border);
-        border-radius: var(--radius-card-sm);
-        background: rgb(13 18 32 / 62%);
-      }
-
-      .caption-meta,
-      .elapsed-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .caption-meta {
-        margin-bottom: 12px;
-        color: var(--dark-muted);
-        font-size: 11px;
-      }
-
-      .caption-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .caption-status .live-dot {
-        width: 6px;
-        height: 6px;
-        box-shadow: none;
-      }
-
-      .caption-footer {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 22px;
-        color: var(--dark-muted);
-        font-size: 11px;
-      }
-
-      .caption-footer span {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .caption-footer .icon {
-        width: 14px;
-        height: 14px;
-      }
-
-      .elapsed-row {
-        margin-top: 14px;
-        padding: 12px 4px;
-        border-block: 1px solid var(--dark-border);
-        color: var(--dark-muted);
-        font-size: 12px;
-      }
-
-      .elapsed-copy {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .elapsed-copy .icon {
-        width: 16px;
-        height: 16px;
-      }
-
-      .interview-controls {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        margin-top: 14px;
-      }
-
-      .control-button {
-        min-width: 48px;
-        min-height: 48px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border: 1px solid var(--dark-border-strong);
-        border-radius: var(--radius-control);
-        background: var(--ink-900);
-        color: var(--paper-50);
-        font-weight: 650;
-      }
-
-      .control-button.mute-control {
-        min-width: 0;
-        flex: 0 1 112px;
-      }
-
-      .control-button.end-control {
-        min-width: 0;
-        flex: 1;
-      }
-
-      .control-copy {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        font-size: 12px;
-        line-height: 16px;
-      }
-
-      .control-copy small {
-        color: var(--dark-muted);
-        font: inherit;
-        font-weight: 400;
-      }
-
-      .control-button.end {
-        border-color: rgb(240 106 138 / 40%);
-        background: rgb(240 106 138 / 12%);
-        color: #ffb0c3;
-      }
-
-      .insight-pane {
-        min-width: 0;
-        padding: clamp(16px, 2vw, 20px);
-        border: 1px solid var(--dark-border);
-        border-radius: 16px;
-        background: rgb(7 10 18 / 42%);
-      }
-
-      .insight-heading {
-        margin-bottom: 16px;
-      }
-
-      .insight-heading h3 {
-        margin: 0;
-        font-size: 16px;
-      }
-
-      .insight-heading > p {
-        margin: 5px 0 0;
-        color: var(--dark-muted);
-        font-size: 11px;
-      }
-
-      .insight-title {
-        gap: 9px;
-      }
-
-      .insight-title .icon {
-        color: #a66cff;
-      }
-
-      .insight-constellation {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .dark-insight {
-        min-width: 0;
-        min-height: 96px;
-        display: grid;
-        grid-template-columns: 48px minmax(0, 1fr) auto;
-        grid-template-areas:
-          "icon copy status"
-          "icon copy evidence";
-        align-items: center;
-        column-gap: 14px;
-        padding: 13px 14px;
-        border: 1px solid var(--dark-border);
-        border-radius: 13px;
-        background: rgb(7 10 18 / 72%);
-      }
-
-      .insight-symbol {
-        grid-area: icon;
-        width: 48px;
-        height: 48px;
-        justify-content: center;
-        border: 1px solid rgb(82 214 162 / 34%);
-        border-radius: 12px;
-        background: linear-gradient(145deg, rgb(82 214 162 / 30%), rgb(82 214 162 / 11%));
-        color: var(--paper-50);
-        font-size: 25px;
-        box-shadow: inset 0 1px rgb(255 255 255 / 7%);
-      }
-
-      .dark-insight.role .insight-symbol,
-      .mobile-selected .insight-symbol {
-        border-color: rgb(166 92 255 / 42%);
-        background: linear-gradient(145deg, rgb(124 92 252 / 40%), rgb(124 92 252 / 13%));
-      }
-
-      .symbol-code {
-        font-family: "Geist Mono", Consolas, monospace;
-        font-size: 16px;
-      }
-
-      .insight-copy {
-        grid-area: copy;
-      }
-
-      .dark-insight .status {
-        grid-area: status;
-        justify-self: end;
-        margin: 0;
-        padding-inline: 0;
-        background: transparent;
-      }
-
-      .dark-insight .status.confirmed {
-        color: var(--mint-400);
-      }
-
-      .desktop-frame .badge.violet,
-      .mobile-frame .badge.violet {
-        color: var(--paper-50);
-      }
-
-      .dark-insight h4 {
-        margin: 0 0 4px;
-        font-size: 14px;
-        line-height: 20px;
-      }
-
-      .dark-insight p {
-        margin: 0;
-        color: var(--dark-muted);
-        font-size: 12px;
-        line-height: 18px;
-      }
-
-      .evidence-cue {
-        grid-area: evidence;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        justify-self: end;
-        color: var(--dark-muted);
-        font-size: 11px;
-      }
-
-      .evidence-cue .icon {
-        width: 14px;
-        height: 14px;
-      }
-
-      .mobile-frame {
-        min-height: 760px;
-        display: flex;
-        flex-direction: column;
-        border-radius: 26px;
-      }
-
-      .mobile-appbar {
-        min-height: 62px;
-        padding: 14px 14px 12px;
-        border-bottom: 1px solid var(--dark-border);
-      }
-
-      .mobile-appbar .sp-lockup {
-        font-size: 13px;
-      }
-
-      .mobile-appbar .mode-pill {
-        min-height: 28px;
-        padding-inline: 8px;
-        font-size: 10px;
-      }
-
-      .mobile-live {
-        margin: 0 12px;
-        padding: 14px 12px 12px;
-        border: 1px solid var(--dark-border);
-        border-radius: 14px;
-        background:
-          radial-gradient(circle at 50% 22%, rgb(53 212 231 / 5%), transparent 34%),
-          rgb(7 10 18 / 54%);
-      }
-
-      .mobile-frame .voice-signal {
-        width: 100px;
-        margin: 18px auto 12px;
-      }
-
-      .mobile-frame .caption {
-        font-size: 16px;
-        line-height: 23px;
-      }
-
-      .mobile-frame .caption-panel {
-        margin-top: 14px;
-        padding: 14px;
-      }
-
-      .mobile-frame .caption-footer {
-        margin-top: 18px;
-      }
-
-      .mobile-insights {
-        flex: 1;
-        padding: 14px 12px 12px;
-        background: transparent;
-      }
-
-      .mobile-insight-heading h3 {
-        margin: 0;
-        font-size: 13px;
-      }
-
-      .mobile-insight-heading p {
-        margin: 3px 0 0;
-        color: var(--dark-muted);
-        font-size: 10px;
-      }
-
-      .mobile-card-rail {
-        display: grid;
-        grid-template-columns: 52px minmax(0, 1fr) 52px;
-        gap: 8px;
-        align-items: stretch;
-        margin: 12px -12px 0;
-        overflow: hidden;
-      }
-
-      .mobile-preview,
-      .mobile-selected {
-        min-width: 0;
-        border: 1px solid var(--dark-border);
-        background: rgb(13 18 32 / 72%);
-      }
-
-      .mobile-preview {
-        min-height: 210px;
-        padding: 12px 8px;
-        overflow: hidden;
-        color: var(--dark-muted);
-        font-size: 10px;
-        line-height: 15px;
-      }
-
-      .mobile-selected {
-        min-height: 226px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 14px 10px;
-        border-color: rgb(166 92 255 / 82%);
-        border-radius: 14px;
-        text-align: center;
-        box-shadow: 0 0 34px rgb(124 92 252 / 10%);
-      }
-
-      .mobile-preview:first-child {
-        border-left: 0;
-        border-radius: 0 12px 12px 0;
-      }
-
-      .mobile-preview:last-child {
-        border-right: 0;
-        border-radius: 12px 0 0 12px;
-      }
-
-      .mobile-preview .insight-symbol {
-        width: 38px;
-        height: 38px;
-        margin-bottom: 12px;
-        font-size: 19px;
-      }
-
-      .mobile-selected .insight-symbol {
-        width: 46px;
-        height: 46px;
-        flex: 0 0 auto;
-        margin-bottom: 12px;
-      }
-
-      .mobile-selected p {
-        margin: 6px 0 12px;
-        color: var(--dark-muted);
-        font-size: 11px;
-        line-height: 16px;
-      }
-
-      .mobile-selected .status.confirmed {
-        margin-top: auto;
-        background: transparent;
-        color: var(--mint-400);
-      }
-
-      .mobile-selected .evidence-cue {
-        margin-top: 7px;
-      }
-
-      .rail-dots {
-        display: flex;
-        justify-content: center;
-        gap: 6px;
-        margin-top: 10px;
-      }
-
-      .rail-dots span {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: var(--slate-500);
-      }
-
-      .rail-dots span:first-child {
-        background: #a66cff;
-      }
-
-      .mobile-controls {
-        position: sticky;
-        bottom: 0;
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-        align-items: stretch;
-        gap: 8px;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
-        border-top: 1px solid var(--dark-border);
-        background: rgb(7 10 18 / 92%);
-        backdrop-filter: blur(10px);
-      }
-
-      .mobile-controls .control-button {
-        min-width: 0;
-        padding: 8px;
-        font-size: 11px;
-      }
-
-      .mobile-controls .end-control {
-        min-width: 0;
-      }
-
-      .mobile-elapsed {
-        flex-direction: column;
-        justify-content: center;
-        color: var(--dark-muted);
-        font-size: 9px;
-      }
-
-      .mobile-elapsed .metadata {
-        color: var(--paper-50);
-        font-size: 13px;
-      }
-
-      .token-line {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px 16px;
         margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid var(--light-border);
       }
 
-      .concept-reference {
-        margin: var(--space-4) 0 0;
-        padding: clamp(16px, 3vw, 28px);
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-lg);
-        background: var(--paper-0);
-        box-shadow: var(--shadow-soft);
+      .state-card {
+        min-height: 154px;
       }
 
-      .concept-reference-heading {
-        display: flex;
-        align-items: end;
-        justify-content: space-between;
-        gap: 20px;
-        margin-bottom: 18px;
+      .state-card .status {
+        margin-bottom: 14px;
       }
 
-      .concept-reference-heading h3,
-      .concept-reference-heading p {
-        margin: 0;
-      }
-
-      .concept-reference-heading p,
-      .concept-reference figcaption {
-        color: var(--slate-500);
-        font-size: 12px;
-        line-height: 18px;
-      }
-
-      .concept-image {
-        width: 100%;
-        height: auto;
-        display: block;
-        border: 1px solid var(--dark-border);
-        border-radius: var(--radius-card-sm);
-        background: var(--ink-950);
-      }
-
-      .concept-reference figcaption {
-        margin-top: 14px;
-      }
-
-      .motion-sample {
-        min-height: 88px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-top: 18px;
-        padding: 16px;
-        overflow: hidden;
-        border: 1px solid var(--dark-border);
-        border-radius: var(--radius-card-sm);
-        background: var(--ink-950);
-        color: var(--paper-50);
-      }
-
-      .motion-node {
-        width: 40px;
-        height: 40px;
-        flex: 0 0 auto;
-        border-radius: 14px;
-        background: var(--mint-400);
-        box-shadow: 0 0 28px rgb(82 214 162 / 18%);
-        animation: insight-arrive 3s var(--ease-standard) infinite;
-      }
-
-      .motion-copy {
-        color: var(--dark-muted);
-        font-size: 12px;
-      }
-
-      .do-dont {
+      .error-gate-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
-        margin-top: var(--space-2);
       }
 
-      .guidance {
-        padding: 18px;
-        border: 1px solid var(--light-border);
-        border-radius: var(--radius-card-sm);
+      .message-panel {
+        min-height: 190px;
+        padding: 20px;
+        border: 1px solid var(--line-200);
+        border-radius: 16px;
         background: var(--paper-0);
       }
 
-      .guidance strong {
-        display: block;
-        margin-bottom: 8px;
+      .message-panel.error-panel {
+        border-color: rgb(180 35 24 / 34%);
+        background: rgb(180 35 24 / 4%);
       }
 
-      .guidance p {
-        margin: 0;
+      .message-panel.turnstile {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border-style: dashed;
+      }
+
+      .message-panel p {
         color: var(--slate-500);
+        font-size: 14px;
+      }
+
+      .turnstile-slot {
+        min-height: 70px;
+        display: grid;
+        place-items: center;
+        padding: 12px;
+        border: 1px solid var(--line-200);
+        border-radius: 10px;
+        background: var(--paper-50);
+        color: var(--slate-500);
+        font-size: 12px;
+        text-align: center;
+      }
+
+      .icon-policy {
+        margin-top: 16px;
+        padding: 18px 20px;
+        border: 1px solid var(--line-200);
+        border-radius: 16px;
+        background: var(--paper-0);
+      }
+
+      .icon-examples {
+        display: flex;
+        gap: 16px;
+        margin-top: 14px;
+        color: var(--ink-950);
+      }
+
+      .interview-section {
+        background: var(--ink-950);
+        color: var(--dark-text);
+      }
+
+      .interview-section .section-heading p,
+      .interview-section .eyebrow {
+        color: var(--dark-muted);
+      }
+
+      .interview-demo {
+        display: grid;
+        grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+        gap: 12px;
+        padding: 12px;
+        border: 1px solid var(--dark-line);
+        border-radius: var(--radius-canvas);
+        background: var(--ink-900);
+      }
+
+      .voice-panel,
+      .insight-panel {
+        min-width: 0;
+        padding: clamp(20px, 3vw, 30px);
+        border: 1px solid var(--dark-line);
+        border-radius: 20px;
+        background: rgb(24 36 58 / 92%);
+      }
+
+      .live-row,
+      .interview-header,
+      .control-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .interview-header {
+        grid-column: 1 / -1;
+        min-height: 52px;
+        padding: 4px 12px;
+      }
+
+      .interview-brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        font-weight: 700;
+      }
+
+      .mode-badge {
+        padding: 5px 9px;
+        border: 1px solid var(--dark-line);
+        border-radius: 999px;
+        color: var(--dark-muted);
+        font-size: 12px;
+      }
+
+      .live-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--coral-500);
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .live-label::before {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--coral-500);
+        content: "";
+      }
+
+      .signal-area {
+        min-height: 190px;
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 18px;
+      }
+
+      .signal {
+        height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .signal span {
+        width: 5px;
+        height: var(--bar);
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--coral-500), var(--coral-300));
+        box-shadow: 0 0 18px rgb(242 107 91 / 20%);
+      }
+
+      .signal-copy {
+        text-align: center;
+      }
+
+      .signal-copy strong,
+      .signal-copy span {
+        display: block;
+      }
+
+      .signal-copy span {
+        margin-top: 3px;
+        color: var(--dark-muted);
         font-size: 13px;
       }
 
-      .footer {
-        padding-block: 40px;
-        border-top: 1px solid var(--light-border);
+      .caption-panel {
+        min-height: 112px;
+        padding: 16px;
+        border: 1px solid var(--dark-line);
+        border-radius: 14px;
+        background: var(--ink-900);
       }
 
-      .footer-inner {
-        display: flex;
+      .caption-panel .meta {
+        margin-bottom: 7px;
+        color: var(--coral-300);
+      }
+
+      .caption-panel p {
+        margin-bottom: 0;
+      }
+
+      .control-row {
+        margin-top: 14px;
+      }
+
+      .timer {
+        color: var(--dark-muted);
+      }
+
+      .interview-control {
+        min-width: 86px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        padding: 9px 13px;
+        border: 1px solid var(--line-strong);
+        border-radius: var(--radius-control);
+        background: transparent;
+        color: var(--dark-text);
+        font-weight: 650;
+      }
+
+      .interview-control.end {
+        border-color: rgb(249 112 102 / 52%);
+        background: rgb(249 112 102 / 14%);
+        color: var(--coral-300);
+      }
+
+      .control-state {
+        display: block;
+        color: var(--dark-muted);
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      .insight-heading {
+        margin-bottom: 18px;
+      }
+
+      .insight-heading p {
+        margin-bottom: 0;
+        color: var(--dark-muted);
+        font-size: 13px;
+      }
+
+      .insight-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .insight-card {
+        display: grid;
+        grid-template-columns: 40px minmax(0, 1fr) auto;
+        gap: 12px;
         align-items: start;
-        justify-content: space-between;
-        gap: 24px;
+        padding: 14px;
+        border: 1px solid var(--dark-line);
+        border-radius: 14px;
+        background: var(--ink-900);
       }
 
-      .footer p {
-        max-width: 720px;
-        margin: 0;
+      .insight-card.selected {
+        border-color: var(--dark-line-strong);
+        background: linear-gradient(110deg, rgb(253 232 228 / 10%), var(--ink-900));
+      }
+
+      .insight-icon {
+        width: 40px;
+        height: 40px;
+        display: grid;
+        place-items: center;
+        border-radius: 12px;
+        background: var(--coral-100);
+        color: var(--coral-800);
+        font-weight: 800;
+      }
+
+      .insight-copy h3 {
+        margin-bottom: 3px;
+        color: var(--dark-text);
+      }
+
+      .insight-copy p {
+        margin-bottom: 0;
+        color: var(--dark-muted);
+        font-size: 13px;
+      }
+
+      .dark-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        color: var(--success-400);
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .concept-reference {
+        margin: 20px 0 0;
+        padding: 12px;
+        border: 1px solid var(--dark-line);
+        border-radius: var(--radius-card);
+        background: var(--ink-900);
+      }
+
+      .concept-reference figcaption {
+        padding: 7px 7px 16px;
+        color: var(--dark-muted);
+        font-size: 13px;
+      }
+
+      .concept-reference img {
+        width: 100%;
+        border-radius: 14px;
+      }
+
+      .rules-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .check-card {
+        padding: 22px;
+        border: 1px solid var(--line-200);
+        border-radius: var(--radius-card);
+        background: var(--paper-0);
+      }
+
+      .check-list {
+        display: grid;
+        gap: 10px;
+        margin: 16px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .check-list li {
+        display: grid;
+        grid-template-columns: 20px minmax(0, 1fr);
+        gap: 9px;
+        color: var(--slate-500);
+      }
+
+      .check-list li::before {
+        width: 18px;
+        height: 18px;
+        display: grid;
+        place-items: center;
+        margin-top: 3px;
+        border-radius: 50%;
+        background: var(--coral-100);
+        color: var(--coral-800);
+        font-size: 11px;
+        font-weight: 800;
+        content: "✓";
+      }
+
+      .motion-note {
+        margin-top: 12px;
+        color: var(--slate-500);
+        font-size: 14px;
+      }
+
+      .footer {
+        padding-block: 32px;
+        border-top: 1px solid var(--line-200);
         color: var(--slate-500);
         font-size: 13px;
       }
@@ -1948,206 +1260,153 @@
         }
       }
 
-      @keyframes signal-breathe {
-        0%,
-        100% {
-          scale: 0.98;
-          opacity: 0.88;
+      @media (max-width: 960px) {
+        .guide-nav a:nth-child(-n + 2) {
+          display: none;
         }
-        50% {
-          scale: 1.025;
-          opacity: 1;
-        }
-      }
 
-      @keyframes insight-arrive {
-        0%,
-        22% {
-          opacity: 0;
-          translate: -20px 0;
-          scale: 0.96;
+        .hero-grid,
+        .section-heading,
+        .type-grid,
+        .interview-demo {
+          grid-template-columns: 1fr;
         }
-        36%,
-        82% {
-          opacity: 1;
-          translate: 0;
-          scale: 1;
-        }
-        100% {
-          opacity: 0;
-        }
-      }
 
-      @media (max-width: 1240px) {
+        .context-card {
+          max-width: 620px;
+        }
+
         .swatch-grid {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
-        .composition-grid {
-          grid-template-columns: 1fr;
+        .interview-header {
+          grid-column: auto;
         }
 
-        .mobile-frame {
-          width: min(390px, 100%);
-          margin-inline: auto;
+        .insight-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
 
-      @media (max-width: 820px) {
-        .section-heading,
-        .icon-policy {
-          grid-template-columns: 1fr;
-        }
-
-        .section-heading {
-          gap: 8px;
-        }
-
-        .thesis-grid,
-        .layout-rules,
-        .button-grid,
-        .field-grid,
-        .card-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .state-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .desktop-body {
-          grid-template-columns: 1fr;
-        }
-
-        .voice-pane {
-          min-height: 620px;
-        }
-      }
-
-      @media (max-width: 620px) {
-        .composition-board {
-          padding: 6px;
-        }
-
-        .site-header {
-          position: static;
-        }
-
-        .header-inner,
-        .footer-inner {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
+      @media (max-width: 700px) {
         .header-inner {
-          padding-block: 14px;
+          min-height: 64px;
         }
 
-        .header-nav {
-          width: 100%;
-          justify-content: flex-start;
-          overflow-x: auto;
-          scrollbar-width: thin;
+        .guide-nav a {
+          display: none;
         }
 
-        .hero {
-          padding-top: 48px;
-        }
-
-        .thesis-grid,
-        .swatch-grid,
-        .surface-pair,
-        .type-grid,
-        .geometry-grid,
         .entry-grid,
-        .sample-grid,
-        .motion-grid,
-        .feedback-grid,
-        .do-dont,
-        .button-grid,
+        .layout-grid,
+        .page-feel,
+        .state-grid,
         .field-grid,
-        .card-grid,
-        .state-grid {
+        .error-gate-grid,
+        .rules-grid {
           grid-template-columns: 1fr;
         }
 
-        .thesis-step {
-          min-height: 0;
+        .swatch-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
 
         .entry-card {
           min-height: 0;
         }
 
-        .scale-strip {
-          align-items: start;
+        .viewport-table,
+        .viewport-table tbody,
+        .viewport-table tr,
+        .viewport-table td {
+          display: block;
+        }
+
+        .viewport-table thead {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          overflow: hidden;
+          clip: rect(0 0 0 0);
+        }
+
+        .viewport-table tr + tr {
+          border-top: 1px solid var(--line-200);
+        }
+
+        .viewport-table td {
+          border: 0;
+        }
+
+        .viewport-table td + td {
+          padding-top: 0;
+          color: var(--slate-500);
+        }
+
+        .insight-list {
+          display: flex;
           overflow-x: auto;
+          scroll-snap-type: x mandatory;
+          scrollbar-width: thin;
         }
 
-        .icon-gallery {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
+        .insight-card {
+          min-width: min(84vw, 340px);
+          grid-template-columns: 40px minmax(0, 1fr);
+          scroll-snap-align: start;
         }
 
-        .desktop-frame {
+        .insight-card .dark-status {
+          grid-column: 2;
+        }
+
+        .row-heading,
+        .control-row {
+          align-items: start;
+          flex-direction: column;
+        }
+
+        .control-row .button-row {
+          width: 100%;
+        }
+
+        .interview-control {
+          flex: 1;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .shell {
+          width: min(calc(100% - 32px), var(--content));
+        }
+
+        .guide-label {
           display: none;
-          min-height: 0;
         }
 
-        .voice-pane {
-          min-height: 560px;
+        .landing-sample {
+          padding-top: 40px;
         }
 
-        .desktop-appbar {
-          align-items: flex-start;
-          flex-direction: column;
+        .swatch-grid {
+          grid-template-columns: 1fr;
         }
 
-        .dark-insight {
-          grid-template-columns: 42px minmax(0, 1fr);
-          grid-template-areas:
-            "icon copy"
-            "status evidence";
-          row-gap: 10px;
+        .swatch-color {
+          min-height: 82px;
         }
 
-        .insight-symbol {
-          width: 42px;
-          height: 42px;
+        .token-row {
+          grid-template-columns: 1fr;
+          gap: 2px;
         }
 
-        .dark-insight .status {
-          justify-self: start;
-        }
-
-        .interview-controls {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .interview-controls .control-button {
-          min-width: 0;
-        }
-
-        .caption-footer {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .composition-labels {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .cluster-heading {
-          align-items: flex-start;
-          flex-direction: column;
-          gap: 4px;
-        }
-
-        .concept-reference-heading {
-          align-items: flex-start;
-          flex-direction: column;
-          gap: 6px;
+        .voice-panel,
+        .insight-panel,
+        .panel,
+        .component-row {
+          padding: 18px;
         }
       }
 
@@ -2159,136 +1418,120 @@
         *,
         *::before,
         *::after {
-          scroll-behavior: auto !important;
-          transition-duration: 0.01ms !important;
           animation-duration: 0.01ms !important;
           animation-iteration-count: 1 !important;
-        }
-
-        .voice-signal,
-        .motion-node,
-        .spinner {
-          animation: none;
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
         }
       }
     </style>
   </head>
   <body>
-    <a class="skip-link" href="#main-content">Skip to design-system content</a>
+    <a class="skip-link" href="#main-content">Skip to the visual guide</a>
 
     <header class="site-header">
-      <div class="header-inner">
-        <a class="brand" href="#top" aria-label="ScreenPilot Signal Canvas reference home">
+      <div class="header-inner shell">
+        <a class="brand" href="#top" aria-label="ScreenPilot visual reference home">
           <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-            <defs>
-              <linearGradient id="mark-gradient" x1="3" y1="5" x2="28" y2="27" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#7C5CFC" />
-                <stop offset="1" stop-color="#35D4E7" />
-              </linearGradient>
-            </defs>
-            <rect x="2" y="2" width="28" height="28" rx="10" fill="#070A12" />
-            <path d="M9 18.5c2.7-5.8 5.2-5.8 7.4 0 2.1 5.5 4.5 5.5 6.6-.2" fill="none" stroke="url(#mark-gradient)" stroke-linecap="round" stroke-width="2.3" />
-            <circle cx="9" cy="18.5" r="1.6" fill="#52D6A2" />
+            <rect width="32" height="32" rx="9" fill="#18243A" />
+            <path d="M7 9.5 25 5l-5.2 20-4.4-7.2-8.4-8.3Z" fill="#F26B5B" />
+            <path d="m11 11 8.5-2.2-5.8 6.3L11 11Z" fill="#FDE8E4" />
           </svg>
-          <span>ScreenPilot / Signal Canvas</span>
+          <span>ScreenPilot</span>
         </a>
-        <nav class="header-nav" aria-label="Reference sections">
-          <a href="#tokens">Tokens</a>
+        <nav class="guide-nav" aria-label="Visual guide sections">
+          <a href="#colors">Colors</a>
+          <a href="#type">Type</a>
+          <a href="#layout">Layout</a>
           <a href="#components">Components</a>
-          <a href="#composition">Composition</a>
-          <a href="#motion">Motion &amp; access</a>
+          <a href="#interview">Interview</a>
+          <span class="guide-label">VISUAL REFERENCE</span>
         </nav>
       </div>
     </header>
 
     <main id="main-content">
-      <section class="hero shell" id="top" aria-labelledby="hero-title">
-        <p class="eyebrow">Living style guide · SP-004</p>
-        <h1 id="hero-title">Calm surfaces. Live signals. Human judgment.</h1>
-        <p class="hero-copy">
-          Signal Canvas is ScreenPilot’s implementable visual language: a precise, transparent AI workspace that moves from a light document surface into a dark live signal field, then returns to a clear evidence review.
-        </p>
-        <div class="thesis-grid" aria-label="Experience narrative">
-          <article class="thesis-step">
-            <h3>01 · Document surface</h3>
-            <p>Structure emerges on quiet paper surfaces with borders doing most of the separation.</p>
+      <section class="landing-sample shell" id="top" aria-labelledby="hero-title">
+        <p class="sample-tag meta">FINAL LANDING HERO DIRECTION</p>
+        <div class="hero-grid">
+          <div>
+            <h1 id="hero-title">Practice the interview. Keep the judgment human.</h1>
+            <p class="hero-copy">
+              ScreenPilot turns a vacancy and an optional CV into a focused voice interview. You get clear,
+              evidence-linked notes—not a hiring decision.
+            </p>
+          </div>
+
+          <aside class="context-card" aria-label="Vacancy context sample">
+            <div class="context-top">
+              <span class="meta">VACANCY CONTEXT</span>
+              <span class="pill">Remote in Europe</span>
+            </div>
+            <h2>What Pilot will screen for</h2>
+            <p>Confirmed roles and constraints supplied to the interview.</p>
+            <div class="context-list">
+              <div class="context-row"><span class="dot-check">✓</span><span>Frontend Developer</span></div>
+              <div class="context-row"><span class="dot-check">✓</span><span>Backend Developer</span></div>
+              <div class="context-row"><span class="dot-check">✓</span><span>Remote within Europe</span></div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="entry-grid" aria-label="Two equal ways to begin">
+          <article class="entry-card">
+            <div class="entry-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></svg>
+            </div>
+            <h2>Use a CV</h2>
+            <p>Pilot reads a text-based PDF and prepares evidence-grounded discussion areas before the call.</p>
+            <div class="entry-actions">
+              <button class="button" type="button">Upload CV</button>
+              <button class="button secondary" type="button">Use sample</button>
+            </div>
           </article>
-          <article class="thesis-step">
-            <h3>02 · Live signal field</h3>
-            <p>Voice activates in a dark canvas while facts crystallize into explicit, sourced cards.</p>
-          </article>
-          <article class="thesis-step">
-            <h3>03 · Evidence canvas</h3>
-            <p>The conversation settles into human-readable notes that support recruiter interpretation.</p>
+
+          <article class="entry-card">
+            <div class="entry-icon" aria-hidden="true">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /><path d="M8 10h8M8 14h5" /></svg>
+            </div>
+            <h2>Start without a CV</h2>
+            <p>No CV needed—Pilot learns through broader opening questions and builds the same kind of review.</p>
+            <div class="entry-actions">
+              <button class="button" type="button">Start conversation</button>
+            </div>
           </article>
         </div>
       </section>
 
-      <section class="section" id="tokens" aria-labelledby="tokens-title">
+      <section class="section" id="colors" aria-labelledby="colors-title">
         <div class="shell">
           <div class="section-heading">
             <div>
-              <p class="metadata kicker">01 / FOUNDATIONS</p>
-              <h2 id="tokens-title">Color is semantic, never ornamental</h2>
+              <p class="eyebrow">COLOR THEME</p>
+              <h2 id="colors-title">Deep Ink + Warm Coral</h2>
             </div>
-            <p>Exact core values are locked. Text/icon pairings below meet WCAG AA for normal text where a ratio is stated; violet uses ink foreground because white is only 4.38:1.</p>
+            <p>Warm white keeps setup and review calm. Deep ink makes the live interview focused. Coral marks the brand, live signal, selection, and main actions.</p>
           </div>
 
-          <div class="swatch-grid" aria-label="Signal Canvas color tokens">
-            <article class="swatch" style="--swatch: #070a12; --swatch-fg: #ffffff">
-              <div class="swatch-color"><span>White · 19.79:1</span></div>
-              <div class="swatch-copy"><strong>ink-950</strong><code>#070A12</code><p>Full-height interview canvas.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #0d1220; --swatch-fg: #ffffff">
-              <div class="swatch-color"><span>White · 18.68:1</span></div>
-              <div class="swatch-copy"><strong>ink-900</strong><code>#0D1220</code><p>Elevated dark surfaces.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #f7f8fc; --swatch-fg: #070a12">
-              <div class="swatch-color"><span>Ink · 18.65:1</span></div>
-              <div class="swatch-copy"><strong>paper-50</strong><code>#F7F8FC</code><p>Landing and review canvas.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #ffffff; --swatch-fg: #070a12">
-              <div class="swatch-color"><span>Ink · 19.79:1</span></div>
-              <div class="swatch-copy"><strong>paper-0</strong><code>#FFFFFF</code><p>Primary light cards.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #7c5cfc; --swatch-fg: #070a12">
-              <div class="swatch-color"><span>Ink · 4.52:1</span></div>
-              <div class="swatch-copy"><strong>violet-500</strong><code>#7C5CFC</code><p>Primary action and AI signal.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #35d4e7; --swatch-fg: #070a12">
-              <div class="swatch-color"><span>Ink · 11.05:1</span></div>
-              <div class="swatch-copy"><strong>cyan-400</strong><code>#35D4E7</code><p>Listening and data accent.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #52d6a2; --swatch-fg: #070a12">
-              <div class="swatch-color"><span>Ink · 10.84:1</span></div>
-              <div class="swatch-copy"><strong>mint-400</strong><code>#52D6A2</code><p>Confirmed insight.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #f1b84b; --swatch-fg: #070a12">
-              <div class="swatch-color"><span>Ink · 11.02:1</span></div>
-              <div class="swatch-copy"><strong>amber-400</strong><code>#F1B84B</code><p>Needs clarification.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #f06a8a; --swatch-fg: #070a12">
-              <div class="swatch-color"><span>Ink · 6.72:1</span></div>
-              <div class="swatch-copy"><strong>rose-400</strong><code>#F06A8A</code><p>Error and end attention only.</p></div>
-            </article>
-            <article class="swatch" style="--swatch: #667085; --swatch-fg: #ffffff">
-              <div class="swatch-color"><span>White · 4.97:1</span></div>
-              <div class="swatch-copy"><strong>slate-500</strong><code>#667085</code><p>Secondary text on light.</p></div>
-            </article>
+          <div class="swatch-grid">
+            <article class="swatch"><div class="swatch-color" style="--swatch:#18243A;--foreground:#FAFAF8"><span>Warm white text</span></div><div class="swatch-copy"><strong>Deep Ink Navy</strong><code>#18243A · ink-950</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#22314B;--foreground:#FAFAF8"><span>Warm white text</span></div><div class="swatch-copy"><strong>Raised Ink</strong><code>#22314B · ink-900</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#FCA39A;--foreground:#18243A"><span>Ink text</span></div><div class="swatch-copy"><strong>Signal Coral</strong><code>#FCA39A · coral-300</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#F26B5B;--foreground:#18243A"><span>Ink text</span></div><div class="swatch-copy"><strong>Warm Coral</strong><code>#F26B5B · coral-500</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#CC493F;--foreground:#FFFFFF"><span>White text</span></div><div class="swatch-copy"><strong>Action Coral</strong><code>#CC493F · coral-700</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#B93831;--foreground:#FFFFFF"><span>White text</span></div><div class="swatch-copy"><strong>Deep Coral</strong><code>#B93831 · coral-800</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#FDE8E4;--foreground:#18243A"><span>Ink text</span></div><div class="swatch-copy"><strong>Pale Coral</strong><code>#FDE8E4 · coral-100</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#FAFAF8;--foreground:#18243A"><span>Ink text</span></div><div class="swatch-copy"><strong>Warm White</strong><code>#FAFAF8 · paper-50</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#FFFFFF;--foreground:#18243A"><span>Ink text</span></div><div class="swatch-copy"><strong>Card White</strong><code>#FFFFFF · paper-0</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#667085;--foreground:#FFFFFF"><span>White sample</span></div><div class="swatch-copy"><strong>Slate</strong><code>#667085 · slate-500</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#E4E7EC;--foreground:#18243A"><span>Border only</span></div><div class="swatch-copy"><strong>Cool Gray</strong><code>#E4E7EC · line-200</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#067647;--foreground:#FFFFFF"><span>Confirmed</span></div><div class="swatch-copy"><strong>Success</strong><code>#067647 · success-600</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#F79009;--foreground:#18243A"><span>Clarify</span></div><div class="swatch-copy"><strong>Warning</strong><code>#F79009 · warning-400</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#B42318;--foreground:#FFFFFF"><span>Error / End</span></div><div class="swatch-copy"><strong>Danger</strong><code>#B42318 · danger-600</code></div></article>
           </div>
 
-          <div class="surface-pair" aria-label="Light and dark surface combinations">
-            <article class="surface-card">
-              <p class="metadata">LIGHT / DOCUMENT</p>
-              <h3>Evidence should feel organized, not scored.</h3>
-              <p>Ink text on paper, slate secondary copy, violet for selected AI actions, and semantic color only when its label or icon is also present.</p>
-            </article>
-            <article class="surface-card dark">
-              <p class="metadata">DARK / LIVE SIGNAL</p>
-              <h3>Pilot is listening</h3>
-              <p>Paper text and muted blue-gray copy stay readable while cyan communicates live listening and mint confirms captured facts.</p>
-            </article>
-          </div>
+          <p class="plain-note"><strong>Simple rule:</strong> use coral for brand and action—not for success, warnings, or errors. White text uses the darker action coral. Cool gray separates quiet cards; interactive controls use the stronger <code>#7D899B</code> border.</p>
+          <p class="motion-note"><strong>Approved logo:</strong> use the header mark in the actual web app—a Deep Ink rounded square with the Warm Coral forward/paper-plane shape and Pale Coral inner facet. The inline SVG in this HTML is the shape authority; generated-image logos are only visual approximations.</p>
         </div>
       </section>
 
@@ -2296,26 +1539,29 @@
         <div class="shell">
           <div class="section-heading">
             <div>
-              <p class="metadata kicker">02 / TYPOGRAPHY</p>
-              <h2 id="type-title">One calm voice, one technical register</h2>
+              <p class="eyebrow">TYPOGRAPHY &amp; FONT</p>
+              <h2 id="type-title">Geist is the product voice</h2>
             </div>
-            <p>Geist Sans carries product language. Geist Mono appears only for compact timing, provenance, IDs, and technical metadata.</p>
+            <p>Geist Sans handles normal interface copy. Geist Mono is reserved for small technical labels, timers, and evidence metadata.</p>
           </div>
+
           <div class="type-grid">
-            <article class="type-panel">
-              <p class="type-display">A clearer screen starts with a conversation.</p>
-              <p class="type-title">What ScreenPilot will explore</p>
-              <h3>Relevant frontend experience</h3>
-              <p class="type-body">We’ll confirm role direction during the call and keep every insight linked to its source.</p>
-              <p class="metadata">02:14 · CANDIDATE EVIDENCE</p>
-              <p class="font-stack"><strong>Sans fallback:</strong> Geist Sans → Geist → Inter → UI/system sans. Display 56/60 desktop, 38/44 mobile · 600. Section 32/38 · 600. Card 15/20 · 600. Body 16/25 · 400. Metadata 12/18 · 500.</p>
+            <article class="panel">
+              <p class="type-display">Clear conversation. Useful evidence.</p>
+              <p class="type-section">Candidate-sourced insights</p>
+              <p class="type-body">Pilot keeps the conversation natural while organizing confirmed facts, open questions, and supporting evidence.</p>
+              <p class="type-meta">CAPTION · 02:14 · CONVERSATION-FIRST</p>
             </article>
-            <article class="type-panel dark">
-              <p class="metadata">LIVE INTERVIEW · 02:14</p>
-              <p class="type-title">Pilot is listening</p>
-              <p class="type-body">“Frontend is the closest match, but I’ve worked across the full stack.”</p>
-              <h3>Requested Full Stack; screening against Frontend</h3>
-              <p class="font-stack"><strong>Mono fallback:</strong> Geist Mono → SFMono-Regular → Consolas → Liberation Mono → monospace. Use sparingly; do not set long labels in all caps.</p>
+            <article class="panel">
+              <h3>Type sizes</h3>
+              <dl class="token-list">
+                <div class="token-row"><dt>Display</dt><dd>56/60 desktop · 38/44 mobile · 600</dd></div>
+                <div class="token-row"><dt>Section title</dt><dd>32/38 · 600</dd></div>
+                <div class="token-row"><dt>Card title</dt><dd>15/20 · 600</dd></div>
+                <div class="token-row"><dt>Body</dt><dd>16/25 · 400</dd></div>
+                <div class="token-row"><dt>Metadata</dt><dd>12/18 · 500–600</dd></div>
+              </dl>
+              <p class="motion-note">Fallbacks: Inter, system UI, Segoe UI, sans-serif. Long labels stay in normal case.</p>
             </article>
           </div>
         </div>
@@ -2325,100 +1571,36 @@
         <div class="shell">
           <div class="section-heading">
             <div>
-              <p class="metadata kicker">03 / LAYOUT</p>
-              <h2 id="layout-title">An 8 px rhythm with fluid pressure relief</h2>
+              <p class="eyebrow">LAYOUT</p>
+              <h2 id="layout-title">Roomy, bounded, and built on 8 px</h2>
             </div>
-            <p>Breakpoints respond to content pressure. They are verification anchors, not separate device themes.</p>
+            <p>Pages do not stretch forever. Cards keep their meaning as the screen narrows, and mobile receives the same content and actions.</p>
           </div>
-          <div class="scale-strip" aria-label="Spacing scale">
-            <div class="space-token"><span class="space-bar" style="--measure: 4px"></span><span>4</span></div>
-            <div class="space-token"><span class="space-bar" style="--measure: 8px"></span><span>8</span></div>
-            <div class="space-token"><span class="space-bar" style="--measure: 16px"></span><span>16</span></div>
-            <div class="space-token"><span class="space-bar" style="--measure: 24px"></span><span>24</span></div>
-            <div class="space-token"><span class="space-bar" style="--measure: 32px"></span><span>32</span></div>
-            <div class="space-token"><span class="space-bar" style="--measure: 48px"></span><span>48</span></div>
-            <div class="space-token"><span class="space-bar" style="--measure: 64px"></span><span>64</span></div>
-            <div class="space-token"><span class="space-bar" style="--measure: 96px"></span><span>96</span></div>
-          </div>
-          <div class="layout-rules">
-            <article class="rule-card"><h3>Content width</h3><p>1200 px system maximum; 720 px reading maximum. Large monitors add deliberate whitespace, not stretched copy.</p></article>
-            <article class="rule-card"><h3>Gutters</h3><p>16 px at 320–390, then fluidly expand up to 48 px. Controls and captions respect safe-area insets.</p></article>
-            <article class="rule-card"><h3>Density</h3><p>Compact metadata, comfortable body rhythm, and bounded cards. Never remove meaning to solve a narrow viewport.</p></article>
-          </div>
-          <div class="anchor-table-wrap">
-            <table>
-              <thead><tr><th>Reference</th><th>Width</th><th>Composition pressure to verify</th><th>Required continuity</th></tr></thead>
-              <tbody>
-                <tr><td>Small phone</td><td>320 px</td><td>Single-column cards, compact navigation, Turnstile fallback</td><td>No clipping, 44 px targets, full recovery copy</td></tr>
-                <tr><td>Standard phone</td><td>360 / 390 px</td><td>Paired entry cards stack equally; insight rail</td><td>Same content, status, controls, and evidence meaning</td></tr>
-                <tr><td>Tablet</td><td>768 / 820 px</td><td>Content-driven one/two-column transition</td><td>No awkward empty band or missing source relationship</td></tr>
-                <tr><td>Compact landscape</td><td>1024 px</td><td>Readable density and operable controls</td><td>Portrait and landscape both remain complete</td></tr>
-                <tr><td>Desktop</td><td>1280 / 1440 px</td><td>42% conversation / 58% insight composition</td><td>Captions remain dominant and unobscured</td></tr>
-                <tr><td>Large monitor</td><td>1920 / 2560+ px</td><td>Bounded reading widths and deliberate whitespace</td><td>Expand composition, not paragraph line length</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
 
-      <section class="section" id="geometry" aria-labelledby="geometry-title">
-        <div class="shell">
-          <div class="section-heading">
-            <div>
-              <p class="metadata kicker">04 / SHAPE &amp; DEPTH</p>
-              <h2 id="geometry-title">Borders first, atmosphere second</h2>
-            </div>
-            <p>Soft elevation is reserved for hierarchy. Glass and gradients live only around selected AI atmosphere and the live overlay.</p>
+          <div class="layout-grid">
+            <article class="rule-card"><h3>Content width</h3><p>1200 px maximum for the full interface and about 720 px for long reading.</p></article>
+            <article class="rule-card"><h3>Page gutters</h3><p>16 px on small phones, growing smoothly to 48 px on desktop.</p></article>
+            <article class="rule-card"><h3>Shape</h3><p>12 px controls, 18–22 px cards, and 28 px for the main interview canvas.</p></article>
           </div>
-          <div class="geometry-grid">
-            <article class="geometry-panel">
-              <h3>Radius hierarchy</h3>
-              <div class="radius-row" aria-label="Radius token examples">
-                <div class="radius-sample" style="border-radius: 12px">12<br />control</div>
-                <div class="radius-sample" style="border-radius: 18px">18<br />compact</div>
-                <div class="radius-sample" style="border-radius: 20px">20<br />card</div>
-                <div class="radius-sample" style="border-radius: 22px">22<br />feature</div>
-                <div class="radius-sample" style="border-radius: 28px">28<br />canvas</div>
-              </div>
-              <p>Nested radii step down. Do not apply the 28 px canvas radius to every element.</p>
-            </article>
-            <article class="geometry-panel">
-              <h3>Separation and atmosphere</h3>
-              <div class="border-demo"><div>1 px neutral border<br />default separation</div><div class="elevated">Sparse soft shadow<br />raised hierarchy only</div></div>
-              <div class="gradient-rule"><span>Limited gradient + accessible dark glass</span></div>
-            </article>
-          </div>
-        </div>
-      </section>
 
-      <section class="section" id="icons" aria-labelledby="icons-title">
-        <div class="shell">
-          <div class="section-heading">
-            <div>
-              <p class="metadata kicker">05 / ICONS</p>
-              <h2 id="icons-title">Lucide-aligned, literal, always supported by language</h2>
-            </div>
-            <p>Icons improve scanning; they never carry hiring meaning or state by themselves.</p>
+          <div class="space-strip" aria-label="8 pixel spacing scale">
+            <span class="space" style="--size:4px">4</span><span class="space" style="--size:8px">8</span><span class="space" style="--size:12px">12</span><span class="space" style="--size:16px">16</span><span class="space" style="--size:24px">24</span><span class="space" style="--size:32px">32</span><span class="space" style="--size:48px">48</span><span class="space" style="--size:64px">64</span><span class="space" style="--size:80px">80</span>
           </div>
-          <div class="icon-policy">
-            <article class="icon-rules">
-              <h3>Policy</h3>
-              <ul>
-                <li>16 px inline, 20 px standard, 24 px emphasis; 1.75 px stroke.</li>
-                <li>Use simple line icons with round caps and joins.</li>
-                <li>Decorative icons use <code>aria-hidden="true"</code>.</li>
-                <li>Icon-only controls require an accessible name and at least 44 × 44 px.</li>
-                <li>Confirmed, clarification, corrected, and error states pair icon + label + color.</li>
-              </ul>
-            </article>
-            <div class="icon-gallery" aria-label="Approved icon meanings">
-              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M8 8l4-5 4 5M8 16l4 5 4-5" /></svg><span>Voice signal</span></div>
-              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3" /></svg><span>Microphone</span></div>
-              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg><span>Confirmed</span></div>
-              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.8 2.4 18a2 2 0 0 0 1.8 3h15.6a2 2 0 0 0 1.8-3L13.7 3.8a2 2 0 0 0-3.4 0Z" /></svg><span>Clarify / error</span></div>
-              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.7L20 7" /><path d="M20 3v4h-4" /></svg><span>Correction / retry</span></div>
-              <div class="icon-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1" /><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1" /></svg><span>Evidence link</span></div>
-            </div>
+
+          <table class="viewport-table">
+            <thead><tr><th>Screen</th><th>What changes</th></tr></thead>
+            <tbody>
+              <tr><td>Phone · 320–390 px</td><td>Cards stack; interview insights become a swipeable rail; controls respect the safe area.</td></tr>
+              <tr><td>Tablet · 768–1024 px</td><td>Layout follows available space instead of forcing desktop columns too early.</td></tr>
+              <tr><td>Laptop · 1280–1440 px</td><td>Interview uses an approximate 42/58 conversation-to-insight split.</td></tr>
+              <tr><td>Large monitor · 1920–2560+ px</td><td>The workspace stays bounded and gains deliberate outer space rather than stretched copy.</td></tr>
+            </tbody>
+          </table>
+
+          <div class="page-feel" style="margin-top:16px">
+            <article class="page-card light"><h3>Setup</h3><p>Warm white document surface with quiet coral atmosphere.</p></article>
+            <article class="page-card dark"><h3>Live interview</h3><p>Deep ink signal field with coral voice activity and distinct status colors.</p></article>
+            <article class="page-card light"><h3>Review</h3><p>Return to warm white for clear evidence and human interpretation.</p></article>
           </div>
         </div>
       </section>
@@ -2427,190 +1609,171 @@
         <div class="shell">
           <div class="section-heading">
             <div>
-              <p class="metadata kicker">06 / PRIMITIVES &amp; STATES</p>
-              <h2 id="components-title">Compact examples, not application screens</h2>
+              <p class="eyebrow">COMPONENTS</p>
+              <h2 id="components-title">A small set of reusable pieces</h2>
             </div>
-            <p>Every state stays explicit, actionable, and consistent across light and dark surfaces.</p>
+            <p>Every state uses words or an icon as well as color. Buttons and inputs stay at least 44 px tall.</p>
           </div>
 
-          <div class="component-cluster">
-            <div class="cluster-heading"><h3>Action states</h3><p>Actual keyboard focus is visible on each interactive example.</p></div>
-            <div class="button-grid">
-              <div class="state-sample"><span>Default</span><button class="btn" type="button">Continue</button></div>
-              <div class="state-sample"><span>Hover</span><button class="btn is-hover" type="button">Continue</button></div>
-              <div class="state-sample"><span>Focus-visible</span><button class="btn is-focus" type="button">Continue</button></div>
-              <div class="state-sample"><span>Disabled</span><button class="btn" type="button" disabled>Start AI interview</button></div>
-              <div class="state-sample"><span>Loading</span><button class="btn" type="button" aria-label="Preparing conversation"><span class="spinner" aria-hidden="true"></span>Preparing</button></div>
-              <div class="state-sample"><span>Secondary / destructive</span><button class="btn danger" type="button">End interview</button></div>
-            </div>
-          </div>
+          <div class="component-stack">
+            <article class="component-row">
+              <div class="row-heading"><h3>Buttons</h3><p>Default, hover, focus, loading, disabled, and destructive</p></div>
+              <div class="button-row">
+                <button class="button" type="button">Continue</button>
+                <button class="button is-hover" type="button">Hover</button>
+                <button class="button is-focus" type="button">Focus</button>
+                <button class="button" type="button"><span class="spinner" aria-hidden="true"></span>Preparing</button>
+                <button class="button" type="button" disabled>Not ready</button>
+                <button class="button danger" type="button">Clear session</button>
+              </div>
+            </article>
 
-          <div class="component-cluster">
-            <div class="cluster-heading"><h3>Field states</h3><p>Labels and recovery text are never replaced by color.</p></div>
-            <div class="field-grid">
-              <div class="field-sample"><label for="field-default">Expected compensation</label><input id="field-default" value="€48,000–€52,000" readonly /><p class="field-note">Default · candidate stated</p></div>
-              <div class="field-sample focus"><label for="field-focus">Preferred role</label><input id="field-focus" value="Frontend Developer" readonly /><p class="field-note">Focus-visible · cyan ring</p></div>
-              <div class="field-sample error"><label for="field-error">CV document</label><input id="field-error" value="portfolio.png" aria-describedby="field-error-copy" aria-invalid="true" readonly /><p class="field-note" id="field-error-copy">Use a text-based PDF up to 5 MB.</p></div>
-            </div>
-          </div>
+            <article class="component-row">
+              <div class="row-heading"><h3>Fields</h3><p>Labels and recovery text stay visible</p></div>
+              <div class="field-grid">
+                <div class="field-sample"><label for="field-default">Expected compensation</label><input id="field-default" value="€48,000–€52,000" readonly /><p class="field-note">Default · candidate stated</p></div>
+                <div class="field-sample focus"><label for="field-focus">Preferred role</label><input id="field-focus" value="Frontend Developer" readonly /><p class="field-note">Visible focus · coral ring</p></div>
+                <div class="field-sample error"><label for="field-error">CV document</label><input id="field-error" value="portfolio.png" aria-describedby="field-error-copy" aria-invalid="true" readonly /><p class="field-note" id="field-error-copy">Use a text-based PDF up to 5 MB.</p></div>
+              </div>
+            </article>
 
-          <div class="component-cluster">
-            <div class="cluster-heading"><h3>Equal-priority entry modes</h3><p>Same prominence, complete explanation, non-competitive copy.</p></div>
-            <div class="entry-grid">
-              <article class="entry-card">
-                <div class="entry-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6M8 13h8M8 17h6" /></svg></div>
-                <h3>Use a CV</h3>
-                <p>For a more focused screen grounded in the document you choose.</p>
-                <ul><li>Text-based PDF or bundled sample</li><li>Evidence-linked preparation</li></ul>
-                <div class="entry-actions"><button class="btn" type="button">Choose PDF</button><button class="btn secondary" type="button">Use sample</button></div>
+            <article class="component-row">
+              <div class="row-heading"><h3>Status and evidence</h3><p>Meaning never relies on color alone</p></div>
+              <div class="badge-row">
+                <span class="status confirmed">✓ Confirmed</span>
+                <span class="status clarify">? Needs clarification</span>
+                <span class="status corrected">↺ Corrected</span>
+                <span class="status error">! Error</span>
+                <a class="evidence-chip" href="#interview">Caption · 02:14</a>
+                <span class="pill">CV fact</span>
+                <span class="pill">Standard screen</span>
+              </div>
+
+              <div class="state-grid">
+                <article class="state-card"><span class="status confirmed">✓ Confirmed</span><h3>English proficiency</h3><p>B2, stated by the candidate. This describes context; it is not a score.</p></article>
+                <article class="state-card"><span class="status clarify">? Needs clarification</span><h3>Availability</h3><p>Pilot heard a partial answer and should ask a short follow-up.</p></article>
+                <article class="state-card"><span class="status corrected">↺ Corrected</span><h3>Role preference</h3><p>Requested Full Stack; screening against Frontend.</p></article>
+              </div>
+            </article>
+
+            <div class="error-gate-grid">
+              <article class="message-panel error-panel">
+                <h3>We couldn’t prepare the conversation</h3>
+                <p>Your entry choice is preserved. Retry preparation or return to the two choices.</p>
+                <div class="button-row"><button class="button" type="button">Retry</button><button class="button secondary" type="button">Back to choices</button></div>
               </article>
-              <article class="entry-card">
-                <div class="entry-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" /><path d="M8 9h8M8 13h5" /></svg></div>
-                <h3>Start without a CV</h3>
-                <p>For the fastest, most open experience; ScreenPilot learns through conversation.</p>
-                <ul><li>One click; no document or form</li><li>Broader discovery first</li></ul>
-                <div class="entry-actions"><button class="btn" type="button">Start conversation-first</button></div>
-              </article>
-            </div>
-          </div>
-
-          <div class="component-cluster">
-            <div class="cluster-heading"><h3>Cards, badges, and evidence</h3><p>Provenance stays readable in every viewport.</p></div>
-            <div class="card-grid">
-              <article class="card"><div class="card-topline"><span class="badge">CV fact</span><span class="metadata">CV</span></div><h3>React and TypeScript</h3><p>“Built accessible interfaces using React and TypeScript.”</p><a class="evidence-chip" href="#composition"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7" /></svg>Source excerpt</a></article>
-              <article class="card"><div class="card-topline"><span class="badge violet">Standard screen</span><span class="metadata">TOPIC</span></div><h3>Availability and work pattern</h3><p>Confirm timing and Remote-within-Europe constraints conversationally.</p></article>
-              <article class="card"><div class="card-topline"><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Confirmed</span><span class="metadata">CANDIDATE</span></div><h3>English proficiency</h3><p>B2, candidate-stated. Language context is descriptive, not a score.</p><a class="evidence-chip" href="#composition">Caption · 02:14</a></article>
-            </div>
-          </div>
-
-          <div class="component-cluster">
-            <div class="cluster-heading"><h3>Semantic insight states</h3><p>Icon + text + color; never color alone.</p></div>
-            <div class="state-grid">
-              <article class="semantic-state" style="--state-color: #52d6a2"><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>Confirmed</span><p>Candidate explicitly verified the information.</p></article>
-              <article class="semantic-state" style="--state-color: #f1b84b"><span class="status clarification"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><path d="M10.3 3.8 2.4 18a2 2 0 0 0 1.8 3h15.6a2 2 0 0 0 1.8-3L13.7 3.8a2 2 0 0 0-3.4 0Z" /></svg>Needs clarification</span><p>The evidence is incomplete or ambiguous.</p></article>
-              <article class="semantic-state" style="--state-color: #35d4e7"><span class="status corrected"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 1-2.3-5.7L20 7" /><path d="M20 3v4h-4" /></svg>Corrected</span><p>The latest candidate statement replaces an earlier fact.</p></article>
-              <article class="semantic-state" style="--state-color: #f06a8a"><span class="status error"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><circle cx="12" cy="12" r="9" /></svg>Error</span><p>The blocking problem keeps a clear Retry or Back action.</p></article>
-            </div>
-          </div>
-
-          <div class="component-cluster">
-            <div class="cluster-heading"><h3>Recovery and paid-action fallback</h3><p>The fallback reserves stable height and styles only ScreenPilot’s surrounding copy.</p></div>
-            <div class="feedback-grid">
-              <article class="error-panel" role="group" aria-labelledby="error-title">
-                <div class="panel-heading"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4M12 17h.01" /><circle cx="12" cy="12" r="9" /></svg><div><h3 id="error-title">We couldn’t prepare the conversation</h3><p>Your chosen entry mode is preserved. Retry preparation or return to the two choices.</p><div class="entry-actions"><button class="btn" type="button">Retry</button><button class="btn secondary" type="button">Back to choices</button></div></div></div>
-              </article>
-              <article class="turnstile-shell" aria-labelledby="turnstile-title">
-                <div class="turnstile-status"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" /><path d="m9 12 2 2 4-4" /></svg><div><h3 id="turnstile-title">One quick security check may appear</h3><p class="field-note">It stays inline, keyboard reachable, and does not contact a paid provider until verification succeeds.</p></div></div>
-                <div class="turnstile-slot" tabindex="0"><span><strong>Reserved Cloudflare-managed area</strong><br />ScreenPilot does not imitate, restyle, hide, or alter widget internals.</span></div>
+              <article class="message-panel turnstile">
+                <div><h3>One quick security check may appear</h3><p>The surrounding message stays stable and keyboard reachable before a paid action.</p></div>
+                <div class="turnstile-slot">Cloudflare-owned widget area · ScreenPilot does not imitate or restyle its internals</div>
               </article>
             </div>
+
+            <article class="icon-policy">
+              <h3>Icon rule</h3>
+              <p>Use simple Lucide-style line icons at 16, 20, or 24 px with a 1.75 px stroke. Important icons always have a visible label or accessible name.</p>
+              <div class="icon-examples" aria-label="Icon style examples">
+                <svg class="icon" viewBox="0 0 24 24" aria-label="Microphone"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3" /></svg>
+                <svg class="icon" viewBox="0 0 24 24" aria-label="Evidence link"><path d="M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7" /><path d="M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7" /></svg>
+                <svg class="icon" viewBox="0 0 24 24" aria-label="Confirmed"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>
+              </div>
+            </article>
           </div>
         </div>
       </section>
 
-      <section class="section" id="composition" aria-labelledby="composition-title">
+      <section class="section interview-section" id="interview" aria-labelledby="interview-title">
         <div class="shell">
           <div class="section-heading">
             <div>
-              <p class="metadata kicker">07 / RESPONSIVE COMPOSITION</p>
-              <h2 id="composition-title">The same interview moment, continuously adapted</h2>
+              <p class="eyebrow">INTERVIEW SCREEN</p>
+              <h2 id="interview-title">Conversation first. Insights second.</h2>
             </div>
-            <p>This coded pair follows the selected concept’s workspace framing, voice presence, vertical insight rhythm, caption containment, and mobile carousel. Exact tokens, semantics, focus behavior, and responsive rules remain explicit in HTML.</p>
+            <p>Desktop gives the conversation about 42% of the workspace and insights about 58%. Mobile keeps the signal, captions, insight rail, and both controls.</p>
           </div>
-          <div class="composition-board">
-            <div class="composition-labels"><span class="metadata">DESKTOP SAMPLE · 42 / 58</span><span class="metadata">MOBILE SAMPLE · SAME MEANING</span></div>
-            <div class="composition-grid">
-              <article class="desktop-frame" aria-label="Desktop active-interview composition sample">
-                <header class="sample-appbar desktop-appbar">
-                  <div class="sp-lockup"><span class="mini-mark" aria-hidden="true"><span style="--mark-height: 11px"></span><span style="--mark-height: 20px"></span><span style="--mark-height: 25px"></span><span style="--mark-height: 17px"></span><span style="--mark-height: 9px"></span></span><span>ScreenPilot</span><span class="mode-pill"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="5" /><path d="M8 10h.01M12 10h.01M8 15l3-2" /></svg>Conversation-first</span></div>
-                  <span class="workspace-meta"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg>Remote within Europe</span>
-                </header>
-                <div class="desktop-body">
-                  <section class="voice-pane" aria-label="Live interview conversation">
-                    <div class="agent-status" aria-label="Pilot is interviewing. Listening."><span class="agent-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="11" rx="3" /><path d="M9 3h6M12 3v4M9 12h.01M15 12h.01M9 16h6" /></svg></span><span>Pilot is interviewing</span><span class="agent-listening"><span class="live-dot" aria-hidden="true"></span>Listening</span></div>
-                    <div class="voice-signal" aria-hidden="true"><div class="signal-bars"><span style="--bar-height: 18px"></span><span style="--bar-height: 34px"></span><span style="--bar-height: 24px"></span><span style="--bar-height: 44px"></span><span style="--bar-height: 28px"></span><span style="--bar-height: 38px"></span><span style="--bar-height: 20px"></span></div></div>
-                    <p class="listening-copy">Pilot is listening…</p>
-                    <div class="caption-panel"><div class="caption-meta"><span class="caption-status"><span class="live-dot" aria-hidden="true"></span>Live</span></div><p class="caption">Frontend is the closest fit. My expected range is €48,000–€52,000, and my English is B2.</p><div class="caption-footer"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M9 10H7a2 2 0 0 0 0 4h2M17 10h-2a2 2 0 0 0 0 4h2" /></svg>Auto-caption on</span><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></div></div>
-                    <div class="elapsed-row"><span class="elapsed-copy"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v6l4 2" /></svg>Elapsed</span><span class="metadata">04:32</span></div>
-                    <div class="interview-controls"><button class="control-button mute-control" type="button" aria-label="Mute microphone"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3" /></svg><span class="control-copy">Mute<small>Off</small></span></button><button class="control-button end end-control" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>End interview</button></div>
-                  </section>
-                  <section class="insight-pane" aria-label="Candidate-sourced insights">
-                    <div class="insight-heading"><div class="insight-title"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5Z" /><path d="m19 16 .7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7Z" /></svg><h3>Candidate-sourced insights</h3></div><p>Facts captured from candidate responses.</p></div>
-                    <div class="insight-constellation">
-                      <article class="dark-insight role"><span class="insight-symbol symbol-code" aria-hidden="true">&lt;/&gt;</span><div class="insight-copy"><h4>Role preference</h4><p>Requested Full Stack; screening against Frontend</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
-                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true">€</span><div class="insight-copy"><h4>Compensation expectation</h4><p>€48,000–€52,000</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
-                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg></span><div class="insight-copy"><h4>English proficiency</h4><p>B2</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
-                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></svg></span><div class="insight-copy"><h4>Availability</h4><p>Four weeks</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
-                      <article class="dark-insight"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="14" rx="2" /><path d="M8 22h8M12 18v4M8 9l-2 2 2 2M16 9l2 2-2 2M13 8l-2 6" /></svg></span><div class="insight-copy"><h4>Relevant frontend experience</h4><p>React, TypeScript, accessibility</p></div><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
-                    </div>
-                  </section>
-                </div>
-              </article>
 
-              <article class="mobile-frame" aria-label="Mobile active-interview composition sample">
-                <header class="sample-appbar mobile-appbar"><div class="sp-lockup"><span class="mini-mark" aria-hidden="true"><span style="--mark-height: 10px"></span><span style="--mark-height: 18px"></span><span style="--mark-height: 23px"></span><span style="--mark-height: 16px"></span><span style="--mark-height: 8px"></span></span><span>ScreenPilot</span></div><span class="mode-pill">Conversation-first</span></header>
-                <div class="mobile-live">
-                  <div class="agent-status" aria-label="Pilot is interviewing. Listening."><span class="agent-icon"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="7" width="14" height="11" rx="3" /><path d="M9 3h6M12 3v4M9 12h.01M15 12h.01M9 16h6" /></svg></span><span>Pilot is interviewing</span><span class="agent-listening"><span class="live-dot" aria-hidden="true"></span>Listening</span></div>
-                  <div class="voice-signal" aria-hidden="true"><div class="signal-bars"><span style="--bar-height: 15px"></span><span style="--bar-height: 27px"></span><span style="--bar-height: 20px"></span><span style="--bar-height: 36px"></span><span style="--bar-height: 22px"></span><span style="--bar-height: 30px"></span><span style="--bar-height: 16px"></span></div></div>
-                  <p class="listening-copy">Pilot is listening…</p>
-                  <div class="caption-panel"><div class="caption-meta"><span class="caption-status"><span class="live-dot" aria-hidden="true"></span>Live</span></div><p class="caption">Frontend is the closest fit. My expected range is €48,000–€52,000, and my English is B2.</p><div class="caption-footer"><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M9 10H7a2 2 0 0 0 0 4h2M17 10h-2a2 2 0 0 0 0 4h2" /></svg>Auto-caption on</span><span><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></div></div>
-                </div>
-                <div class="mobile-insights">
-                  <div class="mobile-insight-heading"><h3>Candidate-sourced insights</h3><p>Swipe to explore</p></div>
-                  <div class="mobile-card-rail" aria-label="Swipeable candidate insight cards">
-                    <article class="mobile-preview" aria-label="Compensation preview"><span class="insight-symbol" aria-hidden="true">€</span><strong>Compensation</strong><br />€48,000–€52,000</article>
-                    <article class="mobile-selected"><span class="insight-symbol symbol-code" aria-hidden="true">&lt;/&gt;</span><h3>Role preference</h3><p>Requested Full Stack; screening against Frontend</p><span class="status confirmed"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>Confirmed</span><span class="evidence-cue"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h6" /></svg>Caption evidence</span></article>
-                    <article class="mobile-preview" aria-label="English proficiency preview"><span class="insight-symbol" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg></span><strong>English</strong><br />B2</article>
-                  </div>
-                  <div class="rail-dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
-                </div>
-                <div class="mobile-controls"><button class="control-button mute-control" type="button" aria-label="Mute microphone"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" /><path d="M5 11v1a7 7 0 0 0 14 0v-1M12 19v3" /></svg><span class="control-copy">Mute<small>Off</small></span></button><span class="mobile-elapsed">Elapsed<span class="metadata">04:32</span></span><button class="control-button end end-control" type="button"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2" /></svg>End interview</button></div>
-              </article>
+          <div class="interview-demo" aria-label="Coded active-interview reference">
+            <div class="interview-header">
+              <span class="interview-brand">ScreenPilot</span>
+              <span class="mode-badge">Conversation-first</span>
             </div>
+
+            <section class="voice-panel" aria-labelledby="voice-title">
+              <div class="live-row"><span class="live-label">Pilot is interviewing</span><span class="meta timer">02:14</span></div>
+              <div class="signal-area">
+                <div class="signal" aria-hidden="true"><span style="--bar:24px"></span><span style="--bar:44px"></span><span style="--bar:64px"></span><span style="--bar:34px"></span><span style="--bar:72px"></span><span style="--bar:48px"></span><span style="--bar:28px"></span><span style="--bar:54px"></span><span style="--bar:38px"></span></div>
+                <div class="signal-copy"><strong id="voice-title">Pilot is listening…</strong><span>Voice activity, not a score</span></div>
+              </div>
+              <div class="caption-panel"><p class="meta">LIVE CAPTION · CANDIDATE</p><p>“I originally looked for a full-stack role, but frontend is the stronger fit for my recent work.”</p></div>
+              <div class="control-row">
+                <span class="meta timer">ELAPSED · 02:14</span>
+                <div class="button-row">
+                  <button class="interview-control" type="button" aria-label="Mute Pilot's microphone input">Mute <span class="control-state">Microphone on</span></button>
+                  <button class="interview-control end" type="button">End interview</button>
+                </div>
+              </div>
+            </section>
+
+            <section class="insight-panel" aria-labelledby="insight-title">
+              <div class="insight-heading"><h2 id="insight-title">Candidate-sourced insights</h2><p>Facts captured from candidate answers. Swipe on mobile.</p></div>
+              <div class="insight-list">
+                <article class="insight-card selected"><span class="insight-icon" aria-hidden="true">&lt;/&gt;</span><div class="insight-copy"><h3>Role preference</h3><p>Requested Full Stack; screening against Frontend</p></div><span class="dark-status">✓ Confirmed</span></article>
+                <article class="insight-card"><span class="insight-icon" aria-hidden="true">€</span><div class="insight-copy"><h3>Compensation</h3><p>€48,000–€52,000 expected</p></div><span class="dark-status">✓ Confirmed</span></article>
+                <article class="insight-card"><span class="insight-icon" aria-hidden="true">Aa</span><div class="insight-copy"><h3>English proficiency</h3><p>B2, candidate-stated</p></div><span class="dark-status">✓ Confirmed</span></article>
+                <article class="insight-card"><span class="insight-icon" aria-hidden="true">↗</span><div class="insight-copy"><h3>Availability</h3><p>Not confirmed yet</p></div><span class="dark-status" style="color:var(--warning-400)">? Needs clarification</span></article>
+                <article class="insight-card"><span class="insight-icon" aria-hidden="true">⌁</span><div class="insight-copy"><h3>Relevant frontend experience</h3><p>Not discussed yet</p></div><span class="dark-status" style="color:var(--warning-400)">? Needs clarification</span></article>
+              </div>
+            </section>
           </div>
-          <div class="token-line" aria-label="Composition rules"><code>full-height field + centered bounded workspace</code><code>desktop: 42% conversation / 58% insights</code><code>mobile: signal → captions → insight rail → safe controls</code><code>still atmosphere + localized signal/card motion</code><code>dynamic viewport + safe-area insets</code><code>no horizontal page scroll</code></div>
+
           <figure class="concept-reference" id="concept-reference">
-            <div class="concept-reference-heading"><div><p class="metadata kicker">PRIMARY VISUAL REFERENCE</p><h3>Refined paired active-interview concept</h3></div><p>Image-led composition · explicit HTML rules govern behavior and access</p></div>
-            <img class="concept-image" src="assets/screenpilot-active-interview-concept.png" width="1536" height="1024" loading="lazy" alt="Selected ScreenPilot Signal Canvas concept board showing the same active interview in a wide desktop workspace and a coordinated mobile layout, with a violet and cyan voice signal, readable caption panel, candidate-sourced insight cards, and mute and end controls." />
-            <figcaption>The coded sample now follows the concept’s framed app shell, vertical desktop insight stack, spacious caption panel, large voice presence, separated controls, and selected-card mobile rail. The HTML remains authoritative for exact tokens, content, semantics, keyboard behavior, reduced motion, and continuous responsive reflow; incidental bitmap measurements are not requirements.</figcaption>
+            <figcaption><strong>Primary composition reference.</strong> The image guides mood and hierarchy; the written colors, behavior, responsive rules, and accessibility above remain authoritative.</figcaption>
+            <img src="assets/screenpilot-active-interview-concept.png?v=deep-ink-coral-20260908" alt="Paired desktop and mobile ScreenPilot active-interview concept using Deep Ink navy, Warm Coral, readable captions, voice signal, controls, and candidate-sourced insight cards." />
           </figure>
         </div>
       </section>
 
-      <section class="section" id="motion" aria-labelledby="motion-title">
+      <section class="section" id="rules" aria-labelledby="rules-title">
         <div class="shell">
           <div class="section-heading">
             <div>
-              <p class="metadata kicker">08 / MOTION &amp; ACCESS</p>
-              <h2 id="motion-title">Motion explains change, then gets out of the way</h2>
+              <p class="eyebrow">RESPONSIVE &amp; ACCESSIBLE</p>
+              <h2 id="rules-title">Same product at every size</h2>
             </div>
-            <p>Spatial travel and pulsing disappear when reduced motion is requested. State, label, layout, and evidence remain.</p>
+            <p>The design changes its arrangement, not its meaning. No important content or recovery action disappears on a smaller screen.</p>
           </div>
-          <div class="motion-grid">
-            <article class="motion-panel">
-              <h3>Timing and easing</h3>
-              <ul><li>Background atmosphere remains still; it does not drift, pulse, or compete with captions.</li><li>Default transitions: 180–240 ms.</li><li>Insight appearance: 320–450 ms with opacity, small scale, and short connector draw.</li><li>Correction: border/color morph; never shake.</li><li>Voice signal: smooth response; no rapid flashing.</li></ul>
-              <div class="motion-sample" aria-label="Insight appearance motion example"><span class="motion-node" aria-hidden="true"></span><span class="motion-copy">A short, calm arrival from signal to structured insight.</span></div>
+
+          <div class="rules-grid">
+            <article class="check-card">
+              <h3>Responsive rules</h3>
+              <ul class="check-list">
+                <li>Works continuously from 320 px through 2560 px and beyond.</li>
+                <li>No horizontal page scrolling or clipped primary actions.</li>
+                <li>Mobile uses dynamic viewport space and safe-area padding.</li>
+                <li>Entry choices keep equal visual weight when stacked.</li>
+                <li>Captions stay readable and never sit under fixed controls.</li>
+              </ul>
             </article>
-            <article class="motion-panel">
-              <h3>Reduced-motion contract</h3>
-              <ul><li>Remove spatial travel and continuous pulsing.</li><li>Use immediate opacity/state changes.</li><li>Keep live status text and final captions available.</li><li>Never autoplay microphone or voice.</li></ul>
-              <p class="font-stack">This document honors <code>prefers-reduced-motion: reduce</code> for its voice, loading, scrolling, and insight demonstrations.</p>
+            <article class="check-card">
+              <h3>Accessibility rules</h3>
+              <ul class="check-list">
+                <li>Normal text meets WCAG AA contrast.</li>
+                <li>Keyboard focus is always visible.</li>
+                <li>Controls are at least 44 × 44 px.</li>
+                <li>Status uses words or icons as well as color.</li>
+                <li>No microphone or voice session starts automatically.</li>
+                <li>Captions remain available throughout the call.</li>
+              </ul>
             </article>
           </div>
-          <div class="do-dont">
-            <article class="guidance"><strong>Use</strong><p>Semantic headings and landmarks, visible focus, 44 px targets, labelled insight states, readable captions, and stable inline recovery.</p></article>
-            <article class="guidance"><strong>Avoid</strong><p>Hiring scores, decorative analytics, neon cyberpunk, robots, generic HR dashboards, hidden mobile features, excessive glow, and excessive glass.</p></article>
-          </div>
+
+          <p class="plain-note"><strong>Motion:</strong> normal transitions last 180–240 ms. Insight cards may enter over 320–450 ms. Corrections use a quiet border/color change—never a shake. Reduced-motion mode removes travel, pulsing, and smooth scrolling.</p>
+          <p class="motion-note"><strong>Reference boundary:</strong> the supplied dashboard image influenced only the Deep Ink + Warm Coral palette and warm visual mood. ScreenPilot does not inherit its recruiter navigation, candidate profiles, pipeline, analytics, scoring, phone controls, or other unsupported features.</p>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <div class="shell footer-inner">
-        <a class="brand" href="#top">ScreenPilot / Signal Canvas</a>
-        <p>This lightweight reference governs visual foundations only. Product behavior, scope, accessibility, and responsive requirements remain authoritative in the ScreenPilot demo source of truth. The interface supports recruiter judgment and never makes an automated hiring decision.</p>
-      </div>
+      <div class="shell">ScreenPilot visual reference · Deep Ink + Warm Coral revision · SP-004</div>
     </footer>
   </body>
 </html>

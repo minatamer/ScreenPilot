@@ -72,6 +72,7 @@ If a dependency is missing or materially different, stop at that boundary and re
 Current implementation progress, reconciled against code and Git history on 2026-09-08:
 
 - SP-001, SP-002, SP-003, and SP-004 are completed, reviewed, revised, and represented by their documented implementation commits.
+- SP-004's earlier direction is represented by `6f94d0a`; the approved Deep Ink + Warm Coral revision supersedes it for implementation.
 - SP-003 remains credential-free by design; live/paid verification waits for user-supplied credentials and explicit permission, while deterministic fake-mode verification is complete.
 - SP-005 is the next unfinished ticket. Later tickets remain pending according to their dependency order.
 
