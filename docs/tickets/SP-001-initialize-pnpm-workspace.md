@@ -1,9 +1,9 @@
 # SP-001 — Initialize Git and the plain pnpm workspace
 
 Status: Required  
-Implementation state: Implemented and verified locally; awaiting user review before staging  
+Implementation state: Completed, reviewed, revised, and verified; committed as `1b9e0b1`<br>
 Milestone: Milestone 0 — repository and visual foundations  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-08<br>
 Depends on: Nothing  
 Suggested commit: `chore(repo): initialize stateless ScreenPilot workspace`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -141,7 +141,8 @@ The backend/contracts `index.ts` files are empty compile entry points only. They
 - pnpm 11.24.0 supersedes the initially tested 11.19.0 pin because pnpm 11.20.0 fixed named-registry substitution and malicious-lockfile rebuild risks affecting the earlier line. The workstation's default Node remains 22.23.2, so exact-target verification used Node's official portable 24.20.0 Windows archive after its SHA-256 matched the published checksum; it did not change the installed system runtime or add files to the repository.
 - Frozen install, route type generation, strict typecheck, focused package checks, production build, and `pnpm audit --prod` all passed under the exact Node.js 24.20.0/pnpm 11.24.0 toolchain. The production audit reported no known vulnerabilities.
 - Git was initialized on `main`, `origin` was configured, and `.git` ownership was restored to the user's Windows account so local Git does not require a global `safe.directory` exception.
-- The index remains empty and the repository has no commit. No fetch, pull, stage, commit, or push was performed.
+- The original review boundary was satisfied: the SP-001 work remained unstaged and uncommitted until the user reviewed it. It was later committed as `1b9e0b1` and is present on `main` and `origin/main`.
+- Revised on 2026-09-08 against the ticket, source of truth, current repository tree, and commit history. The workspace graph, single-lockfile rule, package exports, privacy ignores, targetable builds, and absence of a second orchestrator remain correct; no SP-001 implementation gap was found.
 
 ## Commit boundary
 
@@ -157,4 +158,6 @@ Keep SP-001 reviewable as one logical change represented by `chore(repo): initia
 
 ## Completion handoff
 
-Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
+- Outcome: SP-001 is complete, reviewed, committed, and revised against current repository evidence.
+- Verification: the 2026-09-08 revision reconfirmed the package graph, contract export boundary, one root lockfile, ignored local credential paths, and successful milestone quality gate.
+- Deviations or blockers: none. The no-commit checklist items describe the historical pre-review boundary and were satisfied before commit `1b9e0b1` was created.

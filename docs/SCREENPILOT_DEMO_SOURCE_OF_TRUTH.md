@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-08-31  
+Last revised: 2026-09-08<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -2132,7 +2132,7 @@ Controls:
 - Verify origin, cookie, grant signature/expiry, Turnstile `voice_token` action/hostname, paid-demo flag, backend route/source limit, and configured provider/concurrency conditions.
 - Never accept an agent ID, model ID, voice ID, prompt, or tool definition from the browser.
 
-Response contains a short-lived conversation token and public agent configuration identifiers required by the SDK. It is `Cache-Control: no-store`.
+Response contains a short-lived conversation token and public agent configuration identifiers required by the SDK. The provider adapter may normalize ElevenLabs' returned conversation identifier for transient request handling, but ScreenPilot does not invent an expiry timestamp that the provider response does not supply. The response is `Cache-Control: no-store`.
 
 ### `POST /v1/interview/summary`
 
@@ -2979,7 +2979,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-001 — Initialize Git and the plain pnpm workspace](tickets/SP-001-initialize-pnpm-workspace.md)
 
-**Outcome:** Complete locally and awaiting user review before staging. The repository is initialized on `main` with the canonical SSH remote, and minimal `frontend`, `backend`, and shared-contract packages build without an extra workspace orchestrator.
+**Outcome:** Completed, reviewed, revised, and committed as `1b9e0b1`. The repository is initialized on `main` with the canonical SSH remote, and minimal `frontend`, `backend`, and shared-contract packages build without an extra workspace orchestrator.
 
 **Depends on:** Nothing.
 
@@ -2998,7 +2998,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-002 — Add fast essential quality checks](tickets/SP-002-add-fast-essential-quality-checks.md)
 
-**Outcome:** Complete locally and awaiting user review before staging. Every package has quick, focused checks that protect basic code quality without making each ticket wait for a browser suite; the initial read-only `quality` workflow contains no paid-provider or deployment path.
+**Outcome:** Completed, reviewed, revised, and committed as `60241c4`. Every package has quick, focused checks that protect basic code quality without making each ticket wait for a browser suite; the initial read-only `quality` workflow contains no paid-provider or deployment path.
 
 **Depends on:** SP-001.
 
@@ -3018,7 +3018,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-003 — Add validated configuration and provider fakes](tickets/SP-003-add-validated-configuration-and-provider-fakes.md)
 
-**Outcome:** Frontend/backend configuration fails safely and development works without paid calls.
+**Outcome:** Completed, reviewed, and revised; the original implementation is commit `e7e8a18`. Frontend/backend configuration fails safely, development works without paid calls, and the provider seams now preserve real Turnstile failure shapes and the documented ElevenLabs token boundary before live integration.
 
 **Depends on:** SP-001.
 
@@ -3038,7 +3038,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-004 — Create and approve the visual design references](tickets/SP-004-create-and-approve-visual-design-references.md)
 
-**Outcome:** One lightweight browser-viewable style guide plus one tightly scoped active-interview concept align the user and implementation agent on ScreenPilot’s visual foundations and primary composition before React page styling begins.
+**Outcome:** Completed, user-approved, reviewed, revised, and committed as `6f94d0a`. One lightweight browser-viewable style guide plus one tightly scoped active-interview concept align the user and implementation agent on ScreenPilot’s visual foundations and primary composition before React page styling begins.
 
 **Depends on:** SP-001, SP-002.
 
@@ -3046,22 +3046,22 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Create `docs/SCREENPILOT_DESIGN_SYSTEM.html` as the self-contained lightweight living style guide defined in Section 14.
-- [ ] Show named color tokens with exact values, foreground pairings, light/dark surfaces, and concise semantic usage rules.
-- [ ] Show Geist Sans/Mono fallbacks and every approved typography level using realistic ScreenPilot copy.
-- [ ] Document spacing, gutters, widths, breakpoints/reference viewports, radii, borders, elevation, opacity, gradients, glass limits, and motion/reduced-motion rules.
-- [ ] Document one Lucide-aligned icon system with sizes, stroke weight, semantic usage, and accessibility expectations.
-- [ ] Render compact examples of the required primitives/cards and their default, hover, focus-visible, disabled, loading, confirmed, clarification, corrected, and error states.
-- [ ] Include the stable responsive container/status treatment for a rare interaction-only Turnstile fallback without imitating, restyling, or hiding Cloudflare's widget internals.
-- [ ] Show the equal-priority CV-assisted and conversation-first entry cards plus their selected/focus/responsive states without building the real flow inside the document.
-- [ ] Include one small paired desktop/mobile composition sample proving the same visual language adapts responsively.
-- [ ] Keep the document static and demo-sized: no application flow, CV logic, provider integration, router, full-screen mockup catalogue, Storybook, or Figma dependency.
-- [ ] Render the HTML at representative phone, tablet, laptop/desktop, and large-monitor widths, including an intermediate drag-resized width, and resolve contrast, overflow, font-loading, and consistency issues.
-- [ ] Obtain user approval of the HTML visual reference before generating the ImageGen concept.
-- [ ] Use the approved reference and the exact Section 15 prompt to generate one concept board containing the same active-interview moment at desktop and mobile sizes.
-- [ ] Save the approved generated artifact as `docs/assets/screenpilot-active-interview-concept.png`.
-- [ ] Review the generated concept against the Section 15 checklist; reject invented features and write every accepted compositional refinement back into Section 14 and the HTML reference.
-- [ ] Obtain user approval of the reconciled HTML reference and single concept board before SP-005 broad React styling begins.
+- [x] Create `docs/SCREENPILOT_DESIGN_SYSTEM.html` as the self-contained lightweight living style guide defined in Section 14.
+- [x] Show named color tokens with exact values, foreground pairings, light/dark surfaces, and concise semantic usage rules.
+- [x] Show Geist Sans/Mono fallbacks and every approved typography level using realistic ScreenPilot copy.
+- [x] Document spacing, gutters, widths, breakpoints/reference viewports, radii, borders, elevation, opacity, gradients, glass limits, and motion/reduced-motion rules.
+- [x] Document one Lucide-aligned icon system with sizes, stroke weight, semantic usage, and accessibility expectations.
+- [x] Render compact examples of the required primitives/cards and their default, hover, focus-visible, disabled, loading, confirmed, clarification, corrected, and error states.
+- [x] Include the stable responsive container/status treatment for a rare interaction-only Turnstile fallback without imitating, restyling, or hiding Cloudflare's widget internals.
+- [x] Show the equal-priority CV-assisted and conversation-first entry cards plus their selected/focus/responsive states without building the real flow inside the document.
+- [x] Include one small paired desktop/mobile composition sample proving the same visual language adapts responsively.
+- [x] Keep the document static and demo-sized: no application flow, CV logic, provider integration, router, full-screen mockup catalogue, Storybook, or Figma dependency.
+- [x] Render the HTML at representative phone, tablet, laptop/desktop, and large-monitor widths, including an intermediate drag-resized width, and resolve contrast, overflow, font-loading, and consistency issues.
+- [x] Obtain user approval of the HTML visual reference before generating the ImageGen concept.
+- [x] Use the approved reference and the exact Section 15 prompt to generate one concept board containing the same active-interview moment at desktop and mobile sizes.
+- [x] Save the approved generated artifact as `docs/assets/screenpilot-active-interview-concept.png`.
+- [x] Review the generated concept against the Section 15 checklist; reject invented features and write every accepted compositional refinement back into Section 14 and the HTML reference.
+- [x] Obtain user approval of the reconciled HTML reference and single concept board before SP-005 broad React styling begins.
 
 #### [SP-005 — Implement the approved Signal Canvas foundations](tickets/SP-005-implement-signal-canvas-foundations.md)
 

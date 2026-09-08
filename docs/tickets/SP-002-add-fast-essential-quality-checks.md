@@ -1,10 +1,10 @@
 # SP-002 — Add fast essential quality checks
 
 Status: Required  
-Implementation state: Implemented and verified locally; awaiting user review before staging
+Implementation state: Completed, reviewed, revised, and verified; committed as `60241c4`
 
 Milestone: Milestone 0 — repository and visual foundations  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-08<br>
 Depends on: SP-001  
 Suggested commit: `chore(quality): add fast essential checks`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -78,7 +78,8 @@ Provide fast, focused linting, formatting, type, unit-test, and build gates that
 - All targeted lint, typecheck, unit-test, and build commands passed. `verify:quick` passed with OpenAI, ElevenLabs, and Turnstile provider values removed from the verification process.
 - Temporary probes produced the required failures for frontend-to-backend, contracts-to-frontend, backend-to-contract-source deep import, frontend-to-`node:fs`, and parent-directory traversal through the frontend `@/*` alias. The probes were removed and lint passed afterward.
 - Workflow syntax was parsed by Prettier and its events, exact `quality` name, read-only permission, action/tool pins, cache input, frozen install, and five gates were asserted locally. Full and production `pnpm audit` checks reported no known vulnerabilities.
-- A hosted GitHub Actions run and the repository's branch-protection setting remain unobserved because this ticket is intentionally unstaged and unpushed pending user review. The required branch-protection check name is documented as `quality`.
+- The ticket was later committed as `60241c4` and is present on `main` and `origin/main`. A hosted GitHub Actions run and the repository's branch-protection setting remain unobserved from this local revision; the required branch-protection check name remains `quality`.
+- Revised on 2026-09-08 against the ticket, current quality configuration, commit history, dependency audit, and a fresh milestone gate. Formatting, strict lint, typechecks, unit tests, and production builds remain green; no SP-002 implementation gap was found.
 
 ## Commit boundary
 
@@ -92,4 +93,6 @@ Keep SP-002 reviewable as one logical change represented by `chore(quality): add
 
 ## Completion handoff
 
-Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
+- Outcome: SP-002 is complete, reviewed, committed, and revised against current repository evidence.
+- Verification: the 2026-09-08 revision reconfirmed the unpaid `quality` gate, package-boundary enforcement, secret-free CI configuration, dependency audit, and successful milestone quality gate.
+- Deviations or blockers: no implementation blocker. Hosted workflow history and branch-protection settings were not inspected from the local repository and are not claimed as verified.

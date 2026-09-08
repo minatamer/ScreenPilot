@@ -4,7 +4,6 @@ export type VoiceTokenProviderInput = Readonly<{
 
 export type VoiceTokenProviderResult = Readonly<{
   conversationToken: string;
-  expiresAt: string;
 }>;
 
 export interface VoiceTokenProvider {

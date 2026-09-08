@@ -56,15 +56,19 @@ export class FakeOpenAi
     _input: CvAnalyzerInput,
     signal?: AbortSignal,
   ): Promise<CvAnalyzerResult<FakeNormalizedCv, FakeScreeningPlan>> {
-    signal?.throwIfAborted();
-    return Promise.resolve(fakeCvAnalysis);
+    return Promise.resolve().then(() => {
+      signal?.throwIfAborted();
+      return fakeCvAnalysis;
+    });
   }
 
   summarizeInterview(
     _input: unknown,
     signal?: AbortSignal,
   ): Promise<InterviewSummaryProviderResult<FakeInterviewSummary>> {
-    signal?.throwIfAborted();
-    return Promise.resolve(fakeInterviewSummary);
+    return Promise.resolve().then(() => {
+      signal?.throwIfAborted();
+      return fakeInterviewSummary;
+    });
   }
 }

@@ -11,14 +11,16 @@ export class FakeTurnstileVerifier implements ChallengeVerifier {
     input: ChallengeVerificationInput,
     signal?: AbortSignal,
   ): Promise<ChallengeVerificationResult> {
-    signal?.throwIfAborted();
+    return Promise.resolve().then(() => {
+      signal?.throwIfAborted();
 
-    const success = input.token === FAKE_TURNSTILE_PASS_TOKEN;
-    return Promise.resolve({
-      action: input.expectedAction,
-      errorCodes: success ? [] : ["invalid-input-response"],
-      hostname: success ? "test.screenpilot.invalid" : null,
-      success,
+      const success = input.token === FAKE_TURNSTILE_PASS_TOKEN;
+      return {
+        action: success ? input.expectedAction : null,
+        errorCodes: success ? [] : ["invalid-input-response"],
+        hostname: success ? "test.screenpilot.invalid" : null,
+        success,
+      };
     });
   }
 }

@@ -1,10 +1,10 @@
 # SP-003 — Add validated configuration and provider fakes
 
 Status: Required  
-Implementation state: Implemented and verified locally; awaiting user review before staging
+Implementation state: Completed, reviewed, revised, and verified; original implementation committed as `e7e8a18`
 
 Milestone: Milestone 0 — repository and visual foundations  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-08<br>
 Depends on: SP-001  
 Suggested commit: `feat(config): validate stateless provider configuration`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -84,10 +84,13 @@ Establish typed server/public configuration and deterministic provider seams so 
 - Added Express/SDK-independent use-case ports plus dependency-free fake OpenAI, ElevenLabs, and Turnstile adapters. Fake selection creates no network-capable client; live mode throws unless the later composition root injects an adapter set explicitly.
 - `createProviderAdapters` currently accepts the general `ProviderAdapters` type for live injection, so TypeScript does not distinguish genuine live adapters from fakes; the unit test deliberately injects the fake set in live mode to prove explicit injection is honored. This is not a silent fallback or an SP-003 blocker, but SP-009/later live composition should construct or brand genuine live adapters so the invariant is clearer.
 - Removed the contracts root entry point. The declared public subpath resolves from the frontend workspace, while the package root remains blocked by `exports`.
-- Configuration/adapter unit tests passed for local fake, test fake, non-production published Turnstile test keys, and production live examples; missing groups, secret redaction, enums, URLs, numeric bounds, hostnames, actions, fake/live selection, and stable content-safe fake outputs are covered. Contracts reported 3 passing tests and backend reported 19.
+- Configuration/adapter unit tests passed for local fake, test fake, every published Turnstile test site-key behavior, and production live examples; missing groups, secret redaction, enums, URLs, numeric bounds, hostnames, actions, fake/live selection, and stable content-safe fake outputs are covered.
 - Targeted contracts/backend lint, contracts/backend/frontend typecheck, backend/contracts build, package-export probes, ignore/blank-template checks, source environment-reader scan, frontend build-output secret scan, and `pnpm verify:quick` passed. No UI behavior changed, so responsive visual verification was not applicable.
 - The loader's fail-safe behavior was exercised directly, but literal backend process startup and `GET /health/ready` were not exercised because `app.ts`, `server.ts`, and the readiness route are owned by SP-009. SP-009 must call this loader at composition/startup and expose the resulting readiness behavior without printing values.
 - Live OpenAI, ElevenLabs, real-host Turnstile, and paid-call checks remain blocked by **waiting for user-supplied credentials and permission for paid testing**. No usable `.env.local` file or provider call was created.
+- Revised on 2026-09-08 after a completed-ticket functional audit. Production now rejects all five published Turnstile test site keys, challenge failures preserve absent/untrusted provider fields instead of inventing an expected action, the ElevenLabs token seam models the documented token/conversation identifier without an undocumented expiry, and aborted fake operations reject consistently through their Promise contracts.
+- The revision passed focused backend lint/typecheck and 33 backend tests. The complete unpaid `verify:quick` gate also passed with 3 contracts tests, 33 backend tests, 1 frontend test, and all three production builds under Node.js 24.19.0/pnpm 11.24.0; the original ticket remains independently verified under its exact pinned Node.js 24.20.0 runtime.
+- The original implementation is commit `e7e8a18` on `main` and `origin/main`. This revision remains available as an unstaged working-tree change for user review; no credential was added and no provider call was made.
 
 ## Commit boundary
 
@@ -104,7 +107,9 @@ Keep SP-003 reviewable as one logical change represented by `feat(config): valid
 
 ## Completion handoff
 
-Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
+- Outcome: SP-003 is complete, reviewed, and revised for future live-adapter compatibility while preserving credential-free fake mode.
+- Verification: focused backend lint, typecheck, and all configuration/provider tests pass; the final milestone gate is recorded above after the revision.
+- Deviations: none from the fake-first credential gate. Live and paid verification remains intentionally blocked pending user-supplied credentials and explicit paid-test permission.
 
 Non-blocking follow-ups carried into later tickets:
 

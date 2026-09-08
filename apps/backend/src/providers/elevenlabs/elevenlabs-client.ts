@@ -4,8 +4,8 @@ export type ElevenLabsConversationTokenRequest = Readonly<{
 }>;
 
 export type ElevenLabsConversationTokenResponse = Readonly<{
+  conversationId: string;
   conversationToken: string;
-  expiresAt: string;
 }>;
 
 export interface ElevenLabsClient {

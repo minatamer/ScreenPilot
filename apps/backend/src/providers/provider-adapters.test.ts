@@ -45,7 +45,6 @@ describe("provider adapter composition", () => {
     expect(firstCvResult.usage).toEqual({ inputTokens: 0, outputTokens: 0 });
     expect(voiceResult).toEqual({
       conversationToken: "screenpilot-fake-conversation-token",
-      expiresAt: "2030-01-01T00:00:00.000Z",
     });
     expect(challengeResult).toEqual({
       action: "cv_analyze",
@@ -53,6 +52,58 @@ describe("provider adapter composition", () => {
       hostname: "test.screenpilot.invalid",
       success: true,
     });
+  });
+
+  it("models a failed challenge without inventing provider fields", async () => {
+    const adapters = createProviderAdapters(fakeConfig);
+
+    await expect(
+      adapters.challengeVerifier.verifyChallenge({
+        expectedAction: "voice_token",
+        token: "screenpilot-fake-turnstile-fail",
+      }),
+    ).resolves.toEqual({
+      action: null,
+      errorCodes: ["invalid-input-response"],
+      hostname: null,
+      success: false,
+    });
+  });
+
+  it("rejects aborted fake operations through their Promise contract", async () => {
+    const adapters = createProviderAdapters(fakeConfig);
+    const abortController = new AbortController();
+    abortController.abort();
+
+    const abortedOperations = [
+      () =>
+        adapters.cvAnalyzer.analyzeCv(
+          { cvText: "synthetic", vacancyCatalogKey: "demo-engineering" },
+          abortController.signal,
+        ),
+      () =>
+        adapters.interviewSummarizer.summarizeInterview(
+          { transcript: "synthetic" },
+          abortController.signal,
+        ),
+      () =>
+        adapters.voiceTokenProvider.createVoiceToken(
+          { requestId: "unit-test-request" },
+          abortController.signal,
+        ),
+      () =>
+        adapters.challengeVerifier.verifyChallenge(
+          {
+            expectedAction: "interview_summary",
+            token: FAKE_TURNSTILE_PASS_TOKEN,
+          },
+          abortController.signal,
+        ),
+    ];
+
+    for (const operation of abortedOperations) {
+      await expect(operation()).rejects.toMatchObject({ name: "AbortError" });
+    }
   });
 
   it("never falls back to fakes in live mode", () => {

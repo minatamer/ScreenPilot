@@ -40,6 +40,20 @@ const liveEnvironment = {
   TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
 } as const;
 
+const publishedTurnstileTestSiteKeys = [
+  "1x00000000000000000000AA",
+  "2x00000000000000000000AB",
+  "1x00000000000000000000BB",
+  "2x00000000000000000000BB",
+  "3x00000000000000000000FF",
+] as const;
+
+const publishedTurnstileTestSecretKeys = [
+  "1x0000000000000000000000000000000AA",
+  "2x0000000000000000000000000000000AA",
+  "3x0000000000000000000000000000000AA",
+] as const;
+
 describe("loadBackendConfig", () => {
   it.each([
     ["local fake", fakeEnvironment],
@@ -67,31 +81,51 @@ describe("loadBackendConfig", () => {
     expect(config.publicRuntime.abuseProtection.siteKey).toBe("");
   });
 
-  it("accepts Cloudflare's published test-key flow outside production", () => {
-    const config = loadBackendConfig({
-      ...liveEnvironment,
-      ALLOWED_ORIGINS: "http://localhost:3000",
-      APP_ENV: "test",
-      TURNSTILE_ALLOWED_HOSTNAMES: "localhost",
-      TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
-      TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
-    });
+  it.each(publishedTurnstileTestSiteKeys)(
+    "accepts Cloudflare's published test site key %s outside production",
+    (siteKey) => {
+      const config = loadBackendConfig({
+        ...liveEnvironment,
+        ALLOWED_ORIGINS: "http://localhost:3000",
+        APP_ENV: "test",
+        TURNSTILE_ALLOWED_HOSTNAMES: "localhost",
+        TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
+        TURNSTILE_SITE_KEY: siteKey,
+      });
 
-    expect(config.providerMode).toBe("live");
-  });
+      expect(config.providerMode).toBe("live");
+    },
+  );
 
-  it("rejects production fake mode and published Turnstile test keys", () => {
+  it.each(publishedTurnstileTestSecretKeys)(
+    "rejects Cloudflare's published test secret key %s in production",
+    (secretKey) => {
+      expect(() =>
+        loadBackendConfig({
+          ...liveEnvironment,
+          TURNSTILE_SECRET_KEY: secretKey,
+        }),
+      ).toThrow(/test keys are forbidden/i);
+    },
+  );
+
+  it("rejects production fake mode", () => {
     expect(() =>
       loadBackendConfig({ ...fakeEnvironment, APP_ENV: "production" }),
     ).toThrow(BackendConfigError);
-    expect(() =>
-      loadBackendConfig({
-        ...liveEnvironment,
-        TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA",
-        TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
-      }),
-    ).toThrow(/test keys are forbidden/i);
   });
+
+  it.each(publishedTurnstileTestSiteKeys)(
+    "rejects Cloudflare's published test site key %s in production",
+    (siteKey) => {
+      expect(() =>
+        loadBackendConfig({
+          ...liveEnvironment,
+          TURNSTILE_SITE_KEY: siteKey,
+        }),
+      ).toThrow(/test keys are forbidden/i);
+    },
+  );
 
   it("rejects incomplete live groups without printing secret values", () => {
     const privateValue = "private-test-value-that-must-not-appear";

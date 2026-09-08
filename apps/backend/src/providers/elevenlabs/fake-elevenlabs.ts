@@ -6,7 +6,6 @@ import type {
 
 const fakeVoiceToken: VoiceTokenProviderResult = Object.freeze({
   conversationToken: "screenpilot-fake-conversation-token",
-  expiresAt: "2030-01-01T00:00:00.000Z",
 });
 
 export class FakeElevenLabs implements VoiceTokenProvider {
@@ -14,7 +13,9 @@ export class FakeElevenLabs implements VoiceTokenProvider {
     _input: VoiceTokenProviderInput,
     signal?: AbortSignal,
   ): Promise<VoiceTokenProviderResult> {
-    signal?.throwIfAborted();
-    return Promise.resolve(fakeVoiceToken);
+    return Promise.resolve().then(() => {
+      signal?.throwIfAborted();
+      return fakeVoiceToken;
+    });
   }
 }

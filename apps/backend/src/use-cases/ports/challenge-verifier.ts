@@ -6,7 +6,7 @@ export type ChallengeVerificationInput = Readonly<{
 }>;
 
 export type ChallengeVerificationResult = Readonly<{
-  action: TurnstileAction;
+  action: string | null;
   errorCodes: readonly string[];
   hostname: string | null;
   success: boolean;

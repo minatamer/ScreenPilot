@@ -1,10 +1,10 @@
 # SP-004 — Create and approve the visual design references
 
 Status: Required  
-Implementation state: Completed, reconciled, user-approved, and verified locally; ready for SP-005 (unstaged)
+Implementation state: Completed, user-approved, reviewed, revised, and committed as `6f94d0a`; SP-005 may begin
 
 Milestone: Milestone 0 — repository and visual foundations  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-08<br>
 Depends on: SP-001, SP-002  
 Suggested commit: `docs(design): approve ScreenPilot visual direction`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -88,6 +88,7 @@ Produce one lightweight browser-viewable HTML living style guide and one approve
 - Inspected the final image-led composition at 320, 390, 820, 1024, 1180, 1440, and 2560 px and swept 1220–1280 px across the paired-sample breakpoint. No page overflow, clipped required content, undersized focusable target, or unequal entry-card emphasis remained.
 - Browser checks found no console warning/error. The HTML and the one local approved PNG loaded successfully with no external font/script/style request; the inline favicon avoids a missing-asset request.
 - Contrast-aware pairings passed the local text audit; keyboard focus rendered as a 3 px cyan ring; the active reduced-motion environment removed signal/loading/insight animation and smooth scrolling; the 320 px Turnstile slot retained its dimensions when focused.
+- Revised on 2026-09-08 against the approved artifacts, ticket requirements, source of truth, and commit history. The reference remains complete and implementation-ready. Minor production guidance is carried into SP-005: preserve a sequential heading outline and use unambiguous visible microphone state/action copy; neither changes the approved visual direction.
 
 ## Commit boundary
 
@@ -101,9 +102,9 @@ Keep SP-004 reviewable as one logical change represented by `docs(design): appro
 
 ## Completion handoff
 
-- Outcome: SP-004 is complete and user-approved; SP-005 may begin after the normal review/staging workflow.
+- Outcome: SP-004 is complete, user-approved, reviewed, and committed; SP-005 may begin.
 - Files: `docs/SCREENPILOT_DESIGN_SYSTEM.html`, `docs/assets/screenpilot-active-interview-concept.png`, this ticket, and the parent source of truth.
 - Deliberate deviation: after the first approved raster, the user requested closer image-led alignment and explicitly authorized one corrective refinement of the same concept. Only the final direction is retained.
 - Verification: required responsive anchors and breakpoint sweeps passed with no overflow, clipped required content, undersized focus target, console error, or external runtime dependency. `pnpm verify:quick` passed.
 - Blockers and unchecked items: none for SP-004.
-- Git state: changes remain unstaged and uncommitted as required.
+- Git state: the approved design work was committed as `6f94d0a` and is present on `main` and `origin/main`. The 2026-09-08 documentation reconciliation remains available for review.

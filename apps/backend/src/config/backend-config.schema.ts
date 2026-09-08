@@ -13,7 +13,7 @@ import {
 
 const hostnamePattern =
   /^(?:localhost|(?=.{1,253}$)(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)*[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?)$/i;
-const publishedTurnstileTestKeyPattern = /^[123]x0{10,}(?:AA|AB|FF)$/;
+const publishedTurnstileTestKeyPattern = /^[123]x0{10,}(?:AA|AB|BB|FF)$/;
 const providerIdentifierPattern = /^[A-Za-z\d_-]+$/;
 
 const integerEnvironmentValue = (minimum: number, maximum: number) =>
