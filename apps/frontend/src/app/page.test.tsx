@@ -4,16 +4,23 @@ import { describe, expect, it } from "vitest";
 import HomePage from "./page";
 
 describe("HomePage", () => {
-  it("states the human decision boundary", () => {
+  it("shows the SP-005 foundation harness and human decision boundary", () => {
     render(<HomePage />);
 
     expect(
-      screen.getByRole("heading", { level: 1, name: "ScreenPilot" }),
+      screen.getByRole("heading", {
+        level: 1,
+        name: "The shared visual foundation for ScreenPilot.",
+      }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        "AI handles the first screen. Humans make the decision.",
+        "AI supports the conversation. People make every hiring decision.",
       ),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("img", { name: "ScreenPilot" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Preparing" })).toBeDisabled();
   });
 });

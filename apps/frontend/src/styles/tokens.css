@@ -1,0 +1,140 @@
+:root {
+  color-scheme: light;
+
+  /* Approved SP-004 color foundations. */
+  --sp-color-ink-950: #18243a;
+  --sp-color-ink-900: #22314b;
+  --sp-color-paper-50: #fafaf8;
+  --sp-color-paper-0: #ffffff;
+  --sp-color-coral-100: #fde8e4;
+  --sp-color-coral-300: #fca39a;
+  --sp-color-coral-500: #f26b5b;
+  --sp-color-coral-700: #cc493f;
+  --sp-color-coral-800: #b93831;
+  --sp-color-slate-500: #667085;
+  --sp-color-line-200: #e4e7ec;
+  --sp-color-line-strong: #7d899b;
+  --sp-color-success-600: #067647;
+  --sp-color-success-400: #52d6a2;
+  --sp-color-warning-700: #8a4b0f;
+  --sp-color-warning-400: #f79009;
+  --sp-color-danger-600: #b42318;
+  --sp-color-danger-400: #f97066;
+  --sp-color-control-disabled: #eef0f3;
+  --sp-color-dark-text: #fafaf8;
+  --sp-color-dark-muted: #d0d5dd;
+  --sp-color-dark-line: rgb(253 232 228 / 18%);
+  --sp-color-dark-line-strong: rgb(242 107 91 / 56%);
+
+  /* Geist is preferred when installed; the fallbacks keep the demo offline-safe. */
+  --sp-font-sans:
+    "Geist", "Geist Sans", "Inter", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --sp-font-mono:
+    "Geist Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --sp-text-display-size: 3.5rem;
+  --sp-text-display-line: 1.0714;
+  --sp-text-title-size: 2rem;
+  --sp-text-title-line: 1.1875;
+  --sp-text-card-size: 0.9375rem;
+  --sp-text-card-line: 1.3333;
+  --sp-text-body-size: 1rem;
+  --sp-text-body-line: 1.5625;
+  --sp-text-meta-size: 0.75rem;
+  --sp-text-meta-line: 1.5;
+  --sp-weight-regular: 400;
+  --sp-weight-medium: 500;
+  --sp-weight-semibold: 600;
+  --sp-weight-control: 650;
+  --sp-weight-bold: 700;
+
+  --sp-space-1: 0.25rem;
+  --sp-space-2: 0.5rem;
+  --sp-space-3: 0.75rem;
+  --sp-space-4: 1rem;
+  --sp-space-5: 1.25rem;
+  --sp-space-6: 1.5rem;
+  --sp-space-8: 2rem;
+  --sp-space-10: 2.5rem;
+  --sp-space-12: 3rem;
+  --sp-space-16: 4rem;
+  --sp-space-20: 5rem;
+
+  --sp-radius-control: 0.75rem;
+  --sp-radius-card: 1.25rem;
+  --sp-radius-canvas: 1.75rem;
+  --sp-radius-pill: 999px;
+  --sp-target-min: 2.75rem;
+  --sp-content-max: 75rem;
+  --sp-reading-max: 45rem;
+  --sp-page-gutter: clamp(1rem, 4vw, 3rem);
+  --sp-shadow-soft: 0 18px 56px rgb(24 36 58 / 10%);
+  --sp-shadow-coral: 0 12px 30px rgb(204 73 63 / 24%);
+  --sp-opacity-muted: 0.72;
+  --sp-opacity-disabled: 0.48;
+  --sp-motion-fast: 180ms;
+  --sp-motion-standard: 240ms;
+  --sp-motion-insight: 400ms;
+  --sp-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --sp-surface-canvas: var(--sp-color-paper-50);
+  --sp-surface-card: var(--sp-color-paper-0);
+  --sp-surface-soft: var(--sp-color-coral-100);
+  --sp-surface-inverse: var(--sp-color-ink-950);
+  --sp-text-primary: var(--sp-color-ink-950);
+  --sp-text-secondary: var(--sp-color-slate-500);
+  --sp-text-inverse: var(--sp-color-dark-text);
+  --sp-border-subtle: var(--sp-color-line-200);
+  --sp-border-strong: var(--sp-color-line-strong);
+  --sp-accent: var(--sp-color-coral-500);
+  --sp-accent-hover: var(--sp-color-coral-700);
+  --sp-accent-pressed: var(--sp-color-coral-800);
+  --sp-focus-ring: var(--sp-color-coral-700);
+  --sp-success: var(--sp-color-success-600);
+  --sp-warning: var(--sp-color-warning-700);
+  --sp-danger: var(--sp-color-danger-600);
+  --sp-disabled-surface: var(--sp-color-control-disabled);
+  --sp-disabled-text: var(--sp-color-line-strong);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --sp-surface-canvas: var(--sp-color-ink-950);
+  --sp-surface-card: var(--sp-color-ink-900);
+  --sp-surface-soft: rgb(253 232 228 / 9%);
+  --sp-surface-inverse: var(--sp-color-paper-50);
+  --sp-text-primary: var(--sp-color-dark-text);
+  --sp-text-secondary: var(--sp-color-dark-muted);
+  --sp-text-inverse: var(--sp-color-ink-950);
+  --sp-border-subtle: var(--sp-color-dark-line);
+  --sp-border-strong: var(--sp-color-dark-line-strong);
+  --sp-accent: var(--sp-color-coral-500);
+  --sp-accent-hover: var(--sp-color-coral-300);
+  --sp-accent-pressed: var(--sp-color-coral-100);
+  --sp-focus-ring: var(--sp-color-coral-300);
+  --sp-success: var(--sp-color-success-400);
+  --sp-warning: var(--sp-color-warning-400);
+  --sp-danger: var(--sp-color-danger-400);
+  --sp-disabled-surface: var(--sp-surface-soft);
+  --sp-disabled-text: var(--sp-color-dark-muted);
+}
+
+@media (max-width: 43.75rem) {
+  :root {
+    --sp-text-display-size: 2.375rem;
+    --sp-text-display-line: 1.1579;
+    --sp-text-title-size: 1.75rem;
+    --sp-text-title-line: 1.2143;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --sp-motion-fast: 1ms;
+    --sp-motion-standard: 1ms;
+    --sp-motion-insight: 1ms;
+  }
+}

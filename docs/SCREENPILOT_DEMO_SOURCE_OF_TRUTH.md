@@ -1337,7 +1337,6 @@ screen-pilot/
 │  │  ├─ package.json                            # SP-001
 │  │  ├─ next-env.d.ts                           # SP-001
 │  │  ├─ next.config.ts                          # SP-001; local /v1 rewrite in SP-003
-│  │  ├─ postcss.config.mjs                      # SP-005
 │  │  ├─ tsconfig.json                           # SP-001
 │  │  ├─ vitest.config.ts                        # SP-002
 │  │  ├─ public/
@@ -1346,7 +1345,7 @@ screen-pilot/
 │  │  └─ src/
 │  │     ├─ app/
 │  │     │  ├─ layout.tsx                        # SP-001; final shell SP-005
-│  │     │  ├─ page.tsx                          # SP-001; landing composition SP-011
+│  │     │  ├─ page.tsx                          # SP-001; foundation harness SP-005; landing composition SP-011
 │  │     │  ├─ error.tsx                         # SP-011
 │  │     │  ├─ not-found.tsx                     # SP-011
 │  │     │  └─ demo/
@@ -1418,7 +1417,12 @@ screen-pilot/
 │  │     │  │  ├─ stage-indicator.tsx            # SP-005
 │  │     │  │  ├─ error-panel.tsx                # SP-005
 │  │     │  │  ├─ app-shell.tsx                  # SP-005
-│  │     │  │  └─ site-header.tsx                # SP-005
+│  │     │  │  ├─ site-header.tsx                # SP-005
+│  │     │  │  ├─ screenpilot-mark.tsx           # SP-005
+│  │     │  │  ├─ entry-mode-card.tsx            # SP-005
+│  │     │  │  ├─ entry-mode-badge.tsx           # SP-005
+│  │     │  │  ├─ layout.tsx                     # SP-005
+│  │     │  │  └─ foundations.test.tsx           # SP-005
 │  │     │  ├─ http/
 │  │     │  │  ├─ api-client.ts                  # SP-011; relative /v1 only
 │  │     │  │  └─ api-error.ts                   # SP-011
@@ -3074,7 +3078,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-005 — Implement the approved Signal Canvas foundations](tickets/SP-005-implement-signal-canvas-foundations.md)
 
-**Outcome:** The frontend’s shared foundations and shells faithfully implement the approved HTML visual reference as one fluid system from small phones through large monitors.
+**Outcome:** Completed and revised locally, awaiting commit authorization. The frontend’s shared foundations and shells faithfully implement the approved Deep Ink + Warm Coral HTML reference from `d2a350c` as one fluid system from small phones through large monitors. The historical violet/cyan direction from `6f94d0a` is not part of this implementation.
 
 **Depends on:** SP-002, SP-004.
 
@@ -3082,14 +3086,14 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Translate the approved HTML reference’s color, typography, spacing, radius, elevation, grid, and motion values into maintainable frontend tokens without scattered magic values.
-- [ ] Keep token names/values aligned between `docs/SCREENPILOT_DESIGN_SYSTEM.html` and frontend CSS; update both together when an approved correction is required.
-- [ ] Build the shared ScreenPilot mark, navbar, entry-mode cards/badge, buttons, cards, stage indicator, error panel, and layout primitives from those tokens.
-- [ ] Implement the approved light landing/review and dark interview shells.
-- [ ] Implement focus, reduced-motion, contrast, safe-area, and responsive behavior documented in the reference.
-- [ ] Manually compare desktop/mobile shells against the approved reference and document deliberate accessibility/implementation deviations.
-- [ ] Do not add Storybook, Figma, Code Connect, or a second design-system application unless later scope explicitly justifies it.
-- [ ] Verify no separate mobile component tree or duplicated desktop/mobile design system was introduced.
+- [x] Translate the approved HTML reference’s color, typography, spacing, radius, elevation, grid, and motion values into maintainable frontend tokens without scattered magic values.
+- [x] Keep token names/values aligned between `docs/SCREENPILOT_DESIGN_SYSTEM.html` and frontend CSS; update both together when an approved correction is required.
+- [x] Build the shared ScreenPilot mark, navbar, entry-mode cards/badge, buttons, cards, stage indicator, error panel, and layout primitives from those tokens.
+- [x] Implement the approved light landing/review and dark interview shells.
+- [x] Implement focus, reduced-motion, contrast, safe-area, and responsive behavior documented in the reference.
+- [x] Manually compare desktop/mobile shells against the approved reference and document deliberate accessibility/implementation deviations in the ticket packet.
+- [x] Do not add Storybook, Figma, Code Connect, or a second design-system application unless later scope explicitly justifies it.
+- [x] Verify no separate mobile component tree or duplicated desktop/mobile design system was introduced.
 
 ### Milestone 1 — interview preparation paths
 
@@ -3623,7 +3627,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 - [x] The HTML Design System Reference is approved, stays demo-sized, and defines the token names/values SP-005 will implement.
 - [x] The single paired desktop/mobile active-interview ImageGen concept is approved, reconciled into the explicit design rules, and not expanded into a screen catalogue.
-- [ ] Shared React components apply the approved visual language consistently from small phones through large monitors without parallel device-specific themes.
+- [x] Shared React components apply the approved visual language consistently from small phones through large monitors without parallel device-specific themes.
 - [ ] Fast essential checks pass once before release, and the Section 18 manual acceptance sheet is approved across every responsive size band and representative intermediate widths.
 - [ ] One GitHub `ci.yml` gates pull requests/main with unpaid fast checks, then uses keyless Workload Identity Federation to build and deploy the exact green `main` commit to both Cloud Run services before production smoke verification.
 - [ ] The manually selected custom domain stays under the renewal-price guardrail, Firebase Hosting serves valid managed HTTPS, apex/`www` canonicalization works, and same-origin `/v1` requests reach the backend without exposing direct service URLs to visitors.

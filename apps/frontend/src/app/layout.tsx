@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "ScreenPilot",
-  description: "AI-assisted candidate screening with human decisions.",
+  title: "ScreenPilot · Signal Canvas",
+  description: "Privacy-minded AI screening support with human decisions.",
 };
 
 type RootLayoutProps = Readonly<{
