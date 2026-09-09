@@ -4,10 +4,80 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./api/bootstrap": {
+      "types": "./src/api/bootstrap.ts",
+      "development": "./src/api/bootstrap.ts",
+      "default": "./dist/api/bootstrap.js"
+    },
+    "./api/cv-analysis": {
+      "types": "./src/api/cv-analysis.ts",
+      "development": "./src/api/cv-analysis.ts",
+      "default": "./dist/api/cv-analysis.js"
+    },
+    "./api/error-envelope": {
+      "types": "./src/api/error-envelope.ts",
+      "development": "./src/api/error-envelope.ts",
+      "default": "./dist/api/error-envelope.js"
+    },
+    "./api/interview-preparation": {
+      "types": "./src/api/interview-preparation.ts",
+      "development": "./src/api/interview-preparation.ts",
+      "default": "./dist/api/interview-preparation.js"
+    },
+    "./api/interview-summary": {
+      "types": "./src/api/interview-summary.ts",
+      "development": "./src/api/interview-summary.ts",
+      "default": "./dist/api/interview-summary.js"
+    },
     "./api/public-runtime-config": {
       "types": "./src/api/public-runtime-config.ts",
       "development": "./src/api/public-runtime-config.ts",
       "default": "./dist/api/public-runtime-config.js"
+    },
+    "./api/voice-token": {
+      "types": "./src/api/voice-token.ts",
+      "development": "./src/api/voice-token.ts",
+      "default": "./dist/api/voice-token.js"
+    },
+    "./interview/employer-context": {
+      "types": "./src/interview/employer-context.ts",
+      "development": "./src/interview/employer-context.ts",
+      "default": "./dist/interview/employer-context.js"
+    },
+    "./interview/entry-mode": {
+      "types": "./src/interview/entry-mode.ts",
+      "development": "./src/interview/entry-mode.ts",
+      "default": "./dist/interview/entry-mode.js"
+    },
+    "./interview/insight-card": {
+      "types": "./src/interview/insight-card.ts",
+      "development": "./src/interview/insight-card.ts",
+      "default": "./dist/interview/insight-card.js"
+    },
+    "./interview/normalized-cv": {
+      "types": "./src/interview/normalized-cv.ts",
+      "development": "./src/interview/normalized-cv.ts",
+      "default": "./dist/interview/normalized-cv.js"
+    },
+    "./interview/screening-plan": {
+      "types": "./src/interview/screening-plan.ts",
+      "development": "./src/interview/screening-plan.ts",
+      "default": "./dist/interview/screening-plan.js"
+    },
+    "./interview/screening-summary": {
+      "types": "./src/interview/screening-summary.ts",
+      "development": "./src/interview/screening-summary.ts",
+      "default": "./dist/interview/screening-summary.js"
+    },
+    "./interview/topic-progress": {
+      "types": "./src/interview/topic-progress.ts",
+      "development": "./src/interview/topic-progress.ts",
+      "default": "./dist/interview/topic-progress.js"
+    },
+    "./interview/transcript-turn": {
+      "types": "./src/interview/transcript-turn.ts",
+      "development": "./src/interview/transcript-turn.ts",
+      "default": "./dist/interview/transcript-turn.js"
     }
   },
   "files": [

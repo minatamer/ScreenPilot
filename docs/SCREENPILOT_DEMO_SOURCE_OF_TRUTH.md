@@ -359,6 +359,7 @@ Rules:
 - Validate and migrate or clear the session when `schemaVersion` changes.
 - Expire a session after two hours even if the tab stays open.
 - Clear malformed or oversized session data safely.
+- Require exactly one Frontend and one Backend vacancy and reject impossible workflow-stage/entry-mode combinations during restore.
 - The browser is authoritative only for this visitor's disposable demo; its content is untrusted when sent back to the backend.
 - `cv` must remain absent in conversation-first mode, and conversation-first insights may never acquire a `CV` source label.
 
@@ -421,8 +422,10 @@ Required stage views:
 Refresh behavior:
 
 - Restore validated structured session data from `sessionStorage`.
+- A refresh during local CV extraction or remote CV analysis returns to CV selection because the PDF and raw extracted text are intentionally memory-only.
 - Never restore an active microphone or WebRTC connection automatically.
 - A refresh during a call changes the call to `failed` and offers partial review or restart in the same entry mode.
+- A refresh during post-call summary generation preserves transcript and insights and exposes a retryable summary-interrupted state; it does not claim that the voice call was interrupted.
 - If the interview grant expired, preserve display data and rerun only the selected preparation path: CV analysis for CV-assisted, deterministic preparation for conversation-first.
 
 ### Static legal/privacy content
@@ -1359,6 +1362,8 @@ screen-pilot/
 │  │     │  │  ├─ session-storage.ts             # SP-006
 │  │     │  │  ├─ session-storage.test.ts        # SP-006
 │  │     │  │  ├─ demo-session-provider.tsx      # SP-006
+│  │     │  │  ├─ demo-session-provider.test.tsx  # SP-006; server boundary
+│  │     │  │  ├─ demo-session-provider.client.test.tsx # SP-006; client lifecycle
 │  │     │  │  └─ use-demo-session.ts            # SP-006
 │  │     │  ├─ entry/
 │  │     │  │  ├─ entry-stage.tsx                # SP-011
@@ -3099,7 +3104,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-006 — Define browser-session contracts and reducer](tickets/SP-006-define-browser-session-contracts-and-reducer.md)
 
-**Outcome:** A typed local state machine owns the disposable demo without server persistence.
+**Outcome:** Completed and revised locally on 2026-09-09; awaiting commit authorization. Explicit browser-safe schemas now protect every planned cross-boundary payload, while one hydration-safe frontend reducer owns both preparation branches and their shared interview/review lifecycle. Versioned allow-list persistence is bounded to the current tab and two hours, excludes runtime secrets/binary data, requires grounded candidate/CV evidence, rejects duplicate catalogues and impossible restored stage/mode combinations, safely restarts interrupted CV processing, distinguishes post-call summary recovery from live-call interruption, and never auto-restores a voice connection.
 
 **Depends on:** SP-001, SP-003.
 
@@ -3107,13 +3112,13 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Put cross-boundary entry-mode/interview schemas in `packages/contracts`; keep workflow stages, reducer events, persistence envelope, and browser runtime state in `apps/frontend/src/features/session`.
-- [ ] Implement both branched preparation paths, shared-stage convergence, mode immutability, and invalid-transition guards.
-- [ ] Split persistable structured state from ephemeral browser/runtime state and add a versioned, allow-list-projection `sessionStorage` adapter with two-hour expiry.
-- [ ] Exclude PDF/raw CV text, Turnstile tokens, and provider tokens from persistence.
-- [ ] Make restore hydration-safe and ensure importing the session module never reads browser globals.
-- [ ] Implement Clear session and corrupt-session recovery.
-- [ ] Unit-test both mode transitions, restore, expiry, clearing, mode-specific retry, and refresh-during-call behavior.
+- [x] Put cross-boundary entry-mode/interview schemas in `packages/contracts`; keep workflow stages, reducer events, persistence envelope, and browser runtime state in `apps/frontend/src/features/session`.
+- [x] Implement both branched preparation paths, shared-stage convergence, mode immutability, and invalid-transition guards.
+- [x] Split persistable structured state from ephemeral browser/runtime state and add a versioned, allow-list-projection `sessionStorage` adapter with two-hour expiry.
+- [x] Exclude PDF/raw CV text, Turnstile tokens, and provider tokens from persistence.
+- [x] Make restore hydration-safe and ensure importing the session module never reads browser globals.
+- [x] Implement Clear session and corrupt-session recovery.
+- [x] Unit-test both mode transitions, restore, expiry, clearing, mode-specific retry, and refresh-during-call behavior.
 
 #### [SP-007 — Add the fixed synthetic vacancy catalogue and CV fixtures](tickets/SP-007-add-vacancy-catalogue-and-cv-fixtures.md)
 

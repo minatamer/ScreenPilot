@@ -1,7 +1,7 @@
 # ScreenPilot standalone ticket index
 
 Status: execution-packet index  
-Last synchronized: 2026-09-08<br>
+Last synchronized: 2026-09-09<br>
 Parent source of truth: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
 
 ---
@@ -69,12 +69,13 @@ If a dependency is missing or materially different, stop at that boundary and re
 
 ## Ordered ticket index
 
-Current implementation progress, reconciled against code and Git history on 2026-09-08:
+Current implementation progress, reconciled against code and Git history on 2026-09-09:
 
-- SP-001, SP-002, SP-003, and SP-004 are completed, reviewed, revised, and represented by their documented implementation commits.
+- SP-001 through SP-005 are completed, reviewed, revised, and represented by their documented implementation commits.
 - SP-004's earlier direction is represented by `6f94d0a`; the approved Deep Ink + Warm Coral revision supersedes it for implementation.
 - SP-003 remains credential-free by design; live/paid verification waits for user-supplied credentials and explicit permission, while deterministic fake-mode verification is complete.
-- SP-005 is the next unfinished ticket. Later tickets remain pending according to their dependency order.
+- SP-006 is completed and revised in the working tree, including interrupted CV/summary recovery and hardened restored-state validation; it is awaiting explicit commit authorization.
+- SP-007 is the next unfinished ticket. Later tickets remain pending according to their dependency order.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
