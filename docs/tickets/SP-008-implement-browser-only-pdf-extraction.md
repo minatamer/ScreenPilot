@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 1 — interview preparation paths  
-Implementation state: Completed locally and verified on 2026-09-09; awaiting commit<br>
+Implementation state: Completed and committed on 2026-09-09 in `0b6819f`<br>
 Last synchronized: 2026-09-09<br>
 Depends on: SP-005, SP-006  
 Suggested commit: `feat(frontend): extract CV text in browser memory`  
@@ -69,7 +69,7 @@ Accept a synthetic text-based PDF, validate it defensively, and extract bounded 
 - Enforced one PDF, PDF MIME/signature, 5 MB, 8 pages, and 40,000 normalized characters before any future analysis request.
 - Added explicit rejection for malformed, protected, empty, and scanned/image-only PDFs without OCR or a silent no-CV fallback.
 - Kept the original file and raw text in browser memory only, with abort/release behavior on replacement, reset, return, and unmount.
-- Added focused extraction and component coverage plus reusable empty, image-only, password-protected, and nine-page PDF fixtures. Malformed and oversized byte inputs stay inline in the test so their exact corruption and pre-parse boundary are visible. These changes remain local until the requested commit.
+- Added focused extraction and component coverage plus reusable empty, image-only, password-protected, and nine-page PDF fixtures. Malformed and oversized byte inputs stay inline in the test so their exact corruption and pre-parse boundary are visible. The implementation is represented by `0b6819f`.
 
 ## Verification evidence
 

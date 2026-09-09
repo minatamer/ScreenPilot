@@ -76,7 +76,7 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-003 remains credential-free by design; live/paid verification waits for user-supplied credentials and explicit permission, while deterministic fake-mode verification is complete.
 - SP-006 is completed, revised, and represented by implementation commit `c8bbaf2`, including interrupted CV/summary recovery and hardened restored-state validation.
 - SP-007 is completed, revised, and represented by implementation commit `f890bfb`; its previously blocked PDF-library verification is now closed by SP-008.
-- SP-008 is completed locally and verified on 2026-09-09; it awaits its implementation commit. SP-009 is the next eligible unfinished ticket.
+- SP-008 is completed, verified, and represented by implementation commit `0b6819f`. SP-009 is the next eligible unfinished ticket.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
