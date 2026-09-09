@@ -1449,7 +1449,10 @@ screen-pilot/
 │     ├─ vitest.config.ts                        # SP-002
 │     └─ src/
 │        ├─ app.ts                               # SP-009; factory/composition root
+│        ├─ app.test.ts                          # SP-009
+│        ├─ app-import.test.ts                   # SP-009
 │        ├─ server.ts                            # SP-009; listen/signals only
+│        ├─ server.test.ts                       # SP-009
 │        ├─ config/
 │        │  ├─ backend-config.schema.ts          # SP-003
 │        │  ├─ load-backend-config.ts            # SP-003
@@ -1500,6 +1503,7 @@ screen-pilot/
 │        │  │  └─ fake-elevenlabs.ts             # SP-003
 │        │  └─ turnstile/
 │        │     ├─ cloudflare-turnstile-verifier.ts # SP-009
+│        │     ├─ cloudflare-turnstile-verifier.test.ts # SP-009
 │        │     └─ fake-turnstile-verifier.ts     # SP-003
 │        ├─ security/
 │        │  ├─ anonymous-session-cookie.ts       # SP-009
@@ -3172,18 +3176,18 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Add the Express 5 transport stack with its TypeScript types, Zod boundary middleware, Pino/`pino-http`, Helmet, restricted CORS, cookie parsing, and Supertest.
-- [ ] Separate the Express application factory from the server listener so tests do not bind a port and graceful shutdown remains explicit.
-- [ ] Follow the Section 11 backend tree: transport in `http`, business orchestration in `use-cases`, external SDK mapping in `providers`, demo content in `demo`, signed artifacts in `security`, and environment parsing in `config`.
-- [ ] Compose validated configuration and fake/live adapters explicitly in `app.ts`; use cases never import Express, `process.env`, or concrete SDK clients.
-- [ ] Implement generated request IDs, redacted structured request logs, bounded JSON parsing, typed domain errors, one not-found handler, and one terminal error mapper.
-- [ ] Implement health endpoints, validated proxy/origin configuration, secure content-free cookie defaults, provider timeouts/abort propagation, and graceful shutdown.
-- [ ] Implement a typed Cloudflare Turnstile Siteverify adapter with bounded timeout, strict response validation, secret redaction, expected-hostname/action checks, and stable domain errors; preparing a conversation never invokes it.
-- [ ] Implement `GET /v1/demo/bootstrap` with the unnamed employer context, fixed vacancies, public limits, feature flags, privacy version, and content-free safety cookie.
-- [ ] Implement `POST /v1/interview/prepare` using the versioned deterministic discovery plan and no OpenAI/ElevenLabs adapter call.
-- [ ] Implement the shared `interviewGrant` signer/verifier bound to entry mode, catalogue key, plan version/hash, anonymous-session correlation, and expiry.
-- [ ] Return no candidate facts and reject browser-supplied prompts, questions, provider IDs, or tool definitions.
-- [ ] Add focused Supertest route/grant tests proving middleware/error-envelope behavior, deterministic output, expiry, invalid mode/catalogue rejection, no provider usage, and no persistence.
+- [x] Add the Express 5 transport stack with its TypeScript types, Zod boundary middleware, Pino/`pino-http`, Helmet, restricted CORS, cookie parsing, and Supertest.
+- [x] Separate the Express application factory from the server listener so tests do not bind a port and graceful shutdown remains explicit.
+- [x] Follow the Section 11 backend tree: transport in `http`, business orchestration in `use-cases`, external SDK mapping in `providers`, demo content in `demo`, signed artifacts in `security`, and environment parsing in `config`.
+- [x] Compose validated configuration and fake/live adapters explicitly in `app.ts`; use cases never import Express, `process.env`, or concrete SDK clients.
+- [x] Implement generated request IDs, redacted structured request logs, bounded JSON parsing, typed domain errors, one not-found handler, and one terminal error mapper.
+- [x] Implement health endpoints, validated proxy/origin configuration, secure content-free cookie defaults, provider timeouts/abort propagation, and graceful shutdown.
+- [x] Implement a typed Cloudflare Turnstile Siteverify adapter with bounded timeout, strict response validation, secret redaction, expected-hostname/action checks, and stable domain errors; preparing a conversation never invokes it.
+- [x] Implement `GET /v1/demo/bootstrap` with the unnamed employer context, fixed vacancies, public limits, feature flags, privacy version, and content-free safety cookie.
+- [x] Implement `POST /v1/interview/prepare` using the versioned deterministic discovery plan and no OpenAI/ElevenLabs adapter call.
+- [x] Implement the shared `interviewGrant` signer/verifier bound to entry mode, catalogue key, plan version/hash, anonymous-session correlation, and expiry.
+- [x] Return no candidate facts and reject browser-supplied prompts, questions, provider IDs, or tool definitions.
+- [x] Add focused Supertest route/grant tests proving middleware/error-envelope behavior, deterministic output, expiry, invalid mode/catalogue rejection, no provider usage, and no persistence.
 
 #### [SP-010 — Build the stateless CV-analysis endpoint](tickets/SP-010-build-stateless-cv-analysis-endpoint.md)
 

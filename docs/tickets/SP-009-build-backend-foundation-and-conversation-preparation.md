@@ -2,7 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 1 — interview preparation paths  
-Last synchronized: 2026-08-31  
+Implementation state: Completed, verified, and committed on 2026-09-09<br>
+Last synchronized: 2026-09-09<br>
 Depends on: SP-003, SP-006, SP-007  
 Suggested commit: `feat(backend): prepare conversation-first interviews`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -45,39 +46,56 @@ Create the first complete Express 5 backend slice, public bootstrap, determinist
 
 ## Implementation checklist
 
-- [ ] Create the Express application factory/composition root separately from the server listener and implement graceful shutdown.
-- [ ] Remove the temporary backend `src/index.ts` when `src/app.ts` and `src/server.ts` become the real entry points.
-- [ ] Place transport, use-case, provider, demo-content, security, and configuration modules in their Section 11 owning areas; do not introduce generic `services`, `helpers`, or `common` folders.
-- [ ] Inject typed configuration, clock/ID/signing seams, and fake/live provider implementations into composition so route/use-case tests need no module-cache or global-environment mutation.
-- [ ] Add Zod boundary middleware, Pino/`pino-http` with explicit redaction, Helmet, restricted CORS, bounded JSON parsing, cookie parsing, and Supertest.
-- [ ] Implement generated request IDs, typed domain errors, one not-found handler, and one terminal JSON error mapper.
-- [ ] Validate the proxy/origin configuration before trusting source information or secure cookies.
-- [ ] Implement `GET /health/live` and `GET /health/ready` without provider spending.
-- [ ] Implement `GET /v1/demo/bootstrap` and its content-free signed safety cookie.
-- [ ] Implement the typed Turnstile Siteverify adapter with timeout, strict response parsing, secret redaction, hostname/action checks, and stable errors.
-- [ ] Implement `POST /v1/interview/prepare` from the versioned server fixture with `Cache-Control: no-store`.
-- [ ] Implement the shared signed `interviewGrant` signer/verifier and reject expiry, mutation, wrong mode/catalogue, and correlation mismatch.
-- [ ] Return the stable API error envelope and required content-safe error codes.
-- [ ] Add Supertest/unit coverage for middleware, deterministic output, cookie/grant behavior, expiry, invalid input, no provider calls, and no persistence.
+- [x] Create the Express application factory/composition root separately from the server listener and implement graceful shutdown.
+- [x] Remove the temporary backend `src/index.ts` when `src/app.ts` and `src/server.ts` become the real entry points.
+- [x] Place transport, use-case, provider, demo-content, security, and configuration modules in their Section 11 owning areas; do not introduce generic `services`, `helpers`, or `common` folders.
+- [x] Inject typed configuration, clock/ID/signing seams, and fake/live provider implementations into composition so route/use-case tests need no module-cache or global-environment mutation.
+- [x] Add Zod boundary middleware, Pino/`pino-http` with explicit redaction, Helmet, restricted CORS, bounded JSON parsing, cookie parsing, and Supertest.
+- [x] Implement generated request IDs, typed domain errors, one not-found handler, and one terminal JSON error mapper.
+- [x] Validate the proxy/origin configuration before trusting source information or secure cookies.
+- [x] Implement `GET /health/live` and `GET /health/ready` without provider spending.
+- [x] Implement `GET /v1/demo/bootstrap` and its content-free signed safety cookie.
+- [x] Implement the typed Turnstile Siteverify adapter with timeout, strict response parsing, secret redaction, hostname/action checks, and stable errors.
+- [x] Implement `POST /v1/interview/prepare` from the versioned server fixture with `Cache-Control: no-store`.
+- [x] Implement the shared signed `interviewGrant` signer/verifier and reject expiry, mutation, wrong mode/catalogue, and correlation mismatch.
+- [x] Return the stable API error envelope and required content-safe error codes.
+- [x] Add Supertest/unit coverage for middleware, deterministic output, cookie/grant behavior, expiry, invalid input, no provider calls, and no persistence.
 
 ## Acceptance criteria
 
-- [ ] The backend boots, shuts down, and can be tested in process without binding a port.
-- [ ] Importing app/use-case modules has no listener, filesystem, or network side effect, and tests can construct isolated app instances with explicit fakes.
-- [ ] Bootstrap exposes only public configuration and sets no candidate content in its cookie.
-- [ ] Conversation-first preparation completes deterministically and never invokes OpenAI, ElevenLabs, or Turnstile.
-- [ ] Two identical valid requests use the same versioned plan semantics while receiving safely signed/expiring grants.
-- [ ] Logs remain useful by route/status/duration/request ID without containing forbidden content.
-- [ ] No persistent infrastructure or provider fallback exists.
+- [x] The backend boots, shuts down, and can be tested in process without binding a port.
+- [x] Importing app/use-case modules has no listener, filesystem, or network side effect, and tests can construct isolated app instances with explicit fakes.
+- [x] Bootstrap exposes only public configuration and sets no candidate content in its cookie.
+- [x] Conversation-first preparation completes deterministically and never invokes OpenAI, ElevenLabs, or Turnstile.
+- [x] Two identical valid requests use the same versioned plan semantics while receiving safely signed/expiring grants.
+- [x] Logs remain useful by route/status/duration/request ID without containing forbidden content.
+- [x] No persistent infrastructure or provider fallback exists.
 
 ## Focused verification
 
-- [ ] Run focused backend typecheck and Supertest suites.
-- [ ] Import the application factory in a test process and prove no port was opened and no provider was constructed/called until composition requests it.
-- [ ] Inspect successful bootstrap/prepare responses, headers, cookie attributes, and the stable error envelope.
-- [ ] Assert fake provider call counts remain zero for bootstrap/prepare.
-- [ ] Tamper with and expire a grant; test origin, schema, body-limit, and proxy configuration failures.
-- [ ] Search logs/test snapshots for candidate content, raw IPs, cookies, grants, and secrets.
+- [x] Run focused backend typecheck and Supertest suites.
+- [x] Import the application factory in a test process and prove no port was opened and no provider was constructed/called until composition requests it.
+- [x] Inspect successful bootstrap/prepare responses, headers, cookie attributes, and the stable error envelope.
+- [x] Assert fake provider call counts remain zero for bootstrap/prepare.
+- [x] Tamper with and expire a grant; test origin, schema, body-limit, and proxy configuration failures.
+- [x] Search logs/test snapshots for candidate content, raw IPs, cookies, grants, and secrets.
+
+## Implemented result
+
+- Added the independently testable Express 5 application factory and listener-only server entry point with explicit middleware order and graceful signal shutdown.
+- Added live/readiness health routes, public bootstrap, a signed content-free anonymous cookie, and deterministic conversation-first preparation with no provider operation.
+- Added strict request/origin/body boundaries, stable typed API errors, request IDs, Helmet/CORS hardening, and content-safe structured logging.
+- Added a reusable fail-closed Cloudflare Siteverify adapter with bounded input/output, timeout and abort propagation, strict response validation, and exact action/hostname checks.
+- Added signed expiring interview grants bound to anonymous correlation, entry mode, catalogue, plan version/hash, and—ready for SP-010—the exact CV-analysis hash in CV-assisted mode.
+- Preserved the stateless architecture: no database, durable session, file write, provider fallback, candidate-content cookie, or provider call was introduced.
+
+## Verification evidence
+
+- Backend lint passed with zero warnings; backend TypeScript typecheck and production build passed on Node.js 24.
+- The complete backend unit suite passed: 8 files and 61 tests, including Supertest routes, grant tamper/expiry/bindings, import side effects, server shutdown, configuration failures, and Turnstile timeout/mismatch/response-bound behavior.
+- A built local fake-mode server returned `200 ok`, `200 ready`, and a `200` no-store bootstrap with a signed HttpOnly cookie; the dedicated lifecycle test proved `SIGTERM` closes the listener and releases signal handlers.
+- Response, cookie, log, provider-call, persistence/dependency, forbidden-content, secret, debug-output, and stale-TODO inspections passed.
+- `apps/backend/.env.local` remains ignored. Real Siteverify and live-production readiness remain unchecked because no user-owned Cloudflare/signing credentials or production hostname have been supplied; fake/injected verification made no paid provider call.
 
 ## Commit boundary
 

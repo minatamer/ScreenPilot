@@ -1,0 +1,38 @@
+import { Router } from "express";
+
+import type { AnonymousSessionCookieOptions } from "../security/anonymous-session-cookie.js";
+import type { PrepareConversationFirst } from "../use-cases/prepare-conversation-first.js";
+import { createBootstrapRoutes } from "./routes/bootstrap.routes.js";
+import { createHealthRoutes } from "./routes/health.routes.js";
+import { createInterviewPrepareRoutes } from "./routes/interview-prepare.routes.js";
+import type { BootstrapResponse } from "@screenpilot/contracts/api/bootstrap";
+
+export function createApiRouter(input: {
+  allowedOrigins: readonly string[];
+  cookieOptions: AnonymousSessionCookieOptions;
+  getDemoBootstrap: () => BootstrapResponse;
+  idGenerator: () => string;
+  isReady: () => boolean;
+  prepareConversationFirst: PrepareConversationFirst;
+}): Router {
+  const router = Router();
+
+  router.use("/health", createHealthRoutes(input.isReady));
+  router.use(
+    "/v1/demo/bootstrap",
+    createBootstrapRoutes({
+      cookieOptions: input.cookieOptions,
+      getDemoBootstrap: input.getDemoBootstrap,
+      idGenerator: input.idGenerator,
+    }),
+  );
+  router.use(
+    "/v1/interview/prepare",
+    createInterviewPrepareRoutes({
+      allowedOrigins: input.allowedOrigins,
+      prepareConversationFirst: input.prepareConversationFirst,
+    }),
+  );
+
+  return router;
+}
