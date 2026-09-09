@@ -1,7 +1,7 @@
 # SP-005 — Implement the approved Signal Canvas foundations
 
 Status: Required  
-Implementation state: Completed and revised locally against the approved Deep Ink + Warm Coral SP-004 revision in `d2a350c`; awaiting commit authorization
+Implementation state: Completed, revised against the approved Deep Ink + Warm Coral SP-004 revision in `d2a350c`, and committed in `24d256c`
 
 Milestone: Milestone 0 — repository and visual foundations  
 Last synchronized: 2026-09-08

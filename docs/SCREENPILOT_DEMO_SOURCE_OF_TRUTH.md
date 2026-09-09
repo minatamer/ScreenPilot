@@ -3078,7 +3078,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-005 — Implement the approved Signal Canvas foundations](tickets/SP-005-implement-signal-canvas-foundations.md)
 
-**Outcome:** Completed and revised locally, awaiting commit authorization. The frontend’s shared foundations and shells faithfully implement the approved Deep Ink + Warm Coral HTML reference from `d2a350c` as one fluid system from small phones through large monitors. The historical violet/cyan direction from `6f94d0a` is not part of this implementation.
+**Outcome:** Completed, revised, and committed in `24d256c`. The frontend’s shared foundations and shells faithfully implement the approved Deep Ink + Warm Coral HTML reference from `d2a350c` as one fluid system from small phones through large monitors. The historical violet/cyan direction from `6f94d0a` is not part of this implementation.
 
 **Depends on:** SP-002, SP-004.
 
