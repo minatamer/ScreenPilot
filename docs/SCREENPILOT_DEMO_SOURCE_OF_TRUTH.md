@@ -1373,10 +1373,12 @@ screen-pilot/
 │  │     │  │  └─ entry-stage.test.tsx           # SP-011
 │  │     │  ├─ cv/
 │  │     │  │  ├─ cv-stage.tsx                   # SP-008/SP-012
+│  │     │  │  ├─ cv-stage.test.tsx              # SP-008
 │  │     │  │  ├─ cv-dropzone.tsx                # SP-008
 │  │     │  │  ├─ pdf-validation.ts              # SP-008
 │  │     │  │  ├─ extract-pdf-text.ts            # SP-008
 │  │     │  │  ├─ extract-pdf-text.test.ts       # SP-008
+│  │     │  │  ├─ pdfjs-webpack.d.ts              # SP-008; worker entry typing
 │  │     │  │  └─ analyze-cv.ts                  # SP-012
 │  │     │  ├─ plan/
 │  │     │  │  ├─ plan-preview-stage.tsx         # SP-012
@@ -1550,9 +1552,10 @@ screen-pilot/
 │     │  ├─ correction.txt                       # SP-007
 │     │  └─ prompt-injection.txt                 # SP-007
 │     ├─ pdf/
-│     │  ├─ malformed.pdf                        # SP-008
+│     │  ├─ empty.pdf                            # SP-008
 │     │  ├─ image-only.pdf                       # SP-008
-│     │  └─ password-protected.pdf               # SP-008
+│     │  ├─ password-protected.pdf               # SP-008
+│     │  └─ too-many-pages.pdf                   # SP-008
 │     ├─ transcripts/
 │     │  ├─ interviewer-policy-cases.json        # SP-017; test-only cases
 │     │  ├─ conversation-first.json              # SP-017/SP-020
@@ -3152,12 +3155,12 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Build `CvDropzone` and sample-CV action.
-- [ ] Validate signature, MIME, 5 MB, 8 pages, password state, and text presence.
-- [ ] Extract/normalize ordered page text locally.
-- [ ] Reject scanned/image-only PDFs with clear recovery.
-- [ ] Release the `File` after extraction and clear raw text after analysis succeeds or the visitor resets.
-- [ ] Test supported, malformed, empty, oversized, and scanned fixtures.
+- [x] Build `CvDropzone` and sample-CV action.
+- [x] Validate signature, MIME, 5 MB, 8 pages, password state, and text presence.
+- [x] Extract/normalize ordered page text locally.
+- [x] Reject scanned/image-only PDFs with clear recovery.
+- [x] Release the `File` after extraction and clear raw text after analysis succeeds or the visitor resets.
+- [x] Test supported, malformed, empty, oversized, protected, too-many-page, and scanned inputs.
 
 #### [SP-009 — Build the backend foundation and conversation-first preparation](tickets/SP-009-build-backend-foundation-and-conversation-preparation.md)
 

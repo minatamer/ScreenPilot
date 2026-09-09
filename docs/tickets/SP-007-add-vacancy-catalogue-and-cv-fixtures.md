@@ -59,7 +59,7 @@ Create the small, coherent, fully synthetic content set that supports both entry
 ## Focused verification
 
 - [x] Run contract/fixture validation tests.
-- [ ] Extract the bundled sample PDF with the intended PDF library and compare meaningful text to the fixture. Blocked until SP-008 installs the browser-owned `pdfjs-dist` dependency; SP-007 instead verified exact meaningful text with the bundled PDF inspection runtime and visually rendered the document.
+- [x] Extract the bundled sample PDF with the intended PDF.js library and compare meaningful ordered text to the expected fixture. Completed by SP-008's focused extraction test on 2026-09-09.
 - [x] Search fixture/content files for real company names, unintended country-specific assumptions, unsupported vacancies, and accidental real PII.
 - [x] Search imports/package contents to confirm values and fixtures remain in their owning trees.
 - [x] Manually review the Frontend, Backend, both, Full Stack, and neither-confirmed-role paths.
