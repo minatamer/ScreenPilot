@@ -1484,7 +1484,8 @@ screen-pilot/
 │        ├─ demo/
 │        │  ├─ vacancy-catalogue.ts              # SP-007
 │        │  ├─ employer-faq.ts                   # SP-007
-│        │  └─ conversation-first-plan.ts        # SP-007
+│        │  ├─ conversation-first-plan.ts        # SP-007
+│        │  └─ demo-content.test.ts               # SP-007
 │        ├─ providers/
 │        │  ├─ openai/
 │        │  │  ├─ openai-client.ts              # SP-003
@@ -3122,7 +3123,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-007 — Add the fixed synthetic vacancy catalogue and CV fixtures](tickets/SP-007-add-vacancy-catalogue-and-cv-fixtures.md)
 
-**Outcome:** The demo has a coherent two-vacancy unnamed employer context, a deterministic conversation-first plan, evidence-rich CV cases, and a safe quick start.
+**Outcome:** Completed locally on 2026-09-09, awaiting commit authorization. The demo has a coherent two-vacancy unnamed employer context, a deterministic conversation-first plan, evidence-rich CV cases, and a safe quick start.
 
 **Depends on:** SP-006.
 
@@ -3130,16 +3131,16 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Add the server-owned unnamed synthetic employer context plus fixed Frontend Developer and Backend Developer public vacancy snapshots under the backend demo boundary; visible copy uses **our company** or **the company** and contains no invented brand.
-- [ ] Add distinct responsibilities/requirements plus shared FAQ, benefits, salary range, and remote-Europe policy.
-- [ ] State explicitly that Full Stack is not a confirmed vacancy and provide the approved human-follow-up boundary.
-- [ ] Add and version the server-owned conversation-first discovery plan with no candidate facts, no CV sources, both dormant vacancy branches, and intent/coverage metadata rather than prewritten questions.
-- [ ] Include the full prioritized HR coverage schema in that plan: current context, synthesized experience/responsibility/strength coverage, one team/work-style field, motivation, logistics, English-use context, and candidate questions; do not embed literal dialogue strings in the runtime plan.
-- [ ] Add a text-based synthetic sample PDF under the frontend public fixtures and matching extracted/adversarial test inputs under `tests/fixtures`; candidate identity remains ordinary CV-derived fixture data, not product configuration.
-- [ ] Keep schemas in `packages/contracts`, server-owned values in the backend, and public assets/test inputs in their owning trees; do not create a shared catch-all data package.
-- [ ] Add graduate, experienced, Frontend-leaning, Backend-leaning, mixed/Full-Stack-interest, correction, and injection-test CV fixtures.
-- [ ] Mark every value synthetic in visible copy/fixture metadata.
-- [ ] Verify all fixture content is generic European synthetic data with no real-person PII.
+- [x] Add the server-owned unnamed synthetic employer context plus fixed Frontend Developer and Backend Developer public vacancy snapshots under the backend demo boundary; visible copy uses **our company** or **the company** and contains no invented brand.
+- [x] Add distinct responsibilities/requirements plus shared FAQ, benefits, salary range, and remote-Europe policy.
+- [x] State explicitly that Full Stack is not a confirmed vacancy and provide the approved human-follow-up boundary.
+- [x] Add and version the server-owned conversation-first discovery plan with no candidate facts, no CV sources, both dormant vacancy branches, and intent/coverage metadata rather than prewritten questions.
+- [x] Include the full prioritized HR coverage schema in that plan: current context, synthesized experience/responsibility/strength coverage, one team/work-style field, motivation, logistics, English-use context, and candidate questions; do not embed literal dialogue strings in the runtime plan.
+- [x] Add a text-based synthetic sample PDF under the frontend public fixtures and matching extracted/adversarial test inputs under `tests/fixtures`; candidate identity remains ordinary CV-derived fixture data, not product configuration.
+- [x] Keep schemas in `packages/contracts`, server-owned values in the backend, and public assets/test inputs in their owning trees; do not create a shared catch-all data package.
+- [x] Add graduate, experienced, Frontend-leaning, Backend-leaning, mixed/Full-Stack-interest, correction, and injection-test CV fixtures.
+- [x] Mark every value synthetic in visible copy/fixture metadata.
+- [x] Verify all fixture content is generic European synthetic data with no real-person PII.
 
 #### [SP-008 — Implement browser-only PDF extraction](tickets/SP-008-implement-browser-only-pdf-extraction.md)
 

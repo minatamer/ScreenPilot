@@ -1,0 +1,18 @@
+SCREENPILOT SYNTHETIC CV FIXTURE
+This document describes a fictional candidate created only for deterministic demo testing.
+
+Tala Venn
+Junior interface developer
+Remote within Europe
+
+PROFILE
+Two years of fictional experience supporting responsive product interfaces for internal workflow tools. Evidence leans toward Frontend work, but it is only a conversation hint and does not establish that the candidate applied for the Frontend Developer opening.
+
+RESPONSIBILITIES
+Built and maintained browser-based workflow screens, improved keyboard navigation, reviewed color and focus behavior with a product designer, and simplified long-form content for smaller viewports. Participated in collaborative code review, explained progress in remote planning sessions, and documented interface states for teammates.
+
+PROJECT WORK
+Created a synthetic task-planning interface that reorganized the same content across phone and desktop layouts. Collected broad usability observations from fictional test notes and corrected confusing labels without creating separate device-specific features. No real users, employers, or client records are included.
+
+WORK PREFERENCES
+Feels strongest in customer-facing product UI and accessible interaction work. Prefers a mix of independent focus and regular design or engineering collaboration. Interested in structured onboarding, mentorship, and a learning budget. Uses English for project communication. Availability, compensation, and final role preference should be confirmed live.

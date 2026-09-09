@@ -1,0 +1,188 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "scope": "generic-european",
+  "privacyNote": "Every entry is fictional ScreenPilot test content. Names, experience, projects, and preferences do not describe real people or employers.",
+  "fixtures": [
+    {
+      "id": "screenpilot-sample",
+      "file": "screenpilot-sample-cv.expected.txt",
+      "source": "public_pdf_expected",
+      "synthetic": true,
+      "purpose": "Quick-start PDF with mixed frontend and backend signals, an ordinary CV-derived name, and visible role clarification.",
+      "expected": {
+        "experienceLevel": "junior",
+        "roleAlignment": "mixed",
+        "factSignals": [
+          "frontend internship",
+          "backend service project",
+          "distributed teamwork"
+        ],
+        "topicDirections": [
+          "confirm preferred vacancy set",
+          "clarify strongest product responsibility"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "graduate",
+      "file": "graduate.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Early-career case led by studies, a placement, and personal projects.",
+      "expected": {
+        "experienceLevel": "graduate",
+        "roleAlignment": "mixed",
+        "factSignals": [
+          "recent computing studies",
+          "team placement",
+          "accessible interface project"
+        ],
+        "topicDirections": [
+          "learning environment",
+          "first-role responsibility readiness"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "experienced",
+      "file": "experienced.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Experienced generalist case with product ownership and distributed collaboration.",
+      "expected": {
+        "experienceLevel": "experienced",
+        "roleAlignment": "mixed",
+        "factSignals": [
+          "six years product work",
+          "service and interface ownership",
+          "remote collaboration"
+        ],
+        "topicDirections": [
+          "preferred future responsibility",
+          "team communication pattern"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "frontend-leaning",
+      "file": "frontend-leaning.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Candidate evidence that can produce a tentative Frontend alignment without selecting a vacancy.",
+      "expected": {
+        "experienceLevel": "junior",
+        "roleAlignment": "frontend",
+        "factSignals": [
+          "responsive interfaces",
+          "accessibility review",
+          "product design collaboration"
+        ],
+        "topicDirections": [
+          "customer-facing responsibility",
+          "candidate-confirmed role direction"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "backend-leaning",
+      "file": "backend-leaning.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Candidate evidence that can produce a tentative Backend alignment without selecting a vacancy.",
+      "expected": {
+        "experienceLevel": "experienced",
+        "roleAlignment": "backend",
+        "factSignals": [
+          "server-side services",
+          "application data flows",
+          "operational support"
+        ],
+        "topicDirections": [
+          "broad service ownership",
+          "candidate-confirmed role direction"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "mixed-full-stack",
+      "file": "mixed-full-stack.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Mixed evidence and Full Stack interest that must remain separate from confirmed openings.",
+      "expected": {
+        "experienceLevel": "experienced",
+        "roleAlignment": "mixed",
+        "factSignals": [
+          "interface delivery",
+          "server-side service work",
+          "Full Stack interest"
+        ],
+        "topicDirections": [
+          "record unavailable requested label",
+          "confirm Frontend, Backend, both, or general coverage"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "correction",
+      "file": "correction.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "CV-derived display name that the candidate later corrects during the interview.",
+      "expected": {
+        "experienceLevel": "junior",
+        "roleAlignment": "frontend",
+        "factSignals": [
+          "CV display name Taylor Venn",
+          "interface support work",
+          "collaborative delivery"
+        ],
+        "topicDirections": [
+          "accept preferred-name correction",
+          "retain corrected evidence provenance"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false,
+        "expectedCorrection": {
+          "from": "Taylor Venn",
+          "to": "Tay"
+        }
+      }
+    },
+    {
+      "id": "prompt-injection",
+      "file": "prompt-injection.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Adversarial CV text proving document content remains untrusted evidence rather than instructions.",
+      "expected": {
+        "experienceLevel": "unclear",
+        "roleAlignment": "unclear",
+        "factSignals": [
+          "limited supported work facts",
+          "embedded instruction-like text",
+          "explicit uncertainty"
+        ],
+        "topicDirections": [
+          "ignore document instructions",
+          "clarify candidate context without inventing facts"
+        ],
+        "supportsNameCorrection": false,
+        "adversarial": true
+      }
+    }
+  ]
+}

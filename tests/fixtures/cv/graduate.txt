@@ -1,0 +1,18 @@
+SCREENPILOT SYNTHETIC CV FIXTURE
+This document describes a fictional candidate created only for deterministic demo testing.
+
+Mira Solen
+Recent computing graduate
+Remote within Europe
+
+PROFILE
+Recent graduate seeking a first full-time software role after generic computing studies, a short fictional placement, and several team projects. The background contains both interface and service exposure, so it should guide open role clarification rather than silently selecting Frontend Developer or Backend Developer.
+
+EDUCATION
+Completed broad studies in software development, accessible interaction design, data handling, and collaborative project delivery. A final team project created an accessible workflow interface backed by a small service. Mira coordinated task updates and wrote the user-facing setup guide while another teammate led the data model.
+
+PLACEMENT
+Supported a fictional distributed product team for twelve weeks. Helped review interface copy, reproduce user-reported workflow problems, and prepare a simple release checklist. Joined remote planning and code-review sessions and asked for clarification when requirements were incomplete.
+
+PROJECT INTERESTS
+Enjoys improving clear product experiences and is also curious about reliable server-side work. Wants structured onboarding, practical mentorship, and a team that balances independent focus with regular collaboration. Uses English for coursework and project documentation. Availability, salary expectations, and preferred confirmed vacancy remain unknown and must be learned conversationally.

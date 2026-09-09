@@ -1,0 +1,18 @@
+SCREENPILOT SYNTHETIC CV FIXTURE
+This document describes a fictional candidate created only for deterministic demo testing.
+
+Taylor Venn
+Interface support developer
+Remote within Europe
+
+PROFILE
+The document uses the display name Taylor Venn. During the synthetic interview fixture, the candidate states that they prefer Tay. The candidate-stated correction must replace the CV-derived display name, retain final-turn evidence, and remain in use for the rest of the conversation.
+
+EXPERIENCE
+Eighteen months of fictional experience supporting browser interfaces for a distributed workflow product. Updated form states, improved keyboard instructions, checked responsive content behavior, and prepared clear handover notes. Worked with a product designer and another developer through collaborative review and short remote planning sessions.
+
+PROJECT WORK
+Created a synthetic onboarding checklist interface for a study project and documented where users might need clearer feedback. The project contains no real employer, customer, or participant information. Evidence leans toward Frontend responsibility but cannot establish an application choice.
+
+PREFERENCES
+Values direct feedback, structured onboarding, and a mix of independent work with regular collaboration. Uses English for project notes. The candidate's preferred name, confirmed role set, availability, compensation expectation, and current motivation must be accepted from live answers rather than inferred beyond this document.
