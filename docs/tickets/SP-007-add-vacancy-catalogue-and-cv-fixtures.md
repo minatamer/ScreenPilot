@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 1 — interview preparation paths  
-Implementation state: Completed locally on 2026-09-09; awaiting commit authorization<br>
+Implementation state: Completed and committed on 2026-09-09 in `f890bfb`<br>
 Last synchronized: 2026-09-09<br>
 Depends on: SP-006  
 Suggested commit: `feat(demo): add vacancy catalogue and synthetic CV fixtures`  

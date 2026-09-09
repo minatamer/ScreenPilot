@@ -3123,7 +3123,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-007 — Add the fixed synthetic vacancy catalogue and CV fixtures](tickets/SP-007-add-vacancy-catalogue-and-cv-fixtures.md)
 
-**Outcome:** Completed locally on 2026-09-09, awaiting commit authorization. The demo has a coherent two-vacancy unnamed employer context, a deterministic conversation-first plan, evidence-rich CV cases, and a safe quick start.
+**Outcome:** Completed on 2026-09-09 in implementation commit `f890bfb`. The demo has a coherent two-vacancy unnamed employer context, a deterministic conversation-first plan, evidence-rich CV cases, and a safe quick start.
 
 **Depends on:** SP-006.
 
