@@ -3104,7 +3104,7 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-006 — Define browser-session contracts and reducer](tickets/SP-006-define-browser-session-contracts-and-reducer.md)
 
-**Outcome:** Completed and revised locally on 2026-09-09; awaiting commit authorization. Explicit browser-safe schemas now protect every planned cross-boundary payload, while one hydration-safe frontend reducer owns both preparation branches and their shared interview/review lifecycle. Versioned allow-list persistence is bounded to the current tab and two hours, excludes runtime secrets/binary data, requires grounded candidate/CV evidence, rejects duplicate catalogues and impossible restored stage/mode combinations, safely restarts interrupted CV processing, distinguishes post-call summary recovery from live-call interruption, and never auto-restores a voice connection.
+**Outcome:** Completed, revised, and committed in `c8bbaf2`. Explicit browser-safe schemas now protect every planned cross-boundary payload, while one hydration-safe frontend reducer owns both preparation branches and their shared interview/review lifecycle. Versioned allow-list persistence is bounded to the current tab and two hours, excludes runtime secrets/binary data, requires grounded candidate/CV evidence, rejects duplicate catalogues and impossible restored stage/mode combinations, safely restarts interrupted CV processing, distinguishes post-call summary recovery from live-call interruption, and never auto-restores a voice connection.
 
 **Depends on:** SP-001, SP-003.
 

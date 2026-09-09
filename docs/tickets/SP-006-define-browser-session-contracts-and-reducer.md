@@ -1,7 +1,7 @@
 # SP-006 — Define browser-session contracts and reducer
 
 Status: Required  
-Implementation state: Completed and revised locally on 2026-09-09; awaiting commit authorization
+Implementation state: Completed, revised, and committed in `c8bbaf2`
 
 Milestone: Milestone 1 — interview preparation paths  
 Last synchronized: 2026-09-09<br>
