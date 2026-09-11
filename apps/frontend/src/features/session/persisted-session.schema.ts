@@ -141,11 +141,17 @@ export const persistedDemoSessionSchema = z
       });
     }
 
-    if (session.interviewGrantExpiresAt && !session.interviewGrant) {
+    const hasInterviewGrant = session.interviewGrant !== undefined;
+    const hasInterviewGrantExpiry =
+      session.interviewGrantExpiresAt !== undefined;
+    if (hasInterviewGrant !== hasInterviewGrantExpiry) {
       context.addIssue({
         code: "custom",
-        message: "A grant expiry requires an interview grant.",
-        path: ["interviewGrantExpiresAt"],
+        message:
+          "An interview grant and its expiry must be persisted together.",
+        path: [
+          hasInterviewGrant ? "interviewGrantExpiresAt" : "interviewGrant",
+        ],
       });
     }
 

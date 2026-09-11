@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DemoSessionProvider } from "@/features/session/demo-session-provider";
@@ -57,10 +57,14 @@ describe("HomePage", () => {
         name: "Adaptive AI screening, live in your browser.",
       }),
     ).toBeVisible();
-    expect(screen.getByRole("button", { name: "Use a CV" })).toBeEnabled();
-    expect(
-      screen.getByRole("button", { name: "Start without a CV" }),
-    ).toBeEnabled();
+    const cvButton = screen.getByRole("button", { name: "Use a CV" });
+    const conversationButton = screen.getByRole("button", {
+      name: "Start without a CV",
+    });
+    expect(cvButton).toBeEnabled();
+    expect(conversationButton).toBeEnabled();
+    expect(cvButton).toHaveClass("sp-button--primary");
+    expect(conversationButton).toHaveClass("sp-button--primary");
     expect(
       screen.getByText(/synthetic vacancy for this browser session/),
     ).toBeVisible();
@@ -71,5 +75,10 @@ describe("HomePage", () => {
     expect(screen.queryByText("Foundation preview")).not.toBeInTheDocument();
     expect(screen.queryByText("Reusable states")).not.toBeInTheDocument();
     expect(screen.queryByText("Pilot is listening.")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Privacy" }));
+    expect(
+      screen.getByRole("dialog", { name: "Privacy and demo limits" }),
+    ).toHaveAttribute("open");
   });
 });

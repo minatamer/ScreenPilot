@@ -8,16 +8,48 @@ import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
 import { CvStage } from "@/features/cv/cv-stage";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
-import type { SessionFailure } from "@/features/session/demo-session.types";
+import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
+import type {
+  DemoStage,
+  SessionFailure,
+} from "@/features/session/demo-session.types";
 import { useDemoSession } from "@/features/session/use-demo-session";
 import { AppShell } from "@/shared/ui/app-shell";
 import { PageContainer } from "@/shared/ui/layout";
 import { SiteHeader } from "@/shared/ui/site-header";
+import { StageIndicator } from "@/shared/ui/stage-indicator";
 
 import { BootstrapStatus } from "./bootstrap-status";
 import { ConversationPreparationStage } from "./conversation-preparation-stage";
 import { EntryModeChooser } from "./entry-mode-chooser";
 import { useDemoBootstrap } from "./use-demo-bootstrap";
+
+const DEMO_PROGRESS_STAGES = [
+  "Choose",
+  "Prepare",
+  "Preflight",
+  "Interview",
+  "Review",
+] as const;
+
+const DEMO_STAGE_PROGRESS: Readonly<Record<DemoStage, number>> = {
+  empty: 0,
+  bootstrapping: 0,
+  choosing_entry_mode: 0,
+  awaiting_cv: 1,
+  extracting_cv: 1,
+  analyzing_cv: 1,
+  plan_ready: 1,
+  preparing_conversation: 1,
+  preflight: 2,
+  ready: 2,
+  connecting: 3,
+  live: 3,
+  ending: 3,
+  summarizing: 4,
+  review_ready: 4,
+  cleared: 0,
+};
 
 export function DemoExperience() {
   const router = useRouter();
@@ -115,7 +147,6 @@ export function DemoExperience() {
         onBack={() => {
           dispatch({ type: "BACK_FROM_PREFLIGHT" });
         }}
-        onClearSession={returnHomeAfterClear}
         onStartOver={startOver}
       />
     );
@@ -139,7 +170,23 @@ export function DemoExperience() {
       </a>
       <SiteHeader
         actions={
-          <span className="sp-private-session-label">Session-only demo</span>
+          <>
+            <PrivacyDialog />
+            <button
+              className="sp-header-link"
+              onClick={returnHomeAfterClear}
+              type="button"
+            >
+              Clear session
+            </button>
+          </>
+        }
+        middle={
+          <StageIndicator
+            currentIndex={DEMO_STAGE_PROGRESS[state.stage]}
+            label="Demo progress"
+            stages={DEMO_PROGRESS_STAGES}
+          />
         }
       />
       <main className="sp-demo-main" id="main-content">

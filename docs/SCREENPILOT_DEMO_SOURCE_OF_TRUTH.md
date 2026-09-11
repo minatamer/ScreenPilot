@@ -442,7 +442,7 @@ Refresh behavior:
 
 ### Static legal/privacy content
 
-Privacy and demo limitations may be an accessible modal or anchored section instead of separate routed pages. Keep the explanation visible before either entry choice and repeat it before voice consent. Conversation-first copy explicitly states that the candidate's answers—not a document—become the local transcript and insight evidence.
+Privacy and demo limitations use one accessible modal available from both `/` and `/demo` instead of separate routed pages. The landing also keeps a visible anchored summary before either entry choice, and the disclosure is repeated before voice consent. Conversation-first copy explicitly states that the candidate's answers—not a document—become the local transcript and insight evidence.
 
 ---
 
@@ -3260,6 +3260,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [x] Enter the shared preflight state with the deterministic plan, `interviewGrant`, and Conversation-first badge data.
 - [x] Explain that any candidate-stated role is a synthetic session-only demo vacancy, offer an undecided path, and show no catalogue, unavailable state, or profession-specific branch.
 - [x] Implement Back, retry, expiry, Clear-session, responsive, and keyboard behavior without redirecting to CV upload.
+- [x] Keep the `/demo` route shell visible across early stages with the shared stage indicator, reusable Privacy modal, and immediate Clear-session action.
 - [x] Add focused reducer/component/API tests proving mode isolation and no provider preparation call.
 
 #### [SP-012 — Build the CV-assisted frontend preparation path](tickets/SP-012-build-cv-assisted-frontend-path.md)

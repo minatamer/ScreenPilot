@@ -96,6 +96,16 @@ describe("DemoExperience conversation-first path", () => {
       </DemoSessionProvider>,
     );
 
+    expect(
+      screen.getByRole("navigation", { name: "Demo progress" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Choose").closest("li")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    expect(screen.getByRole("button", { name: "Privacy" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Clear session" })).toBeEnabled();
+
     fireEvent.click(
       await screen.findByRole("button", { name: "Start without a CV" }),
     );
@@ -106,6 +116,10 @@ describe("DemoExperience conversation-first path", () => {
     ).toBeVisible();
     expect(screen.getByText("Conversation-first")).toBeVisible();
     expect(screen.getByText(/Candidate-only evidence/)).toBeVisible();
+    expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
 
     expect(browserFetch).toHaveBeenCalledTimes(2);
     expect(browserFetch.mock.calls.map(([input]) => requestUrl(input))).toEqual(
@@ -170,6 +184,12 @@ describe("DemoExperience conversation-first path", () => {
         name: "Preparing an open conversation",
       }),
     ).toBeVisible();
+    expect(screen.getByText("Prepare").closest("li")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+    expect(screen.getByRole("button", { name: "Privacy" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Clear session" })).toBeEnabled();
     await waitFor(() => {
       expect(preparationSignal).toBeDefined();
     });
@@ -277,6 +297,13 @@ describe("DemoExperience conversation-first path", () => {
     await screen.findByRole("heading", {
       name: "Your open conversation is ready.",
     });
+
+    fireEvent.click(screen.getByRole("button", { name: "Privacy" }));
+    expect(
+      screen.getByRole("dialog", { name: "Privacy and demo limits" }),
+    ).toHaveAttribute("open");
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+
     fireEvent.click(screen.getByRole("button", { name: "Clear session" }));
     expect(router.replace).toHaveBeenCalledWith("/");
   });

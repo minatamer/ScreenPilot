@@ -1,25 +1,18 @@
 import { EntryModeBadge } from "@/shared/ui/entry-mode-badge";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { StageIndicator } from "@/shared/ui/stage-indicator";
 
 type PreflightHandoffProps = Readonly<{
   onBack: () => void;
-  onClearSession: () => void;
   onStartOver: () => void;
 }>;
 
 export function PreflightHandoff({
   onBack,
-  onClearSession,
   onStartOver,
 }: PreflightHandoffProps) {
   return (
     <div className="sp-demo-stage sp-preflight-handoff">
-      <StageIndicator
-        currentIndex={2}
-        stages={["Choose", "Prepare", "Preflight", "Interview", "Review"]}
-      />
       <div className="sp-preflight-handoff__heading">
         <EntryModeBadge>Conversation-first</EntryModeBadge>
         <p className="sp-eyebrow">Shared preflight handoff</p>
@@ -62,9 +55,6 @@ export function PreflightHandoff({
         </Button>
         <Button onClick={onStartOver} variant="quiet">
           Start over
-        </Button>
-        <Button onClick={onClearSession} variant="quiet">
-          Clear session
         </Button>
       </ButtonGroup>
     </div>

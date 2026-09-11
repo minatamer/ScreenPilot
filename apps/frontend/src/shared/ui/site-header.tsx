@@ -9,15 +9,22 @@ type NavigationItem = Readonly<{
 
 type SiteHeaderProps = Readonly<{
   actions?: ReactNode;
+  middle?: ReactNode;
   navigation?: readonly NavigationItem[];
 }>;
 
-export function SiteHeader({ actions, navigation = [] }: SiteHeaderProps) {
+export function SiteHeader({
+  actions,
+  middle,
+  navigation = [],
+}: SiteHeaderProps) {
   return (
     <header className="sp-site-header">
       <div className="sp-site-header__inner">
         <ScreenPilotMark href="#top" />
-        {navigation.length > 0 ? (
+        {middle ? (
+          <div className="sp-site-header__middle">{middle}</div>
+        ) : navigation.length > 0 ? (
           <nav aria-label="Primary navigation" className="sp-site-header__nav">
             {navigation.map(({ href, label }) => (
               <a href={href} key={`${href}:${label}`}>

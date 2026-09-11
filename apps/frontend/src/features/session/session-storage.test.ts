@@ -92,6 +92,7 @@ function persistedSession(
     demoContext,
     screeningPlan: conversationPlan,
     interviewGrant: "signed-test-grant",
+    interviewGrantExpiresAt: "2026-09-09T10:15:00.000Z",
     transcript: [],
     insights: [],
     topicProgress: [],
@@ -219,8 +220,32 @@ describe("session storage", () => {
         ...persistedSession(),
         screeningPlan: undefined,
         interviewGrant: undefined,
+        interviewGrantExpiresAt: undefined,
       }).success,
     ).toBe(false);
+  });
+
+  it("clears a prepared session whose grant is missing its expiry", () => {
+    const storage = new MemorySessionStorage();
+    const invalidSession = {
+      ...persistedSession(),
+      interviewGrantExpiresAt: undefined,
+    };
+    storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(invalidSession));
+
+    expect(persistedDemoSessionSchema.safeParse(invalidSession).success).toBe(
+      false,
+    );
+    expect(
+      persistedDemoSessionSchema.safeParse({
+        ...persistedSession(),
+        interviewGrant: undefined,
+      }).success,
+    ).toBe(false);
+    expect(
+      loadPersistedSession(storage, new Date("2026-09-09T10:00:00.000Z")),
+    ).toEqual({ status: "cleared", reason: "corrupt" });
+    expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
   });
 
   it.each([

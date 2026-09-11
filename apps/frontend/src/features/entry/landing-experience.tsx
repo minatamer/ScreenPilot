@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
+import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
 import { useDemoSession } from "@/features/session/use-demo-session";
 import { AppShell } from "@/shared/ui/app-shell";
 import { Button, ButtonGroup } from "@/shared/ui/button";
@@ -17,7 +18,6 @@ import { useDemoBootstrap } from "./use-demo-bootstrap";
 
 const landingNavigation = [
   { href: "#how-it-works", label: "How it works" },
-  { href: "#privacy", label: "Privacy" },
 ] as const;
 
 const ACTIVE_SESSION_STAGES = new Set([
@@ -61,14 +61,17 @@ export function LandingExperience() {
       </a>
       <SiteHeader
         actions={
-          <a
-            className="sp-header-link"
-            href="https://github.com/minatamer/ScreenPilot"
-            rel="noreferrer"
-            target="_blank"
-          >
-            Project source
-          </a>
+          <>
+            <PrivacyDialog />
+            <a
+              className="sp-header-link"
+              href="https://github.com/minatamer/ScreenPilot"
+              rel="noreferrer"
+              target="_blank"
+            >
+              Project source
+            </a>
+          </>
         }
         navigation={landingNavigation}
       />

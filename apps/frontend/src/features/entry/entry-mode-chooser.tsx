@@ -75,7 +75,6 @@ export function EntryModeChooser({
             onClick={() => {
               onSelect("conversation_first");
             }}
-            variant="secondary"
           >
             Start without a CV
           </Button>
