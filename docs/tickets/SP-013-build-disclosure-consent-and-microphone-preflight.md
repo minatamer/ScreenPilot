@@ -3,7 +3,7 @@
 Status: Required  
 Milestone: Milestone 2 — browser voice experience  
 Last synchronized: 2026-08-31  
-Depends on: SP-006, SP-011, SP-012  
+Depends on: SP-006, SP-011, SP-011A, SP-012  
 Suggested commit: `feat(frontend): add voice disclosure and preflight`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -17,6 +17,7 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 ## Standalone implementation context
 
 - Both entry modes arrive with an unexpired `interviewGrant` and use this exact shared preflight.
+- SP-011A's in-workspace Privacy access and session/human-decision context remain visible, but they do not replace this ticket's complete provider/AI/voice/microphone disclosure immediately before consent.
 - Disclosure identifies OpenAI/ElevenLabs processing, Cloudflare Turnstile anti-abuse verification, no ScreenPilot audio recording, session-only review, eight-minute maximum, and the expectation to use synthetic data.
 - The mode badge explains whether the interviewer has CV-derived context or will learn only from spoken answers.
 - Consent begins unchecked and requires a deliberate action.

@@ -25,6 +25,7 @@ Translate the approved visual reference into maintainable frontend tokens, share
 - Use shared React primitives and composition. There must not be separate desktop/mobile component trees or scattered page-specific color/spacing values.
 - Tokens/global styles belong under `apps/frontend/src/styles`; reusable design primitives belong under `apps/frontend/src/shared/ui`. Feature-specific composed UI stays with its feature rather than growing a universal component catalogue.
 - The light shell serves landing, preparation, and review. The dark shell serves preflight and the active interview.
+- SP-011A later extends the same tokens into a mixed-surface landing—Deep Ink product-story hero followed by Warm White working sections—and an early-demo context rail. This is an approved composition correction, not a second token system or device-specific theme.
 - Responsiveness is continuous from 320 px through large monitors, with content-pressure breakpoints, bounded reading widths, safe-area support, and reduced motion.
 
 ## Scope boundaries

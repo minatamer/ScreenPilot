@@ -3,7 +3,7 @@
 Status: Required  
 Milestone: Milestone 1 — interview preparation paths  
 Last synchronized: 2026-09-11<br>
-Depends on: SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011<br>
+Depends on: SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011, SP-011A<br>
 Suggested commit: `feat(frontend): add CV-assisted preparation`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -23,6 +23,7 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - Plan preview has **What the CV says** and **What ScreenPilot will explore**. Every CV-derived topic links to evidence; fixed topics are marked as standard screening.
 - An evidence-linked role suggestion is labelled **Suggested from CV — we will confirm during the call**. The visitor does not select or confirm a role before the call.
 - This branch converges into the exact shared preflight used by conversation-first.
+- Render every CV preparation stage inside SP-011A's Editorial Live Signal `/demo` workspace. Preserve its header-owned progress/Clear-session controls and persistent session/privacy/human-decision context rail; do not reintroduce a marketing navbar or stage-local shell.
 - Role-neutral synthetic-demo disclosure comes from bootstrap and API payloads use SP-010A's declared role-label contracts through the shared relative `/v1` client; the feature does not mirror server values, create a role allow-list, or create a second HTTP stack.
 
 ## Manual credential gate
@@ -51,6 +52,7 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - [ ] Display any evidence-linked bounded role suggestion as **Suggested from CV — confirm during the call** and provide no pre-call role selector or supported-role list.
 - [ ] Offer only Continue and Start over; implement typed analysis/Turnstile/schema/grant-expiry errors and mode-aware Back behavior.
 - [ ] Converge on the same shared preflight state/components.
+- [ ] Preserve the SP-011A early-demo workspace and context rail across extraction, analysis, plan preview, and shared preflight.
 - [ ] Test two distinct fixtures, no-placeholder leakage, retry/reset, evidence links, and responsive parity.
 
 ## Acceptance criteria

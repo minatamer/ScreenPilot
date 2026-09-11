@@ -3,7 +3,7 @@
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
 Last synchronized: 2026-08-26  
-Depends on: SP-005, SP-011, SP-012, SP-013, SP-016, SP-021  
+Depends on: SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-021  
 Suggested commit: `fix(frontend): harden demo quality`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -19,6 +19,7 @@ Bring the complete product path to equal release quality across accessibility, c
 - Responsive quality is continuous from 320 px through 2560 px and beyond; breakpoints follow content pressure rather than separate device products.
 - Reference anchors: 320; 360×800; 390×844; 768/820 tablet; 1024×768; 1280×800; 1440×900; 1920×1080; 2560×1440, plus drag-resized intermediate widths.
 - Both landing entry cards remain equally prominent. Both modes converge on shared components without duplicated desktop/mobile trees.
+- SP-011A's Editorial Live Signal landing preview and early-demo context rail are release surfaces: preserve the one-shot/no-loop motion boundary, reduced-motion still state, navbar cleanup, contextual Privacy access, and deliberate large-screen composition.
 - Mobile interview keeps voice signal, captions, sticky safe-area-aware controls, insight categories/states/source chips, swipeable rail, and expandable evidence.
 - Large monitors use bounded reading widths, deliberate whitespace, and expanded composition—not stretched paragraphs and controls.
 - Required behavior includes keyboard/focus, ARIA/status/captions, reduced motion, 200% zoom, long content, orientation, safe areas, dynamic viewport, virtual keyboard, and minimum 44×44 targets.
@@ -77,4 +78,3 @@ Keep SP-024 reviewable as one logical change represented by `fix(frontend): hard
 ## Completion handoff
 
 Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
-

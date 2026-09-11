@@ -78,6 +78,12 @@ Produce one lightweight browser-viewable HTML living style guide and one approve
 - The user approved the simplified HTML's Deep Ink rounded-square / Warm Coral forward-mark logo for the actual web app. SP-005 should extract and reuse that code-native SVG with an accessible ScreenPilot label rather than tracing the generated raster.
 - The user approved the corrected revision and authorized its immediate commit; SP-005 may begin after this ticket commit.
 
+## SP-011A composition correction (2026-09-11)
+
+- SP-011A keeps the approved Deep Ink + Warm Coral tokens, logo, type character, active-interview concept, and accessibility rules, but supersedes the original generic light landing composition with the research-backed **Editorial Live Signal** mixed-surface hero.
+- The HTML opening sample now demonstrates the intended product-first hierarchy: Deep Ink editorial copy, a clearly illustrative role-neutral signal → transcript → evidence preview, equal entry actions immediately afterward, and Privacy/source access outside primary navigation.
+- This corrective implementation was explicitly authorized without a new approval pause. It is a composition extension of the existing Signal Canvas authority, not a second design direction or replacement raster concept.
+
 ## Previous focused verification
 
 - [x] Open the HTML directly in a browser and check console/network behavior.

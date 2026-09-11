@@ -2530,9 +2530,9 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 
 - Left: compact ScreenPilot mark and wordmark.
 - The approved product mark is the code-native SVG shown in the HTML reference: a Deep Ink rounded square containing a Warm Coral forward/paper-plane shape with a Pale Coral inner facet. Reuse this mark in the actual frontend starting in SP-005, with an accessible ScreenPilot label. The raster concept's generated logo is an approximation and must not replace the HTML SVG authority.
-- Center/right: **How it works**, **Privacy**, and repository/portfolio link.
-- During `/demo`: replace marketing links with stage indicator, **Clear session**, and privacy access.
-- No hamburger on desktop; mobile uses a compact actions menu.
+- On the landing, keep only **How it works** and **Start demo** with the product mark. Privacy and repository/source access are secondary to the entry decision: Privacy remains a clearly labelled control in the visible trust section and repository/source access moves to the footer.
+- During `/demo`, the header contains the stage indicator and **Clear session** only. A compact context rail inside the main experience keeps session-only status, the human-decision boundary, and Privacy access available throughout early stages.
+- The compact landing header does not require a hamburger. On narrow `/demo` widths, the progress indicator reflows or scrolls within its own row while every stage remains named.
 - No Dashboard, Jobs, Candidates, Pricing, Login, or Signup navigation.
 
 ### Interviewer naming and AI transparency
@@ -2546,13 +2546,17 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 
 #### Landing
 
-- Warm White canvas with a soft coral/pale-coral atmospheric gradient behind the hero.
-- Hero copy occupies no more than two lines at desktop width and retains a strong, balanced hierarchy at narrow mobile widths.
-- Role-neutral synthetic-demo context card explains that a candidate-stated role becomes a session-only demo vacancy. It is disclosure/context supplied to the AI, not a job-board listing, catalogue, selectable opening, employer-fact card, or preselected role.
-- Two equal entry-mode cards appear above the fold: **Use a CV** and **Start without a CV**. Neither is rendered as a small secondary link.
+- Use an **Editorial Live Signal** mixed-surface composition: a Deep Ink opening field communicates the live product, then Warm White working sections carry entry, explanation, trust, and footer content. Coral/pale-coral atmosphere is restrained, still, and bounded to the hero signal field.
+- Hero copy occupies no more than three balanced lines at desktop width and retains a strong editorial hierarchy at narrow mobile widths. It explicitly states the voice-interview, candidate-sourced evidence, session-only, and human-decision boundaries without generic “AI-powered” filler.
+- Pair the opening copy with a semantic illustrative product preview showing **Pilot is listening**, a synthetic role-neutral exchange, and unscored evidence states. The preview is labelled illustrative, contains no real candidate/employer/vacancy/provider state, and communicates the same information when animation is absent.
+- Preview motion connects signal → transcript → evidence once in less than five seconds. It never loops, moves layout, auto-plays media, or uses motion as the only carrier of meaning. Use fixed layout with opacity and small transforms only; reduced motion resolves immediately to the stable completed preview.
+- A concise context/trust row explains that a candidate-stated role becomes a session-only synthetic demo vacancy and that ScreenPilot never makes the hiring decision. It is disclosure/context, not a job-board listing, catalogue, selectable opening, employer-fact card, or preselected role.
+- The **Start demo** header/hero action points to the first-party entry chooser; it does not skip or favor an entry mode.
+- Two equal entry-mode cards immediately follow the product story: **Use a CV** and **Start without a CV**. Neither is rendered as a small secondary link, and both retain complete copy, keyboard order, and the same primary action treatment.
 - The CV card previews focused, evidence-grounded discussion areas and contains Upload plus Use sample actions. The conversation card previews fast open discovery and contains one Start action. Neither card promises or displays a fixed question script.
 - Comparison copy is concise and non-competitive; it explains preparation differences while promising the same live/review quality.
 - A three-node process strip adapts its first label by selected mode: CV understanding or Conversation discovery → Voice → Review.
+- Privacy remains visible before either entry path through concise trust copy plus an accessible modal trigger in the landing trust section. The project-source link belongs in the footer, not primary navigation.
 
 #### CV input
 
@@ -2579,6 +2583,13 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - Use a brief branded transition into preflight, not a fake document animation, progress percentage, or empty plan canvas.
 - Copy states **No CV needed—ScreenPilot will learn through the conversation** and identifies that initial questions will be broader.
 - If preparation fails, show Retry and Back to choices without suggesting that CV upload is required.
+
+#### Early `/demo` workspace
+
+- Treat `/demo` as an independently understandable product surface, not a marketing-page continuation. The header owns only ScreenPilot identity, canonical stage progress, and Clear session.
+- Place a compact context rail inside the main workspace. It persists across choose, CV input, deterministic preparation, and shared preflight; it states **Session only**, **Human decision**, and exposes the shared Privacy dialog without duplicating workflow state.
+- The active stage occupies the primary workspace well. Use the same Deep Ink/Coral signal motifs, Warm White surfaces, typography, focus treatment, and continuous responsive rules as the landing.
+- On compact widths, the context rail becomes a concise horizontal/stacked orientation band above the active stage. Do not hide its privacy or decision-boundary content.
 
 #### Preflight
 
@@ -2639,6 +2650,7 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - Correction: brief border/color morph, not shake.
 - Voice signal responds smoothly but avoids rapid flashing.
 - Reduced-motion mode removes spatial travel and pulsing.
+- The landing product preview is an exception only in duration, not behavior: one automatic explanatory sequence may last up to 4.8 seconds, must stop after one iteration, use only opacity/transform, keep every state semantically present, and resolve to its stable still frame under reduced motion. Any later continuous or repeating marketing motion requires a visible pause/stop mechanism and a new review.
 
 ### Component inventory
 
@@ -2646,6 +2658,8 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - `DemoStageIndicator`
 - `EntryModeCard`
 - `EntryModeBadge`
+- `IllustrativeInterviewPreview`
+- `DemoContextRail`
 - `VacancyContextCard`
 - `CvDropzone`
 - `ExtractionStatus`
@@ -2992,7 +3006,7 @@ The numeric backlog remains the source for ticket identity, but dependency order
 ```text
 Repository/runtime lane: SP-001 -> SP-002 + SP-003 -> SP-006 -> SP-007 -> SP-009
 Visual lane:             SP-001 -> SP-002 -> SP-004 (approval) -> SP-005
-Convergence:             SP-005 + SP-006 -> SP-008; both lanes then feed SP-011/SP-012
+Convergence:             SP-005 + SP-006 -> SP-008; both lanes feed SP-011 -> SP-011A -> SP-012
 ```
 
 `SP-002` and `SP-003` may be implemented in either order after SP-001. The runtime lane may continue through SP-009 while SP-004 waits for visual approval; do not let that approval gate block contracts, session-state, synthetic content, or backend-foundation work. Do not begin SP-008 or broad frontend feature styling until SP-005 is complete.
@@ -3260,14 +3274,33 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [x] Enter the shared preflight state with the deterministic plan, `interviewGrant`, and Conversation-first badge data.
 - [x] Explain that any candidate-stated role is a synthetic session-only demo vacancy, offer an undecided path, and show no catalogue, unavailable state, or profession-specific branch.
 - [x] Implement Back, retry, expiry, Clear-session, responsive, and keyboard behavior without redirecting to CV upload.
-- [x] Keep the `/demo` route shell visible across early stages with the shared stage indicator, reusable Privacy modal, and immediate Clear-session action.
+- [x] Keep the `/demo` route shell visible across early stages with the shared stage indicator, reusable Privacy access, and immediate Clear-session action. SP-011A subsequently moves Privacy from the temporary header placement into the persistent in-workspace context rail.
 - [x] Add focused reducer/component/API tests proving mode isolation and no provider preparation call.
+
+#### [SP-011A — Modernize the entry and early demo experience](tickets/SP-011A-modernize-entry-and-early-demo-experience.md)
+
+**Outcome:** Replace the generic light entry composition with the research-backed Editorial Live Signal landing and a coherent early `/demo` workspace before the CV-assisted path extends them.
+
+**Depends on:** SP-005, SP-006, SP-010A, SP-011.
+
+**Suggested commit:** `feat(frontend): modernize the ScreenPilot entry experience`
+
+**Checklist:**
+
+- [ ] Record current UX, accessibility, product-demo, competitor, gallery, community, and React/Next library research with evidence-quality distinctions before product code.
+- [ ] Build a semantic, role-neutral illustrative interview preview that shows signal → transcript → unscored evidence without real candidate data or provider calls.
+- [ ] Keep automatic preview motion one-shot, below five seconds, compositor-only, and immediately stable under reduced motion.
+- [ ] Retain equal CV-assisted and conversation-first entry paths while materially redesigning the landing hierarchy and surfaces.
+- [ ] Remove Privacy and Project source from landing/demo navigation; preserve contextual Privacy access and move Project source to the footer.
+- [ ] Give early `/demo` stages one persistent progress/header and in-workspace privacy/session/human-decision context rail.
+- [ ] Disable the identified Next.js development indicator through supported Next.js 16 configuration while preserving compile/runtime error reporting.
+- [ ] Verify deterministic tests, lint, typecheck, build, keyboard/focus/dialog behavior, reduced motion, responsive anchors, and no overflow.
 
 #### [SP-012 — Build the CV-assisted frontend preparation path](tickets/SP-012-build-cv-assisted-frontend-path.md)
 
 **Outcome:** Uploaded and sample CVs flow through local extraction, grounded analysis, and an explainable plan preview before reaching the same preflight boundary.
 
-**Depends on:** SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011.
+**Depends on:** SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011, SP-011A.
 
 **Suggested commit:** `feat(frontend): add CV-assisted preparation`
 
@@ -3290,7 +3323,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** No provider audio session begins without informed consent and a working microphone.
 
-**Depends on:** SP-006, SP-011, SP-012.
+**Depends on:** SP-006, SP-011, SP-011A, SP-012.
 
 **Suggested commit:** `feat(frontend): add voice disclosure and preflight`
 
@@ -3518,7 +3551,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** The complete portfolio path adapts fluidly and remains equally polished and functionally complete from small phones through tablets, compact/standard laptops, desktops, and large monitors, including keyboard, safe-area, and reduced-motion behavior.
 
-**Depends on:** SP-005, SP-011, SP-012, SP-013, SP-016, SP-021.
+**Depends on:** SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-021.
 
 **Suggested commit:** `fix(frontend): harden demo quality`
 

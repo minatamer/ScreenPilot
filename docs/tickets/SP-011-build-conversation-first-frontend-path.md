@@ -42,7 +42,7 @@ Deliver the equally prominent no-CV preparation path from landing choice to shar
 - [x] Guarantee `cv` remains absent and CV/CV+Candidate source labels are impossible.
 - [x] Enter the shared preflight state with the Conversation-first badge.
 - [x] Implement mode-aware Back, retry, grant expiry, Start over/Clear session, keyboard, and responsive behavior.
-- [x] Keep the `/demo` header's stage indicator, Privacy modal, and Clear-session control available throughout early preparation and preflight.
+- [x] Keep the `/demo` route's stage indicator, Privacy access, and Clear-session control available throughout early preparation and preflight. SP-011A later relocates Privacy from the temporary header position into the persistent workspace context rail.
 - [x] Preserve equal visual quality on phones, tablets, laptops, desktops, large monitors, and intermediate widths.
 - [x] Add focused reducer/component/API tests for branch isolation, no provider preparation calls, failure recovery, and shared-stage convergence.
 
@@ -54,7 +54,7 @@ Deliver the equally prominent no-CV preparation path from landing choice to shar
 - [x] The path discloses that any bounded candidate-stated role becomes a synthetic session-only demo vacancy, offers an undecided route, and contains no role allow-list or unavailable state.
 - [x] Retry stays in conversation-first; Back returns to the equal choice screen instead of CV upload.
 - [x] Mobile and desktop show the same information/actions with intentional reflow.
-- [x] The landing opens Privacy as an accessible modal, and `/demo` retains progress, Privacy, and Clear-session controls without duplicating them inside individual stages.
+- [x] The landing opens Privacy as an accessible modal, and `/demo` retains progress, contextual Privacy access, and Clear-session controls without duplicating them inside individual stages.
 
 ## Focused verification
 
@@ -72,7 +72,7 @@ Deliver the equally prominent no-CV preparation path from landing choice to shar
 - Added one shared relative `/v1` frontend API client that validates bootstrap, preparation, and stable error envelopes without exposing a provider URL or secret to the browser.
 - Connected conversation-first to deterministic preparation with a fresh request ID, abortable Back behavior, typed Retry handling, strict response validation, and no CV, OpenAI, ElevenLabs, or Turnstile operation.
 - Extended the allow-listed browser session with an atomic grant/expiry invariant: restored prepared state is cleared if either value is missing, while an expired valid conversation-first grant safely reruns only deterministic preparation.
-- Added one reusable accessible Privacy modal to the landing and `/demo`, then centralized the demo stage indicator and Clear-session action in the route header so every early stage exposes the same controls.
+- Added one reusable accessible Privacy modal to the landing and `/demo`, then centralized the demo stage indicator and Clear-session action at route level so every early stage exposes the same controls. SP-011A supersedes only the temporary navbar placement by moving Privacy into the in-workspace context rail.
 - Added the shared preflight handoff shell and mode badge while deliberately leaving consent, microphone, Turnstile, and live voice behavior to SP-013 and later tickets.
 - Removed stale fixed-role showcase language from the existing CV entry stage so both entry paths remain role-neutral after SP-010A.
 - Preserved the approved design reference HTML, bundled sample CV, and immutable project specification unchanged.

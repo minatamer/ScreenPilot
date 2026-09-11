@@ -83,7 +83,8 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-009 is completed, verified, and represented by implementation commit `db65b2c`.
 - SP-010 is completed, verified, and represented by implementation commit `744901e`. Its fixed Frontend/Backend role-alignment boundary is now historical and explicitly superseded by SP-010A; its evidence, safety, statelessness, and provider protections remain required.
 - SP-010A is completed, verified, and represented by implementation commit `6febf01`; its role-neutral contract/domain migration supersedes the earlier fixed-role direction without making a paid provider call.
-- SP-011 is completed and verified on 2026-09-11, including its focused corrective validation pass. The real landing exposes equal CV-assisted and conversation-first paths, deterministic conversation-first preparation reaches the shared preflight boundary, the landing and demo share accessible privacy access, the demo header retains progress and Clear session, malformed grant/expiry restores fail closed, and the temporary SP-005 showcase is gone. SP-012 is now the next eligible implementation ticket.
+- SP-011 is completed and verified on 2026-09-11, including its focused corrective validation pass and commit `a04e04a`.
+- SP-011A is the active corrective ticket. It records the current-product research and replaces SP-011's generic light composition with the Editorial Live Signal landing and early-demo shell before SP-012 extends the frontend. Its privacy placement supersedes SP-011's temporary header placement without changing the privacy, role-neutral, or session-state contract. SP-012 becomes next only after SP-011A is complete.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
@@ -101,7 +102,8 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-010 | [Build stateless CV-analysis endpoint](SP-010-build-stateless-cv-analysis-endpoint.md) | SP-003, SP-007, SP-009 | Required |
 | SP-010A | [Make every candidate-selected role an available synthetic demo vacancy](SP-010A-make-every-candidate-selected-role-available.md) | SP-006, SP-007, SP-009, SP-010 | Required |
 | SP-011 | [Build conversation-first frontend path](SP-011-build-conversation-first-frontend-path.md) | SP-005, SP-006, SP-007, SP-009, SP-010A | Required |
-| SP-012 | [Build CV-assisted frontend path](SP-012-build-cv-assisted-frontend-path.md) | SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011 | Required |
+| SP-011A | [Modernize the entry and early demo experience](SP-011A-modernize-entry-and-early-demo-experience.md) | SP-005, SP-006, SP-010A, SP-011 | Required |
+| SP-012 | [Build CV-assisted frontend path](SP-012-build-cv-assisted-frontend-path.md) | SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011, SP-011A | Required |
 | SP-013 | [Build disclosure, consent, and microphone preflight](SP-013-build-disclosure-consent-and-microphone-preflight.md) | SP-006, SP-011, SP-012 | Required |
 | SP-014 | [Configure ElevenLabs agent and private token flow](SP-014-configure-elevenlabs-agent-and-token-flow.md) | SP-003, SP-009, SP-010, SP-010A, SP-013 | Required |
 | SP-015 | [Normalize live events, captions, and controls](SP-015-normalize-live-events-captions-and-controls.md) | SP-006, SP-014 | Required |
@@ -122,7 +124,7 @@ Execute in order unless the dependency column proves a later packet can safely p
 ## Milestone boundaries
 
 - Milestone 0: SP-001 through SP-005 — repository, quality, configuration, and visual foundations.
-- Milestone 1: SP-006 through SP-012, including SP-010A — disposable state, the role-neutral migration, and both preparation paths.
+- Milestone 1: SP-006 through SP-012, including SP-010A and SP-011A — disposable state, the role-neutral migration, the modern entry shell, and both preparation paths.
 - Milestone 2: SP-013 through SP-018 — shared preflight, real-time voice, insights, policy, and latency.
 - Milestone 3: SP-019 through SP-021 — transcript evidence, summary, and local review.
 - Milestone 4: SP-022 through SP-025 — public-demo hardening and focused release approval.
@@ -139,7 +141,7 @@ Ticket numbers identify scope; dependencies determine safe execution order:
 ```text
 Repository/runtime lane: SP-001 -> SP-002 + SP-003 -> SP-006 -> SP-007 -> SP-009 -> SP-010 -> SP-010A
 Visual lane:             SP-001 -> SP-002 -> SP-004 (approval) -> SP-005
-Convergence:             SP-005 + SP-006 -> SP-008; both lanes then feed SP-011/SP-012
+Convergence:             SP-005 + SP-006 -> SP-008; both lanes feed SP-011 -> SP-011A -> SP-012
 ```
 
 SP-002 and SP-003 may be taken in either order after SP-001. The runtime lane can proceed while SP-004 waits for design approval; the approval gate blocks broad React styling, not the contracts/session/backend backbone.
