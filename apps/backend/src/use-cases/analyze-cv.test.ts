@@ -1,6 +1,10 @@
 import { readFile } from "node:fs/promises";
 
 import { analyzeCvResponseSchema } from "@screenpilot/contracts/api/cv-analysis";
+import {
+  FIXED_TOPIC_KEYS,
+  UNIVERSAL_TOPIC_KEYS,
+} from "@screenpilot/contracts/interview/screening-plan";
 import { describe, expect, it, vi } from "vitest";
 
 import { FakeOpenAi } from "../providers/openai/fake-openai.js";
@@ -55,7 +59,6 @@ function requestFor(cvText: string) {
     clientRequestId: CLIENT_REQUEST_ID,
     cvText,
     turnstileToken: FAKE_TURNSTILE_PASS_TOKEN,
-    vacancyCatalogKey: "demo-engineering",
   } as const;
 }
 
@@ -69,7 +72,7 @@ async function expectUseCaseError(
 describe("analyzeCv", () => {
   it("returns grounded materially different analyses and signed CV-assisted grants", async () => {
     const frontendText = await fixture("frontend-leaning.txt");
-    const backendText = await fixture("backend-leaning.txt");
+    const backendText = await fixture("backend-developer.txt");
     const frontend = analyzeCvResponseSchema.parse(
       await createUseCase()(requestFor(frontendText), ANONYMOUS_SESSION_ID),
     );
@@ -80,13 +83,12 @@ describe("analyzeCv", () => {
     expect(frontend.cv).not.toEqual(backend.cv);
     expect(frontend.plan.branch).toBe("mixed");
     expect(backend.plan.branch).toBe("experienced");
-    expect(frontend.plan.vacancyClarification).toMatchObject({
-      confirmedVacancyKeys: [],
+    expect(frontend.plan.roleClarification).toMatchObject({
       requiresCandidateConfirmation: true,
-      suggestedVacancyKey: "frontend-developer",
+      suggestedRole: "Frontend Developer",
     });
-    expect(backend.plan.vacancyClarification.suggestedVacancyKey).toBe(
-      "backend-developer",
+    expect(backend.plan.roleClarification.suggestedRole).toBe(
+      "Backend Developer",
     );
     expect(frontend.usage).toMatchObject({
       cachedInputTokens: 0,
@@ -111,19 +113,80 @@ describe("analyzeCv", () => {
         cvAnalysisHash: hashInterviewGrantValue(frontend.cv),
         entryMode: "cv_assisted",
         planHash: hashInterviewGrantValue(frontend.plan),
-        planVersion: "2026-09-11.1",
-        vacancyCatalogKey: "demo-engineering",
+        planVersion: "2026-09-11.3",
       }),
     ).toMatchObject({ entryMode: "cv_assisted" });
+  });
+
+  it.each([
+    ["graphic-designer.txt", "Graphic Designer"],
+    ["customer-support.txt", "Customer Support Representative"],
+    ["product-manager.txt", "Product Manager"],
+    ["backend-developer.txt", "Backend Developer"],
+    ["full-stack-developer.txt", "Full Stack Developer"],
+  ] as const)(
+    "treats %s as an ordinary evidence-linked role suggestion",
+    async (filename, suggestedRole) => {
+      const response = await createUseCase()(
+        requestFor(await fixture(filename)),
+        ANONYMOUS_SESSION_ID,
+      );
+
+      expect(response.cv.suggestedRole).toEqual({
+        cvFactIds: ["role-direction-1"],
+        label: suggestedRole,
+      });
+      expect(response.plan.roleClarification).toMatchObject({
+        cvFactIds: ["role-direction-1"],
+        suggestedRole,
+        requiresCandidateConfirmation: true,
+      });
+      expect(response.plan.topics.map((topic) => topic.key)).toEqual([
+        ...UNIVERSAL_TOPIC_KEYS,
+      ]);
+      expect(response.plan.fixedTopics).toEqual([...FIXED_TOPIC_KEYS]);
+      const clarificationTopic = response.plan.topics.find(
+        (topic) => topic.key === "clarifications_and_followups",
+      );
+      expect(clarificationTopic?.required).toBe(false);
+      expect(clarificationTopic?.intent).toMatch(
+        /unsupported employer or vacancy/i,
+      );
+      expect(JSON.stringify(response.plan)).not.toMatch(
+        /coding challenge|portfolio review|roleplay|professional knowledge|system design|framework trivia/i,
+      );
+    },
+  );
+
+  it.each([
+    "graphic-designer.txt",
+    "customer-support.txt",
+    "product-manager.txt",
+  ])("does not fabricate software experience for %s", async (filename) => {
+    const response = await createUseCase()(
+      requestFor(await fixture(filename)),
+      ANONYMOUS_SESSION_ID,
+    );
+    const generatedStatementsAndPlan = JSON.stringify({
+      factStatements: response.cv.facts.map((fact) => fact.statement),
+      plan: response.plan,
+    });
+
+    expect(generatedStatementsAndPlan).not.toMatch(
+      /software product experience|software engineering experience/i,
+    );
   });
 
   it.each([
     ["graduate.txt", "graduate"],
     ["experienced.txt", "experienced"],
     ["frontend-leaning.txt", "junior"],
-    ["backend-leaning.txt", "experienced"],
-    ["mixed-full-stack.txt", "experienced"],
+    ["backend-developer.txt", "experienced"],
+    ["full-stack-developer.txt", "experienced"],
     ["correction.txt", "junior"],
+    ["graphic-designer.txt", "experienced"],
+    ["customer-support.txt", "junior"],
+    ["product-manager.txt", "experienced"],
     ["prompt-injection.txt", "unclear"],
   ] as const)("safely analyzes %s", async (filename, experienceLevel) => {
     const cvText = await fixture(filename);
@@ -134,12 +197,9 @@ describe("analyzeCv", () => {
 
     expect(response.cv.experienceLevel).toBe(experienceLevel);
     expect(response.plan.entryMode).toBe("cv_assisted");
-    expect(response.plan.vacancyClarification.confirmedVacancyKeys).toEqual([]);
-    expect(JSON.stringify(response)).not.toMatch(
-      /"suggestedVacancyKey":"full-stack|"score"|"hiringDecision"/i,
-    );
+    expect(JSON.stringify(response)).not.toMatch(/"score"|"hiringDecision"/i);
     if (filename === "prompt-injection.txt") {
-      expect(response.plan.vacancyClarification.suggestedVacancyKey).toBeNull();
+      expect(response.plan.roleClarification.suggestedRole).toBeNull();
       expect(response.cv.displayName).toBeNull();
     }
   });
@@ -253,7 +313,6 @@ describe("analyzeCv", () => {
     const cvText = await fixture("frontend-leaning.txt");
     const valid = await new FakeOpenAi().analyzeCv({
       cvText,
-      vacancyCatalogKey: "demo-engineering",
     });
     const invalidAnalyzer: CvAnalyzer = {
       analyzeCv: () =>
@@ -299,22 +358,21 @@ describe("analyzeCv", () => {
       "PROVIDER_UNAVAILABLE",
     );
 
-    const unsupportedVacancyHintAnalyzer: CvAnalyzer = {
+    const unsupportedRoleHintAnalyzer: CvAnalyzer = {
       analyzeCv: () =>
         Promise.resolve({
           ...valid,
           screeningPlan: {
             ...valid.screeningPlan,
-            vacancyClarification: {
-              ...valid.screeningPlan.vacancyClarification,
+            roleClarification: {
+              ...valid.screeningPlan.roleClarification,
               cvFactIds: [],
-              suggestedVacancyKey: "frontend-developer",
             },
           },
         }),
     };
     await expectUseCaseError(
-      createUseCase({ analyzer: unsupportedVacancyHintAnalyzer })(
+      createUseCase({ analyzer: unsupportedRoleHintAnalyzer })(
         requestFor(cvText),
         ANONYMOUS_SESSION_ID,
       ),
@@ -342,12 +400,11 @@ describe("analyzeCv", () => {
                 skillFactIds.has(factId),
               ),
             })),
-            vacancyClarification: {
-              ...valid.screeningPlan.vacancyClarification,
-              cvFactIds:
-                valid.screeningPlan.vacancyClarification.cvFactIds.filter(
-                  (factId) => skillFactIds.has(factId),
-                ),
+            roleClarification: {
+              ...valid.screeningPlan.roleClarification,
+              cvFactIds: valid.screeningPlan.roleClarification.cvFactIds.filter(
+                (factId) => skillFactIds.has(factId),
+              ),
             },
           },
         }),

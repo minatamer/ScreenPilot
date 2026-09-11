@@ -44,10 +44,10 @@
       "development": "./src/api/voice-token.ts",
       "default": "./dist/api/voice-token.js"
     },
-    "./interview/employer-context": {
-      "types": "./src/interview/employer-context.ts",
-      "development": "./src/interview/employer-context.ts",
-      "default": "./dist/interview/employer-context.js"
+    "./interview/demo-context": {
+      "types": "./src/interview/demo-context.ts",
+      "development": "./src/interview/demo-context.ts",
+      "default": "./dist/interview/demo-context.js"
     },
     "./interview/entry-mode": {
       "types": "./src/interview/entry-mode.ts",

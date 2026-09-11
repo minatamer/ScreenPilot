@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { roleSuggestionSchema } from "./demo-context.js";
+
 export const CV_FACT_CATEGORIES = [
   "education",
   "experience",
@@ -36,6 +38,7 @@ export const normalizedCvSchema = z
     experienceLevel: z.enum(EXPERIENCE_LEVELS),
     facts: z.array(normalizedCvFactSchema).max(32),
     ambiguities: z.array(normalizedCvAmbiguitySchema).max(16),
+    suggestedRole: roleSuggestionSchema.nullable(),
   })
   .superRefine((cv, context) => {
     if ((cv.displayName === null) !== (cv.displayNameEvidence === null)) {
@@ -44,6 +47,14 @@ export const normalizedCvSchema = z
         message:
           "A CV display name and its evidence must be present or absent together.",
         path: ["displayNameEvidence"],
+      });
+    }
+    const factIds = new Set(cv.facts.map((fact) => fact.id));
+    if (cv.suggestedRole?.cvFactIds.some((factId) => !factIds.has(factId))) {
+      context.addIssue({
+        code: "custom",
+        message: "A suggested role must reference only known CV facts.",
+        path: ["suggestedRole", "cvFactIds"],
       });
     }
   });

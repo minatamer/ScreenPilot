@@ -27,14 +27,12 @@ function createFixture() {
       planHash,
       planVersion: "test-plan-v1",
       ttlSeconds: 900,
-      vacancyCatalogKey: "demo-engineering",
     });
   const expected = {
     anonymousSessionId: ANONYMOUS_SESSION_ID,
     entryMode: "conversation_first" as const,
     planHash,
     planVersion: "test-plan-v1",
-    vacancyCatalogKey: "demo-engineering" as const,
   };
 
   return {
@@ -58,11 +56,10 @@ describe("interview grants", () => {
       anonymousSessionId: ANONYMOUS_SESSION_ID,
       entryMode: "conversation_first",
       grantId: GRANT_ID,
-      vacancyCatalogKey: "demo-engineering",
-      version: 1,
+      version: 2,
     });
     expect(JSON.stringify(claims)).not.toMatch(
-      /candidate|transcript|cvText|question/i,
+      /candidate|transcript|cvText|question|roleLabel|vacancy/i,
     );
   });
 
@@ -107,7 +104,6 @@ describe("interview grants", () => {
         anonymousSessionId: ANONYMOUS_SESSION_ID,
         cvAnalysisHash: hashInterviewGrantValue({ facts: ["fact-1"] }),
         entryMode: "cv_assisted",
-        vacancyCatalogKey: "demo-engineering",
       }),
     ).toThrow(expect.objectContaining({ code: "INTERVIEW_GRANT_INVALID" }));
   });
@@ -126,7 +122,6 @@ describe("interview grants", () => {
       planHash: hashInterviewGrantValue({ entryMode: "cv_assisted" }),
       planVersion: "test-cv-plan-v1",
       ttlSeconds: 900,
-      vacancyCatalogKey: "demo-engineering",
     });
 
     expect(() =>
@@ -134,7 +129,6 @@ describe("interview grants", () => {
         anonymousSessionId: ANONYMOUS_SESSION_ID,
         cvAnalysisHash: hashInterviewGrantValue({ facts: ["other"] }),
         entryMode: "cv_assisted",
-        vacancyCatalogKey: "demo-engineering",
       }),
     ).toThrow(expect.objectContaining({ code: "INTERVIEW_GRANT_INVALID" }));
   });

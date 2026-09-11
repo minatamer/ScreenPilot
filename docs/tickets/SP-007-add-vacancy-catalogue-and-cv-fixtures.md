@@ -11,6 +11,8 @@ Ticket index: [`README.md`](README.md)
 
 ---
 
+> **Superseded product content — SP-010A:** This packet preserves what commit `f890bfb` implemented, but its fixed Frontend/Backend catalogue, Full Stack unavailable response, universal Remote-Europe policy, and universal €40,000–€55,000 employer range are no longer active requirements. SP-010A migrated the demo to candidate-selected synthetic role availability, retained these roles only as ordinary fixtures, removed role-specific employer claims, and made location/work-arrangement/compensation candidate-preference topics unless explicit server-owned facts exist.
+
 ## Objective
 
 Create the small, coherent, fully synthetic content set that supports both entry modes, natural role clarification, CV personalization, and deterministic tests.

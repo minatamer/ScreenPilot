@@ -2,35 +2,37 @@ import { describe, expect, it } from "vitest";
 
 import { analyzeCvRequestSchema } from "../api/cv-analysis.js";
 import { voiceTokenRequestSchema } from "../api/voice-token.js";
+import { roleLabelSchema, rolePreferenceSchema } from "./demo-context.js";
 import { insightCardSchema } from "./insight-card.js";
-import { screeningPlanSchema } from "./screening-plan.js";
+import {
+  FIXED_TOPIC_KEYS,
+  screeningPlanSchema,
+  UNIVERSAL_TOPIC_KEYS,
+} from "./screening-plan.js";
+import { screeningSummarySchema } from "./screening-summary.js";
 import { transcriptTurnSchema } from "./transcript-turn.js";
 
 const conversationPlan = {
   entryMode: "conversation_first",
   openingIntent: "Begin a concise recruiter screening conversation.",
   branch: "discovery",
-  vacancyClarification: {
-    confirmedVacancyKeys: [],
-    suggestedVacancyKey: null,
+  roleClarification: {
+    suggestedRole: null,
     reason: "The candidate must confirm the screening direction.",
     cvFactIds: [],
     requiresCandidateConfirmation: true,
   },
-  topics: [
-    {
-      key: "current_context",
-      title: "Current context",
-      reason: "Understand the candidate's current professional context.",
-      cvFactIds: [],
-      applicableVacancyKeys: [],
-      intent: "Learn the candidate's current work or study context.",
-      coverageCriteria: ["A concise current-context statement is available."],
-      followupDirections: [],
-      required: true,
-    },
-  ],
-  fixedTopics: ["current_context"],
+  topics: UNIVERSAL_TOPIC_KEYS.map((key) => ({
+    key,
+    title: key,
+    reason: "Understand one universal HR field.",
+    cvFactIds: [],
+    intent: "Learn one universal HR field without professional assessment.",
+    coverageCriteria: ["Candidate evidence covers this field."],
+    followupDirections: [],
+    required: key !== "clarifications_and_followups",
+  })),
+  fixedTopics: [...FIXED_TOPIC_KEYS],
 } as const;
 
 describe("SP-006 cross-boundary contracts", () => {
@@ -39,17 +41,34 @@ describe("SP-006 cross-boundary contracts", () => {
     expect(
       screeningPlanSchema.safeParse({
         ...conversationPlan,
-        vacancyClarification: {
-          ...conversationPlan.vacancyClarification,
+        roleClarification: {
+          ...conversationPlan.roleClarification,
           cvFactIds: ["fact-1"],
         },
+      }).success,
+    ).toBe(false);
+    expect(
+      screeningPlanSchema.safeParse({
+        ...conversationPlan,
+        topics: conversationPlan.topics.filter(
+          (topic) => topic.key !== "clarifications_and_followups",
+        ),
+      }).success,
+    ).toBe(false);
+    expect(
+      screeningPlanSchema.safeParse({
+        ...conversationPlan,
+        topics: conversationPlan.topics.map((topic) =>
+          topic.key === "clarifications_and_followups"
+            ? { ...topic, required: true }
+            : topic,
+        ),
       }).success,
     ).toBe(false);
   });
 
   it("keeps CV and voice requests strict, bounded, and token-only", () => {
     const validCvRequest = {
-      vacancyCatalogKey: "demo-engineering",
       cvText: "x".repeat(500),
       clientRequestId: "2f495240-b35d-4f87-869b-6334d8397c12",
       turnstileToken: "test-challenge-token",
@@ -67,6 +86,44 @@ describe("SP-006 cross-boundary contracts", () => {
         interviewGrant: "signed-test-grant",
         turnstileToken: "test-challenge-token",
         agentId: "browser-must-not-select-this",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("normalizes bounded role labels and preserves one compound label", () => {
+    expect(
+      roleLabelSchema.parse("  Cafe\u0301 Designer and UX Researcher  "),
+    ).toBe("Café Designer and UX Researcher");
+    expect(roleLabelSchema.safeParse("Support\u202E Manager").success).toBe(
+      false,
+    );
+    expect(roleLabelSchema.safeParse("x".repeat(121)).success).toBe(false);
+    expect(
+      rolePreferenceSchema.parse({
+        label: "Full Stack Developer",
+        status: "candidate_stated",
+        evidenceTurnIds: ["turn-2"],
+      }),
+    ).toMatchObject({ label: "Full Stack Developer" });
+    expect(
+      rolePreferenceSchema.safeParse({
+        label: null,
+        status: "candidate_stated",
+        evidenceTurnIds: ["turn-2"],
+      }).success,
+    ).toBe(false);
+    expect(
+      insightCardSchema.safeParse({
+        id: "role-insight",
+        category: "role_preference",
+        label: "Requested role",
+        value: "Support\u202e Manager",
+        source: "Candidate",
+        status: "confirmed",
+        evidenceTurnIds: ["turn-2"],
+        cvFactIds: [],
+        createdAt: "2026-09-09T09:20:00.000Z",
+        updatedAt: "2026-09-09T09:20:00.000Z",
       }).success,
     ).toBe(false);
   });
@@ -96,5 +153,37 @@ describe("SP-006 cross-boundary contracts", () => {
         updatedAt: "2026-09-09T09:20:00.000Z",
       }).success,
     ).toBe(true);
+  });
+
+  it("reports candidate-stated or undecided role state without vacancy keys", () => {
+    const summary = {
+      overview: "Candidate evidence was organized for human review.",
+      rolePreference: {
+        label: null,
+        status: "undecided",
+        evidenceTurnIds: ["turn-1"],
+      },
+      confirmedFacts: [],
+      clarifications: [],
+      topicsCovered: [],
+      topicsNotCovered: [],
+      communicationNotes: [],
+      candidateQuestions: [],
+      humanFollowups: [],
+      limitations: ["The demo does not make hiring decisions."],
+    } as const;
+
+    expect(screeningSummarySchema.parse(summary)).toEqual(summary);
+    // Migration guard: the superseded vacancy-key summary envelope is rejected.
+    expect(
+      screeningSummarySchema.safeParse({
+        ...summary,
+        rolePreference: {
+          requestedLabel: "Graphic Designer",
+          screeningVacancyKeys: [],
+          evidenceTurnIds: ["turn-1"],
+        },
+      }).success,
+    ).toBe(false);
   });
 });

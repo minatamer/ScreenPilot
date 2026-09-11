@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { roleSuggestionSchema } from "../interview/demo-context.js";
 import {
   EXPERIENCE_LEVELS,
   normalizedCvFactSchema,
@@ -10,16 +11,51 @@ import {
   FIXED_TOPIC_KEYS,
   screeningPlanSchema,
   type ScreeningPlan,
+  UNIVERSAL_TOPIC_KEYS,
 } from "../interview/screening-plan.js";
 
 const technicalEvaluationPattern =
   /\b(?:coding challenge|framework trivia|system design|technical (?:assessment|exercise|interview|question|quiz|screen))\b|\b(?:ask|assess|evaluate|explore|follow up|grade|probe|question|quiz|score|test)\b.{0,80}\b(?:algorithm|api|architecture|coding|debugging|framework|implementation|system design|technical|testing)\b/i;
 const unsupportedAssessmentPattern =
   /\b(?:accent|age|culture[ -]?fit|disability|employability|employable|ethnicity|gender|hire|hired|hiring|marital status|nationality|personality|pregnancy|protected(?: trait)?|race|rank|ranked|ranking|rating|reject|rejected|rejection|religion|sentiment|sexual orientation|score|scored|scoring)\b|\b(?:recommend|recommendation)\b.{0,40}\b(?:candidate|hire|hiring|reject|role)\b/i;
-const unsupportedApplicationClaimPattern =
-  /\b(?:applied|application)\b.{0,48}\b(?:Backend|Frontend|Full Stack)\b/i;
-const unsupportedPlanApplicationClaimPattern =
-  /\b(?:applied\s+(?:for|to)|application\s+(?:for|to)|(?:Backend|Frontend|Full Stack)\b.{0,48}\b(?:applied|application))\b/i;
+const applicationClaimPatterns = [
+  /\b(?:apply|applies|applying|applied)\s+for\b/i,
+  /\b(?:candidate|applicant|they|he|she)\b[^.!?\n]{0,64}\b(?:apply|applies|applying|applied)\s+(?:as|to)\b/i,
+  /\b(?:(?:candidate|applicant)(?:['’]s)?|her|his|their)\s+application\s+(?:for|to)\b/i,
+  /\b(?:(?:candidate|applicant)(?:['’]s)?|her|his|their)\s+application\b[^.!?\n]{0,80}\b(?:pending|submitted)\b/i,
+  /\b(?:submit|submits|submitted|submitting)\s+(?:(?:an?|her|his|the|their)\s+)?(?:job\s+)?application\b/i,
+  /\bapplication\s+(?:(?:has|had)\s+been|is|was|remains)\s+(?:pending|submitted)\b/i,
+  /^(?:an?\s+|the\s+)?application\s+(?:for|to)\b/i,
+] as const;
+
+const professionSpecificAssessmentPatterns = [
+  /\bsuitability\b/i,
+  /\b(?:assess|check|evaluate|grade|probe|quiz|score|test)\b.{0,80}\b(?:competenc(?:y|ies)|(?:domain|industry|job|profession|professional|role)[ -]?knowledge|knowledge)\b/i,
+  /\b(?:competenc(?:y|ies)|(?:domain|industry|job|profession|professional|role)[ -]?knowledge|knowledge)\b.{0,80}\b(?:assessment|exercise|quiz|test|testing)\b/i,
+  /\b(?:assess|evaluate|grade|review|score|test)\b.{0,80}\bportfolio\b/i,
+  /\bportfolio\b.{0,80}\b(?:assessment|exercise|interview|quiz|review|test|testing)\b/i,
+  /\b(?:simulate|simulates|simulating)\b/i,
+  /\b(?:conduct|run|stage)\b.{0,64}\b(?:mock[ -]?(?:call|conversation|exercise|interview)|role[ -]?play|scenario|simulation)\b/i,
+  /\b(?:role[ -]?play|scenario(?:[ -]based)?|simulation)\b.{0,64}\b(?:assess|assessment|evaluate|exercise|interview|quiz|test|testing)\b/i,
+] as const;
+
+function normalizeGuardrailText(value: string): string {
+  return value.normalize("NFKC").replaceAll(/[‘’]/gu, "'");
+}
+
+function containsApplicationClaim(value: string): boolean {
+  const normalizedValue = normalizeGuardrailText(value);
+  return applicationClaimPatterns.some((pattern) =>
+    pattern.test(normalizedValue),
+  );
+}
+
+function containsProfessionSpecificAssessment(value: string): boolean {
+  const normalizedValue = normalizeGuardrailText(value);
+  return professionSpecificAssessmentPatterns.some((pattern) =>
+    pattern.test(normalizedValue),
+  );
+}
 
 const modelAmbiguitySchema = z.strictObject({
   description: z.string().trim().min(1).max(500),
@@ -33,6 +69,7 @@ const modelNormalizedCvSchema = z.strictObject({
   experienceLevel: z.enum(EXPERIENCE_LEVELS),
   facts: z.array(normalizedCvFactSchema).max(32),
   ambiguities: z.array(modelAmbiguitySchema).max(16),
+  suggestedRole: roleSuggestionSchema.nullable(),
 });
 
 function addIssue(
@@ -50,7 +87,7 @@ function hasDuplicates(values: readonly string[]): boolean {
 function planDescriptions(plan: ScreeningPlan): string[] {
   return [
     plan.openingIntent,
-    plan.vacancyClarification.reason,
+    plan.roleClarification.reason,
     ...plan.topics.flatMap((topic) => [
       topic.key,
       topic.title,
@@ -91,6 +128,10 @@ type CvAnalysisValidationInput = Readonly<{
       statement: string;
     }>[];
     headline: string | null;
+    suggestedRole: Readonly<{
+      cvFactIds: readonly string[];
+      label: string;
+    }> | null;
   }>;
   plan: ScreeningPlan;
 }>;
@@ -140,11 +181,7 @@ function validateCvAnalysisOutput(
       ["cv"],
     );
   }
-  if (
-    candidateDescriptions.some((value) =>
-      unsupportedApplicationClaimPattern.test(value),
-    )
-  ) {
+  if (candidateDescriptions.some(containsApplicationClaim)) {
     addIssue(
       context,
       "CV analysis cannot claim that the candidate applied for a vacancy.",
@@ -171,11 +208,7 @@ function validateCvAnalysisOutput(
       ["plan"],
     );
   }
-  if (
-    screeningPlanDescriptions.some((value) =>
-      unsupportedPlanApplicationClaimPattern.test(value),
-    )
-  ) {
+  if (screeningPlanDescriptions.some(containsApplicationClaim)) {
     addIssue(
       context,
       "Screening plans cannot claim that the candidate applied for a role.",
@@ -193,6 +226,13 @@ function validateCvAnalysisOutput(
       ["plan"],
     );
   }
+  if (screeningPlanDescriptions.some(containsProfessionSpecificAssessment)) {
+    addIssue(
+      context,
+      "Profession-specific assessment directions are not allowed in an HR screening plan.",
+      ["plan"],
+    );
+  }
 
   if (output.plan.entryMode !== "cv_assisted") {
     addIssue(context, "CV analysis must produce a CV-assisted plan.", [
@@ -206,21 +246,30 @@ function validateCvAnalysisOutput(
       "branch",
     ]);
   }
-  if (output.plan.vacancyClarification.confirmedVacancyKeys.length > 0) {
-    addIssue(
-      context,
-      "A CV cannot confirm the candidate's requested vacancy.",
-      ["plan", "vacancyClarification", "confirmedVacancyKeys"],
-    );
-  }
   if (
-    output.plan.vacancyClarification.suggestedVacancyKey !== null &&
-    output.plan.vacancyClarification.cvFactIds.length === 0
+    output.plan.roleClarification.suggestedRole !== null &&
+    output.plan.roleClarification.cvFactIds.length === 0
   ) {
     addIssue(
       context,
-      "A suggested vacancy requires at least one linked CV fact.",
-      ["plan", "vacancyClarification", "cvFactIds"],
+      "A suggested role requires at least one linked CV fact.",
+      ["plan", "roleClarification", "cvFactIds"],
+    );
+  }
+  if (
+    (output.cv.suggestedRole?.label ?? null) !==
+      output.plan.roleClarification.suggestedRole ||
+    (output.cv.suggestedRole !== null &&
+      (output.cv.suggestedRole.cvFactIds.length !==
+        output.plan.roleClarification.cvFactIds.length ||
+        output.cv.suggestedRole.cvFactIds.some(
+          (factId) => !output.plan.roleClarification.cvFactIds.includes(factId),
+        )))
+  ) {
+    addIssue(
+      context,
+      "The CV and screening plan must carry the same evidence-linked role suggestion.",
+      ["plan", "roleClarification"],
     );
   }
 
@@ -241,18 +290,20 @@ function validateCvAnalysisOutput(
       ["plan", "fixedTopics"],
     );
   }
-  for (const key of FIXED_TOPIC_KEYS) {
+  for (const key of UNIVERSAL_TOPIC_KEYS) {
     if (!topicKeys.includes(key)) {
-      addIssue(context, `CV-assisted plans must define the ${key} topic.`, [
-        "plan",
-        "topics",
-      ]);
+      addIssue(
+        context,
+        `CV-assisted plans must define the universal ${key} topic.`,
+        ["plan", "topics"],
+      );
     }
   }
 
   const knownFactIds = new Set(factIds);
   const referencedFactIds = [
-    ...output.plan.vacancyClarification.cvFactIds,
+    ...(output.cv.suggestedRole?.cvFactIds ?? []),
+    ...output.plan.roleClarification.cvFactIds,
     ...output.plan.topics.flatMap((topic) => topic.cvFactIds),
   ];
   for (const factId of referencedFactIds) {

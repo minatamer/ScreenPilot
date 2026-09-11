@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 1 — interview preparation paths  
-Last synchronized: 2026-08-31  
-Depends on: SP-005, SP-006, SP-008, SP-010, SP-011  
+Last synchronized: 2026-09-11<br>
+Depends on: SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011<br>
 Suggested commit: `feat(frontend): add CV-assisted preparation`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -21,9 +21,9 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - Immediately before paid analysis, execute the reusable managed Turnstile gate with action `cv_analyze`; its token is memory-only and single-use.
 - After a validated response, clear raw extracted text and store only normalized facts, the plan, grant, and bounded public metadata in `sessionStorage`.
 - Plan preview has **What the CV says** and **What ScreenPilot will explore**. Every CV-derived topic links to evidence; fixed topics are marked as standard screening.
-- Role alignment is labelled **Suggested from CV — we will confirm during the call**. The visitor does not select a role before the call.
+- An evidence-linked role suggestion is labelled **Suggested from CV — we will confirm during the call**. The visitor does not select or confirm a role before the call.
 - This branch converges into the exact shared preflight used by conversation-first.
-- Employer/vacancy context comes from bootstrap and API payloads use declared contract exports through the shared relative `/v1` client; the feature does not mirror server values or create a second HTTP stack.
+- Role-neutral synthetic-demo disclosure comes from bootstrap and API payloads use SP-010A's declared role-label contracts through the shared relative `/v1` client; the feature does not mirror server values, create a role allow-list, or create a second HTTP stack.
 
 ## Manual credential gate
 
@@ -34,7 +34,7 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 ## Scope boundaries
 
 - Do not upload/store the PDF, persist raw extracted text, add a plan editor/regeneration workflow, or ask for recruiter approval.
-- Do not claim the candidate applied for Frontend/Backend, confirm a role from CV evidence, or invent missing candidate values.
+- Do not claim the candidate applied for any role, turn a CV suggestion into candidate-confirmed role state, or invent candidate/employer values.
 - Do not allow sample-CV placeholders to leak into uploaded-CV sessions.
 - Do not create separate desktop/mobile or CV-only preflight/interview/review implementations.
 - Do not start ElevenLabs in this ticket.
@@ -44,11 +44,11 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - [ ] Connect the landing CV card to upload/sample selection and the SP-008 extractor.
 - [ ] Implement truthful extraction and analysis progress labels without fake percentages or premature facts.
 - [ ] Build/reuse the managed interaction-only Turnstile gate for `cv_analyze`, with stable accessible fallback layout and token reset.
-- [ ] Call `POST /v1/cv/analyze` with bounded text, fixed catalogue, client request ID, and one-time token.
+- [ ] Call the SP-010A-migrated `POST /v1/cv/analyze` with bounded text, client request ID, and one-time token; do not send a fixed catalogue key.
 - [ ] Clear raw text only after a validated successful response; preserve it in component memory for a safe manual retry.
 - [ ] Validate and store normalized CV, plan, grant, expiry, and coarse metadata.
 - [ ] Render evidence-linked CV fact cards and planned topic cards with fixed-topic badges.
-- [ ] Display non-binding role-alignment language exactly and provide no pre-call role selector.
+- [ ] Display any evidence-linked bounded role suggestion as **Suggested from CV — confirm during the call** and provide no pre-call role selector or supported-role list.
 - [ ] Offer only Continue and Start over; implement typed analysis/Turnstile/schema/grant-expiry errors and mode-aware Back behavior.
 - [ ] Converge on the same shared preflight state/components.
 - [ ] Test two distinct fixtures, no-placeholder leakage, retry/reset, evidence links, and responsive parity.
@@ -59,7 +59,8 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - [ ] Two distinct fixtures visibly change at least two facts and two topic intents/directions.
 - [ ] Turnstile must pass before OpenAI analysis and its token never reaches persistence.
 - [ ] Raw PDF/text is absent after success; only bounded structured state remains.
-- [ ] No text claims an applied or confirmed vacancy before candidate speech.
+- [ ] No text claims an applied/real vacancy or candidate-confirmed role before candidate speech; all role availability is disclosed as synthetic and session-scoped.
+- [ ] A CV may suggest any bounded role label only through validated fact IDs; Product Manager and other non-software suggestions render identically and remain replaceable by candidate speech.
 - [ ] Continue reaches the same preflight implementation as conversation-first.
 
 ## Focused verification
@@ -67,6 +68,7 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - [ ] Run targeted frontend integration/component/reducer tests with fake extraction, Turnstile, and backend responses.
 - [ ] Inspect browser network/storage for PDF, raw CV text, Turnstile token, or sample-value leakage.
 - [ ] Manually exercise sample/upload, two different CVs, challenge interaction/failure, analysis timeout/schema error, retry, Start over, and Back.
+- [ ] Exercise a Product Manager suggestion, no suggestion, and injected role-like CV text; verify each suggestion remains explicitly unconfirmed and replaceable by later candidate speech, and no employer fact or supported-role list appears. Candidate confirmation/correction behavior is owned by SP-016, SP-017, and SP-025.
 - [ ] Check plan preview at mobile, tablet, desktop, large-monitor, and one intermediate width.
 
 ## Commit boundary

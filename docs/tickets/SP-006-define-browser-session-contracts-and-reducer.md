@@ -12,6 +12,8 @@ Ticket index: [`README.md`](README.md)
 
 ---
 
+> **Superseded role model — SP-010A:** This packet remains the historical record of the committed v1 session contracts. Its persisted requirement for exactly one Frontend and one Backend vacancy, fixed catalogue keys, `screeningVacancyKeys`, and unavailable-role status is no longer the target product behavior. SP-010A completed the migration to one bounded candidate-selected synthetic role label (or an undecided role-neutral state), with corrections and multiple-role wording represented without an allow-list or unavailable branch. Do not extend the old fixed-vacancy shape in later tickets.
+
 ## Objective
 
 Create the typed, versioned, current-tab state model and reducer that safely owns both preparation branches and their shared interview/review lifecycle.

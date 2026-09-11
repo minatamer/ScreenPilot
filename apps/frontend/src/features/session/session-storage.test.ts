@@ -1,10 +1,11 @@
 // @vitest-environment node
 
-import type {
-  PublicEmployerContext,
-  PublicVacancySnapshot,
-} from "@screenpilot/contracts/interview/employer-context";
-import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-plan";
+import type { PublicRoleNeutralDemoContext } from "@screenpilot/contracts/interview/demo-context";
+import {
+  FIXED_TOPIC_KEYS,
+  type ScreeningPlan,
+  UNIVERSAL_TOPIC_KEYS,
+} from "@screenpilot/contracts/interview/screening-plan";
 import { describe, expect, it } from "vitest";
 
 import type { DemoSessionState } from "./demo-session.types";
@@ -50,79 +51,45 @@ class MemorySessionStorage implements SessionStorageLike {
   }
 }
 
-const employer: PublicEmployerContext = {
-  catalogueKey: "demo-engineering",
-  displayName: "our company",
-  summary:
-    "An unnamed company building workflow products for distributed teams.",
-  facts: [],
-  faq: [],
+const demoContext: PublicRoleNeutralDemoContext = {
+  kind: "role_agnostic_first_stage_hr_screen",
+  roleAvailability: "candidate_selected_synthetic_session_vacancy",
+  employerFactsAvailable: false,
 };
-
-function vacancy(
-  key: "frontend-developer" | "backend-developer",
-  title: string,
-): PublicVacancySnapshot {
-  return {
-    key,
-    title,
-    employmentType: "full_time",
-    workPattern: "remote_within_europe",
-    summary: `${title} role summary.`,
-    responsibilities: ["Build useful product experiences."],
-    requirements: ["Relevant professional or project experience."],
-    benefits: [],
-    salaryRange: {
-      currency: "EUR",
-      minimumGrossAnnual: 40_000,
-      maximumGrossAnnual: 55_000,
-    },
-  };
-}
-
-const vacancies = [
-  vacancy("frontend-developer", "Frontend Developer"),
-  vacancy("backend-developer", "Backend Developer"),
-];
 
 const conversationPlan: ScreeningPlan = {
   entryMode: "conversation_first",
   openingIntent: "Begin a concise recruiter screening conversation.",
   branch: "discovery",
-  vacancyClarification: {
-    confirmedVacancyKeys: [],
-    suggestedVacancyKey: null,
+  roleClarification: {
+    suggestedRole: null,
     reason: "The candidate must confirm the screening direction.",
     cvFactIds: [],
     requiresCandidateConfirmation: true,
   },
-  topics: [
-    {
-      key: "current_context",
-      title: "Current context",
-      reason: "Understand the candidate's current professional context.",
-      cvFactIds: [],
-      applicableVacancyKeys: [],
-      intent: "Learn the candidate's current work or study context.",
-      coverageCriteria: ["A concise current-context statement is available."],
-      followupDirections: [],
-      required: true,
-    },
-  ],
-  fixedTopics: ["current_context"],
+  topics: UNIVERSAL_TOPIC_KEYS.map((key) => ({
+    key,
+    title: key,
+    reason: "Understand one universal HR field.",
+    cvFactIds: [],
+    intent: "Learn one universal HR field without professional assessment.",
+    coverageCriteria: ["Candidate evidence covers this field."],
+    followupDirections: [],
+    required: key !== "clarifications_and_followups",
+  })),
+  fixedTopics: [...FIXED_TOPIC_KEYS],
 };
 
 function persistedSession(
   overrides: Partial<PersistedDemoSession> = {},
 ): PersistedDemoSession {
   return persistedDemoSessionSchema.parse({
-    schemaVersion: 1,
+    schemaVersion: 2,
     stage: "preflight",
     entryMode: "conversation_first",
     createdAt: CREATED_AT,
     expiresAt: EXPIRES_AT,
-    employer,
-    vacancies,
+    demoContext,
     screeningPlan: conversationPlan,
     interviewGrant: "signed-test-grant",
     transcript: [],
@@ -174,6 +141,7 @@ describe("session storage", () => {
       experienceLevel: "unclear",
       facts: [],
       ambiguities: [],
+      suggestedRole: null,
     } as const;
     const cvResult = persistedDemoSessionSchema.safeParse({
       ...baseSession,
@@ -201,14 +169,12 @@ describe("session storage", () => {
     expect(provenanceResult.success).toBe(false);
   });
 
-  it("rejects duplicate fixed vacancies during restore", () => {
+  it("rejects the superseded fixed-catalogue envelope during restore", () => {
     const storage = new MemorySessionStorage();
     const invalidSession = {
       ...persistedSession(),
-      vacancies: [
-        vacancy("frontend-developer", "Frontend Developer"),
-        vacancy("frontend-developer", "Frontend Developer duplicate"),
-      ],
+      employer: { catalogueKey: "obsolete-catalogue" },
+      vacancies: [{ key: "obsolete-role" }],
     };
     storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(invalidSession));
 
@@ -287,10 +253,10 @@ describe("session storage", () => {
       reason: "corrupt",
     },
     {
-      name: "an unsupported future version",
-      rawValue: JSON.stringify({ schemaVersion: 2 }),
+      name: "an unsupported schema version",
+      rawValue: JSON.stringify({ schemaVersion: 1 }),
       now: "2026-09-09T10:00:00.000Z",
-      reason: "future_version",
+      reason: "unsupported_version",
     },
     {
       name: "an oversized payload",
@@ -307,6 +273,47 @@ describe("session storage", () => {
       reason,
     });
     expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it("finds and clears the old v1 storage key deliberately", () => {
+    const storage = new MemorySessionStorage();
+    const oldKey = "screenpilot:demo-session:v1";
+    storage.setItem(oldKey, JSON.stringify({ schemaVersion: 1 }));
+
+    expect(
+      loadPersistedSession(storage, new Date("2026-09-09T10:00:00.000Z")),
+    ).toEqual({ status: "cleared", reason: "unsupported_version" });
+    expect(storage.getItem(oldKey)).toBeNull();
+  });
+
+  it("clears an old version while restoring a coexisting current session", () => {
+    const storage = new MemorySessionStorage();
+    const session = persistedSession();
+    const oldKey = "screenpilot:demo-session:v1";
+    storage.setItem(oldKey, JSON.stringify({ schemaVersion: 1 }));
+    storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    storage.setItem("another-app:key", "keep");
+
+    expect(
+      loadPersistedSession(storage, new Date("2026-09-09T10:00:00.000Z")),
+    ).toEqual({ status: "restored", session });
+    expect(storage.getItem(oldKey)).toBeNull();
+    expect(storage.getItem("another-app:key")).toBe("keep");
+  });
+
+  it("clears old versions when the coexisting current session is corrupt", () => {
+    const storage = new MemorySessionStorage();
+    const oldKey = "screenpilot:demo-session:v1";
+    storage.setItem(oldKey, JSON.stringify({ schemaVersion: 1 }));
+    storage.setItem(SESSION_STORAGE_KEY, "{not-json");
+    storage.setItem("another-app:key", "keep");
+
+    expect(
+      loadPersistedSession(storage, new Date("2026-09-09T10:00:00.000Z")),
+    ).toEqual({ status: "cleared", reason: "corrupt" });
+    expect(storage.getItem(oldKey)).toBeNull();
+    expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(storage.getItem("another-app:key")).toBe("keep");
   });
 
   it("clears every ScreenPilot key without touching other tab data", () => {

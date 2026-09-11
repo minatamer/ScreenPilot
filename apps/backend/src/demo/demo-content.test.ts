@@ -1,30 +1,24 @@
 import { readFileSync } from "node:fs";
 
-import {
-  publicEmployerContextSchema,
-  publicVacancyCatalogueSchema,
-} from "@screenpilot/contracts/interview/employer-context";
+import { publicRoleNeutralDemoContextSchema } from "@screenpilot/contracts/interview/demo-context";
 import {
   FIXED_TOPIC_KEYS,
   screeningPlanSchema,
+  UNIVERSAL_TOPIC_KEYS,
 } from "@screenpilot/contracts/interview/screening-plan";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
-import { EMPLOYER_FAQ, ROLE_CATALOGUE_BOUNDARY } from "./employer-faq.js";
 import {
   CONVERSATION_FIRST_PLAN,
   CONVERSATION_FIRST_PLAN_VERSION,
 } from "./conversation-first-plan.js";
-import {
-  PUBLIC_EMPLOYER_CONTEXT,
-  PUBLIC_VACANCY_CATALOGUE,
-} from "./vacancy-catalogue.js";
+import { PUBLIC_ROLE_NEUTRAL_DEMO_CONTEXT } from "./role-neutral-demo-context.js";
 
 const fixtureManifestSchema = z.strictObject({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   synthetic: z.literal(true),
-  scope: z.literal("generic-european"),
+  scope: z.literal("role-agnostic"),
   privacyNote: z.string().min(1),
   fixtures: z
     .array(
@@ -41,7 +35,7 @@ const fixtureManifestSchema = z.strictObject({
             "experienced",
             "unclear",
           ]),
-          roleAlignment: z.enum(["frontend", "backend", "mixed", "unclear"]),
+          suggestedRole: z.string().min(1).max(120).nullable(),
           factSignals: z.array(z.string().min(1)).min(2),
           topicDirections: z.array(z.string().min(1)).min(2),
           supportsNameCorrection: z.boolean(),
@@ -52,7 +46,7 @@ const fixtureManifestSchema = z.strictObject({
         }),
       }),
     )
-    .length(8),
+    .length(11),
 });
 
 function readCvFixture(file: string): string {
@@ -62,72 +56,32 @@ function readCvFixture(file: string): string {
   );
 }
 
-describe("SP-007 server-owned demo content", () => {
-  it("exposes exactly two coherent unnamed synthetic vacancies", () => {
+describe("SP-010A server-owned role-neutral demo content", () => {
+  it("exposes only the role-neutral synthetic-demo disclosure", () => {
     expect(
-      publicEmployerContextSchema.safeParse(PUBLIC_EMPLOYER_CONTEXT).success,
-    ).toBe(true);
-    expect(
-      publicVacancyCatalogueSchema.safeParse(PUBLIC_VACANCY_CATALOGUE).success,
-    ).toBe(true);
-    expect(PUBLIC_EMPLOYER_CONTEXT.displayName).toBe("our company");
-    expect(PUBLIC_VACANCY_CATALOGUE.map((vacancy) => vacancy.key)).toEqual([
-      "frontend-developer",
-      "backend-developer",
-    ]);
-    for (const vacancy of PUBLIC_VACANCY_CATALOGUE) {
-      expect(vacancy).toMatchObject({
-        employmentType: "full_time",
-        workPattern: "remote_within_europe",
-        salaryRange: {
-          currency: "EUR",
-          minimumGrossAnnual: 40_000,
-          maximumGrossAnnual: 55_000,
-        },
-      });
-    }
-    expect(PUBLIC_VACANCY_CATALOGUE[0]?.responsibilities).not.toEqual(
-      PUBLIC_VACANCY_CATALOGUE[1]?.responsibilities,
+      publicRoleNeutralDemoContextSchema.parse(
+        PUBLIC_ROLE_NEUTRAL_DEMO_CONTEXT,
+      ),
+    ).toEqual({
+      kind: "role_agnostic_first_stage_hr_screen",
+      roleAvailability: "candidate_selected_synthetic_session_vacancy",
+      employerFactsAvailable: false,
+    });
+    expect(JSON.stringify(PUBLIC_ROLE_NEUTRAL_DEMO_CONTEXT)).not.toMatch(
+      /roles|openings|salary|benefits|location|responsibilities|qualifications/i,
     );
   });
 
-  it("keeps Full Stack unconfirmed and covers fixed candidate questions", () => {
-    expect(ROLE_CATALOGUE_BOUNDARY.confirmedVacancies).toHaveLength(2);
-    expect(
-      ROLE_CATALOGUE_BOUNDARY.confirmedVacancies.map(({ label }) => label),
-    ).not.toContain("Full Stack");
-    expect(ROLE_CATALOGUE_BOUNDARY.unavailableRoleGuidance).toContain(
-      "only Frontend Developer and Backend Developer are confirmed",
-    );
-    expect(ROLE_CATALOGUE_BOUNDARY.neitherConfirmedGuidance).toContain(
-      "human follow-up",
-    );
-    expect(EMPLOYER_FAQ.map(({ key }) => key)).toEqual(
-      expect.arrayContaining([
-        "company-work",
-        "confirmed-openings",
-        "full-stack-boundary",
-        "remote-pattern",
-        "salary",
-        "benefits",
-        "availability",
-        "screening-process",
-        "unsupported-detail",
-      ]),
-    );
-  });
-
-  it("provides a versioned deterministic discovery plan without scripted questions", () => {
+  it("provides a universal deterministic discovery plan without scripted questions", () => {
     expect(CONVERSATION_FIRST_PLAN_VERSION).toMatch(/^\d{4}-\d{2}-\d{2}\.\d+$/);
-    expect(screeningPlanSchema.safeParse(CONVERSATION_FIRST_PLAN).success).toBe(
-      true,
+    expect(screeningPlanSchema.parse(CONVERSATION_FIRST_PLAN)).toEqual(
+      CONVERSATION_FIRST_PLAN,
     );
     expect(CONVERSATION_FIRST_PLAN).toMatchObject({
       entryMode: "conversation_first",
       branch: "discovery",
-      vacancyClarification: {
-        confirmedVacancyKeys: [],
-        suggestedVacancyKey: null,
+      roleClarification: {
+        suggestedRole: null,
         cvFactIds: [],
       },
     });
@@ -139,22 +93,26 @@ describe("SP-007 server-owned demo content", () => {
         (topic) => topic.cvFactIds.length === 0,
       ),
     ).toBe(true);
-
-    const dormantRoleBranches = CONVERSATION_FIRST_PLAN.topics.filter(
-      (topic) => topic.applicableVacancyKeys.length === 1,
+    expect(CONVERSATION_FIRST_PLAN.topics.map((topic) => topic.key)).toContain(
+      "clarifications_and_followups",
     );
-    expect(dormantRoleBranches).toHaveLength(2);
-    expect(dormantRoleBranches.every((topic) => !topic.required)).toBe(true);
+    expect(CONVERSATION_FIRST_PLAN.topics.map((topic) => topic.key)).toEqual([
+      ...UNIVERSAL_TOPIC_KEYS,
+    ]);
     expect(
-      dormantRoleBranches.flatMap((topic) => topic.applicableVacancyKeys),
-    ).toEqual(["frontend-developer", "backend-developer"]);
+      CONVERSATION_FIRST_PLAN.topics.find(
+        (topic) => topic.key === "clarifications_and_followups",
+      ),
+    ).toMatchObject({ required: false });
 
     const planText = JSON.stringify(CONVERSATION_FIRST_PLAN);
     expect(planText).not.toContain("?");
-    expect(planText).not.toContain("Hi, what's your name");
+    expect(planText).not.toMatch(
+      /frontend|backend|full stack|remote within europe|40,?000|55,?000|coding challenge/i,
+    );
   });
 
-  it("keeps the fixture corpus explicit, varied, and synthetic", () => {
+  it("keeps the fixture corpus cross-profession, varied, and synthetic", () => {
     const manifest = fixtureManifestSchema.parse(
       JSON.parse(readCvFixture("fixture-manifest.json")),
     );
@@ -166,22 +124,20 @@ describe("SP-007 server-owned demo content", () => {
       expect(fixtureText).not.toMatch(
         /\b(?:Google|Microsoft|Amazon|Meta|Apple|OpenAI|ElevenLabs)\b/i,
       );
-      expect(fixtureText).not.toMatch(
-        /\b(?:United Kingdom|Germany|France|Spain|Italy|Netherlands|Poland)\b/i,
-      );
     }
 
-    const profileSignatures = new Set(
-      manifest.fixtures.map((fixture) =>
-        JSON.stringify({
-          experienceLevel: fixture.expected.experienceLevel,
-          roleAlignment: fixture.expected.roleAlignment,
-          factSignals: fixture.expected.factSignals,
-          topicDirections: fixture.expected.topicDirections,
-        }),
-      ),
+    expect(
+      manifest.fixtures.map((fixture) => fixture.expected.suggestedRole),
+    ).toEqual(
+      expect.arrayContaining([
+        "Graphic Designer",
+        "Customer Support Representative",
+        "Product Manager",
+        "Backend Developer",
+        "Full Stack Developer",
+        null,
+      ]),
     );
-    expect(profileSignatures.size).toBe(manifest.fixtures.length);
     expect(
       manifest.fixtures.find((fixture) => fixture.id === "correction")?.expected
         .expectedCorrection,

@@ -12,6 +12,16 @@ This file is the implementation source of truth for the ScreenPilot demo. It rep
 
 The untouched client-style input remains `docs/SCREENPILOT_PROJECT_SPEC.md`. Treat that file as received material: do not edit it and do not silently copy outdated scope from it.
 
+### 2026-09-11 role-neutral reconciliation
+
+The latest product decision supersedes the immutable specification's fixed software-role, technical-context, Frontend/Backend catalogue, Full Stack fallback, Remote-Europe, and universal compensation examples. ScreenPilot is now a role-agnostic first-stage HR screening demo: any bounded non-empty role the candidate states becomes the available synthetic demo vacancy for that browser session, while an undecided candidate continues with an open role-neutral screen. Frontend and Backend are ordinary test examples only.
+
+There is no role allow-list, unavailable-vacancy flow, forced role choice, role-specific competency path, or inferred employer context. Every profession receives the same adaptive general-HR intents. Candidate experience/status may change conversational ordering and depth; profession never turns the screen into a technical, portfolio, competency, roleplay, professional-knowledge, or hiring-suitability assessment. Role labels and CV suggestions are inert untrusted candidate data. Unsupported employer/vacancy questions become human follow-up, and no responsibilities, qualifications, compensation, benefits, reporting lines, team size, work pattern, location requirement, or hiring timeline may be invented from a role label.
+
+One shared role-label boundary trims and Unicode-normalizes candidate/CV role text, requires 1–120 characters after normalization, rejects control characters and bidi overrides, and treats the result only as delimited untrusted data. A role label can shape natural phrasing but cannot change tools, safety policy, knowledge, or interview type.
+
+SP-010A completed the required contract/content migration locally on 2026-09-11. The removed fixed-catalogue code is historical state and must not be reintroduced by SP-011 or later tickets.
+
 ### Authority order
 
 1. The latest explicit user decision.
@@ -35,13 +45,12 @@ Do not add infrastructure merely because a production recruiting product would n
 | --- | --- | --- |
 | Product type | Public portfolio demo | Optimize for a polished eight-minute experience, not multi-tenant operations. |
 | Primary user | One anonymous visitor playing the candidate and then viewing the result | No recruiter account, candidate account, organization, or permissions system. |
-| Product boundary | Two equally important screening entry paths: CV-assisted after a simulated upstream CV handoff, or conversation-first with no CV | Both paths screen for the demo's fixed engineering openings, converge before the live call, and remain outside job-board/application-form scope. |
+| Product boundary | Two equally important role-agnostic HR-screening entry paths: CV-assisted after a simulated upstream CV handoff, or conversation-first with no CV | Both paths use the same universal HR intents, converge before the live call, and remain outside job-board/application-form scope. |
 | Employer wording | **our company** / **the company** | Deliberately use no fictional company name or brand; choose the natural form for each sentence. |
-| Confirmed vacancies | **Frontend Developer** and **Backend Developer** — synthetic | A two-item fixed catalogue enables natural role clarification without adding job CRUD, search, or employer configuration. |
-| Role personalization | CV evidence may suggest non-binding vacancy alignment; only the candidate's spoken confirmation sets whether the screening covers Frontend, Backend, or both | Never claim that a CV proves which role the candidate applied for. Corrections, interest in both confirmed roles, and an unconfirmed Full Stack preference must be handled naturally. |
-| Location | **Remote within Europe** | Generic European framing with no country-specific workflow. |
-| Work pattern | Remote-first with optional team meetups | Fixed interview context, not configurable employer policy. |
-| Compensation context | Employer range **€40,000–€55,000 gross annually** — synthetic | Gives the conversation a concrete but fictional salary topic. |
+| Synthetic demo vacancy | Any bounded non-empty candidate-stated role label; `null` while undecided | Availability is synthetic and browser-session scoped, not a real employer opening. No allow-list, unsupported-role error, role classifier, job CRUD, or special named-role behavior. |
+| Role personalization | Candidate speech sets/corrects the current role label; CV evidence may provide one fact-linked non-binding suggestion | Preserve candidate wording, including compound labels. Never claim a CV proves an application, split multiple-role wording into parallel screens, or infer job/employer facts. |
+| Location and work pattern | No universal employer fact | Gather the candidate's location/work-arrangement preferences unless explicit server-owned context exists. |
+| Compensation context | No universal employer range | Gather the candidate's expectation or decline; do not infer an employer budget from the role label. |
 | Sample candidate | Bundled synthetic CV fixture with no name hardcoded into product configuration | Any candidate name is treated only as CV-derived fixture content, exactly like an uploaded CV. |
 | Entry modes | **Use a CV** (upload or sample) and **Start without a CV** | CV-assisted analysis produces focused questions; conversation-first starts faster and learns the same candidate context through open questions during the call. Neither path is secondary. |
 | Visible authentication | None | No signup, login, password, invitation token, or account UI. |
@@ -70,7 +79,7 @@ Do not add infrastructure merely because a production recruiting product would n
 | Public custom domain | One manually purchased non-premium domain or a $0 incremental subdomain of an existing portfolio domain | Maximum planned renewal is $15/year before tax. `screenpilot.com` is an active unrelated company and is not a purchase target. |
 | Public routing | Firebase Hosting custom domain and managed HTTPS with ordered same-origin rewrites to both Cloud Run services | Browser API calls use relative `/v1` paths; no second API domain, paid load balancer, or Preview Cloud Run domain mapping. |
 | Maximum live call | Eight minutes | Bounds cost and keeps the demo focused. |
-| Interview depth | HR/recruiter screening with at most one broad role-context clarification, not a technical interview | No implementation walkthrough, chained project interrogation, coding exercise, testing/debugging drill, architecture question, trivia, algorithm, whiteboard task, take-home assignment, or scored technical evaluation in either entry mode. |
+| Interview depth | Role-agnostic HR/recruiter screening with at most one broad role-context clarification | No technical, portfolio, competency, roleplay, professional-knowledge, implementation, coding, testing/debugging, architecture, trivia, algorithm, whiteboard, take-home, or suitability assessment in either entry mode. |
 | Provider fallback | None | A provider failure becomes a clear error; do not hide a second voice architecture in the build. |
 
 ### What “stateless” means here
@@ -104,8 +113,9 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - Two materially different CV fixtures produce visibly different facts and interview topics.
 - No paid voice connection starts before disclosure, consent, microphone permission, and the final Start button.
 - Candidate speech produces live captions and at least one appropriate insight card.
-- The AI uses supported CV facts when available or learns candidate context from spoken answers, then confirms whether the screening should cover Frontend, Backend, or both before specializing the interview.
-- A Full Stack request is recorded honestly as an unconfirmed preference; the agent explains that only Frontend and Backend are confirmed and asks whether the candidate wants one or both of those openings covered.
+- The AI uses supported CV facts when available or learns candidate context from spoken answers, then records any bounded candidate-stated role as the session's synthetic demo vacancy without changing the universal HR scope.
+- Graphic Designer, Customer Support Representative, Product Manager, Backend Developer, Full Stack Developer, compound/multiple-role wording, and undecided candidates all complete the same role-neutral HR screen without redirection or profession-specific assessment.
+- Unsupported employer/vacancy questions become human follow-up; no role label causes invented responsibilities, qualifications, compensation, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines.
 - Interruption feels natural and stops agent audio promptly.
 - The complete CV-assisted and conversation-first preparation → interview → review flows are visually coherent and functionally complete across small phones, tablets, compact and standard laptops, desktops, and large monitors.
 - The lightweight HTML Design System Reference is reviewed before broad React styling and clearly communicates the approved fonts, typography, colors, spacing, surfaces, icon rules, and representative component states.
@@ -121,8 +131,9 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 
 ### In scope
 
-- One unnamed synthetic employer context and two fixed synthetic vacancies: Frontend Developer and Backend Developer.
-- CV-derived candidate context and non-binding vacancy-alignment signals, followed by conversational role confirmation inside the live call.
+- One unnamed synthetic-demo disclosure with no fictional employer brand or finite vacancy catalogue.
+- Any bounded candidate-stated role becomes the available synthetic demo vacancy for the browser session; an undecided candidate continues role-neutrally.
+- CV-derived candidate context and an optional evidence-linked non-binding role suggestion, followed by conversational confirmation/correction inside the live call.
 - One bundled synthetic sample CV.
 - Visitor-supplied synthetic, text-based PDF CVs.
 - A first-class conversation-first path requiring no CV, with candidate context gathered through natural open questions.
@@ -134,10 +145,10 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - Voice disclosure, explicit consent, microphone test, and Start button.
 - Private ElevenLabs WebRTC token issuance.
 - Cloudflare Turnstile Free verification before CV analysis, voice-token issuance, and post-call summary generation, with interaction shown only when Turnstile requires it.
-- Entry-mode-aware real-time interview: CV-grounded focused follow-ups or open discovery followed by graduate/experienced and vacancy-specific branching.
+- Entry-mode-aware real-time interview: CV-grounded focused follow-ups or open discovery, with experience/status-informed conversational structure and no profession-specific branch.
 - Provisional and final live captions.
 - Client-side tools that create and correct insight cards.
-- Fixed unnamed-employer/vacancy FAQ answers grounded only in bundled content.
+- Minimal unnamed-demo answers grounded only in explicit server-owned content; unsupported employer/vacancy questions are recorded for human follow-up.
 - Eight-minute limit, graceful ending, interruption, and measured latency.
 - One restrained non-evaluative latency filler when genuinely needed.
 - Browser-local transcript and evidence references.
@@ -160,7 +171,7 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - Invitation links, email, SMS, phone numbers, telephony, calendars, or ATS integration.
 - Cross-tab, cross-device, shareable, or return-later sessions.
 - OCR for scanned CVs, DOCX ingestion, multi-file CVs, or arbitrary attachments.
-- Employer-managed or arbitrary job catalogues, vacancies beyond the two fixed engineering openings, employer onboarding, custom company knowledge bases, or customer configuration.
+- Employer-managed job catalogues, vacancy CRUD, employer onboarding, custom company knowledge bases, or customer configuration. The candidate-authored synthetic session role is context, not a persisted catalogue entry.
 - Automated hiring scores, pass/fail decisions, rankings, sentiment, emotion, accent, personality, or protected-trait inference.
 - Automatic English-proficiency rating; only candidate-stated proficiency and neutral communication observations are allowed.
 - Human recruiter workflow, notes, approval, rejection, or hiring decisions.
@@ -179,7 +190,7 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 
 ### 4.1 Product boundary
 
-The visitor chooses one of two equally prominent ways to experience the same company screening. **Use a CV** simulates ScreenPilot receiving a CV from an upstream general engineering application and uses it to focus the conversation. **Start without a CV** simulates a recruiter beginning with no candidate document and lets the agent learn the profile live. In both modes, the confirmed screening role set remains unresolved until the candidate states whether they want Frontend, Backend, or both during the conversation. ScreenPilot is not an application portal, job board, or technical assessment.
+The visitor chooses one of two equally prominent ways to experience the same role-agnostic HR screening. **Use a CV** simulates ScreenPilot receiving a CV from an upstream handoff and uses it to focus the conversation. **Start without a CV** simulates a recruiter beginning with no candidate document and lets the agent learn the profile live. In both modes, any bounded non-empty role the candidate states becomes the session's synthetic demo vacancy; an undecided candidate continues with an open role-neutral screen. ScreenPilot is not an application portal, job board, real vacancy listing, or professional assessment.
 
 ### 4.2 Entry-mode contract
 
@@ -190,7 +201,7 @@ The visitor chooses one of two equally prominent ways to experience the same com
 | First questions | Confirm/correct name and role direction, then verify or deepen CV claims | Learn the candidate's name in plain language, discover their target position openly, then explore experience naturally |
 | Question character | More focused sooner because known facts can be verified and explored | Broader at first, then becomes focused as candidate answers create insight cards |
 | Evidence sources | `CV`, `Candidate`, or `CV + Candidate` | `Candidate` only |
-| Shared experience | Disclosure, consent, microphone, voice runtime, vacancy boundaries, insights, summary, review, clearing, responsive quality | Same |
+| Shared experience | Synthetic-vacancy disclosure, consent, microphone, universal HR voice runtime, insights, summary, review, clearing, responsive quality | Same |
 
 Neither mode may be described as better. The UI explains the tradeoff: use a CV for a more focused screen; start without one for the fastest, most open experience.
 
@@ -218,7 +229,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 1 — landing
 
 - **Input state:** no browser demo session.
-- **Visible behavior:** concise product statement, unnamed company/vacancy context, privacy summary, and two equally weighted mode cards: **Use a CV** and **Start without a CV**. The CV card contains upload and sample-CV actions; the conversation card explains that ScreenPilot will ask open discovery questions.
+- **Visible behavior:** concise role-neutral product statement, synthetic/session-only vacancy disclosure, privacy summary, and two equally weighted mode cards: **Use a CV** and **Start without a CV**. The CV card contains upload and sample-CV actions; the conversation card explains that ScreenPilot will ask open discovery questions.
 - **Mutation:** frontend requests `GET /v1/demo/bootstrap`, receives public configuration, and creates a versioned browser session.
 - **Output state:** `cv_input` for CV-assisted or `conversation_preparing` for conversation-first.
 - **Failure:** if bootstrap fails, show retry plus a static explanation of the demo; do not show a fake working session.
@@ -226,7 +237,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 2A — CV input
 
 - **Input state:** valid bootstrap configuration.
-- **Visible behavior:** drop zone/file picker, text-based PDF requirement, 5 MB limit, synthetic-data warning, confirmed-vacancy context, and sample-CV shortcut. There is no pre-call role picker.
+- **Visible behavior:** drop zone/file picker, text-based PDF requirement, 5 MB limit, synthetic-data warning, role-neutral demo disclosure, and sample-CV shortcut. There is no pre-call role picker or supported-role list.
 - **Mutation:** selected `File` remains in JavaScript memory only.
 - **Output state:** `local_extracting` after validation.
 - **Failure:** reject wrong type, invalid PDF signature, password-protected file, more than 8 pages, over 5 MB, or no extractable text.
@@ -241,10 +252,10 @@ Any blocking failure remains attached to its current stage and offers a specific
 
 #### Stage 4A — AI CV analysis
 
-- **Input state:** extracted text plus fixed `vacancyCatalogKey`; the public Turnstile integration is configured and ready.
+- **Input state:** extracted text under the SP-010A role-neutral request contract; the public Turnstile integration is configured and ready.
 - **Visible behavior:** execute a managed Turnstile check immediately before the paid analysis request, showing an inline interaction only when Turnstile requires it; then show animated but honest analysis progress. No fabricated facts appear before the response validates.
 - **API:** `POST /v1/cv/analyze` with the bounded CV payload and one memory-only `turnstileToken`.
-- **Backend behavior:** verifies the single-use Turnstile token with Siteverify before calling OpenAI, treats CV text as untrusted data, calls GPT-5.4 mini once with structured output and `store: false`, validates the result, and returns normalized facts, evidence excerpts, non-binding Frontend/Backend alignment signals, common and vacancy-specific screening topics, and a short-lived signed `interviewGrant`.
+- **Backend behavior:** verifies the single-use Turnstile token with Siteverify before calling OpenAI, treats CV text as untrusted data, calls GPT-5.4 mini once with structured output and `store: false`, validates the result, and returns normalized facts, evidence excerpts, an optional fact-linked non-binding bounded role suggestion, universal HR screening topics, and a short-lived signed `interviewGrant`.
 - **Browser behavior:** stores only the validated structured result and grant in `sessionStorage`; raw PDF and full extracted text are removed.
 - **Output state:** `plan_preview`.
 - **Failure:** an invalid, expired, duplicated, or temporarily unavailable Turnstile result offers a safe retry without calling OpenAI. Invalid model output is retried once inside the request; otherwise show Retry analysis while retaining only the extracted text in component memory.
@@ -263,7 +274,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Visible behavior:** a brief truthful **Preparing an open conversation** transition. Do not show document analysis, extracted facts, fake personalization, or a plan-preview detour.
 - **API:** `POST /v1/interview/prepare` with `entryMode: "conversation_first"`.
 - **Backend behavior:** validates the anonymous session and returns a versioned deterministic discovery plan plus a short-lived signed `interviewGrant`. It makes no OpenAI or ElevenLabs call.
-- **Generic plan:** preferred name, open-ended target position, current work/study context, broad relevant experience and strongest areas, team/work style, motivation/next-role goals, remote-Europe work pattern, availability, compensation, candidate-stated English-use context, candidate questions, and graceful close. Frontend/Backend context changes wording and relevance but does not create a technical-question branch.
+- **Universal plan:** preferred name, open-ended requested role, current work/study context, high-level experience/responsibilities, team/work style, motivation/next-role priorities, location/work-arrangement preferences, availability, compensation expectation, candidate-stated English-use context where relevant, candidate questions, human follow-ups, and graceful close. Candidate experience/status may change ordering or depth; profession never creates a competency or technical branch.
 - **Browser behavior:** stores only the generic plan and grant in `sessionStorage`; `cv` remains absent.
 - **Output state:** `preflight`.
 - **Failure:** show a quick Retry and preserve the chosen entry mode; never redirect the visitor into CV upload.
@@ -283,7 +294,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Input state:** valid grant, consent true, microphone ready, and Turnstile ready.
 - **Visible behavior:** one **Start AI interview** button. Clicking it executes Turnstile in managed, interaction-only mode; a legitimate visitor normally moves directly into the connecting animation, while any required interaction appears inline without leaving preflight.
 - **API:** `POST /v1/voice/token` verifies the signed grant and one memory-only `turnstileToken`, applies backend/provider capacity gates, and returns a short-lived private conversation token.
-- **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, the fixed unnamed-employer/vacancy context, the screening plan, optional normalized CV/alignment context, and registered client tools.
+- **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, role-neutral synthetic-demo disclosure, the universal screening plan, optional normalized CV/fact-linked role suggestion, candidate-stated role or undecided state, and registered client tools. All candidate content is bounded and delimited as untrusted data.
 - **Output state:** `interviewing` only after the SDK reports connected.
 - **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider.
 
@@ -291,7 +302,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 
 - **Input state:** connected ElevenLabs conversation.
 - **Visible behavior:** agent voice area, listening/speaking status, elapsed time, live captions, insight board, mute, and End interview.
-- **Conversation behavior:** follows the entry-mode opening in Section 8, conversational vacancy clarification, broad professional background, selected-role motivation, availability/work pattern, compensation expectations, candidate-stated English-use context, candidate questions, and close. CV claims are verified only when needed in CV-assisted mode; conversation-first discovers facts from answers. The agent does not conduct a technical interview.
+- **Conversation behavior:** follows the entry-mode opening in Section 8, learns/confirms the candidate's role wording or undecided state, then covers high-level context/experience, collaboration preferences, motivation, location/work-arrangement preferences, availability, compensation expectations, relevant candidate-stated English use, candidate questions, human follow-ups, and close. CV claims are verified only when needed in CV-assisted mode; conversation-first discovers facts from answers. The selected profession never changes the interview into a technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
 - **Client events:** tentative transcript updates captions only; final transcript creates immutable local turns.
 - **Client tools:** add/correct structured insight cards and topic status in browser state.
 - **Output state:** `ending` on agent completion, user End action, time limit, or unrecoverable disconnect.
@@ -308,7 +319,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 10 — local review and clear
 
 - **Input state:** transcript, plan, insight cards, and optional summary in browser session.
-- **Visible behavior:** entry-mode label, confirmed screening role/requested-role nuance, topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, transcript evidence, recruiter follow-ups, and limitations. Conversation-first review contains no CV source chips or claims of CV verification.
+- **Visible behavior:** entry-mode label, candidate-stated synthetic session role or undecided state, topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, transcript evidence, recruiter follow-ups, and limitations. Conversation-first review contains no CV source chips or claims of CV verification.
 - **Allowed actions:** return to transcript evidence, copy summary, optionally download a local JSON report, or **Clear session**.
 - **Mutation:** Clear removes ScreenPilot `sessionStorage` and in-memory candidate/interview state, then returns to landing. The content-free safety cookie expires automatically and is not presented as candidate data.
 - **Output state:** `cleared`.
@@ -320,13 +331,12 @@ The frontend stores only the following versioned JSON in `sessionStorage`:
 
 ```ts
 type DemoSession = {
-  schemaVersion: 1;
+  schemaVersion: 2; // SP-010A role-neutral migration
   stage: DemoStage;
   entryMode: "cv_assisted" | "conversation_first" | null;
   createdAt: string;
   expiresAt: string;
-  employer: PublicEmployerContext;
-  vacancies: PublicVacancySnapshot[];
+  demoContext: PublicRoleNeutralDemoContext;
   preferredName?: PreferredName;
   rolePreference?: RolePreference;
   cv?: NormalizedCv;
@@ -356,10 +366,10 @@ Rules:
 
 - Never place the PDF blob, base64 PDF, full extracted CV text, Turnstile token, provider token, API key, microphone audio, or raw debug payload in browser persistence.
 - Never use `localStorage` or IndexedDB for candidate content.
-- Validate and migrate or clear the session when `schemaVersion` changes.
+- Validate and migrate or clear the session when `schemaVersion` changes. On every load, remove every unsupported `screenpilot:demo-session:v*` key even when the current key also exists or is corrupt; preserve unrelated `sessionStorage` entries.
 - Expire a session after two hours even if the tab stays open.
 - Clear malformed or oversized session data safely.
-- Require exactly one Frontend and one Backend vacancy and reject impossible workflow-stage/entry-mode combinations during restore.
+- Validate one bounded candidate-stated role label or an undecided state under the SP-010A session schema, and reject impossible workflow-stage/entry-mode combinations during restore.
 - The browser is authoritative only for this visitor's disposable demo; its content is untrusted when sent back to the backend.
 - `cv` must remain absent in conversation-first mode, and conversation-first insights may never acquire a `CV` source label.
 
@@ -367,14 +377,14 @@ Rules:
 
 1. Bundled sample CV reaches plan preview and live preflight.
 2. **Start without a CV** skips upload, extraction, AI analysis, and plan preview, then reaches the same preflight using deterministic preparation.
-3. Conversation-first asks the candidate's name in plain language and then their open-ended target position before assuming Frontend or Backend.
+3. Conversation-first asks the candidate's name in plain language and then their open-ended target position without assuming a profession or requiring a choice.
 4. Conversation-first answers progressively create candidate-sourced cards and make later questions more specific.
 5. A graduate-style CV produces education/project-oriented topics.
 6. An experienced CV produces role/contribution-oriented topics.
 7. A different valid CV changes at least two facts and two planned topic intents or follow-up directions; it does not prewrite live questions.
-8. A Frontend-leaning or Backend-leaning CV changes the non-binding role-alignment explanation without silently selecting a vacancy.
-9. A candidate in either mode can choose or correct the screening vacancy; subsequent questions adapt immediately.
-10. A candidate asking for Full Stack receives the transparent fixed-catalogue response, has that preference recorded, and is asked which confirmed vacancy should anchor the screening.
+8. A CV may suggest Product Manager or another bounded role only through linked facts and without silently selecting or claiming a vacancy.
+9. A candidate in either mode can state or correct any role label; it becomes the synthetic session vacancy and later wording adapts without changing the universal HR scope.
+10. Graphic Designer, Customer Support Representative, Backend Developer, and Full Stack Developer are accepted normally; compound/multiple-role wording receives one shared screen, while an undecided candidate completes role-neutrally.
 11. An image-only PDF fails locally without affecting the conversation-first path.
 12. Denied microphone permission never requests a voice token.
 13. Unchecked consent never requests a voice token.
@@ -393,7 +403,7 @@ Rules:
 
 - Minimal navbar: ScreenPilot mark, **How it works** anchor, **Privacy** modal, GitHub/portfolio link.
 - Hero: **Adaptive AI screening, live in your browser.** Supporting copy: **Bring a CV for focused questions, or start talking and let ScreenPilot learn as you go.**
-- Unnamed employer context card showing the confirmed Frontend Developer and Backend Developer openings, Remote within Europe, and that preferred-role clarification happens during the call. Visible copy says **our company**, never a fictional brand.
+- Role-neutral context card explaining that the candidate's stated role becomes a synthetic vacancy for this browser-session demo, not a real employer opening. It lists no finite roles, universal location/work pattern, salary, benefits, responsibilities, or qualifications. Visible copy says **our company** only when grammatically needed and never invents a brand.
 - Two equal entry cards with matching visual weight and keyboard order: **Use a CV** and **Start without a CV**. Upload/sample controls live inside the CV path rather than visually demoting conversation-first.
 - Mode comparison states the benefit honestly: **More focused from the start** versus **Fastest way to try the conversation**.
 - Three-step explanation adapts by mode: CV or conversation context → voice interview → structured review.
@@ -501,18 +511,18 @@ The board is the demo's visual signature. It should make AI comprehension visibl
 | Category | Example | Allowed source |
 | --- | --- | --- |
 | Preferred name | “Candidate-stated preferred name” | CV or candidate-confirmed statement; candidate correction wins |
-| Role preference | “Requested Full Stack; screening against Frontend” | Candidate-confirmed statement only |
+| Role preference | “Interested in Graphic Designer” or “Undecided” | Candidate-confirmed statement only; any bounded role is accepted as synthetic session context |
 | Current context | “Recently completed a frontend internship” | CV or candidate-confirmed statement |
 | Relevant experience | “Worked on customer-facing web products” | CV or candidate-confirmed statement |
 | Broad responsibility | “Owned a delivery-status feature” | Candidate statement with transcript turn; no technical assessment implied |
 | Strongest areas | “Feels strongest in customer-facing product work” | Candidate statement or grounded CV fact; never a scored strength |
 | Team/work style | “Prefers a mix of focused independent work and close collaboration” | Candidate-confirmed statement only; no personality inference |
 | Availability | “Available after four weeks” | Candidate-confirmed statement |
-| Work pattern | “Comfortable with remote-first collaboration” | Candidate-confirmed statement |
+| Location/work arrangement | “Prefers remote work within their current time zone” | Candidate-confirmed preference; not an employer promise |
 | Compensation | “Expected range €45k–€50k” | Candidate-confirmed statement |
 | English | “Uses English in weekly team communication” | Candidate statement only; no rating |
-| Motivation | “Interested in product-focused frontend work” | Candidate-confirmed statement |
-| Candidate question | “Asked about mentorship and code review” | Candidate question turn |
+| Motivation | “Interested in customer-facing work and growth” | Candidate-confirmed statement |
+| Candidate question | “Asked about team structure and onboarding” | Candidate question turn; unsupported employer details become human follow-up |
 | Follow-up needed | “Availability date needs clarification” | Explicit uncertainty or contradiction |
 
 ### Card lifecycle
@@ -589,9 +599,9 @@ The prompt is an operational policy, not a word-for-word interview script. It mu
 
 #### Hardcode decisions, not interview sentences
 
-- The application hardcodes the topic checklist, allowed employer facts, branch eligibility, evidence rules, safety boundaries, time limit, and completion conditions.
+- The application hardcodes the universal topic checklist, synthetic-demo disclosure, employer-knowledge boundary, experience-informed conversational structure, evidence rules, safety boundaries, time limit, and completion conditions.
 - It does **not** hardcode a question bank or map each topic to one mandatory sentence. The model decides how to phrase the next question from the current state, last candidate answer, known evidence, and spoken-response contract.
-- Topic definitions describe an **intent** and what counts as covered. For example, a project-contribution topic asks the model to learn what the candidate personally did; it does not store a literal project question for replay.
+- Topic definitions describe an **intent** and what counts as covered. For example, a broad-responsibility intent asks the model to learn what the candidate personally did at a high level; it does not store a literal question for replay or invite portfolio/competency assessment.
 - Quoted dialogue in this document and prompt fixtures demonstrates approved or rejected tone. It is not copied into frontend/backend branching code, and the model is instructed to vary the wording naturally.
 - The prompt may include a small number of varied examples for failure-prone branches because examples improve behavior, but no example is a required script and no exact-match assertion is used to grade natural dialogue.
 - Tests assert meaning and constraints—such as whether role intent was discovered, whether only one question was asked, and whether the wording stayed direct—not exact sentence equality.
@@ -605,17 +615,17 @@ The live agent's primary job is to fill a small set of recruiter-screening field
 | Order | Data slot | What ScreenPilot needs to learn | Completion rule |
 | ---: | --- | --- | --- |
 | 1 | `preferred_name` | The name the candidate gives for this conversation. | Candidate-stated final turn; CV name may seed context but a correction always wins. |
-| 2 | `requested_role_label` + `screening_vacancy_keys` | The role in the candidate's own words and whether this screen covers Frontend, Backend, both, or remains unresolved. | Candidate confirms a direction; never infer an application from CV skills. |
+| 2 | `role_preference` | The bounded role in the candidate's own words, including compound wording, or an explicit undecided state. | Candidate states/confirms/corrects the label; any non-empty label becomes synthetic session context and never proves a real application. |
 | 3 | `current_context` | The candidate's current or most recent work, studies, internship, career break, or equivalent professional context. | One concise candidate summary or sufficiently clear CV fact; do not demand both work and education. |
 | 4 | `relevant_experience_summary` | A synthesized recruiter note covering the candidate's recent role/studies, broad responsibilities, strongest self-described areas, and any relevant direction that emerged. | This is never asked as one abstract question. Build it from volunteered details and one or more natural prompts; a useful high-level summary is enough, and not every sub-area must be separately interrogated. At most one broad example/ownership clarification may be used when the answer is too vague. |
 | 5 | `team_work_style` | How the candidate describes collaborating, working independently, communicating, receiving feedback, or the environment in which they work best. | One candidate-stated preference or example is enough. Ask at most one primary team/work-style question unless clarification is genuinely necessary; never infer personality or culture fit. |
 | 6 | `motivation_and_next_role` | Why this opportunity/direction interests them and what they want from their next role. | Candidate states at least one motivation, goal, or preferred growth area. Do not pressure them to criticize a current employer. |
-| 7 | `remote_europe_fit` | Whether full-time remote work within Europe fits their situation and any relevant work-pattern/time-zone constraint they volunteer. | Candidate confirms, declines, or identifies a constraint. Ask about logistics, never nationality or protected traits. |
+| 7 | `location_work_arrangement` | The candidate's location and work-arrangement preferences or constraints. | Candidate states a preference, declines, or identifies a constraint. Do not imply an employer location/pattern or ask about nationality/protected traits. |
 | 8 | `availability` | Notice period or realistic earliest start timing. | Candidate provides timing, declines, or says it is uncertain; preserve uncertainty. |
 | 9 | `compensation_expectation` | Candidate's expected range plus currency/period when supplied. | Candidate provides it or declines. Never negotiate, pressure, or treat the number as a score. |
 | 10 | `english_use_context` | Candidate-stated context for using English at work, study, or collaboration when it has not emerged naturally. | Candidate statement only. No automated proficiency rating, accent judgment, grammar critique, or hidden score. |
-| 11 | `candidate_questions` | What the candidate wants clarified about the company, role, process, or benefits. | Offer one clear opportunity; zero questions is a valid answer. Answer only from fixed context. |
-| 12 | `clarifications_and_followups` | Any contradiction, missing logistical detail, unavailable requested role, or answer requiring human follow-up. | Record only when a real ambiguity remains; this is not a reason to prolong every interview. |
+| 11 | `candidate_questions` | What the candidate wants clarified about the company, synthetic role context, or process. | Offer one clear opportunity; zero questions is valid. Answer only from explicit server-owned facts and otherwise record human follow-up. |
+| 12 | `clarifications_and_followups` | Any contradiction, missing logistical detail, unsupported employer/vacancy question, or answer requiring human follow-up. | Record only when a real ambiguity remains; it must not block completion or prolong every interview. |
 
 ```ts
 type ScreeningFieldKey =
@@ -625,7 +635,7 @@ type ScreeningFieldKey =
   | "relevant_experience_summary"
   | "team_work_style"
   | "motivation_and_next_role"
-  | "remote_europe_fit"
+  | "location_work_arrangement"
   | "availability"
   | "compensation_expectation"
   | "english_use_context"
@@ -653,11 +663,11 @@ The state begins with all applicable slots `unknown`, except grounded CV-assiste
 
 - Target **8–10 primary interviewer prompts** for a normal complete screen, excluding candidate counterquestions and genuinely necessary clarification. End earlier when the fields are already covered.
 - The first useful answer may fill several slots. For example, a candidate can state their current role, experience, strongest area, and desired direction in one introduction; the agent must not ask those again separately.
-- Name, role direction, and broad current context come first because they make every later question more relevant. Broad responsibility/strength and one team/work-style intent follow when still unknown; motivation comes before logistical questions; availability, work pattern, compensation, English-use context, and candidate questions complete the screen.
+- Name, requested role/undecided state, and broad current context come first because they make later wording more relevant. Broad responsibility/experience and one team/work-style intent follow when still unknown; motivation comes before logistics; location/work arrangement, availability, compensation, English-use context when relevant, candidate questions, human follow-ups, and close complete the screen.
 - CV-assisted mode uses supported CV facts to skip basic repetition and asks only for role confirmation, meaningful correction/clarification, missing HR fields, and one broad relevant-experience check when useful.
 - Conversation-first mode begins broader, but it still collects only the same HR fields. It does not recreate an entire CV orally.
 - The question library below is a menu of approved intent and tone directions, not a list to exhaust. For a normal complete screen, use at most one primary question from most categories, skip questions whose answers are already known, and allow one answer to cover several fields.
-- Across the whole call, allow **at most one** broad role-context clarification such as the type of frontend/backend responsibility the candidate handled. Never follow it with implementation, API, architecture, debugging, testing, framework-trivia, or hypothetical system-design questions.
+- Across the whole call, allow **at most one** broad role-context clarification about high-level responsibilities. Never follow it with technical, portfolio, competency, roleplay, professional-knowledge, implementation, API, architecture, debugging, testing, framework-trivia, or system-design questions.
 - If the candidate volunteers technical detail, acknowledge the relevant responsibility in the insight state and return to the next missing HR field. Do not reward detail with a deeper technical chain.
 - Follow-up priority is: unresolved correction/safety issue, candidate counterquestion, missing role direction, missing background, missing team/work style, missing motivation, missing logistics, candidate questions, then close.
 - No field requires exact phrasing, and no complete screen must contain every example sentence from this document.
@@ -698,11 +708,7 @@ Selection rules:
 - Definition of a useful move: **“What would make a new position feel like a good move for you?”**
 - Avoided responsibilities: **“Is there anything you would prefer not to have as a major part of your next role?”**
 
-If a conversation-first candidate asks what positions exist before giving any background, do not assume they are an engineer and do not recite a catalogue. Ask one inclusive discovery question in this direction:
-
-> “Since you haven't provided a resume yet, could you briefly tell me about your recent work, studies, or strongest skills?”
-
-After the answer, the agent may mention two or three plausible directions as tentative interpretations, clearly distinguish them from confirmed vacancies, and ask one concise preference question. It must not claim the candidate applied for a role they never named.
+If a conversation-first candidate asks what positions exist, explain briefly that this role-agnostic portfolio demo treats the role they choose as synthetic session context rather than advertising real openings. Ask what role or direction they want to use for the demo. If they are undecided, continue with an open role-neutral screen; do not infer a profession, propose a catalogue, or block progress.
 
 **Team and work-style directions**
 
@@ -737,7 +743,7 @@ Keep reasons for leaving neutral. Never pressure the candidate to criticize a cu
 
 **Practical screening directions**
 
-- Remote suitability: **“Would remote work suit you?”**
+- Work-arrangement preference: **“What kind of work arrangement are you looking for?”**
 - Working constraints: **“Are there any working-hour or time-zone constraints we should know about?”**
 - Start timing: **“When would you be available to start?”**
 - Notice period: **“Do you have a notice period?”**
@@ -751,7 +757,7 @@ Ask only the missing logistics. Do not combine all seven into one turn. A candid
 
 - Missing background: **“Is there anything important about your background that we haven't covered?”**
 - Recruiter note: **“Is there anything you'd like the recruiter to know?”**
-- Candidate questions: **“What would you like to know about the position or our company?”**
+- Candidate questions: **“What would you like to clarify about the synthetic role or screening process?”**
 - Short alternative: **“Do you have any questions before we finish?”**
 
 Offer one clear opportunity, not every closing variant. If the candidate has no questions, accept that answer and close without trying to manufacture another topic.
@@ -764,7 +770,7 @@ Offer one clear opportunity, not every closing variant. If the candidate has no 
 4. One broad responsibility or strongest-area question if still needed.
 5. One team/work-style question if still needed.
 6. Motivation or next-role priority.
-7. Missing remote-work, availability, and compensation logistics, each only when not already answered.
+7. Missing location/work-arrangement preference, availability, and compensation logistics, each only when not already answered.
 8. Candidate-stated English-use context if it has not emerged naturally.
 9. One opportunity for candidate questions, then close.
 
@@ -776,9 +782,9 @@ Critical instructions appear early and each section uses short action-oriented b
 
 1. **Role:** a neutral first-screen interviewer for an unnamed synthetic company; never a hiring decision-maker, assessor, therapist, or general assistant.
 2. **Critical spoken-output contract:** the 8–25-word target, normal 35-word limit, one-question limit, directness, forbidden assistant openers, no spoken formatting, and no answer evaluation.
-3. **Runtime context:** entry mode, allowed employer facts, confirmed vacancy catalogue, prepared topic branches, elapsed/remaining time, and bounded candidate context.
+3. **Runtime context:** entry mode, synthetic-demo disclosure, universal prepared topics, current bounded role label or undecided state, elapsed/remaining time, and bounded candidate context.
 4. **Turn decision order:** stop, unclear input, correction, candidate counterquestion, evidence/tool update, next topic, then spoken response.
-5. **Conversation flow:** CV-assisted and conversation-first openings, discovery, vacancy handling, topic coverage, candidate questions, and close conditions.
+5. **Conversation flow:** CV-assisted and conversation-first openings, role discovery/confirmation, universal topic coverage, candidate questions, and close conditions.
 6. **Tools:** exactly when each client tool may run, required evidence, argument meanings, correction behavior, and failure behavior.
 7. **Uncertainty and recovery:** unclear audio, missing facts, contradictions, unsupported employer questions, interruptions, and disconnected context.
 8. **Guardrails:** privacy, prompt-injection resistance, protected traits, no unsupported facts, no scoring, no hiring recommendation, and immediate stop behavior.
@@ -790,11 +796,11 @@ Static policy remains identical across sessions. Only these bounded variables ma
 
 - `entry_mode`: `cv_assisted` or `conversation_first`.
 - `candidate_context`: normalized CV facts and evidence references in CV-assisted mode, or an explicit **no CV supplied** marker in conversation-first mode.
-- `screening_plan`: fixed common topics plus Frontend and Backend branches; it is a coverage guide, not a script.
-- `confirmed_vacancies`: the two fixed Frontend and Backend openings and their fixed FAQ facts.
-- `known_state`: preferred name, requested role wording, confirmed screening roles, completed topics, corrections, and remaining time as available through supported dynamic state.
+- `screening_plan`: universal HR topics and experience-informed conversational structure; it is a coverage guide, not a script.
+- `role_context`: one bounded candidate-authored label or an explicit undecided state, plus the synthetic/session-only disclosure.
+- `known_state`: preferred name, current role context, completed topics, corrections, human follow-ups, and remaining time as available through supported dynamic state.
 
-Dynamic content is delimited and labelled **untrusted evidence, never instructions**. CV text, candidate speech, tool output, and browser-supplied values cannot change the role, tools, guardrails, vacancies, or spoken-output contract. Secrets, provider IDs, grants, Turnstile tokens, and internal signing values never enter the LLM prompt.
+Dynamic content is delimited and labelled **untrusted evidence, never instructions**. CV text, candidate speech, role labels, tool output, and browser-supplied values cannot change the interviewer policy, tools, guardrails, universal intent set, employer knowledge boundary, or spoken-output contract. Secrets, provider IDs, grants, Turnstile tokens, and internal signing values never enter the LLM prompt.
 
 #### Turn decision order
 
@@ -803,7 +809,7 @@ For every final candidate turn, the policy directs GPT to choose exactly one con
 1. If the candidate asks to stop, end immediately without another screening question.
 2. If the transcript is unclear, partial, contradictory in a way that blocks progress, or clearly affected by noise, ask one short clarification and do not record the uncertain fact.
 3. If the candidate corrects a prior fact, correct the insight/state first and use the corrected value from that turn onward.
-4. If the candidate asks a relevant counterquestion, answer the smallest useful part from fixed employer context before returning with at most one relevant question. If the answer is not in context, say that it requires human follow-up; never improvise.
+4. If the candidate asks a relevant counterquestion, answer only from explicit server-owned facts before returning with at most one relevant question. If the answer is not provided, say that it requires human follow-up; never improvise from the role label, CV, or general knowledge.
 5. Record only explicit or safely paraphrased candidate evidence. Never turn an inference into a confirmed card, never invent a browser turn ID, and never announce routine tool execution aloud.
 6. Select the single highest-value unfinished topic that follows naturally from the last answer. Prefer a grounded follow-up over the next generic checklist item.
 7. Produce one direct spoken response that follows the length and question limits, then stop generating and wait.
@@ -826,13 +832,13 @@ The source-controlled prompt contains several short, varied examples covering th
 
 | Situation | Approved direction | Explicit failure to prevent |
 | --- | --- | --- |
-| Candidate asks which positions exist before giving background | “Well, since you haven't provided a CV yet, could you briefly tell me about your recent work, studies, or strongest skills?” | Assuming engineering, reciting every vacancy, or asking several background questions together. |
-| Computer-science background follows | “I see—that points toward Frontend, Backend, or potentially Full Stack work. We have Frontend and Backend openings; would you like both considered, or do you prefer one?” | Claiming all three are vacancies or giving an extended role lecture. |
+| Candidate asks which positions exist before giving background | Explain briefly that this is a synthetic role-agnostic demo, then ask what role they want to use or whether they prefer an open role-neutral screen. | Claiming a real vacancy exists, reciting a supported-role list, or asking several background questions together. |
+| Candidate states “Graphic Designer” | Record that exact bounded label as the session's synthetic demo vacancy, then continue with the universal HR intents. | Redirecting to software roles or starting a portfolio/design assessment. |
 | Candidate corrects a CV fact | Briefly accept the correction, update the fact, and continue from it. | Defending the CV, repeating the old claim, or thanking them multiple times. |
-| Candidate asks about salary band | State the fixed range directly, then ask at most one relevant follow-up. | “Great question!” followed by policy narration or an invented exception. |
+| Candidate asks about the employer's salary band | Say that no employer-specific band is provided and flag it for human follow-up; the candidate may still share an expectation or decline. | Inventing a band, treating a candidate expectation as employer policy, or blocking the interview. |
 | Candidate gives a terse but complete answer | Record it and ask the next natural question in one short sentence. | Padding the turn with praise, a summary, and an offer to help. |
 | Candidate gives an unclear answer | Ask for the one missing detail needed to continue. | Guessing, filling an insight card, or stacking alternatives. |
-| Candidate requests Full Stack | Record the preference, state that only Frontend and Backend are confirmed, and ask whether to cover one or both. | Inventing a Full Stack opening or forcing a single choice. |
+| Candidate requests Full Stack Developer | Record the exact bounded label as the session's synthetic demo vacancy and continue with the universal HR intents. | Redirecting to Frontend/Backend or starting a technical assessment. |
 | Candidate says stop | End courteously and immediately. | Asking why, continuing the interview, or calling another fact tool. |
 
 Examples must vary their first words so few-shot guidance does not create a new repeated verbal tic. Counterexamples are paired with the violated rule rather than included as unlabeled dialogue the model could imitate.
@@ -853,8 +859,8 @@ Deterministic failures:
 - A turn contains more than one question or combines multiple information requests into one sentence.
 - A turn begins with a banned routine opener or praise phrase.
 - A spoken turn contains Markdown headings/lists, JSON, tool names, internal keys, or tool narration.
-- The conversation asks implementation, API, architecture, debugging, testing, framework-trivia, or system-design questions, or asks more than one broad role-context clarification.
-- A conversation-first turn claims a CV fact/source, an unconfirmed application, or an unsupported vacancy.
+- The conversation asks technical, portfolio, competency, roleplay, professional-knowledge, suitability, implementation, API, architecture, debugging, testing, framework-trivia, or system-design questions, or asks more than one broad role-context clarification.
+- A conversation-first turn claims a CV fact/source, a real application, employer detail, or non-synthetic vacancy.
 - A tool call records evidence after unclear input, uses an invalid category/source, invents a turn ID, or duplicates instead of correcting a known fact.
 - A stop request produces another interview question or evidence mutation.
 
@@ -865,7 +871,7 @@ Semantic checks:
 - The response is neutral and direct rather than flattering, coaching, cold, evasive, or assistant-like.
 - Any paraphrased insight preserves the candidate's meaning and uncertainty without converting inference into fact.
 
-The initial regression set includes both entry openings, missing name, unclear audio, silence/partial transcript, role-catalogue counterquestion, broad Software Engineer answer, Frontend, Backend, both, Full Stack, neither confirmed vacancy, employed/student/between-role contexts, early-career studies, recent-role responsibilities, strongest areas, team/work-style preference, several fields volunteered in one answer, CV correction, compensation refusal, uncertain availability, unsupported company question, sensitive/protected topic, prompt injection in CV/candidate speech, interruption, terse answer, long answer, repeated answer, and stop. Fixtures verify that the question library guides natural intent without becoming a questionnaire, that covered fields are skipped, and that no team preference becomes a personality or culture-fit judgment. Prompt changes address one observed failure at a time and rerun the same fixtures. The deployed prompt records a prompt version and model identifier so drift can be traced; use an exact model snapshot when ElevenLabs exposes one, otherwise record the provider model alias and ElevenLabs agent revision.
+The initial regression set includes both entry modes, missing name, unclear audio, silence/partial transcript, role/vacancy counterquestions, Graphic Designer, Customer Support Representative, CV-suggested Product Manager, Backend Developer without technical questioning, Full Stack Developer without redirection, role correction, compound/multiple-role wording, undecided role, employed/student/between-role contexts, early-career studies, recent-role responsibilities, strongest areas, team/work-style preference, several fields volunteered in one answer, CV correction, compensation refusal, uncertain availability, unsupported employer question, sensitive/protected topic, prompt injection in CV/candidate speech/role labels, interruption, terse answer, long answer, repeated answer, and stop. Fixtures verify that the intent library guides natural conversation without becoming a questionnaire, that covered fields are skipped, that profession never changes the interview into an assessment, and that no team preference becomes a personality or culture-fit judgment. Prompt changes address one observed failure at a time and rerun the same fixtures. The deployed prompt records a prompt version and model identifier so drift can be traced; use an exact model snapshot when ElevenLabs exposes one, otherwise record the provider model alias and ElevenLabs agent revision.
 
 ### Entry-mode openings
 
@@ -873,47 +879,45 @@ The initial regression set includes both entry openings, missing name, unclear a
 
 - Candidate name, headline, skills, roles, projects, experience level, and source-linked facts come from the normalized CV result. Synthetic sample values are never substituted into an uploaded-CV session.
 - Welcome the candidate using the extracted name only when present; make correction easy, or ask what name to use when it is missing/unclear. Keep the opening short and do not add a generic thank-you merely because the call started.
-- A CV can indicate Frontend or Backend alignment, but it cannot establish what the candidate applied for. Never say **“You applied for Frontend”** unless the candidate states that in the conversation.
-- If one alignment is stronger, mention the relevant CV evidence tentatively, state the confirmed Frontend and Backend openings, and discover whether the candidate wants one or both covered. Do not reuse a mandatory sentence.
-- If the CV is mixed or unclear, state the two confirmed openings and ask neutrally whether to cover one or both without guessing or reading from a fixed question string.
+- A CV can support one tentative role suggestion in any profession, but it cannot establish what the candidate applied for. The suggestion must cite validated CV facts and remain non-binding until the candidate confirms or corrects it.
+- If the CV supports a suggestion, mention the evidence briefly and ask whether the candidate wants to use that role for the synthetic demo vacancy. Do not imply a real opening or reuse a mandatory sentence.
+- If the CV is mixed or unclear, ask which role the candidate wants to use or whether they prefer an open role-neutral screen; do not guess or present a finite catalogue.
 - After role clarification, verify two or three high-value CV claims and go deeper rather than re-asking basic information already supported by the document.
 
 #### Conversation-first opening
 
 1. Use the single configured first message **“Hi, what's your name?”** so the interviewer speaks immediately. Record the answer only after the final transcript turn. All subsequent wording is generated; do not add this or later questions to a question bank.
 2. If the interface has not already made it clear, use at most one short sentence explaining that ScreenPilot will learn through the conversation and organize answers into live notes; do not repeat the preflight disclosure.
-3. Generate one plain, open question that discovers what position the candidate wants at the company. Do not lead with a Frontend/Backend choice and do not imply that an application record exists. **“What position are you applying for at our company?”** is a tone example, not a required string.
+3. Generate one plain, open question that discovers which role the candidate wants to use for this synthetic demo. Do not present an allow-list, infer a role from background, or imply that an application record or real opening exists.
 4. Interpret the answer conversationally:
-   - Clear Frontend or Backend answer: record it without a ceremonial confirmation and activate that topic branch.
-   - Candidate asks which positions exist before sharing any background: do not assume engineering, a degree, or a last job and do not immediately dump the catalogue. Ask one inclusive discovery question in this direction: **“Well, since you haven't provided a CV yet, could you briefly tell me about your recent work, studies, or strongest skills?”**
-   - After that discovery answer, mention at most two or three plausible role interests as tentative directions rather than vacancies, state that the confirmed openings are Frontend Developer and Backend Developer, and ask whether the candidate wants both considered or prefers one. Reference tone: **“I see—that points toward Frontend, Backend, or potentially Full Stack work. We have Frontend and Backend openings; would you like both considered, or do you prefer one?”**
-   - Broad answer such as **Software Engineer**: if background is still missing, use the same single discovery question; otherwise state the two confirmed openings and ask whether to cover both or one.
-   - Full Stack or another unavailable role: use the fixed unavailable-vacancy response below, record the requested label, and ask whether Frontend, Backend, or both should be covered.
-   - Interest in both confirmed roles: record both without forcing an artificial primary choice; later questions may cover one grounded context from each branch within the time limit.
+   - Any bounded non-empty role label: preserve it as one candidate-authored label, record it as the available synthetic demo vacancy for this browser session, and continue with the universal HR intents.
+   - Candidate asks which positions exist: explain that the demo is role-agnostic and their chosen role becomes a synthetic session-only vacancy; ask for a role or offer an open role-neutral screen. Do not invent employer openings.
+   - Compound/multiple-role wording: preserve the wording as one label and run one shared HR screen; do not classify, split, rank, or route it.
+   - Undecided: record the unresolved state and continue role-neutrally without pressure or repeated clarification.
    - Unclear answer: ask one concise clarification rather than guessing.
 5. Ask for a short professional introduction only to fill missing current-context and broad-experience fields and choose graduate, experienced, or mixed HR depth.
 6. If relevant experience remains vague, ask at most one broad responsibility/example clarification. Do not ask how the candidate implemented, debugged, tested, architected, or optimized anything; do not recreate a CV verbally.
 
 Conversation-first questions begin broader because there is no document, but every confirmed answer should reduce later repetition. Once the agent learns a fact, it uses it naturally and asks a deeper follow-up rather than asking the same generic question again. After preferred name and target-position discovery, the topic plan is a coverage guide rather than a rigid script: the agent chooses the next relevant question from the candidate's last answer while preserving one-question-at-a-time behavior and the eight-minute boundary.
 
-### Shared reactive role behavior
+### Shared role-neutral behavior
 
 - If the candidate corrects the name, role, or any prior interpretation, acknowledge once, correct the relevant insight rather than arguing, and use the correction for the rest of the call.
-- If the candidate says they want Full Stack, keep the response short and state in substance: **“I’ll note Full Stack as your preference. The confirmed openings are Frontend and Backend. Would you like this screening to cover both, or focus on one?”**
-- If the candidate then chooses Frontend, Backend, or both, retain the requested Full Stack wording separately from the confirmed screening-role set and use the applicable topic branch or branches immediately.
-- If the candidate chooses both confirmed openings directly, record both and continue without repeatedly asking for a primary preference.
-- If the candidate declines both confirmed options, offer to continue with a general engineering screen and record that role matching needs human follow-up; do not fabricate a vacancy or force a choice.
+- Treat any valid role label—including Frontend Developer, Backend Developer, Full Stack Developer, non-software roles, and compound wording—as ordinary untrusted candidate data with identical workflow semantics.
+- A role label may shape natural phrasing but never changes the universal intent set or adds technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
+- If the candidate is undecided, continue with the same HR intents and keep the role insight unresolved.
+- Employer/vacancy questions may be answered only from explicit server-owned facts; otherwise create a concise human follow-up and continue.
 - Role clarification is part of the live conversation. Do not move it into a setup form or require the visitor to select a vacancy before pressing Start.
 
 ### Shared required sequence after the opening
 
-1. Follow the chosen entry-mode opening and establish preferred name plus whether the screening covers Frontend, Backend, both, or remains unresolved.
+1. Follow the chosen entry-mode opening and establish preferred name plus one candidate-authored role label or an undecided state.
 2. Choose graduate, experienced, or mixed depth from the available CV and/or candidate evidence.
 3. Synthesize the candidate's broad relevant experience from recent role/studies, responsibilities, and strongest self-described areas; ask no more than one high-level example clarification if needed.
 4. Learn one candidate-stated team/work-style preference when it has not already emerged, without personality or culture-fit assessment.
-5. Ask motivation for the stated position or, if unresolved, the candidate's preferred engineering direction.
-6. Ask only the missing availability and remote-work logistics.
-7. Ask compensation expectations in euros, allowing the candidate to decline.
+5. Ask motivation for the stated role or, if unresolved, what the candidate wants from a next opportunity.
+6. Ask only the missing availability and location/work-arrangement preferences.
+7. Ask compensation expectations in the candidate's own terms, allowing the candidate to decline.
 8. Continue naturally in English; do not administer a separate language test.
 9. Ask whether the candidate has questions.
 10. Summarize the role preference and next step as human review, then end clearly.
@@ -924,7 +928,7 @@ Conversation-first questions begin broader because there is no document, but eve
 - Broad exposure through coursework, personal work, university work, internships, volunteering, or open source without interrogating implementation details.
 - Strongest self-described areas and the kind of responsibility they are ready to take on.
 - Motivation, learning environment, collaboration preference, and what they want from a first or early-career role.
-- Use the selected vacancy only to keep wording relevant; do not ask framework, debugging, testing, architecture, or coding questions.
+- Use the candidate-authored synthetic role only to keep wording relevant; do not add technical, portfolio, competency, roleplay, professional-knowledge, or suitability questions.
 
 ### Experienced branch
 
@@ -932,31 +936,21 @@ Conversation-first questions begin broader because there is no document, but eve
 - Strongest relevant area and the type of ownership or collaboration they have handled, described at recruiter level.
 - One general team/work-style preference when not already answered; do not turn it into a personality or culture-fit assessment.
 - What they want to change, continue, or grow in their next role without requiring criticism of a present employer.
-- Motivation for the confirmed role direction plus availability, work-pattern, and compensation logistics.
+- Motivation for the candidate-stated role direction plus availability, work-arrangement preference, and compensation logistics.
 - Do not ask architecture, delivery-tradeoff, API, implementation, debugging, testing, or system-design questions.
 
-### Vacancy-aware HR phrasing
+### Role-aware, profession-neutral HR phrasing
 
-Both prepared plan types contain Frontend and Backend relevance metadata so the live agent can adapt immediately after the candidate confirms or changes preference; this metadata does not create technical interview branches.
+Both prepared plan types use the same universal HR intents. The current role label may make wording feel relevant, but it never selects a profession-specific branch.
 
-- **Frontend direction:** learn whether the candidate broadly identifies with customer-facing web/mobile interfaces, product UI, or another frontend responsibility, only when this remains unclear from the CV/introduction.
-- **Backend direction:** learn whether the candidate broadly identifies with server-side services, data/API work, or another backend responsibility, only when this remains unclear from the CV/introduction.
-- Ask only about areas supported by the CV or introduced by the candidate. The goal is role alignment at recruiter level, not evaluating technical competence or technology depth.
-- Common HR fields—background, motivation, collaboration/work environment, availability, remote-Europe fit, compensation, English-use context, and candidate questions—remain the actual screening checklist regardless of vacancy.
-- If both vacancies are chosen, record both and keep one shared HR conversation. Do not ask one technical question per vacancy.
-- If no confirmed vacancy is chosen, use the same common HR fields, keep role matching unresolved, and mark human follow-up; do not assume the candidate is an engineer.
+- Ask only about high-level experience, responsibilities, motivation, and preferences supported by the CV or introduced by the candidate. Do not test competence or professional knowledge.
+- Common HR fields—background, motivation, collaboration/work environment, location/work-arrangement preference, availability, compensation expectation, candidate-stated English-use context where relevant, and candidate questions—remain the screening checklist for every role.
+- Compound/multiple-role wording remains one label and one shared HR conversation.
+- If the role is undecided, use the same common HR fields and keep the role insight unresolved; do not assume a profession.
 
-### Fixed employer answers
+### Employer and vacancy knowledge boundary
 
-The agent may answer only from this bundled synthetic context:
-
-- The company builds internal workflow products for distributed teams.
-- The confirmed openings are Frontend Developer and Backend Developer; both are full-time and remote within Europe.
-- No Full Stack opening is confirmed in the demo context. The agent may record Full Stack interest for human follow-up but may not promise that vacancy exists.
-- The team uses collaborative code review and lightweight agile delivery.
-- Both openings include structured onboarding, mentorship, and a learning budget.
-- The synthetic range for either confirmed opening is €40,000–€55,000 gross annually.
-- Details not in this list require human follow-up.
+The demo provides no employer-specific responsibilities, qualifications, salary band, benefits, reporting line, team size, work pattern, location requirement, or hiring timeline. The only safe statements are that the experience is a synthetic, session-only first-stage HR screening demo and that the candidate's bounded role label is being used as the synthetic vacancy for that session. Every unsupported employer or vacancy question requires a concise human follow-up; the interviewer must not infer facts from the role label, CV, or general industry knowledge.
 
 ### Safety rules
 
@@ -1050,7 +1044,6 @@ The backend receives:
 
 ```ts
 type AnalyzeCvRequest = {
-  vacancyCatalogKey: "demo-engineering";
   cvText: string; // 500–40,000 normalized characters
   clientRequestId: string;
   turnstileToken: string; // one-time, memory-only; expected action: cv_analyze
@@ -1077,10 +1070,14 @@ type NormalizedCv = {
     description: string;
     evidenceExcerpt?: string;
   }>;
+  suggestedRole: {
+    label: string;
+    cvFactIds: string[];
+  } | null;
 };
 ```
 
-`displayName` and every other candidate value must be supported by the uploaded CV or be `null`/unclear. The model must not substitute sample-fixture values. No field may contain personality, emotion, honesty, accent, protected-trait inference, employability, score, or hiring recommendation.
+`displayName` and every other candidate value must be supported by the uploaded CV or be `null`/unclear. `suggestedRole`, when present, contains one bounded role label backed by at least one validated `cvFactId`; it is a non-binding conversation suggestion, not an application or vacancy claim. Application-claim validation is role-agnostic and covers `apply` inflections with `for`, `to`, or `as`; active or passive submitted-application wording with or without an explicit target; and candidate/applicant/possessive application wording such as a pending application for an arbitrary role. Assessment validation rejects general suitability evaluation, role/profession/domain knowledge tests, quizzes, exercises or assessments, and simulation/scenario/roleplay assessment directions. These checks remain context-sensitive: ordinary grounded CV evidence may mention a portfolio, competency, domain knowledge, past work/training simulations, applied machine learning, or software/role-based application terminology without being treated as an assessment or application claim. The model must not substitute sample-fixture values. No field may contain personality, emotion, honesty, accent, protected-trait inference, employability, score, hiring recommendation, portfolio review, competency testing, roleplay, professional-knowledge assessment, or profession-specific suitability assessment.
 
 ### Screening-plan output
 
@@ -1089,19 +1086,17 @@ type ScreeningPlan = {
   entryMode: "cv_assisted" | "conversation_first";
   openingIntent: string;
   branch: "graduate" | "experienced" | "mixed" | "discovery";
-  vacancyClarification: {
-    confirmedVacancyKeys: Array<"frontend-developer" | "backend-developer">;
-    suggestedVacancyKey: "frontend-developer" | "backend-developer" | null;
+  roleClarification: {
+    suggestedRole: string | null;
     reason: string;
     cvFactIds: string[];
     requiresCandidateConfirmation: true;
   };
   topics: Array<{
-    key: string;
+    key: ScreeningFieldKey;
     title: string;
     reason: string;
     cvFactIds: string[];
-    applicableVacancyKeys: Array<"frontend-developer" | "backend-developer">;
     intent: string;
     coverageCriteria: string[];
     followupDirections: string[];
@@ -1114,7 +1109,7 @@ type ScreeningPlan = {
     | "relevant_experience_summary"
     | "team_work_style"
     | "motivation_and_next_role"
-    | "remote_europe_fit"
+    | "location_work_arrangement"
     | "availability"
     | "compensation_expectation"
     | "english_use_context"
@@ -1123,34 +1118,35 @@ type ScreeningPlan = {
 };
 ```
 
-The backend validates fact references and strips unsupported fields before returning it. `openingIntent`, `intent`, `coverageCriteria`, and `followupDirections` describe what the conversation should learn and possible directions for a grounded follow-up; they never contain a sentence the live agent must recite. An empty `applicableVacancyKeys` array means the topic is common to both branches. `suggestedVacancyKey` is only a grounded CV-assisted conversation hint; it is always `null` for conversation-first, never mutates `DemoSession.rolePreference`, and cannot claim the candidate applied to that vacancy.
+The backend validates fact references and strips unsupported fields before returning it. Both prepared plan types expose each of the 12 universal `ScreeningFieldKey` topics exactly once. `fixedTopics` identifies the 11 ordinary required topics; `clarifications_and_followups` remains in `topics` with `required: false` so genuine contradictions, missing logistics, or unsupported employer/vacancy questions can be retained without forcing an unnecessary question. `openingIntent`, `intent`, `coverageCriteria`, and `followupDirections` describe what the conversation should learn and possible directions for a grounded follow-up; they never contain a sentence the live agent must recite. Every topic is universal rather than tied to a profession. `roleClarification.suggestedRole` is only a grounded CV-assisted conversation hint; it is always `null` for conversation-first, never mutates `DemoSession.rolePreference`, and cannot claim the candidate applied to a role or that a real vacancy exists.
 
 ### Deterministic conversation-first plan
 
-`POST /v1/interview/prepare` returns a versioned server-owned `ScreeningPlan` with `entryMode: "conversation_first"`, `branch: "discovery"`, no CV fact IDs, no suggested vacancy, and both dormant vacancy topic branches. Its required topics are:
+`POST /v1/interview/prepare` returns a versioned server-owned `ScreeningPlan` with `entryMode: "conversation_first"`, `branch: "discovery"`, no CV fact IDs, no suggested role, and no profession-specific branches. Its required topics are:
 
 1. Preferred name.
-2. Open-ended position being applied for at **our company**.
+2. Open-ended role to use as the synthetic session vacancy, or an undecided state.
 3. Current work/study context plus a synthesized view of broad responsibilities, relevant experience, and strongest self-described areas.
 4. One general team/work-style preference when it has not already emerged.
 5. Motivation and what the candidate wants from the next role.
-6. Remote-Europe work-pattern fit, availability, and compensation expectation or decline.
+6. Location/work-arrangement preference, availability, and compensation expectation or decline.
 7. Candidate-stated English-use context when not already learned naturally, candidate questions, and close.
 
-This plan is ordinary validated application data, not model-generated content. It requires no OpenAI call, never fabricates candidate facts, and becomes more specific only through final candidate turns and live client-tool updates. Frontend/Backend metadata may change relevance and wording, but it may add no implementation, architecture, API, debugging, testing, or framework-depth requirement.
+Every conversation-first plan also contains the optional `clarifications_and_followups` topic with `required: false`. It is used only when a real unresolved item exists and never creates a routine extra question.
+
+This plan is ordinary validated application data, not model-generated content. It requires no OpenAI call, never fabricates candidate facts, and becomes more specific only through final candidate turns and live client-tool updates. Candidate experience/status may change ordering, phrasing, or clarification depth; the profession may not add technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
 
 ### Conversation-confirmed role preference
 
 ```ts
 type RolePreference = {
-  requestedLabel: string; // candidate's own wording, for example "Full Stack"
-  screeningVacancyKeys: Array<"frontend-developer" | "backend-developer">; // zero unresolved, one focused, two both
-  status: "confirmed" | "unavailable_requested" | "undecided";
+  label: string | null; // shared normalized 1–120-character candidate label; null when undecided
+  status: "candidate_stated" | "undecided";
   evidenceTurnIds: string[];
 };
 ```
 
-This value is created or corrected only from a final candidate transcript turn and validated `recordInsight`/`correctInsight` client-tool event. It may influence later questions immediately, but it never creates a vacancy or changes the fixed catalogue.
+This value is created or corrected only from a final candidate transcript turn and validated `recordInsight`/`correctInsight` client-tool event. A non-empty label becomes the synthetic vacancy for the current browser session only; it does not claim a real opening or application. Compound/multiple-role wording remains one label, and corrections replace the current value without selecting another workflow.
 
 ### Stateless interview grant
 
@@ -1178,8 +1174,8 @@ Limits: maximum 160 turns, 30,000 transcript characters, 24 insights, and 16 top
 type ScreeningSummary = {
   overview: string;
   rolePreference?: {
-    requestedLabel: string;
-    screeningVacancyKeys: Array<"frontend-developer" | "backend-developer">;
+    label: string | null;
+    status: "candidate_stated" | "undecided";
     evidenceTurnIds: string[];
   };
   confirmedFacts: Array<{ statement: string; evidenceTurnIds: string[] }>;
@@ -1195,7 +1191,7 @@ type ScreeningSummary = {
 };
 ```
 
-The summary cannot add facts without local transcript evidence. It must distinguish a candidate's requested role from the confirmed vacancy used to anchor the screening and must not turn Full Stack interest into an available opening. Communication notes describe observable behavior such as “asked for clarification before answering,” never proficiency grades or personality labels.
+The summary cannot add facts without local transcript evidence. It reports the candidate-authored role label or undecided state as synthetic session context and must not imply a real vacancy or application. Communication notes describe observable behavior such as “asked for clarification before answering,” never proficiency grades or personality labels.
 
 ---
 
@@ -1240,7 +1236,7 @@ screen-pilot/
 │        ├─ http/           # routes, middleware, response/error mapping
 │        ├─ use-cases/      # bootstrap, preparation, analysis, token, summary
 │        ├─ providers/      # OpenAI, ElevenLabs, Turnstile adapters
-│        ├─ demo/           # server-owned catalogue and deterministic plan
+│        ├─ demo/           # server-owned role-neutral disclosure and deterministic plan
 │        ├─ security/       # signed grant and anonymous-cookie boundaries
 │        ├─ config/         # validated server configuration
 │        ├─ ai/prompts/     # source-controlled interviewer prompt
@@ -1344,7 +1340,7 @@ screen-pilot/
 │  │  ├─ vitest.config.ts                        # SP-002
 │  │  ├─ public/
 │  │  │  └─ fixtures/
-│  │  │     └─ screenpilot-sample-cv.pdf         # SP-007
+│  │  │     └─ screenpilot-sample-cv.pdf         # SP-007/SP-010A
 │  │  └─ src/
 │  │     ├─ app/
 │  │     │  ├─ layout.tsx                        # SP-001; final shell SP-005
@@ -1487,10 +1483,9 @@ screen-pilot/
 │        │  ├─ create-voice-token.ts             # SP-014
 │        │  └─ generate-interview-summary.ts     # SP-020
 │        ├─ demo/
-│        │  ├─ vacancy-catalogue.ts              # SP-007
-│        │  ├─ employer-faq.ts                   # SP-007
-│        │  ├─ conversation-first-plan.ts        # SP-007
-│        │  └─ demo-content.test.ts               # SP-007
+│        │  ├─ role-neutral-demo-context.ts      # SP-010A
+│        │  ├─ conversation-first-plan.ts        # SP-007/SP-010A
+│        │  └─ demo-content.test.ts               # SP-007/SP-010A
 │        ├─ providers/
 │        │  ├─ openai/
 │        │  │  ├─ openai-client.ts              # SP-003
@@ -1524,20 +1519,20 @@ screen-pilot/
 │        ├─ api/
 │        │  ├─ public-runtime-config.ts          # SP-003
 │        │  ├─ error-envelope.ts                 # SP-006/SP-009
-│        │  ├─ bootstrap.ts                      # SP-006/SP-009
-│        │  ├─ cv-analysis.ts                    # SP-006/SP-010
-│        │  ├─ interview-preparation.ts          # SP-006/SP-009
+│        │  ├─ bootstrap.ts                      # SP-006/SP-009/SP-010A
+│        │  ├─ cv-analysis.ts                    # SP-006/SP-010/SP-010A
+│        │  ├─ interview-preparation.ts          # SP-006/SP-009/SP-010A
 │        │  ├─ voice-token.ts                    # SP-006/SP-014
 │        │  └─ interview-summary.ts              # SP-006/SP-020
 │        ├─ interview/
 │        │  ├─ entry-mode.ts                     # SP-006
-│        │  ├─ employer-context.ts               # SP-006/SP-007
-│        │  ├─ normalized-cv.ts                  # SP-006
-│        │  ├─ screening-plan.ts                 # SP-006
+│        │  ├─ demo-context.ts                   # SP-010A
+│        │  ├─ normalized-cv.ts                  # SP-006/SP-010A
+│        │  ├─ screening-plan.ts                 # SP-006/SP-010A
 │        │  ├─ transcript-turn.ts                # SP-006
 │        │  ├─ insight-card.ts                   # SP-006
 │        │  ├─ topic-progress.ts                 # SP-006
-│        │  └─ screening-summary.ts              # SP-006
+│        │  └─ screening-summary.ts              # SP-006/SP-010A
 │        ├─ client-tools/
 │        │  └─ insight-tools.ts                  # SP-016
 │        └─ ai/
@@ -1547,14 +1542,15 @@ screen-pilot/
 │  └─ fixtures/
 │     ├─ cv/
 │     │  ├─ fixture-manifest.json                # SP-007
-│     │  ├─ screenpilot-sample-cv.expected.txt   # SP-007
+│     │  ├─ screenpilot-sample-cv.expected.txt   # SP-007/SP-010A
 │     │  ├─ graduate.txt                         # SP-007
 │     │  ├─ experienced.txt                      # SP-007
-│     │  ├─ frontend-leaning.txt                 # SP-007
-│     │  ├─ backend-leaning.txt                  # SP-007
-│     │  ├─ mixed-full-stack.txt                 # SP-007
-│     │  ├─ correction.txt                       # SP-007
-│     │  └─ prompt-injection.txt                 # SP-007
+│     │  ├─ graphic-designer.txt                 # SP-010A
+│     │  ├─ customer-support.txt                 # SP-010A
+│     │  ├─ product-manager.txt                  # SP-010A
+│     │  ├─ backend-developer.txt                # SP-010A; ordinary role
+│     │  ├─ full-stack-developer.txt             # SP-010A; no redirection
+│     │  └─ prompt-injection.txt                 # SP-007/SP-010A
 │     ├─ pdf/
 │     │  ├─ empty.pdf                            # SP-008
 │     │  ├─ image-only.pdf                       # SP-008
@@ -1563,7 +1559,8 @@ screen-pilot/
 │     ├─ transcripts/
 │     │  ├─ interviewer-policy-cases.json        # SP-017; test-only cases
 │     │  ├─ conversation-first.json              # SP-017/SP-020
-│     │  └─ cv-assisted-correction.json          # SP-017/SP-020
+│     │  ├─ cv-assisted-correction.json          # SP-017/SP-020
+│     │  └─ role-neutral-scenarios.json          # SP-010A/SP-017/SP-020
 │     └─ provider-events/
 │        ├─ elevenlabs-provisional.json          # SP-015
 │        ├─ elevenlabs-final.json                # SP-015
@@ -1596,7 +1593,7 @@ The tree is intentionally explicit but not a mandate to split trivial logic into
 | Express-only validation/middleware/response mapping | `apps/backend/src/http` | `http/routes/cv-analyze.routes.ts` |
 | Product orchestration independent of Express and SDK payloads | `apps/backend/src/use-cases` | `use-cases/analyze-cv.ts` |
 | External API/SDK translation or a deterministic fake | `apps/backend/src/providers/<provider>` | `providers/openai/openai-cv-analyzer.ts` |
-| Fixed server-owned employer/vacancy/plan content | `apps/backend/src/demo` | `demo/vacancy-catalogue.ts` |
+| Server-owned synthetic-demo disclosure and universal plan content | `apps/backend/src/demo` | `demo/role-neutral-demo-context.ts` |
 | Signing, cookies, rate limits, or spend gates | `apps/backend/src/security` | `security/interview-grant.ts` |
 | A test for one module | beside that module | `session-storage.test.ts` |
 | A reusable synthetic/adversarial input | `tests/fixtures/<kind>` | `cv/prompt-injection.txt` |
@@ -1615,7 +1612,7 @@ apps/backend  ──┘
 - `packages/contracts` is the only internal workspace library at demo start. It is browser-safe and may depend on Zod, but never on React, Next.js, Express, Node-only APIs, environment readers, provider SDKs, application code, or candidate fixtures.
 - `apps/frontend` and `apps/backend` never import each other, including through relative paths, TypeScript path aliases, test shortcuts, or package subpaths. They communicate through relative `/v1` HTTP calls and shared contracts.
 - Only values that actually cross an HTTP, client-tool, or structured-provider boundary belong in `packages/contracts`. Frontend-only workflow stages, persistence envelopes, component props, and browser runtime state stay in `apps/frontend/src/features/session`; server configuration, grants, provider payload mapping, and deterministic plan content stay in the backend.
-- Public employer/vacancy content and the conversation-first plan are server-owned under `apps/backend/src/demo`. The frontend obtains public content through `GET /v1/demo/bootstrap`; it does not keep a hardcoded mirror.
+- The role-neutral synthetic-demo disclosure and deterministic conversation-first plan are server-owned under `apps/backend/src/demo`. The frontend obtains the disclosure through `GET /v1/demo/bootstrap` and the plan through `POST /v1/interview/prepare`; it does not keep a hardcoded mirror, catalogue, opening, employer facts, or preselected role.
 - The bundled sample PDF is a frontend public fixture. Expected extraction text and adversarial variants live under `tests/fixtures`; production code never imports the test fixture tree.
 - Feature code may import its own internals, the deliberately small frontend `shared` areas, and the public `@screenpilot/contracts` exports. It may not deep-import another feature's private files. Add a narrow feature entry point only when another feature has a real dependency on it.
 - Avoid root or package-wide barrel files that expose internals. Use explicit subpath exports for stable contract groups and direct module imports inside each application.
@@ -2056,15 +2053,20 @@ Validates required configuration is present without spending provider credits or
 
 Purpose:
 
-- Return the public unnamed-employer context, two-item vacancy catalogue, feature flags, limits, and public privacy text version.
+- Return the role-agnostic synthetic-demo disclosure, feature flags, limits, and public privacy text version without a finite role list or employer/vacancy facts.
 - Set/refresh a signed, short-lived, content-free anonymous safety cookie.
 
 Response:
 
 ```ts
+type PublicRoleNeutralDemoContext = {
+  kind: "role_agnostic_first_stage_hr_screen";
+  roleAvailability: "candidate_selected_synthetic_session_vacancy";
+  employerFactsAvailable: false;
+};
+
 type BootstrapResponse = {
-  employer: PublicEmployerContext;
-  vacancies: PublicVacancySnapshot[];
+  demoContext: PublicRoleNeutralDemoContext;
   limits: {
     pdfBytes: 5_242_880;
     pdfPages: 8;
@@ -2092,12 +2094,12 @@ Controls:
 - Fresh Turnstile token with expected `cv_analyze` action.
 - Best-effort backend route/source limit.
 - Text length/printability/language sanity.
-- Fixed vacancy-catalogue key only; the request cannot create or alter vacancies.
+- No vacancy catalogue or browser-supplied employer facts; any suggested role is bounded, evidence-linked, and non-binding.
 - Prompt-injection-safe developer instructions.
 - GPT-5.4 mini allow-list, reasoning `none`, structured output, `store: false`.
 - One internal retry for invalid structured output, not for every provider error.
 
-Returns `NormalizedCv`, `ScreeningPlan` with non-binding vacancy alignment, `interviewGrant`, expiration, and coarse usage/cost metadata.
+Returns `NormalizedCv`, `ScreeningPlan` with an optional non-binding evidence-linked role suggestion, `interviewGrant`, expiration, and coarse usage/cost metadata.
 
 ### `POST /v1/interview/prepare`
 
@@ -2108,14 +2110,13 @@ Request:
 ```ts
 type PrepareInterviewRequest = {
   entryMode: "conversation_first";
-  vacancyCatalogKey: "demo-engineering";
   clientRequestId: string;
 };
 ```
 
 Controls:
 
-- Validate origin, anonymous safety cookie, schema, fixed entry mode, fixed catalogue key, request size, and best-effort backend route/source limit.
+- Validate origin, anonymous safety cookie, schema, fixed entry mode, request size, and best-effort backend route/source limit.
 - Load the versioned deterministic discovery intent/coverage plan from server-owned fixtures; never accept question strings, prompts, provider IDs, or tool definitions from the browser.
 - Make no OpenAI or ElevenLabs request and return no candidate facts.
 
@@ -2129,7 +2130,7 @@ type PrepareInterviewResponse = {
 };
 ```
 
-The route uses `Cache-Control: no-store`. The signed grant binds `conversation_first`, the catalogue, plan version/hash, expiry, and anonymous-session correlation without storing a server session.
+The route uses `Cache-Control: no-store`. The signed grant binds `conversation_first`, plan version/hash, expiry, and anonymous-session correlation without storing a server session or copying candidate role text into the token.
 
 ### `POST /v1/voice/token`
 
@@ -2194,7 +2195,7 @@ Required stable codes include `INVALID_ENTRY_MODE`, `INVALID_CV_TEXT`, `INTERVIE
 | Live interviewer | OpenAI GPT-5.4 mini via ElevenAgents | Next utterance and allow-listed client-tool decisions. |
 | Speech synthesis | ElevenLabs Flash v2.5 | Text to streamed agent voice. |
 | CV analysis/tailored plan and summary | OpenAI GPT-5.4 mini via backend Responses API | Structured, stateless intelligence; CV analysis runs only in CV-assisted mode, while summary runs for both. |
-| Conversation-first plan | ScreenPilot backend fixture | Deterministic generic discovery sequence and both vacancy branches; no pre-call model charge. |
+| Conversation-first plan | ScreenPilot backend fixture | Deterministic universal HR discovery/coverage with no profession-specific branch; no pre-call model charge. |
 | UI/session state | ScreenPilot frontend | Local transcript, insights, stages, and review. |
 
 “ElevenLabs plus GPT usage” means voice minutes and model tokens are separate cost components. ElevenLabs is not only transcription in this design: it runs the real-time audio loop, turn-taking, and TTS, while GPT supplies interview language and tool decisions.
@@ -2388,7 +2389,7 @@ Cloudflare Turnstile therefore adds **$0** to the planned demo cost. It is indep
 These sources informed failure scenarios and implementation patterns, but community claims remain anecdotal and never override provider documentation or measured ScreenPilot tests:
 
 - [Workable phone-screening questions](https://resources.workable.com/phone-screening-interview-questions) and [phone-screen guidance](https://resources.workable.com/stories-and-insights/phone-screen-interview) support keeping the first screen focused on high-level background, interest, expectations, availability, and CV clarification while leaving technical and in-depth questioning for later stages.
-- [Greenhouse interview-template guidance](https://www.greenhouse.com/blog/interview-questions-template) supports using structured competencies and high-level-fit goals as guides rather than forcing interviewers through a word-for-word script.
+- [Greenhouse interview-template guidance](https://www.greenhouse.com/blog/interview-questions-template) supports consistent intent-based structure rather than a word-for-word script; ScreenPilot narrows that principle to universal first-stage HR intents and explicitly excludes competency or suitability assessment.
 - [Indeed teamwork-question guidance](https://www.indeed.com/career-advice/interviewing/are-you-a-team-player) informed the open team/work-style directions; ScreenPilot asks candidates to describe collaboration preferences rather than inviting an automatic yes/no **team player** answer.
 - [LiveKit homepage voice-agent architecture](https://github.com/livekit/agents/blob/main/examples/homepage/README.md) keeps authored prompts in Markdown, separates low-latency inline knowledge from on-demand lookups, and pairs deterministic tests with live evals.
 - [OpenAI's shipped Codex realtime backend prompt](https://github.com/openai/codex/blob/main/codex-rs/prompts/templates/realtime/backend_prompt.md) demonstrates a concise identity/tone block, sparing name use, and direct next-step language.
@@ -2545,7 +2546,7 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 
 - Warm White canvas with a soft coral/pale-coral atmospheric gradient behind the hero.
 - Hero copy occupies no more than two lines at desktop width and retains a strong, balanced hierarchy at narrow mobile widths.
-- Vacancy context card looks like structured context supplied to the AI, not a job-board listing or selectable vacancy form.
+- Role-neutral synthetic-demo context card explains that a candidate-stated role becomes a session-only demo vacancy. It is disclosure/context supplied to the AI, not a job-board listing, catalogue, selectable opening, employer-fact card, or preselected role.
 - Two equal entry-mode cards appear above the fold: **Use a CV** and **Start without a CV**. Neither is rendered as a small secondary link.
 - The CV card previews focused, evidence-grounded discussion areas and contains Upload plus Use sample actions. The conversation card previews fast open discovery and contains one Start action. Neither card promises or displays a fixed question script.
 - Comparison copy is concise and non-competitive; it explains preparation differences while promising the same live/review quality.
@@ -2723,7 +2724,7 @@ Create one polished product-design concept board for ScreenPilot, a browser-base
 
 Follow the approved “Signal Canvas” visual language exactly: precise, calm, modern, transparent, technically credible, and candidate-friendly; Deep Ink Navy ink-950 (#18243A) interview canvas; raised ink-900 (#22314B) surfaces; Warm Coral coral-500 (#F26B5B) brand and live signal paired with Deep Ink text; action coral-700 (#CC493F) for filled controls with White text; Pale Coral coral-100 (#FDE8E4) selected/soft accents; Warm White paper-50 (#FAFAF8) and White paper-0 (#FFFFFF); Cool Gray line-200 (#E4E7EC) for quiet card borders, stronger line-strong (#7D899B) for interactive boundaries, and Slate slate-500 (#667085) for secondary text. Keep status colors separate: green confirmed, amber clarification, and red error/end attention. Use Geist-like sans typography with mono metadata; 8 px spacing rhythm; 12 px controls, 18–22 px cards, 28 px main canvas; subtle borders and sparse soft elevation; limited accessible glass only around the live interview overlay; restrained Lucide-like line icons. Avoid neon cyberpunk, robots, stock photos, generic HR dashboards, decorative analytics charts, excessive glow, and excessive glassmorphism.
 
-Depict Pilot, ScreenPilot's AI interviewer, interviewing a synthetic candidate for the unnamed demo company, Remote within Europe. The company has confirmed Frontend Developer and Backend Developer openings. The candidate is using conversation-first mode, initially asked about Full Stack, has just chosen Frontend as the screening anchor, and has also stated an expected salary of €48,000–€52,000 and B2 English proficiency. Show a clearly listening coral Pilot voice signal, Pilot status using the exact visible phrases “Pilot is interviewing” and “Pilot is listening…”, readable live caption, elapsed timer, a mute control whose action/state reads **Mute — Microphone on**, an **End interview** control, a subtle Conversation-first mode badge, and an insight area containing candidate-sourced cards for role preference (“Requested Full Stack; screening against Frontend”), compensation expectation, English proficiency, availability, and relevant frontend experience. Mark only role preference, compensation, and B2 English as confirmed, using both text/icon and green status color with caption-evidence cues. Availability must read **Not confirmed yet** and relevant frontend experience must read **Not discussed yet**; both use the amber **Needs clarification** state and neither claims caption evidence. Do not invent a company or candidate name. Do not use “AI” as the visible interviewer label, and do not show hiring scores, rankings, pass/fail decisions, sentiment, emotion, login, recruiter navigation, job management, pause, phone controls, device chrome, or unsupported features.
+Depict Pilot, ScreenPilot's AI interviewer, interviewing a synthetic candidate in a role-agnostic first-stage HR demo. The candidate is using conversation-first mode and has stated “Graphic Designer,” which is shown as the synthetic session-only vacancy—not a real opening or application. They have also stated a compensation expectation and candidate-described English-use context. Show a clearly listening coral Pilot voice signal, Pilot status using the exact visible phrases “Pilot is interviewing” and “Pilot is listening…”, readable live caption, elapsed timer, a mute control whose action/state reads **Mute — Microphone on**, an **End interview** control, a subtle Conversation-first mode badge, and an insight area containing candidate-sourced cards for role preference (“Graphic Designer — synthetic demo role”), compensation expectation, English-use context, availability, and high-level relevant experience. Mark only role preference, compensation expectation, and English-use context as confirmed, using both text/icon and green status color with caption-evidence cues. Availability must read **Not confirmed yet** and relevant experience must read **Not discussed yet**; both use the amber **Needs clarification** state and neither claims caption evidence. Do not invent a company or candidate name, employer facts, responsibilities, qualifications, salary band, benefits, work pattern, or hiring timeline. Do not use “AI” as the visible interviewer label, and do not show hiring scores, rankings, pass/fail decisions, sentiment, emotion, login, recruiter navigation, job management, pause, phone controls, device chrome, or unsupported features.
 
 Desktop composition: full-height dark canvas; approximately 42% left voice/caption/control area and 58% right fixed-layout insight constellation; cards emerge visually from the voice area but never cover captions. Mobile composition: compact voice signal at top, readable captions, swipeable insight-card rail with one selected card expanded, and sticky safe-area-aware mute/end controls. Preserve the same content, status, actions, visual identity, and evidence meaning in both views rather than removing mobile features. All interactive targets should look at least 44 × 44 px and status must never rely on color alone.
 
@@ -2863,9 +2864,9 @@ Feature tickets add small tests for logic that is difficult or error-prone to va
 - Turnstile token memory-only handling plus missing, invalid, expired, duplicated, wrong-hostname, wrong-action, timeout, and successful Siteverify results; every failure proves the paid provider adapter was not called.
 - Prompt builder keeps CV text in delimited untrusted-data sections.
 - Live-interviewer prompt lint covers required section order, version/model metadata, bounded runtime placeholders, and no secret/internal-token interpolation.
-- Spoken-output fixture graders cover the 35-word ceiling, one-question limit, banned acknowledgement/praise openers, spoken formatting/tool narration, unsupported vacancy/CV claims, and immediate stop behavior.
-- Conversation-policy fixtures fail any implementation, API, architecture, debugging, testing, framework-trivia, or system-design question and any second role-context clarification in the same screen.
-- Vacancy-alignment output remains non-binding, and role-preference reducer updates require a final candidate evidence turn.
+- Spoken-output fixture graders cover the 35-word ceiling, one-question limit, banned acknowledgement/praise openers, spoken formatting/tool narration, unsupported employer/vacancy/CV claims, and immediate stop behavior.
+- Conversation-policy fixtures fail any technical, portfolio, competency, roleplay, professional-knowledge, suitability, implementation, API, architecture, debugging, testing, framework-trivia, or system-design question and any second role-context clarification in the same screen.
+- CV role suggestions remain evidence-linked and non-binding, and role-preference reducer updates require a final candidate evidence turn.
 - Summary evidence references cannot point to missing turns.
 - Log redaction.
 
@@ -2885,35 +2886,37 @@ These tests run against provider fakes and are invoked by package/file when rele
 Before deployment, manually verify:
 
 1. Sample CV → analysis → plan preview.
-2. Uploaded text PDF → materially different facts/topics and non-binding vacancy alignment.
+2. Uploaded text PDF → materially different facts/topics and an optional non-binding evidence-linked role suggestion.
 3. Conversation-first → deterministic preparation → shared preflight with no upload, CV UI, CV analysis charge, or plan preview.
-4. Conversation-first uses the one configured name opener, then generates a plain open target-position question before offering catalogue clarification; acceptance is based on intent and tone, not exact wording.
+4. Conversation-first uses the one configured name opener, then generates a plain open role question with synthetic/session-only framing and no catalogue; acceptance is based on intent and tone, not exact wording.
 5. Conversation-first insight board starts open, fills only from candidate turns, and uses learned facts to make later questions less generic.
 6. Missing or incorrect extracted/spoken name is handled conversationally without sample-placeholder leakage.
-7. Suggested-vacancy confirmation and opposite-vacancy correction both update later questions immediately.
-8. Full Stack request is recorded transparently, followed by a concise choice between covering Frontend, Backend, or both; declining both produces a role-neutral screen plus human follow-up.
-9. Invalid/image-only PDF local rejection does not affect conversation-first.
-10. Consent, microphone, and Turnstile readiness gates prevent premature voice-token requests in both modes; a legitimate visitor normally sees no puzzle.
-11. Fake or controlled live voice → captions → insight cards → review in both modes.
-12. Candidate correction updates rather than duplicates a card.
-13. Mid-call disconnect preserves partial review.
-14. Summary failure preserves transcript/insights and can retry.
-15. Refresh between safe stages restores local state; refresh during a call does not reconnect.
-16. Clear session removes browser candidate content.
-17. Missing, invalid, replayed, expired, wrong-hostname, and wrong-action Turnstile tokens fail before paid provider calls; a fresh valid token recovers without losing the current CV text, transcript, or insight state as appropriate.
-18. Both complete flows remain visually aligned and functionally complete across phone, tablet, compact-laptop, laptop/desktop, large-monitor, and intermediate drag-resized widths.
-19. Mobile portrait/landscape, safe-area, virtual-keyboard, long-caption, and sticky-control behavior.
-20. Read representative agent turns aloud and verify routine replies are direct, normally 8–25 words, never over the normal 35-word limit, contain at most one question, and do not use canned acknowledgement or praise prefixes.
-21. Verify counterquestions are answered before the interview resumes, unclear audio produces clarification rather than an insight, and timing/interruptions are tuned through ElevenLabs settings rather than prompt filler.
-22. Verify a normal screen fills the prioritized HR fields in roughly 8–10 primary prompts, credits multi-field answers, asks no more than one broad role-context clarification, and never enters an implementation/testing/architecture follow-up chain.
+7. A CV-suggested Product Manager role is visibly non-binding; confirmation or correction updates later wording immediately.
+8. Graphic Designer, Customer Support Representative, Backend Developer, and Full Stack Developer are accepted identically; Full Stack is not redirected and Backend triggers no technical questions.
+9. Compound/multiple-role wording remains one label, a role correction replaces it, and an undecided candidate completes the same role-neutral screen.
+10. Unsupported employer/vacancy questions create human follow-up without invented facts or blocking completion.
+11. Invalid/image-only PDF local rejection does not affect conversation-first.
+12. Consent, microphone, and Turnstile readiness gates prevent premature voice-token requests in both modes; a legitimate visitor normally sees no puzzle.
+13. Fake or controlled live voice → captions → insight cards → review in both modes.
+14. Candidate correction updates rather than duplicates a card.
+15. Mid-call disconnect preserves partial review.
+16. Summary failure preserves transcript/insights and can retry.
+17. Refresh between safe stages restores local state; refresh during a call does not reconnect.
+18. Clear session removes browser candidate content.
+19. Missing, invalid, replayed, expired, wrong-hostname, and wrong-action Turnstile tokens fail before paid provider calls; a fresh valid token recovers without losing the current CV text, transcript, or insight state as appropriate.
+20. Both complete flows remain visually aligned and functionally complete across phone, tablet, compact-laptop, laptop/desktop, large-monitor, and intermediate drag-resized widths.
+21. Mobile portrait/landscape, safe-area, virtual-keyboard, long-caption, and sticky-control behavior.
+22. Read representative agent turns aloud and verify routine replies are direct, normally 8–25 words, never over the normal 35-word limit, contain at most one question, and do not use canned acknowledgement or praise prefixes.
+23. Verify counterquestions are answered before the interview resumes, unclear audio produces clarification rather than an insight, and timing/interruptions are tuned through ElevenLabs settings rather than prompt filler.
+24. Verify a normal screen fills the prioritized HR fields in roughly 8–10 primary prompts, credits multi-field answers, asks no more than one broad role-context clarification, and never enters a profession-specific assessment chain.
 
 ### Optional extended Playwright flows — SP-028
 
 1. Landing → sample CV → analysis → plan preview.
-2. Valid text PDF → different facts/topics and grounded vacancy-alignment hint.
+2. Valid text PDF → different facts/topics and an optional grounded role suggestion.
 3. Landing → conversation-first → deterministic preparation → preflight, proving CV stages and provider preparation calls were skipped.
-4. Conversation-first discovery → preferred name → open position question → progressively focused follow-ups → Candidate-only review.
-5. Fake voice role branches in both modes: confirm suggestion, choose opposite vacancy, request Full Stack then choose one, and decline both.
+4. Conversation-first discovery → preferred name → open synthetic-role question or undecided path → progressively focused follow-ups → Candidate-only review.
+5. Fake voice role scenarios in both modes: Graphic Designer, Customer Support Representative, CV-suggested Product Manager, Backend without technical questions, Full Stack without redirection, correction, compound wording, and undecided.
 6. Missing/incorrect-name conversational recovery.
 7. Invalid/image-only PDF local rejection.
 8. Consent/microphone gates prevent token request.
@@ -2928,12 +2931,15 @@ Before deployment, manually verify:
 
 ### Optional automated AI eval personas — SP-028
 
-- Conversation-first graduate who supplies preferred name, requests Full Stack, chooses Frontend as the screening anchor, and answers progressively deeper questions.
-- Junior developer who chooses Backend even though the CV alignment hint suggests Frontend.
-- Experienced developer whose CV is vague about recent responsibilities and whose preferred vacancy must be asked neutrally without technical interrogation.
+- Conversation-first graduate who supplies a preferred name, chooses Graphic Designer, and answers progressively deeper general-HR questions.
+- Customer Support Representative who receives no competency simulation or professional-knowledge test.
+- Candidate whose CV suggests Product Manager but who corrects the role during the call.
+- Backend Developer who receives no technical questions and Full Stack Developer who receives no redirection.
+- Candidate using compound/multiple-role wording and an undecided candidate who both complete one shared role-neutral screen.
+- Experienced candidate whose CV is vague about recent responsibilities and whose role must be asked neutrally without professional interrogation.
 - Candidate correcting an outdated CV claim.
 - Candidate declining compensation discussion.
-- Conversation-first candidate giving a broad “Software Engineer” answer and later asking an unsupported company question.
+- Conversation-first candidate who later asks an unsupported employer question and receives a human-follow-up boundary.
 - Candidate attempting to redirect the interview through instructions embedded in CV text.
 - Candidate asking to stop.
 
@@ -3132,6 +3138,8 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Outcome:** Completed on 2026-09-09 in implementation commit `f890bfb`. The demo has a coherent two-vacancy unnamed employer context, a deterministic conversation-first plan, evidence-rich CV cases, and a safe quick start.
 
+**Superseded product boundary:** The fixed catalogue, employer/vacancy facts, Remote-Europe policy, compensation range, dormant profession branches, and Full Stack unavailable path below are historical implementation facts only. SP-010A removed them from active behavior while preserving the still-valid deterministic-fixture, evidence, privacy, and dependency-boundary work.
+
 **Depends on:** SP-006.
 
 **Suggested commit:** `feat(demo): add vacancy catalogue and synthetic CV fixtures`
@@ -3168,7 +3176,9 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-009 — Build the backend foundation and conversation-first preparation](tickets/SP-009-build-backend-foundation-and-conversation-preparation.md)
 
-**Outcome:** The first complete backend slice boots safely and prepares a conversation-first interview without storage or provider calls.
+**Outcome:** Completed in implementation commit `db65b2c`. The first complete backend slice boots safely and prepares a conversation-first interview without storage or provider calls.
+
+**Superseded product boundary:** SP-009's fixed vacancy bootstrap, catalogue-bound grant, and dormant role branches below describe historical implementation, not the target product. SP-010A completed their role-neutral migration; the Express, statelessness, error, security, deterministic-preparation, and no-provider-call foundations remain authoritative.
 
 **Depends on:** SP-003, SP-006, SP-007.
 
@@ -3191,7 +3201,9 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 #### [SP-010 — Build the stateless CV-analysis endpoint](tickets/SP-010-build-stateless-cv-analysis-endpoint.md)
 
-**Outcome:** GPT turns bounded browser-extracted CV text into grounded facts and a focused plan without persistence.
+**Outcome:** Completed in implementation commit `744901e`. GPT turns bounded browser-extracted CV text into grounded facts and a focused plan without persistence.
+
+**Superseded product boundary:** Commit `744901e` implemented CV analysis against the then-current fixed catalogue. Its catalogue-key unions, vacancy-alignment fields, profession metadata, and universal employer facts are historical only. SP-010A replaced them with an optional fact-linked role-label suggestion and universal HR plan while retaining SP-010's validation, privacy, Turnstile, structured-output, repair, and no-store guarantees.
 
 **Depends on:** SP-003, SP-007, SP-009.
 
@@ -3211,11 +3223,29 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 SP-010 provides an injected fail-closed admission boundary and proves denials occur before Turnstile/OpenAI. The actual bounded TTL rate limiter, capacity/spend policy, and runtime wiring remain owned by SP-022; the SP-010 server default does not claim to enforce them yet.
 
+#### [SP-010A — Make every candidate-selected role an available synthetic demo vacancy](tickets/SP-010A-make-every-candidate-selected-role-available.md)
+
+**Outcome:** Every bounded non-empty candidate-stated role becomes the synthetic vacancy for that browser session, while undecided candidates complete an open role-neutral first-stage HR screen.
+
+**Depends on:** SP-006, SP-007, SP-009, SP-010.
+
+**Suggested commit:** `refactor(domain): make screening roles session-defined`
+
+**Checklist:**
+
+- [x] Replace fixed catalogue keys/unions and unavailable-role state with one bounded candidate-authored role label or explicit undecided state, backed by final-turn evidence.
+- [x] Remove the fixed role list, employer facts, Remote-Europe claim, universal compensation band, Full Stack redirection, and dormant profession branches from bootstrap, plans, grants, session state, and UI copy.
+- [x] Allow one optional CV `suggestedRole` only when backed by validated CV fact IDs; keep it non-binding and candidate-correctable.
+- [x] Make both entry modes use the same universal HR intents; experience/status may change conversational structure, but profession adds no technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
+- [x] Delimit role labels as bounded untrusted data and route unsupported employer/vacancy questions to human follow-up without inventing facts.
+- [x] Cover Graphic Designer, Customer Support Representative, CV-suggested Product Manager, Backend without technical questions, Full Stack without redirection, correction, compound wording, undecided, unsupported employer questions, and prompt injection with deterministic fakes only.
+- [x] Preserve statelessness, current-tab allow-list persistence, cleanup, Turnstile/provider ordering, logging redaction, and grant integrity; make no live or paid provider call.
+
 #### [SP-011 — Build the conversation-first frontend entry path](tickets/SP-011-build-conversation-first-frontend-path.md)
 
 **Outcome:** A visitor can choose the no-CV path, receive deterministic preparation, and reach the shared preflight boundary immediately.
 
-**Depends on:** SP-005, SP-006, SP-007, SP-009.
+**Depends on:** SP-005, SP-006, SP-007, SP-009, SP-010A.
 
 **Suggested commit:** `feat(frontend): add conversation-first entry`
 
@@ -3226,6 +3256,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Skip upload, extraction, AI-analysis, CV facts, and plan-preview stages entirely.
 - [ ] Ensure the mode creates no `cv` state, CV cards, CV source chips, fake facts, or pre-call model request.
 - [ ] Enter the shared preflight state with the deterministic plan, `interviewGrant`, and Conversation-first badge data.
+- [ ] Explain that any candidate-stated role is a synthetic session-only demo vacancy, offer an undecided path, and show no catalogue, unavailable state, or profession-specific branch.
 - [ ] Implement Back, retry, expiry, Clear-session, responsive, and keyboard behavior without redirecting to CV upload.
 - [ ] Add focused reducer/component/API tests proving mode isolation and no provider preparation call.
 
@@ -3233,7 +3264,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** Uploaded and sample CVs flow through local extraction, grounded analysis, and an explainable plan preview before reaching the same preflight boundary.
 
-**Depends on:** SP-005, SP-006, SP-008, SP-010, SP-011.
+**Depends on:** SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011.
 
 **Suggested commit:** `feat(frontend): add CV-assisted preparation`
 
@@ -3244,7 +3275,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Build the reusable managed Turnstile client boundary and execute it with action `cv_analyze` immediately before uploaded/sample CV analysis; keep the response token in memory only, show interaction only when required, and reset it after every attempt.
 - [ ] Call `POST /v1/cv/analyze` with the one-time token, then clear raw text after a validated response.
 - [ ] Build CV fact cards with evidence excerpts and linked CV-derived/fixed screening-topic cards.
-- [ ] Label vacancy alignment as **Suggested from CV — we will confirm during the call** and add no pre-call role picker.
+- [ ] Label an evidence-linked role hint as **Suggested from CV — confirm during the call**; allow any bounded profession label and add no pre-call role picker.
 - [ ] Add Continue and Start over only; no plan editor or regeneration workflow.
 - [ ] Enter the same shared preflight state with the tailored plan, `interviewGrant`, and CV-assisted badge data.
 - [ ] Handle local extraction, analysis, invalid schema, grant expiry, retry, and mode-aware Back behavior.
@@ -3263,6 +3294,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 **Checklist:**
 
 - [ ] Explain OpenAI/ElevenLabs transient AI/voice processing, Cloudflare Turnstile anti-abuse verification, no ScreenPilot recording, and session-only review without implying that Turnstile receives CV/interview content.
+- [ ] Disclose that a candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview remains role-neutral when undecided; show no role allow-list or employer facts.
 - [ ] Explain the selected context accurately: CV-derived facts for CV-assisted or answers-only discovery for conversation-first.
 - [ ] Implement unchecked consent and deliberate continuation.
 - [ ] Implement microphone permission, device label, and input meter.
@@ -3274,14 +3306,14 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** The browser can start only the locked private voice agent through the backend.
 
-**Depends on:** SP-003, SP-009, SP-010, SP-013.
+**Depends on:** SP-003, SP-009, SP-010, SP-010A, SP-013.
 
 **Suggested commit:** `feat(voice): connect private ElevenLabs WebRTC session`
 
 **Checklist:**
 
 - [ ] Configure Scribe v2 Realtime, GPT-5.4 mini reasoning none, and Flash v2.5.
-- [ ] Configure entry mode, unnamed employer/vacancy variables, bounded optional CV plus plan context, tool schemas, voice, turn-taking, interruption, timeout, and 8-minute duration; use dynamic variables rather than browser prompt replacement.
+- [ ] Configure entry mode, synthetic/session-only disclosure, bounded untrusted role context, bounded optional CV plus universal plan context, tool schemas, voice, turn-taking, interruption, timeout, and 8-minute duration; use dynamic variables rather than browser prompt replacement.
 - [ ] Configure the single short ElevenLabs first message and verify that every later interviewer question is model-generated from topic intent/state rather than frontend, backend, or provider question strings.
 - [ ] Configure and record the provider agent revision/model identifier, keep live reasoning/thinking disabled, and expose a conservative output-token ceiling for SP-017/SP-018 calibration without cutting tool calls.
 - [ ] Disable audio saving and set transcript retention to the shortest locked setting.
@@ -3310,7 +3342,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** The agent turns final candidate statements into validated local cards with evidence.
 
-**Depends on:** SP-005, SP-006, SP-015.
+**Depends on:** SP-005, SP-006, SP-010A, SP-015.
 
 **Suggested commit:** `feat(insights): visualize live interview understanding`
 
@@ -3321,6 +3353,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Implement a fixed desktop constellation and equally intentional mobile insight rail/expanded-card composition with the same information and states.
 - [ ] Implement card appearance, correction, clarification, and source chips.
 - [ ] Implement candidate-evidenced role-preference cards and synchronized `DemoSession.rolePreference` updates through the existing record/correct tools.
+- [ ] Preserve any bounded candidate role—including compound wording—as one inert label, support undecided/correction states, and use the same insight semantics for every profession.
 - [ ] Implement preferred-name capture/correction and synchronized `DemoSession.preferredName` updates without hardcoded candidate names.
 - [ ] Support separate evidence-grounded cards for current context, broad responsibility/strongest areas, and candidate-stated team/work style; never label a preference as a personality trait or culture-fit result.
 - [ ] Seed CV cards only in CV-assisted mode; start conversation-first fact cards empty and reject any `CV`/`CV + Candidate` source in that mode.
@@ -3333,7 +3366,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** GPT conducts a focused CV-assisted or open conversation-first screen, becomes more specific as evidence arrives, and uses tools consistently without unsafe hiring judgments.
 
-**Depends on:** SP-007, SP-011, SP-012, SP-014, SP-016.
+**Depends on:** SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016.
 
 **Suggested commit:** `feat(ai): implement screening conversation policy`
 
@@ -3343,17 +3376,17 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Structure the prompt in the locked Section 8 order with critical speech rules first, short Markdown bullets, bounded untrusted runtime context, exact decision order, tool/error behavior, guardrails, and varied examples plus labelled anti-examples.
 - [ ] Implement the one configured first-message exception, generated follow-up wording, name correction, conversational role clarification, and graduate/experienced/discovery branching without a hardcoded question bank.
 - [ ] In CV-assisted mode, ground focused verification questions in normalized facts/topic IDs and avoid re-asking known basics.
-- [ ] In conversation-first mode, generate a plain open target-position question, gather basic context naturally, and deepen later questions from candidate-evidenced insights without implying a CV exists; test intent and constraints rather than an exact sentence.
+- [ ] In conversation-first mode, generate a plain open synthetic-role question or support an undecided path, gather basic context naturally, and deepen later questions from candidate-evidenced insights without implying a CV or real application exists; test intent and constraints rather than an exact sentence.
 - [ ] Enforce the natural spoken-response contract: 8–25-word target, normal 35-word ceiling, one or two sentences, no spoken formatting/tool narration, no habitual acknowledgement or praise prefixes, no repeated assistant framing, and one question at a time.
-- [ ] Implement the candidate-counterquestion branch: when asked which positions exist before background is known, ask one inclusive recent-work/studies/skills discovery question, then separate tentative role interests from confirmed vacancies.
-- [ ] Adapt later questions immediately when the candidate chooses Frontend, Backend, or both without treating CV alignment as an applied role or forcing a false single-role preference.
-- [ ] Implement the transparent Full Stack/unavailable-vacancy response, correction path, both-openings path, and role-neutral fallback when neither confirmed opening is chosen.
-- [ ] Add fixed unnamed-company/vacancy-answer boundaries and human-follow-up behavior.
+- [ ] Implement the candidate-counterquestion branch: explain the synthetic role-agnostic demo, ask for any role or offer an undecided path, and never invent an employer opening.
+- [ ] Adapt wording immediately to any bounded candidate role while keeping one universal HR intent set and treating a CV suggestion as non-binding.
+- [ ] Implement correction, compound/multiple-role, and undecided paths without allow-list lookup, Full Stack redirection, or profession-specific branching.
+- [ ] Add the strict no-employer-facts knowledge boundary and concise human-follow-up behavior.
 - [ ] Define when to record/correct insights and mark topics.
 - [ ] Implement the prioritized `ScreeningFieldState` checklist so one candidate answer can fill several fields and the next prompt targets only the highest-value missing HR field.
-- [ ] Encode Section 8's complete non-technical HR intent library and selection rules in the source-controlled prompt guidance: background/experience, role direction, team/work style, motivation, practical logistics, and closing. Preserve every documented example as approved tone guidance without turning examples into a frontend/backend question bank or exact-match script.
+- [ ] Encode Section 8's complete universal HR intent library and selection rules in the source-controlled prompt guidance: background/experience, role direction, team/work style, motivation, practical logistics, and closing. Preserve every documented example as approved tone guidance without turning examples into a profession-specific question bank or exact-match script.
 - [ ] Synthesize `relevant_experience_summary` from recent context, broad responsibilities, strongest self-described areas, and role relevance instead of asking for an abstract summary; capture `team_work_style` separately from candidate evidence and prohibit personality/culture-fit inference.
-- [ ] Enforce the normal 8–10-prompt budget, at most one broad role-context clarification across the call, and no technical follow-up chain even when the candidate volunteers implementation detail.
+- [ ] Enforce the normal 8–10-prompt budget, at most one broad role-context clarification across the call, and no technical, portfolio, competency, roleplay, professional-knowledge, or suitability chain for any role.
 - [ ] Implement the exact per-turn decision order for stop, unclear input, corrections, candidate counterquestions, evidence/tool eligibility, grounded next-topic choice, and response generation.
 - [ ] Keep system-prompt responsibilities separate from ElevenLabs turn-taking/interruption/TTS settings; do not use routine LLM filler words to hide platform or tool latency.
 - [ ] Enforce one question at a time, uncertainty behavior, stop requests, fixed knowledge boundaries, and safety exclusions.
@@ -3401,7 +3434,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** GPT organizes local evidence into cautious recruiter-readable notes without saving it.
 
-**Depends on:** SP-009, SP-010, SP-017, SP-019.
+**Depends on:** SP-009, SP-010, SP-010A, SP-017, SP-019.
 
 **Suggested commit:** `feat(backend): summarize local interview evidence`
 
@@ -3412,6 +3445,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Enforce entry-mode/plan/grant/source consistency and reject CV-sourced content in conversation-first summaries.
 - [ ] Use GPT-5.4 mini structured output, reasoning none, and `store: false`.
 - [ ] Require all factual claims to cite existing local turn IDs.
+- [ ] Report one candidate-stated role label or undecided state as synthetic session context; never claim a real vacancy/application or infer employer facts, job requirements, or professional suitability.
 - [ ] Produce distinct evidence-grounded notes for current/recent context, broad responsibilities/strongest areas, and candidate-stated team/work style when present; do not invent missing subfields or turn preferences into personality judgments.
 - [ ] Forbid scores, decisions, sentiment, personality, and unsupported proficiency labels.
 - [ ] Validate/repair one malformed output and return limitations.
@@ -3421,7 +3455,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** The demo ends with a polished local result and an explicit privacy exit.
 
-**Depends on:** SP-005, SP-006, SP-019, SP-020.
+**Depends on:** SP-005, SP-006, SP-010A, SP-019, SP-020.
 
 **Suggested commit:** `feat(review): complete disposable session review`
 
@@ -3429,6 +3463,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 - [ ] Build overview, facts, clarifications, coverage, questions, follow-ups, and limitations sections.
 - [ ] Show the entry mode and correct evidence provenance; conversation-first review never claims CV verification.
+- [ ] Show any candidate-authored role or undecided state without supported-role, unavailable-vacancy, real-opening, or application language; surface unsupported employer questions as human follow-up.
 - [ ] Preserve transcript/insights when summary fails and offer Retry.
 - [ ] Execute a fresh managed Turnstile `interview_summary` check immediately before summary generation; keep the token in memory only, preserve all local evidence if it fails, and reset it before Retry.
 - [ ] Implement evidence scrolling, Copy summary, and Clear session.
@@ -3502,7 +3537,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** The complete demo is manually approved across phone, tablet, compact-laptop, laptop/desktop, and large-monitor layouts and passes the fast essential checks without requiring the extended automation suite.
 
-**Depends on:** SP-017, SP-018, SP-021, SP-022, SP-023, SP-024.
+**Depends on:** SP-010A, SP-017, SP-018, SP-021, SP-022, SP-023, SP-024.
 
 **Suggested commit:** `test: complete focused demo release checks`
 
@@ -3511,8 +3546,8 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Complete every Section 18 manual acceptance scenario across the responsive size anchors and spot-check intermediate drag-resized widths.
 - [ ] Verify distinct CV fixtures produce distinct grounded plans.
 - [ ] Verify conversation-first skips CV/provider preparation, begins with open discovery, progressively focuses, and produces a Candidate-only review.
-- [ ] Manually verify suggested-role confirmation, opposite-role correction, Full Stack redirection, neither-role general screening, and missing/incorrect-name handling.
-- [ ] Manually verify both modes remain HR screens: prioritized fields, multi-field answer credit, normal 8–10-prompt budget, at most one broad role-context clarification, and zero technical follow-up chains.
+- [ ] Manually verify Graphic Designer, Customer Support Representative, CV-suggested Product Manager, Backend without technical questions, Full Stack without redirection, correction, compound wording, undecided role, unsupported employer questions, and missing/incorrect-name handling.
+- [ ] Manually verify both modes remain role-agnostic HR screens: prioritized fields, multi-field answer credit, normal 8–10-prompt budget, at most one broad role-context clarification, and zero profession-specific assessment chains.
 - [ ] Run the smallest targeted unit/backend checks for release-critical logic.
 - [ ] Run the complete fast default command set once.
 - [ ] Run one controlled live ElevenLabs/OpenAI smoke interview per entry mode.
@@ -3563,7 +3598,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Checklist:**
 
-- [ ] Write README with architecture, provider roles, local setup, privacy limits, and screenshots.
+- [ ] Write README with the role-agnostic first-stage HR story, candidate-defined synthetic session role/undecided path, architecture, provider roles, local setup, privacy limits, and screenshots; never imply real vacancies or profession-specific assessment.
 - [ ] Link the approved HTML Design System Reference and explain how its tokens map to the shared React styling.
 - [ ] Add a two-minute demo script and concise architecture diagram.
 - [ ] Demonstrate both equal entry modes and explain focused-from-CV versus open-discovery behavior in portfolio materials.
@@ -3578,7 +3613,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Outcome:** If the extra investment is worthwhile, ScreenPilot gains repeatable full-flow regression coverage without slowing normal feature tickets or commits.
 
-**Depends on:** SP-026. SP-027 is independent and optional.
+**Depends on:** SP-010A, SP-026. SP-027 is independent and optional.
 
 **Suggested commit:** `test: add optional extended demo automation`
 
@@ -3587,7 +3622,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Add Playwright desktop/mobile projects and provider event fixtures.
 - [ ] Automate every optional Section 18 browser flow across the responsive phone, tablet, laptop/desktop, and large-monitor reference anchors.
 - [ ] Add paired desktop/mobile visual-regression snapshots for every major stage and failure state.
-- [ ] Automate all eight AI eval personas and forbidden behaviors with deterministic fakes.
+- [ ] Automate the Section 18 cross-profession, correction, compound-role, undecided, unsupported-employer-question, injection, and forbidden-assessment scenarios with deterministic fakes.
 - [ ] Add extended integration coverage for provider errors, event ordering, grants, and privacy boundaries.
 - [ ] Expose extended tests through manual/opt-in commands or CI dispatch only, never every commit.
 - [ ] Keep paid live-provider calls outside automation and default CI.
@@ -3599,10 +3634,10 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 ### Product
 
-- [ ] The landing presents CV-assisted and conversation-first as equally important entry modes for the two fixed synthetic Frontend/Backend vacancies, with no fictional employer name.
+- [ ] The landing presents CV-assisted and conversation-first as equally important role-agnostic entry modes and discloses that the candidate's role becomes a synthetic session-only demo vacancy, with no fictional employer name or finite role list.
 - [ ] Uploaded-CV facts personalize the call without leaking sample placeholders or treating CV alignment as proof of an applied role.
-- [ ] Conversation-first requires no document, skips CV analysis/plan preview, uses only the configured name opener as a fixed question, then generates natural target-position and follow-up questions that become more focused as answers arrive.
-- [ ] Role preference is confirmed conversationally, corrections adapt later questions, and a Full Stack request is recorded without inventing a vacancy.
+- [ ] Conversation-first requires no document, skips CV analysis/plan preview, uses only the configured name opener as a fixed question, then generates a natural synthetic-role question or undecided path plus follow-ups that become more focused as answers arrive.
+- [ ] Any bounded candidate-stated role is accepted without redirection, corrections adapt later wording, compound wording remains one label, and undecided candidates complete the same universal HR screen.
 - [ ] No signup, login, phone, invitation, dashboard, job management, or historical workflow exists.
 - [ ] Sample/uploaded CV use the same CV-assisted branch, and both major entry modes converge on the same preflight, interview, review, and Clear-session implementation.
 - [ ] Scanned/unsupported PDFs fail clearly before backend analysis.
@@ -3623,8 +3658,8 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Consent and microphone readiness precede token issuance.
 - [ ] Conversation-first preparation uses a deterministic server plan and makes no pre-call OpenAI or ElevenLabs request.
 - [ ] Two CVs produce meaningfully different grounded facts, topic intents, and follow-up directions while live question wording remains generated.
-- [ ] Both modes adapt role-specific questions from candidate-confirmed answers; conversation-first never creates a CV source or claims CV verification.
-- [ ] Both modes remain recruiter-style HR screens, use the approved non-technical HR intent library, fill the same prioritized HR field checklist—including synthesized experience and separate team/work style—ask at most one broad role-context clarification, and never branch into technical evaluation or personality/culture-fit judgment.
+- [ ] Both modes may adapt the phrasing and ordering of universal profession-neutral HR questions after a candidate confirms a role label; the label never introduces role-specific question categories, technical depth, or professional assessment, and conversation-first never creates a CV source or claims CV verification.
+- [ ] Both modes remain role-agnostic recruiter-style HR screens, use the universal HR intent library, fill the same prioritized HR field checklist—including synthesized experience and separate team/work style—ask at most one broad role-context clarification, and never branch into technical, portfolio, competency, roleplay, professional-knowledge, suitability, personality, or culture-fit assessment.
 - [ ] Client tools produce evidence-linked insight cards locally.
 - [ ] Interruption and TTFA meet release gates.
 - [ ] Audio saving/retention and UI disclosure match.
@@ -3662,7 +3697,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 | --- | --- | --- |
 | User-uploaded CV path | In scope alongside sample CV | Keep for the core personalization proof, but implement after the sample path. Cut it only if PDF reliability threatens polish. |
 | Conversation-first path | Locked, equal priority with CV-assisted | Keep because it provides the fastest trial and demonstrates live adaptive discovery. Share preflight/interview/review components; do not let it become a separate app or a long manual form. |
-| Two-vacancy role clarification | In scope | Keep the fixed Frontend/Backend catalogue, allow the candidate to screen for either or both, and retain the Full Stack boundary because it demonstrates reactive conversation. Do not add arbitrary vacancies, a general job classifier, vacancy CRUD, or a pre-call role picker. |
+| Candidate-defined synthetic role | Locked, role-agnostic | Accept any bounded candidate-stated label as the synthetic vacancy for that browser session or continue undecided. Keep one universal HR screen; do not add an allow-list, classifier, vacancy CRUD, pre-call picker, profession-specific assessment, or inferred employer facts. |
 | Separate Express backend | In scope | Keep because it protects keys, uses a broadly recognized Node.js API stack, and demonstrates backend/API skill. Collapsing into Next.js route handlers is the largest remaining architectural simplification if schedule becomes tight. |
 | Real-time insight constellation | In scope with fixed layout | Keep the cards; avoid a true mind-map/graph engine, draggable nodes, zoom, physics, or editable relationships. |
 | Five client tools | In scope | Keep only if all five are reliable. `recordInsight` and `correctInsight` are essential; topic/question/follow-up tools may be merged into one structured event tool. |
@@ -3673,7 +3708,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Desktop/mobile parity | Locked, non-negotiable | Preserve every core stage, action, state, and visual identity on both; adapt composition rather than hiding features on mobile. |
 | Custom animated voice signal | In scope | Use a restrained CSS/canvas component. Cut advanced audio-reactive shaders or 3D/WebGL work. |
 | Latency filler | Conditional | Keep the policy, but enable the audible filler only if measured p95 latency needs it. Do not build a library of filler phrases. |
-| Automated AI eval suite | Optional SP-028 | Manual scripted review and narrow safety tests are enough for release; automate all eight personas only if the extra confidence is worth the time. |
+| Automated AI eval suite | Optional SP-028 | Manual scripted review and narrow safety tests are enough for release; automate the full role-neutral scenario/persona matrix only if the extra confidence is worth the time. |
 | HTML Design System Reference | In scope and intentionally lightweight | Keep fonts, typography, colors, spacing, surfaces, icons, and compact component/state examples; do not turn it into full-screen mockups, Storybook, or another app. |
 | Figma design system/prototype | Future optional, out of demo scope | Do not block implementation or add tickets for Figma. Revisit only if the portfolio later benefits from a formal design artifact. |
 | ImageGen concept | One paired active-interview concept after HTML-reference approval | Keep it because the richest ScreenPilot screen can establish composition and atmosphere for the rest of the implementation. Do not expand it into landing-page variants, every-state mockups, or multiple art directions. |

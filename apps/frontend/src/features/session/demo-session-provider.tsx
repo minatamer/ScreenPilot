@@ -49,12 +49,12 @@ type DemoSessionProviderProps = Readonly<{
 }>;
 
 function noticeForClearedSession(
-  reason: "corrupt" | "expired" | "future_version" | "oversized",
+  reason: "corrupt" | "expired" | "unsupported_version" | "oversized",
 ): SessionRestoreNotice {
   const notices = {
     corrupt: "corrupt_session_cleared",
     expired: "expired_session_cleared",
-    future_version: "future_session_cleared",
+    unsupported_version: "incompatible_session_cleared",
     oversized: "oversized_session_cleared",
   } as const;
   return notices[reason];

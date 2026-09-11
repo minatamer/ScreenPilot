@@ -15,7 +15,7 @@ import type { ChallengeVerifier } from "./ports/challenge-verifier.js";
 import type { CvAnalyzer } from "./ports/cv-analyzer.js";
 import { UseCaseError } from "./use-case-error.js";
 
-const CV_ANALYSIS_PLAN_VERSION = "2026-09-11.1";
+const CV_ANALYSIS_PLAN_VERSION = "2026-09-11.3";
 const OPENAI_INPUT_COST_PER_MILLION_TOKENS = 0.75;
 const OPENAI_CACHED_INPUT_COST_PER_MILLION_TOKENS = 0.075;
 const OPENAI_OUTPUT_COST_PER_MILLION_TOKENS = 4.5;
@@ -192,7 +192,6 @@ export function createAnalyzeCv(input: {
       providerResult = await input.analyzer.analyzeCv(
         {
           cvText: request.cvText,
-          vacancyCatalogKey: request.vacancyCatalogKey,
         },
         signal,
       );
@@ -234,7 +233,6 @@ export function createAnalyzeCv(input: {
         planHash: hashInterviewGrantValue(output.plan),
         planVersion: CV_ANALYSIS_PLAN_VERSION,
         ttlSeconds: input.grantTtlSeconds,
-        vacancyCatalogKey: request.vacancyCatalogKey,
       });
       return analyzeCvResponseSchema.parse({
         cv: output.cv,

@@ -33,7 +33,7 @@ If explicitly approved after deployment, package the already-released demo so an
 
 ## Implementation checklist
 
-- [ ] Write/update the project README with product story, both entry modes, architecture, provider roles, local setup, privacy limits, deployment, and safe demo instructions.
+- [ ] Write/update the project README with the role-agnostic first-stage HR story, candidate-defined synthetic session role/undecided path, both entry modes, architecture, provider roles, local setup, privacy limits, deployment, and safe demo instructions; never imply real vacancies or profession-specific assessment.
 - [ ] Link the approved HTML Design System Reference and explain its token mapping to shared React styling.
 - [ ] Add a concise architecture diagram and a two-minute demo script.
 - [ ] Capture synthetic screenshots showing entry choice, focused/open preparation difference, active voice/insights, evidence review, and mobile parity.
@@ -75,4 +75,3 @@ Keep SP-027 reviewable as one logical change represented by `docs: prepare Scree
 ## Completion handoff
 
 Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
-

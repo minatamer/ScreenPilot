@@ -1,4 +1,8 @@
-import { FIXED_TOPIC_KEYS } from "@screenpilot/contracts/interview/screening-plan";
+import {
+  FIXED_TOPIC_KEYS,
+  UNIVERSAL_TOPIC_KEYS,
+} from "@screenpilot/contracts/interview/screening-plan";
+import { roleLabelSchema } from "@screenpilot/contracts/interview/demo-context";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
 import type {
   ScreeningPlan,
@@ -86,15 +90,15 @@ function extractDisplayName(cvText: string): string | null {
   );
 }
 
-function topicTitle(key: (typeof FIXED_TOPIC_KEYS)[number]): string {
+function topicTitle(key: (typeof UNIVERSAL_TOPIC_KEYS)[number]): string {
   return key
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 }
 
-function createFixedTopic(
-  key: (typeof FIXED_TOPIC_KEYS)[number],
+function createUniversalTopic(
+  key: (typeof UNIVERSAL_TOPIC_KEYS)[number],
   cvFactIds: readonly string[],
 ): ScreeningTopic {
   const groundedFactIds = [
@@ -103,8 +107,27 @@ function createFixedTopic(
   ].includes(key)
     ? [...cvFactIds]
     : [];
+  if (key === "clarifications_and_followups") {
+    return {
+      coverageCriteria: [
+        "A genuine unresolved item is recorded, or this topic remains not applicable.",
+      ],
+      cvFactIds: [],
+      followupDirections: [
+        "Retain unsupported employer or vacancy questions for human follow-up without inventing an answer.",
+        "Do not create a clarification merely to fill this optional topic.",
+      ],
+      intent:
+        "Record only a genuine contradiction, missing logistical detail, or unsupported employer or vacancy question requiring human follow-up.",
+      key,
+      reason:
+        "Human follow-up remains available without forcing another interview question.",
+      required: false,
+      title: topicTitle(key),
+    };
+  }
+
   return {
-    applicableVacancyKeys: [],
     coverageCriteria: [
       `Candidate-confirmed evidence covers ${topicTitle(key).toLowerCase()}, or the candidate declines.`,
     ],
@@ -123,6 +146,63 @@ function createFixedTopic(
   };
 }
 
+function extractSuggestedRole(
+  cvText: string,
+): Readonly<{ evidence: string; label: string }> | null {
+  const explicitDirection = cvText
+    .split("\n")
+    .map((line) => line.trim())
+    .find((line) => /^Suggested role:\s*.+/iu.test(line));
+  if (explicitDirection) {
+    const parsedLabel = roleLabelSchema.safeParse(
+      explicitDirection.replace(/^Suggested role:\s*/iu, ""),
+    );
+    if (parsedLabel.success) {
+      return { evidence: explicitDirection, label: parsedLabel.data };
+    }
+  }
+
+  const ordinarySignals: readonly Readonly<{
+    label: string;
+    pattern: RegExp;
+  }>[] = [
+    {
+      label: "Graphic Designer",
+      pattern: /\b(?:graphic designer|visual design|brand design)\b/iu,
+    },
+    {
+      label: "Customer Support Representative",
+      pattern: /\b(?:customer support representative|customer support)\b/iu,
+    },
+    {
+      label: "Product Manager",
+      pattern: /\b(?:product manager|product management)\b/iu,
+    },
+    {
+      label: "Full Stack Developer",
+      pattern: /\bfull stack\b/iu,
+    },
+    {
+      label: "Frontend Developer",
+      pattern:
+        /\b(?:frontend work|interface developer|interface support|customer-facing product UI)\b/iu,
+    },
+    {
+      label: "Backend Developer",
+      pattern:
+        /\b(?:backend direction|backend-oriented|server-side product|server-side services)\b/iu,
+    },
+  ];
+
+  for (const signal of ordinarySignals) {
+    const evidence = paragraphContaining(cvText, signal.pattern);
+    if (evidence !== null) {
+      return { evidence, label: signal.label };
+    }
+  }
+  return null;
+}
+
 function createFakeCvAnalysis(
   cvText: string,
 ): CvAnalyzerResult<NormalizedCv, ScreeningPlan> {
@@ -133,20 +213,7 @@ function createFakeCvAnalysis(
       trustedText,
       /\b(?:experience|graduate|internship|placement|project work|studies)\b/i,
     ) ?? paragraphContaining(trustedText, /\bsoftware\b/i);
-  const frontendEvidence = paragraphContaining(
-    trustedText,
-    /\b(?:Frontend work|interface developer|interface support|customer-facing product UI)\b/i,
-  );
-  const backendEvidence = paragraphContaining(
-    trustedText,
-    /\b(?:Backend direction|Backend-oriented|server-side product|server-side services)\b/i,
-  );
-  const suggestedVacancyKey =
-    frontendEvidence !== null && backendEvidence === null
-      ? "frontend-developer"
-      : backendEvidence !== null && frontendEvidence === null
-        ? "backend-developer"
-        : null;
+  const suggestedRole = extractSuggestedRole(trustedText);
   const experienceLevel =
     /\b(?:recent graduate|first full-time|studies)\b/i.test(trustedText)
       ? "graduate"
@@ -169,19 +236,15 @@ function createFakeCvAnalysis(
       statement:
         experienceLevel === "graduate"
           ? "The CV describes an early-career study or placement context."
-          : "The CV describes prior software product experience.",
+          : "The CV describes prior experience in the candidate's stated context.",
     });
   }
-  const directionEvidence = frontendEvidence ?? backendEvidence;
-  if (directionEvidence !== null && suggestedVacancyKey !== null) {
+  if (suggestedRole !== null) {
     facts.push({
       category: "skill",
-      evidenceExcerpt: directionEvidence,
+      evidenceExcerpt: suggestedRole.evidence,
       id: "role-direction-1",
-      statement:
-        suggestedVacancyKey === "frontend-developer"
-          ? "The CV contains a provisional Frontend-oriented work signal."
-          : "The CV contains a provisional Backend-oriented work signal.",
+      statement: `The CV contains a provisional ${suggestedRole.label} direction.`,
     });
   }
 
@@ -192,7 +255,9 @@ function createFakeCvAnalysis(
       : experienceLevel === "experienced"
         ? "experienced"
         : "mixed";
-  const topics = FIXED_TOPIC_KEYS.map((key) => createFixedTopic(key, factIds));
+  const topics = UNIVERSAL_TOPIC_KEYS.map((key) =>
+    createUniversalTopic(key, factIds),
+  );
 
   return {
     normalizedCv: {
@@ -207,6 +272,13 @@ function createFakeCvAnalysis(
       experienceLevel,
       facts,
       headline: null,
+      suggestedRole:
+        suggestedRole === null
+          ? null
+          : {
+              cvFactIds: ["role-direction-1"],
+              label: suggestedRole.label,
+            },
     },
     screeningPlan: {
       branch,
@@ -215,15 +287,14 @@ function createFakeCvAnalysis(
       openingIntent:
         "Confirm the candidate's preferred name and requested role, then clarify only meaningful CV gaps.",
       topics,
-      vacancyClarification: {
-        confirmedVacancyKeys: [],
-        cvFactIds: suggestedVacancyKey === null ? [] : ["role-direction-1"],
+      roleClarification: {
+        cvFactIds: suggestedRole === null ? [] : ["role-direction-1"],
         reason:
-          suggestedVacancyKey === null
-            ? "The CV does not support one clear vacancy hint; ask the candidate to choose the screening direction."
-            : "CV evidence provides a non-binding direction that the candidate must confirm or correct.",
+          suggestedRole === null
+            ? "The CV does not support one clear role hint; the candidate may provide a role label or remain undecided."
+            : "CV evidence provides a non-binding role direction that the candidate must confirm or correct.",
         requiresCandidateConfirmation: true,
-        suggestedVacancyKey,
+        suggestedRole: suggestedRole?.label ?? null,
       },
     },
     usage: {

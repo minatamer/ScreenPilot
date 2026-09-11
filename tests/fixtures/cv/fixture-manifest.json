@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "synthetic": true,
-  "scope": "generic-european",
+  "scope": "role-agnostic",
   "privacyNote": "Every entry is fictional ScreenPilot test content. Names, experience, projects, and preferences do not describe real people or employers.",
   "fixtures": [
     {
@@ -9,18 +9,18 @@
       "file": "screenpilot-sample-cv.expected.txt",
       "source": "public_pdf_expected",
       "synthetic": true,
-      "purpose": "Quick-start PDF with mixed frontend and backend signals, an ordinary CV-derived name, and visible role clarification.",
+      "purpose": "Quick-start PDF with mixed responsibilities, an ordinary CV-derived name, and open role confirmation.",
       "expected": {
         "experienceLevel": "junior",
-        "roleAlignment": "mixed",
+        "suggestedRole": null,
         "factSignals": [
-          "frontend internship",
-          "backend service project",
+          "interface internship",
+          "service project",
           "distributed teamwork"
         ],
         "topicDirections": [
-          "confirm preferred vacancy set",
-          "clarify strongest product responsibility"
+          "confirm candidate role wording",
+          "clarify strongest responsibility"
         ],
         "supportsNameCorrection": true,
         "adversarial": false
@@ -34,7 +34,7 @@
       "purpose": "Early-career case led by studies, a placement, and personal projects.",
       "expected": {
         "experienceLevel": "graduate",
-        "roleAlignment": "mixed",
+        "suggestedRole": null,
         "factSignals": [
           "recent computing studies",
           "team placement",
@@ -56,7 +56,7 @@
       "purpose": "Experienced generalist case with product ownership and distributed collaboration.",
       "expected": {
         "experienceLevel": "experienced",
-        "roleAlignment": "mixed",
+        "suggestedRole": null,
         "factSignals": [
           "six years product work",
           "service and interface ownership",
@@ -75,17 +75,17 @@
       "file": "frontend-leaning.txt",
       "source": "text",
       "synthetic": true,
-      "purpose": "Candidate evidence that can produce a tentative Frontend alignment without selecting a vacancy.",
+      "purpose": "Ordinary software fixture whose evidence can suggest a role without special runtime semantics.",
       "expected": {
         "experienceLevel": "junior",
-        "roleAlignment": "frontend",
+        "suggestedRole": "Frontend Developer",
         "factSignals": [
           "responsive interfaces",
           "accessibility review",
           "product design collaboration"
         ],
         "topicDirections": [
-          "customer-facing responsibility",
+          "high-level responsibility",
           "candidate-confirmed role direction"
         ],
         "supportsNameCorrection": true,
@@ -93,21 +93,21 @@
       }
     },
     {
-      "id": "backend-leaning",
-      "file": "backend-leaning.txt",
+      "id": "backend-developer",
+      "file": "backend-developer.txt",
       "source": "text",
       "synthetic": true,
-      "purpose": "Candidate evidence that can produce a tentative Backend alignment without selecting a vacancy.",
+      "purpose": "Ordinary software fixture whose evidence can suggest a role without technical screening.",
       "expected": {
         "experienceLevel": "experienced",
-        "roleAlignment": "backend",
+        "suggestedRole": "Backend Developer",
         "factSignals": [
           "server-side services",
           "application data flows",
           "operational support"
         ],
         "topicDirections": [
-          "broad service ownership",
+          "broad responsibility",
           "candidate-confirmed role direction"
         ],
         "supportsNameCorrection": true,
@@ -115,22 +115,22 @@
       }
     },
     {
-      "id": "mixed-full-stack",
-      "file": "mixed-full-stack.txt",
+      "id": "full-stack-developer",
+      "file": "full-stack-developer.txt",
       "source": "text",
       "synthetic": true,
-      "purpose": "Mixed evidence and Full Stack interest that must remain separate from confirmed openings.",
+      "purpose": "Full Stack interest that is accepted as an ordinary bounded role suggestion without redirection.",
       "expected": {
         "experienceLevel": "experienced",
-        "roleAlignment": "mixed",
+        "suggestedRole": "Full Stack Developer",
         "factSignals": [
           "interface delivery",
           "server-side service work",
           "Full Stack interest"
         ],
         "topicDirections": [
-          "record unavailable requested label",
-          "confirm Frontend, Backend, both, or general coverage"
+          "preserve candidate role wording",
+          "use one universal HR screen"
         ],
         "supportsNameCorrection": true,
         "adversarial": false
@@ -144,7 +144,7 @@
       "purpose": "CV-derived display name that the candidate later corrects during the interview.",
       "expected": {
         "experienceLevel": "junior",
-        "roleAlignment": "frontend",
+        "suggestedRole": "Frontend Developer",
         "factSignals": [
           "CV display name Taylor Venn",
           "interface support work",
@@ -156,10 +156,73 @@
         ],
         "supportsNameCorrection": true,
         "adversarial": false,
-        "expectedCorrection": {
-          "from": "Taylor Venn",
-          "to": "Tay"
-        }
+        "expectedCorrection": { "from": "Taylor Venn", "to": "Tay" }
+      }
+    },
+    {
+      "id": "graphic-designer",
+      "file": "graphic-designer.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Cross-profession design example that must receive only the universal first-stage HR screen.",
+      "expected": {
+        "experienceLevel": "experienced",
+        "suggestedRole": "Graphic Designer",
+        "factSignals": [
+          "visual communication",
+          "collaborative review",
+          "candidate preferences"
+        ],
+        "topicDirections": [
+          "high-level responsibilities",
+          "work environment preferences"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "customer-support",
+      "file": "customer-support.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Cross-profession support example with no simulation, knowledge test, or competency assessment.",
+      "expected": {
+        "experienceLevel": "junior",
+        "suggestedRole": "Customer Support Representative",
+        "factSignals": [
+          "customer communication",
+          "human follow-up",
+          "team context sharing"
+        ],
+        "topicDirections": [
+          "high-level responsibilities",
+          "collaboration preferences"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
+      }
+    },
+    {
+      "id": "product-manager",
+      "file": "product-manager.txt",
+      "source": "text",
+      "synthetic": true,
+      "purpose": "Cross-profession product example proving a fact-linked arbitrary role suggestion remains non-binding.",
+      "expected": {
+        "experienceLevel": "experienced",
+        "suggestedRole": "Product Manager",
+        "factSignals": [
+          "product coordination",
+          "decision notes",
+          "cross-team communication"
+        ],
+        "topicDirections": [
+          "candidate role confirmation",
+          "next-role motivation"
+        ],
+        "supportsNameCorrection": true,
+        "adversarial": false
       }
     },
     {
@@ -167,10 +230,10 @@
       "file": "prompt-injection.txt",
       "source": "text",
       "synthetic": true,
-      "purpose": "Adversarial CV text proving document content remains untrusted evidence rather than instructions.",
+      "purpose": "Adversarial CV text proving document and role-label content remain inert evidence rather than instructions.",
       "expected": {
         "experienceLevel": "unclear",
-        "roleAlignment": "unclear",
+        "suggestedRole": null,
         "factSignals": [
           "limited supported work facts",
           "embedded instruction-like text",

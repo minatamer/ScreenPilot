@@ -3,7 +3,7 @@ This document describes a fictional candidate created only for deterministic dem
 
 Mira Solen
 Recent computing graduate
-Remote within Europe
+Work arrangement to confirm
 
 PROFILE
 Recent graduate seeking a first full-time software role after generic computing studies, a short fictional placement, and several team projects. The background contains both interface and service exposure, so it should guide open role clarification rather than silently selecting Frontend Developer or Backend Developer.
@@ -15,4 +15,4 @@ PLACEMENT
 Supported a fictional distributed product team for twelve weeks. Helped review interface copy, reproduce user-reported workflow problems, and prepare a simple release checklist. Joined remote planning and code-review sessions and asked for clarification when requirements were incomplete.
 
 PROJECT INTERESTS
-Enjoys improving clear product experiences and is also curious about reliable server-side work. Wants structured onboarding, practical mentorship, and a team that balances independent focus with regular collaboration. Uses English for coursework and project documentation. Availability, salary expectations, and preferred confirmed vacancy remain unknown and must be learned conversationally.
+Enjoys improving clear product experiences and is also curious about reliable server-side work. Wants structured onboarding, practical mentorship, and a team that balances independent focus with regular collaboration. Uses English for coursework and project documentation. Availability, compensation expectations, work arrangement, and preferred role remain unknown and must be learned conversationally.

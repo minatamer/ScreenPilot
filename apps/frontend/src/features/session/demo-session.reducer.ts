@@ -1,10 +1,10 @@
 import type { InterviewGrant } from "@screenpilot/contracts/api/interview-preparation";
 import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
 import {
-  publicVacancyCatalogueSchema,
-  type PublicEmployerContext,
-  type PublicVacancySnapshot,
-} from "@screenpilot/contracts/interview/employer-context";
+  publicRoleNeutralDemoContextSchema,
+  rolePreferenceSchema,
+  type PublicRoleNeutralDemoContext,
+} from "@screenpilot/contracts/interview/demo-context";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
@@ -43,8 +43,7 @@ export type DemoSessionEvent =
   | Readonly<{ type: "BOOTSTRAP_STARTED" }>
   | Readonly<{
       type: "BOOTSTRAP_SUCCEEDED";
-      employer: PublicEmployerContext;
-      vacancies: readonly PublicVacancySnapshot[];
+      demoContext: PublicRoleNeutralDemoContext;
     }>
   | Readonly<{ type: "SELECT_ENTRY_MODE"; entryMode: EntryMode }>
   | Readonly<{ type: "CV_EXTRACTION_STARTED" }>
@@ -88,14 +87,13 @@ export class InvalidSessionTransitionError extends Error {
 
 export function createInitialDemoSessionState(): DemoSessionState {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     hydrationStatus: "pending",
     stage: "empty",
     entryMode: null,
     createdAt: null,
     expiresAt: null,
-    employer: null,
-    vacancies: [],
+    demoContext: null,
     transcript: [],
     insights: [],
     topicProgress: [],
@@ -144,8 +142,7 @@ function clearModeSpecificState(state: DemoSessionState): DemoSessionState {
     entryMode: null,
     createdAt: state.createdAt,
     expiresAt: state.expiresAt,
-    employer: state.employer,
-    vacancies: state.vacancies,
+    demoContext: state.demoContext,
     transcript: [],
     insights: [],
     topicProgress: [],
@@ -317,19 +314,16 @@ export function demoSessionReducer(
     case "BOOTSTRAP_SUCCEEDED":
       assertStage(state, event.type, ["bootstrapping"]);
       {
-        const parsedVacancies = publicVacancyCatalogueSchema.safeParse(
-          event.vacancies,
+        const parsedDemoContext = publicRoleNeutralDemoContextSchema.safeParse(
+          event.demoContext,
         );
-        if (!parsedVacancies.success) {
-          throw new RangeError(
-            "The demo bootstrap requires both fixed vacancies exactly once.",
-          );
+        if (!parsedDemoContext.success) {
+          throw new TypeError("The role-neutral demo disclosure is invalid.");
         }
         return {
           ...state,
           stage: "choosing_entry_mode",
-          employer: event.employer,
-          vacancies: parsedVacancies.data,
+          demoContext: parsedDemoContext.data,
           failure: undefined,
         };
       }
@@ -522,15 +516,15 @@ export function demoSessionReducer(
         );
       }
       return { ...state, preferredName: event.preferredName };
-    case "SET_ROLE_PREFERENCE":
-      if (
-        !hasFinalCandidateEvidence(state, event.rolePreference.evidenceTurnIds)
-      ) {
+    case "SET_ROLE_PREFERENCE": {
+      const rolePreference = rolePreferenceSchema.parse(event.rolePreference);
+      if (!hasFinalCandidateEvidence(state, rolePreference.evidenceTurnIds)) {
         throw new TypeError(
           "Role preferences require final candidate evidence.",
         );
       }
-      return { ...state, rolePreference: event.rolePreference };
+      return { ...state, rolePreference };
+    }
     case "START_OVER":
       assertStage(state, event.type, [
         "awaiting_cv",

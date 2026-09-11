@@ -11,6 +11,8 @@ Ticket index: [`README.md`](README.md)
 
 ---
 
+> **Superseded CV role-alignment contract — SP-010A:** This packet remains the historical record of commit `744901e`. Its fixed `demo-engineering` key, Frontend/Backend-only suggestions, rejection of other applied-role labels, and fixed-vacancy grant bindings are no longer the target product model. SP-010A completed the migration to evidence-linked, non-binding suggestions for any bounded role label; candidate speech remains authoritative, role labels stay inert untrusted data, and the existing evidence, HR-only, privacy, Turnstile, and statelessness guarantees remain mandatory.
+
 ## Objective
 
 Convert bounded browser-extracted CV text into validated evidence-grounded facts and a focused HR screening plan in one protected stateless OpenAI request.

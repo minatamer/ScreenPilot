@@ -1,9 +1,9 @@
 import type { InterviewGrant } from "@screenpilot/contracts/api/interview-preparation";
 import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
 import type {
-  PublicEmployerContext,
-  PublicVacancySnapshot,
-} from "@screenpilot/contracts/interview/employer-context";
+  PublicRoleNeutralDemoContext,
+  RolePreference as ContractRolePreference,
+} from "@screenpilot/contracts/interview/demo-context";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
@@ -51,12 +51,7 @@ export type PreferredName = Readonly<{
   evidenceTurnIds: readonly string[];
 }>;
 
-export type RolePreference = Readonly<{
-  requestedLabel: string;
-  screeningVacancyKeys: readonly ("frontend-developer" | "backend-developer")[];
-  status: "confirmed" | "unavailable_requested" | "undecided";
-  evidenceTurnIds: readonly string[];
-}>;
+export type RolePreference = ContractRolePreference;
 
 export type SessionFailure = Readonly<{
   stage: FailureStage;
@@ -68,7 +63,7 @@ export type SessionFailure = Readonly<{
 export type SessionRestoreNotice =
   | "corrupt_session_cleared"
   | "expired_session_cleared"
-  | "future_session_cleared"
+  | "incompatible_session_cleared"
   | "oversized_session_cleared"
   | "storage_unavailable"
   | "call_interrupted"
@@ -76,14 +71,13 @@ export type SessionRestoreNotice =
   | "summary_interrupted";
 
 export type DemoSessionState = Readonly<{
-  schemaVersion: 1;
+  schemaVersion: 2;
   hydrationStatus: "pending" | "ready";
   stage: DemoStage;
   entryMode: EntryMode | null;
   createdAt: string | null;
   expiresAt: string | null;
-  employer: PublicEmployerContext | null;
-  vacancies: readonly PublicVacancySnapshot[];
+  demoContext: PublicRoleNeutralDemoContext | null;
   preferredName?: PreferredName | undefined;
   rolePreference?: RolePreference | undefined;
   cv?: NormalizedCv | undefined;

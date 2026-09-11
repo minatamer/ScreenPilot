@@ -3,10 +3,10 @@ This document describes a fictional candidate created only for deterministic dem
 
 Robin Vale
 Backend-oriented product developer
-Remote within Europe
+Work arrangement to confirm
 
 PROFILE
-Five years of fictional experience maintaining server-side product services and application data flows for distributed workflow teams. The evidence suggests a Backend direction, but the CV cannot decide which confirmed vacancy the candidate wants screened.
+Five years of fictional experience maintaining server-side product services and application data flows for distributed workflow teams. The evidence suggests a Backend Developer direction, but the CV supplies only a non-binding conversation hint that the candidate may confirm or correct.
 
 RESPONSIBILITIES
 Maintained bounded service endpoints, supported scheduled data-import processes, improved operational error messages, and documented service ownership for remote teammates. Worked with interface developers to agree clear data contracts and participated in collaborative review and lightweight planning. Responsibilities are described at recruiter level and contain no technical assessment result.
@@ -15,4 +15,4 @@ DELIVERY CONTEXT
 Helped a fictional product team reduce repeated support work by clarifying service behavior and release handovers. Shared status updates across a distributed team and paired with a junior colleague during onboarding. No real system, customer, employer, or production incident is represented.
 
 NEXT ROLE
-Wants to continue broad server-side product responsibility while working closely with product-facing colleagues. Values independent focus, direct feedback, mentorship, and a remote-first routine. Uses English for documentation and weekly collaboration. Availability, compensation expectation, and whether to cover Backend alone or both openings remain candidate-confirmed details.
+Wants to continue broad server-side product responsibility while working closely with product-facing colleagues. Values independent focus, direct feedback, mentorship, and flexible work arrangements. Uses English for documentation and weekly collaboration. Availability, compensation expectation, work-arrangement preference, and final role wording remain candidate-confirmed details.

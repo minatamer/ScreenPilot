@@ -1,13 +1,11 @@
 import { z } from "zod";
 
 import { screeningPlanSchema } from "../interview/screening-plan.js";
-import { vacancyCatalogKeySchema } from "../interview/employer-context.js";
 
 export const interviewGrantSchema = z.string().trim().min(16).max(8_192);
 
 export const prepareInterviewRequestSchema = z.strictObject({
   entryMode: z.literal("conversation_first"),
-  vacancyCatalogKey: vacancyCatalogKeySchema,
   clientRequestId: z.uuid(),
 });
 

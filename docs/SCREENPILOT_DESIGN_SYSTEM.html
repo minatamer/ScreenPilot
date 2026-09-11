@@ -1457,22 +1457,22 @@
           <div>
             <h1 id="hero-title">Practice the interview. Keep the judgment human.</h1>
             <p class="hero-copy">
-              ScreenPilot turns a vacancy and an optional CV into a focused voice interview. You get clear,
-              evidence-linked notes—not a hiring decision.
+              ScreenPilot turns a candidate-chosen synthetic role and an optional CV into a focused first-stage
+              HR conversation. You get clear, evidence-linked notes—not a hiring decision.
             </p>
           </div>
 
-          <aside class="context-card" aria-label="Vacancy context sample">
+          <aside class="context-card" aria-label="Role-neutral demo context sample">
             <div class="context-top">
-              <span class="meta">VACANCY CONTEXT</span>
-              <span class="pill">Remote in Europe</span>
+              <span class="meta">SYNTHETIC ROLE CONTEXT</span>
+              <span class="pill">Session only</span>
             </div>
             <h2>What Pilot will screen for</h2>
-            <p>Confirmed roles and constraints supplied to the interview.</p>
+            <p>The candidate's role guides wording, not the universal HR scope.</p>
             <div class="context-list">
-              <div class="context-row"><span class="dot-check">✓</span><span>Frontend Developer</span></div>
-              <div class="context-row"><span class="dot-check">✓</span><span>Backend Developer</span></div>
-              <div class="context-row"><span class="dot-check">✓</span><span>Remote within Europe</span></div>
+              <div class="context-row"><span class="dot-check">✓</span><span>Any bounded candidate-stated role</span></div>
+              <div class="context-row"><span class="dot-check">✓</span><span>One universal first-stage HR screen</span></div>
+              <div class="context-row"><span class="dot-check">✓</span><span>No real opening or application claim</span></div>
             </div>
           </aside>
         </div>
@@ -1632,7 +1632,7 @@
               <div class="row-heading"><h3>Fields</h3><p>Labels and recovery text stay visible</p></div>
               <div class="field-grid">
                 <div class="field-sample"><label for="field-default">Expected compensation</label><input id="field-default" value="€48,000–€52,000" readonly /><p class="field-note">Default · candidate stated</p></div>
-                <div class="field-sample focus"><label for="field-focus">Preferred role</label><input id="field-focus" value="Frontend Developer" readonly /><p class="field-note">Visible focus · coral ring</p></div>
+                <div class="field-sample focus"><label for="field-focus">Preferred role</label><input id="field-focus" value="Graphic Designer" readonly /><p class="field-note">Candidate stated · synthetic session role</p></div>
                 <div class="field-sample error"><label for="field-error">CV document</label><input id="field-error" value="portfolio.png" aria-describedby="field-error-copy" aria-invalid="true" readonly /><p class="field-note" id="field-error-copy">Use a text-based PDF up to 5 MB.</p></div>
               </div>
             </article>
@@ -1652,7 +1652,7 @@
               <div class="state-grid">
                 <article class="state-card"><span class="status confirmed">✓ Confirmed</span><h3>English proficiency</h3><p>B2, stated by the candidate. This describes context; it is not a score.</p></article>
                 <article class="state-card"><span class="status clarify">? Needs clarification</span><h3>Availability</h3><p>Pilot heard a partial answer and should ask a short follow-up.</p></article>
-                <article class="state-card"><span class="status corrected">↺ Corrected</span><h3>Role preference</h3><p>Requested Full Stack; screening against Frontend.</p></article>
+                <article class="state-card"><span class="status corrected">↺ Corrected</span><h3>Role preference</h3><p>Graphic Designer, corrected from Marketing Designer.</p></article>
               </div>
             </article>
 
@@ -1703,7 +1703,7 @@
                 <div class="signal" aria-hidden="true"><span style="--bar:24px"></span><span style="--bar:44px"></span><span style="--bar:64px"></span><span style="--bar:34px"></span><span style="--bar:72px"></span><span style="--bar:48px"></span><span style="--bar:28px"></span><span style="--bar:54px"></span><span style="--bar:38px"></span></div>
                 <div class="signal-copy"><strong id="voice-title">Pilot is listening…</strong><span>Voice activity, not a score</span></div>
               </div>
-              <div class="caption-panel"><p class="meta">LIVE CAPTION · CANDIDATE</p><p>“I originally looked for a full-stack role, but frontend is the stronger fit for my recent work.”</p></div>
+              <div class="caption-panel"><p class="meta">LIVE CAPTION · CANDIDATE</p><p>“I'm looking for a graphic designer role, and I enjoy collaborating closely with product teams.”</p></div>
               <div class="control-row">
                 <span class="meta timer">ELAPSED · 02:14</span>
                 <div class="button-row">
@@ -1716,17 +1716,17 @@
             <section class="insight-panel" aria-labelledby="insight-title">
               <div class="insight-heading"><h2 id="insight-title">Candidate-sourced insights</h2><p>Facts captured from candidate answers. Swipe on mobile.</p></div>
               <div class="insight-list">
-                <article class="insight-card selected"><span class="insight-icon" aria-hidden="true">&lt;/&gt;</span><div class="insight-copy"><h3>Role preference</h3><p>Requested Full Stack; screening against Frontend</p></div><span class="dark-status">✓ Confirmed</span></article>
+                <article class="insight-card selected"><span class="insight-icon" aria-hidden="true">◇</span><div class="insight-copy"><h3>Role preference</h3><p>Graphic Designer · synthetic demo role</p></div><span class="dark-status">✓ Confirmed</span></article>
                 <article class="insight-card"><span class="insight-icon" aria-hidden="true">€</span><div class="insight-copy"><h3>Compensation</h3><p>€48,000–€52,000 expected</p></div><span class="dark-status">✓ Confirmed</span></article>
                 <article class="insight-card"><span class="insight-icon" aria-hidden="true">Aa</span><div class="insight-copy"><h3>English proficiency</h3><p>B2, candidate-stated</p></div><span class="dark-status">✓ Confirmed</span></article>
                 <article class="insight-card"><span class="insight-icon" aria-hidden="true">↗</span><div class="insight-copy"><h3>Availability</h3><p>Not confirmed yet</p></div><span class="dark-status" style="color:var(--warning-400)">? Needs clarification</span></article>
-                <article class="insight-card"><span class="insight-icon" aria-hidden="true">⌁</span><div class="insight-copy"><h3>Relevant frontend experience</h3><p>Not discussed yet</p></div><span class="dark-status" style="color:var(--warning-400)">? Needs clarification</span></article>
+                <article class="insight-card"><span class="insight-icon" aria-hidden="true">⌁</span><div class="insight-copy"><h3>Relevant experience</h3><p>Not discussed yet</p></div><span class="dark-status" style="color:var(--warning-400)">? Needs clarification</span></article>
               </div>
             </section>
           </div>
 
           <figure class="concept-reference" id="concept-reference">
-            <figcaption><strong>Primary composition reference.</strong> The image guides mood and hierarchy; the written colors, behavior, responsive rules, and accessibility above remain authoritative.</figcaption>
+            <figcaption><strong>Primary composition reference.</strong> The image guides mood and hierarchy only. Its embedded role/vacancy wording is historical and superseded by the role-neutral written content above; written colors, behavior, responsive rules, accessibility, and product copy remain authoritative.</figcaption>
             <img src="assets/screenpilot-active-interview-concept.png?v=deep-ink-coral-20260908" alt="Paired desktop and mobile ScreenPilot active-interview concept using Deep Ink navy, Warm Coral, readable captions, voice signal, controls, and candidate-sourced insight cards." />
           </figure>
         </div>

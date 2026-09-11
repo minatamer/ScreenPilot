@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-08-31  
-Depends on: SP-005, SP-006, SP-015  
+Last synchronized: 2026-09-11<br>
+Depends on: SP-005, SP-006, SP-010A, SP-015<br>
 Suggested commit: `feat(insights): visualize live interview understanding`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -22,6 +22,7 @@ Make ScreenPilot's understanding visible by validating five browser client tools
 - CV-assisted may seed grounded cards with `CV`; candidate confirmation/correction changes provenance to `CV + Candidate` or `Candidate`.
 - Conversation-first begins with no candidate fact cards and allows only `Candidate` provenance.
 - Preferred-name and role-preference tool updates synchronize the typed `DemoSession` fields from the same evidence.
+- Role-preference tools accept any bounded candidate-stated label or an undecided state. They do not classify professions, check an allow-list, split compound labels, or create unavailable-role behavior.
 - Desktop uses a fixed constellation; mobile retains identical categories/sources/states in a vertical composition with swipeable rail and expandable evidence.
 - Card lifecycle is empty → appearing → confirmed, with confirmed → corrected or needs-clarification.
 
@@ -47,7 +48,7 @@ Make ScreenPilot's understanding visible by validating five browser client tools
 - [ ] Implement the fixed desktop constellation and intentional mobile rail/expanded-card composition.
 - [ ] Implement appearance, confirmed, corrected, clarification, and evidence-chip states with reduced-motion alternatives.
 - [ ] Synchronize preferred name and role preference from record/correct events while preserving candidate wording/evidence.
-- [ ] Support current context, relevant experience, broad responsibility, strongest areas, team/work style, availability, work pattern, compensation, English-use context, motivation, candidate question, and follow-up categories.
+- [ ] Support current context, relevant experience, broad responsibility, strongest areas, team/work style, availability, location/work-arrangement preference, compensation expectation, English-use context when relevant, motivation, candidate question, and human-follow-up categories.
 - [ ] Seed only validated CV facts in CV-assisted and leave conversation-first fact state empty.
 - [ ] Treat salary, English, availability, and team/work preferences neutrally.
 - [ ] Test malformed calls, wrong sources, no-evidence calls, duplicates, corrections, source transitions, role/name synchronization, layout, and reduced motion.
@@ -58,13 +59,16 @@ Make ScreenPilot's understanding visible by validating five browser client tools
 - [ ] A correction replaces the prior card value, displays Corrected, and preserves valid evidence history without duplication.
 - [ ] Conversation-first cannot create a CV-sourced card by type, reducer, or malformed tool call.
 - [ ] Name/role cards and `DemoSession` values stay synchronized from candidate evidence.
+- [ ] Any bounded role label, compound wording, correction, and undecided state use one role-card/session contract with no classification, splitting, allow-list check, or unavailable status.
 - [ ] Desktop and mobile show the same categories, source chips, clarification/correction states, and evidence access.
 - [ ] No backend write, audio control, hidden score, or unsupported inference exists.
+- [ ] Unsupported employer/vacancy questions create evidence-linked human-follow-up cards without inventing responsibilities, qualifications, compensation, benefits, reporting lines, team size, work pattern, location requirements, or timelines.
 
 ## Focused verification
 
 - [ ] Run focused tool-schema, dispatcher, reducer, and component tests.
 - [ ] Replay fake events for salary, availability, team style, name correction, role correction, candidate question, and clarification.
+- [ ] Replay Graphic Designer, Full Stack Developer, compound-role, undecided, and unsupported-employer-question events and verify universal categories plus evidence-linked human follow-up.
 - [ ] Attempt invalid source, missing final turn, invented ID, duplicate, and unsupported category calls.
 - [ ] Manually inspect desktop/mobile appearance, correction, long values, evidence chips, reduced motion, and conversation-first empty state.
 

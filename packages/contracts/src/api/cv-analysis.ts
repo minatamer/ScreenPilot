@@ -1,12 +1,10 @@
 import { z } from "zod";
 
 import { interviewGrantSchema } from "./interview-preparation.js";
-import { vacancyCatalogKeySchema } from "../interview/employer-context.js";
 import { normalizedCvSchema } from "../interview/normalized-cv.js";
 import { screeningPlanSchema } from "../interview/screening-plan.js";
 
 export const analyzeCvRequestSchema = z.strictObject({
-  vacancyCatalogKey: vacancyCatalogKeySchema,
   cvText: z.string().trim().min(500).max(40_000),
   clientRequestId: z.uuid(),
   turnstileToken: z.string().trim().min(1).max(4_096),

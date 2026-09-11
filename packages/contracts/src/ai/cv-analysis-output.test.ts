@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { providerUsageSchema } from "../api/cv-analysis.js";
-import { FIXED_TOPIC_KEYS } from "../interview/screening-plan.js";
+import {
+  FIXED_TOPIC_KEYS,
+  UNIVERSAL_TOPIC_KEYS,
+} from "../interview/screening-plan.js";
 import {
   cvAnalysisModelOutputJsonSchema,
   cvAnalysisModelOutputSchema,
@@ -22,12 +25,16 @@ function validOutput() {
       facts: [
         {
           category: "education",
-          evidenceExcerpt: "Recent computing graduate",
+          evidenceExcerpt: "Recent product management graduate",
           id: "education-1",
-          statement: "The CV describes a recent computing graduate.",
+          statement: "The CV describes a recent product management graduate.",
         },
       ],
-      headline: "Recent computing graduate",
+      headline: "Recent product management graduate",
+      suggestedRole: {
+        cvFactIds: ["education-1"],
+        label: "Product Manager",
+      },
     },
     plan: {
       branch: "graduate",
@@ -35,30 +42,28 @@ function validOutput() {
       fixedTopics: [...FIXED_TOPIC_KEYS],
       openingIntent:
         "Confirm the candidate's preferred name and requested role.",
-      topics: FIXED_TOPIC_KEYS.map((key) => ({
-        applicableVacancyKeys: [],
+      topics: UNIVERSAL_TOPIC_KEYS.map((key) => ({
         coverageCriteria: ["Candidate-confirmed evidence covers this field."],
         cvFactIds: key === "current_context" ? ["education-1"] : [],
         followupDirections: ["Preserve candidate corrections."],
         intent: `Confirm ${key} at a concise recruiter-screening level.`,
         key,
         reason: "Candidate confirmation remains required.",
-        required: true,
+        required: key !== "clarifications_and_followups",
         title: key,
       })),
-      vacancyClarification: {
-        confirmedVacancyKeys: [],
+      roleClarification: {
         cvFactIds: ["education-1"],
         reason: "The CV supports only a non-binding conversation hint.",
         requiresCandidateConfirmation: true,
-        suggestedVacancyKey: null,
+        suggestedRole: "Product Manager",
       },
     },
   } as const;
 }
 
 describe("CV-analysis model output contract", () => {
-  it("accepts the evidence-grounded CV-assisted shape and publishes JSON Schema", () => {
+  it("accepts one evidence-grounded role suggestion and publishes JSON Schema", () => {
     expect(cvAnalysisModelOutputSchema.parse(validOutput())).toEqual(
       validOutput(),
     );
@@ -68,7 +73,7 @@ describe("CV-analysis model output contract", () => {
     });
   });
 
-  it("rejects role confirmation, missing HR topics, and dangling fact references", () => {
+  it("rejects missing HR topics and dangling fact references", () => {
     const output = validOutput();
     expect(
       cvAnalysisModelOutputSchema.safeParse({
@@ -77,9 +82,8 @@ describe("CV-analysis model output contract", () => {
           ...output.plan,
           fixedTopics: ["preferred_name"],
           topics: output.plan.topics.slice(0, 1),
-          vacancyClarification: {
-            ...output.plan.vacancyClarification,
-            confirmedVacancyKeys: ["frontend-developer"],
+          roleClarification: {
+            ...output.plan.roleClarification,
             cvFactIds: ["missing-fact"],
           },
         },
@@ -87,21 +91,50 @@ describe("CV-analysis model output contract", () => {
     ).toBe(false);
   });
 
-  it("requires fact evidence for vacancy hints and classified experience levels", () => {
+  it("requires matching fact evidence for role suggestions", () => {
     const output = validOutput();
     expect(
       cvAnalysisModelOutputSchema.safeParse({
         ...output,
         plan: {
           ...output.plan,
-          vacancyClarification: {
-            ...output.plan.vacancyClarification,
+          roleClarification: {
+            ...output.plan.roleClarification,
             cvFactIds: [],
-            suggestedVacancyKey: "frontend-developer",
           },
         },
       }).success,
     ).toBe(false);
+    expect(
+      cvAnalysisModelOutputSchema.safeParse({
+        ...output,
+        cv: {
+          ...output.cv,
+          suggestedRole: {
+            cvFactIds: ["education-1"],
+            label: "Graphic Designer",
+          },
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      cvAnalysisModelOutputSchema.safeParse({
+        ...output,
+        cv: { ...output.cv, suggestedRole: null },
+        plan: {
+          ...output.plan,
+          roleClarification: {
+            ...output.plan.roleClarification,
+            cvFactIds: [],
+            suggestedRole: null,
+          },
+        },
+      }).success,
+    ).toBe(true);
+  });
+
+  it("requires evidence for classified experience levels", () => {
+    const output = validOutput();
     expect(
       cvAnalysisModelOutputSchema.safeParse({
         ...output,
@@ -111,11 +144,12 @@ describe("CV-analysis model output contract", () => {
           facts: [
             {
               category: "skill",
-              evidenceExcerpt: "TypeScript",
+              evidenceExcerpt: "Product planning",
               id: "skill-1",
-              statement: "The CV lists TypeScript.",
+              statement: "The CV lists product planning.",
             },
           ],
+          suggestedRole: null,
         },
         plan: {
           ...output.plan,
@@ -123,37 +157,68 @@ describe("CV-analysis model output contract", () => {
             ...topic,
             cvFactIds: [],
           })),
-          vacancyClarification: {
-            ...output.plan.vacancyClarification,
+          roleClarification: {
+            ...output.plan.roleClarification,
             cvFactIds: [],
+            suggestedRole: null,
           },
         },
       }).success,
     ).toBe(false);
+  });
+
+  it.each([
+    "The candidate applied for the Product Manager role.",
+    "The candidate is applying for Product Manager.",
+    "The candidate applies for Graphic Designer.",
+    "The candidate will apply for Customer Support Representative.",
+    "The candidate submitted an application for Product Manager.",
+    "The candidate submitted their application for Product Manager.",
+    "The candidate applied as a Graphic Designer.",
+    "The candidate submitted an application.",
+    "The Product Manager application was submitted.",
+    "Their application for Product Manager is pending.",
+  ])("rejects arbitrary-role application claims: %s", (statement) => {
+    const output = validOutput();
     expect(
       cvAnalysisModelOutputSchema.safeParse({
         ...output,
         cv: {
           ...output.cv,
-          experienceLevel: "unclear",
-          facts: [],
-        },
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic) => ({
-            ...topic,
-            cvFactIds: [],
+          facts: output.cv.facts.map((fact) => ({
+            ...fact,
+            statement,
           })),
-          vacancyClarification: {
-            ...output.plan.vacancyClarification,
-            cvFactIds: [],
-          },
+        },
+      }).success,
+    ).toBe(false);
+  });
+
+  it.each([
+    "The CV includes a portfolio of design work.",
+    "The CV describes competency developed through customer support work.",
+    "The CV lists domain knowledge in insurance operations.",
+    "The CV describes call simulations performed during past training.",
+    "The CV describes work on a software application.",
+    "The CV describes work on a role-based software application.",
+    "The CV describes applied machine learning experience.",
+  ])("allows benign grounded CV evidence: %s", (statement) => {
+    const output = validOutput();
+    expect(
+      cvAnalysisModelOutputSchema.safeParse({
+        ...output,
+        cv: {
+          ...output.cv,
+          facts: output.cv.facts.map((fact) => ({
+            ...fact,
+            statement,
+          })),
         },
       }).success,
     ).toBe(true);
   });
 
-  it("rejects duplicate evidence IDs and technical evaluation topics", () => {
+  it("rejects duplicate evidence IDs and professional assessment topics", () => {
     const output = validOutput();
     expect(
       cvAnalysisModelOutputSchema.safeParse({
@@ -180,167 +245,42 @@ describe("CV-analysis model output contract", () => {
   });
 
   it.each([
-    [
-      "opening intent hiring judgment",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          openingIntent: "Rank the candidate and recommend them for hiring.",
-        },
-      }),
-    ],
-    [
-      "vacancy application claim",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          vacancyClarification: {
-            ...output.plan.vacancyClarification,
-            reason: "The candidate applied for the Frontend role.",
-          },
-        },
-      }),
-    ],
-    [
-      "vacancy sensitive judgment",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          vacancyClarification: {
-            ...output.plan.vacancyClarification,
-            reason: "Their personality indicates strong culture fit.",
-          },
-        },
-      }),
-    ],
-    [
-      "technical follow-up direction",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic, index) =>
-            index === 0
-              ? {
-                  ...topic,
-                  followupDirections: [
-                    "Ask a system design question and score architecture depth.",
-                  ],
-                }
-              : topic,
-          ),
-        },
-      }),
-    ],
-    [
-      "accent follow-up direction",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic, index) =>
-            index === 0
-              ? {
-                  ...topic,
-                  followupDirections: ["Evaluate the candidate's accent."],
-                }
-              : topic,
-          ),
-        },
-      }),
-    ],
-    [
-      "protected-trait coverage criterion",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic, index) =>
-            index === 0
-              ? {
-                  ...topic,
-                  coverageCriteria: [
-                    "Infer the candidate's age and marital status.",
-                  ],
-                }
-              : topic,
-          ),
-        },
-      }),
-    ],
-  ])("rejects forbidden content in %s", (_label, mutate) => {
+    "Rank the candidate and recommend them for hiring.",
+    "Their personality indicates strong culture fit.",
+    "The candidate applied for the Product Manager role.",
+    "Review the candidate's design portfolio as an assessment.",
+    "Run competency testing for customer support scenarios.",
+    "Use roleplay to assess a difficult customer interaction.",
+    "Test professional knowledge for the requested profession.",
+    "Evaluate profession-specific suitability for the role.",
+    "Assess the candidate’s suitability for this role.",
+    "Run a customer-support knowledge test.",
+    "Simulate a difficult customer call.",
+    "The candidate is applying for Product Manager.",
+    "The candidate applied as a Graphic Designer.",
+    "The candidate submitted an application.",
+    "The Product Manager application was submitted.",
+    "Their application for Product Manager is pending.",
+  ])("rejects forbidden plan content: %s", (reason) => {
+    const output = validOutput();
     expect(
-      cvAnalysisModelOutputSchema.safeParse(mutate(validOutput())).success,
+      cvAnalysisModelOutputSchema.safeParse({
+        ...output,
+        plan: {
+          ...output.plan,
+          roleClarification: { ...output.plan.roleClarification, reason },
+        },
+      }).success,
     ).toBe(false);
   });
 
-  it.each([
-    [
-      "opening intent",
-      (output: ReturnType<typeof validOutput>) => ({
+  it("rejects literal questions in declarative plan fields", () => {
+    const output = validOutput();
+    expect(
+      cvAnalysisModelOutputSchema.safeParse({
         ...output,
         plan: { ...output.plan, openingIntent: "Which role do you want?" },
-      }),
-    ],
-    [
-      "vacancy reason",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          vacancyClarification: {
-            ...output.plan.vacancyClarification,
-            reason: "Would Frontend be your preferred role?",
-          },
-        },
-      }),
-    ],
-    [
-      "topic intent",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic, index) =>
-            index === 0 ? { ...topic, intent: "What name do you use?" } : topic,
-          ),
-        },
-      }),
-    ],
-    [
-      "coverage criterion",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic, index) =>
-            index === 0
-              ? { ...topic, coverageCriteria: ["Are you available soon?"] }
-              : topic,
-          ),
-        },
-      }),
-    ],
-    [
-      "follow-up direction",
-      (output: ReturnType<typeof validOutput>) => ({
-        ...output,
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic, index) =>
-            index === 0
-              ? { ...topic, followupDirections: ["Why this company?"] }
-              : topic,
-          ),
-        },
-      }),
-    ],
-  ])("rejects a literal question in %s", (_label, mutate) => {
-    expect(
-      cvAnalysisModelOutputSchema.safeParse(mutate(validOutput())).success,
+      }).success,
     ).toBe(false);
   });
 

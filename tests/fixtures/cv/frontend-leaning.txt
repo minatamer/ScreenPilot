@@ -3,7 +3,7 @@ This document describes a fictional candidate created only for deterministic dem
 
 Tala Venn
 Junior interface developer
-Remote within Europe
+Work arrangement to confirm
 
 PROFILE
 Two years of fictional experience supporting responsive product interfaces for internal workflow tools. Evidence leans toward Frontend work, but it is only a conversation hint and does not establish that the candidate applied for the Frontend Developer opening.

@@ -1,14 +1,10 @@
 import { z } from "zod";
 
 import { publicRuntimeConfigSchema } from "./public-runtime-config.js";
-import {
-  publicEmployerContextSchema,
-  publicVacancyCatalogueSchema,
-} from "../interview/employer-context.js";
+import { publicRoleNeutralDemoContextSchema } from "../interview/demo-context.js";
 
 export const bootstrapResponseSchema = publicRuntimeConfigSchema.extend({
-  employer: publicEmployerContextSchema,
-  vacancies: publicVacancyCatalogueSchema,
+  demoContext: publicRoleNeutralDemoContextSchema,
 });
 
 export type BootstrapResponse = z.infer<typeof bootstrapResponseSchema>;

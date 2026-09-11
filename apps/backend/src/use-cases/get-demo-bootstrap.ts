@@ -4,16 +4,12 @@ import {
 } from "@screenpilot/contracts/api/bootstrap";
 import type { PublicRuntimeConfig } from "@screenpilot/contracts/api/public-runtime-config";
 
-import {
-  PUBLIC_EMPLOYER_CONTEXT,
-  PUBLIC_VACANCY_CATALOGUE,
-} from "../demo/vacancy-catalogue.js";
+import { PUBLIC_ROLE_NEUTRAL_DEMO_CONTEXT } from "../demo/role-neutral-demo-context.js";
 
 export function createGetDemoBootstrap(publicRuntime: PublicRuntimeConfig) {
   const response = bootstrapResponseSchema.parse({
     ...publicRuntime,
-    employer: PUBLIC_EMPLOYER_CONTEXT,
-    vacancies: PUBLIC_VACANCY_CATALOGUE,
+    demoContext: PUBLIC_ROLE_NEUTRAL_DEMO_CONTEXT,
   });
 
   return function getDemoBootstrap(): BootstrapResponse {

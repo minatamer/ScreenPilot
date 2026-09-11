@@ -3,7 +3,7 @@ This document describes a fictional candidate created only for deterministic dem
 
 Noel Arden
 Experienced product software developer
-Remote within Europe
+Work arrangement to confirm
 
 PROFILE
 Six years of fictional product-development experience across internal workflow interfaces, server-side services, and delivery coordination for distributed teams. The record is intentionally broad and does not indicate which confirmed ScreenPilot vacancy the candidate wants; role direction must be confirmed during the conversation.
@@ -15,4 +15,4 @@ EARLIER EXPERIENCE
 Worked on data-import flows and customer-facing status views for a fictional software product. Investigated operational reports at a high level, clarified requirements with non-technical partners, and documented limitations before delivery. No real employer, customer, or product is represented.
 
 NEXT ROLE
-Wants meaningful product ownership, a collaborative remote-first environment, and room to mentor while continuing to learn. Open to Frontend, Backend, or a mixed direction, subject to the confirmed vacancy conversation. Uses English in weekly distributed-team communication. Notice period, compensation expectation, and preferred screening vacancy are not supplied.
+Wants meaningful product ownership, a collaborative environment, and room to mentor while continuing to learn. The candidate remains open to several role directions and has not selected one. Uses English in weekly distributed-team communication. Notice period, compensation expectation, work arrangement, and preferred role wording are not supplied.

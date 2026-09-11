@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 1 — interview preparation paths  
-Last synchronized: 2026-08-31  
-Depends on: SP-005, SP-006, SP-007, SP-009  
+Last synchronized: 2026-09-11<br>
+Depends on: SP-005, SP-006, SP-007, SP-009, SP-010A<br>
 Suggested commit: `feat(frontend): add conversation-first entry`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -18,15 +18,15 @@ Deliver the equally prominent no-CV preparation path from landing choice to shar
 
 - The landing offers two equal cards: **Use a CV** and **Start without a CV**. Neither is a secondary link or degraded experience.
 - Conversation-first simulates a recruiter beginning with no document. The live agent will learn name, role interest, and background naturally from speech.
-- On selection, call `POST /v1/interview/prepare` with the fixed conversation-first mode/catalogue and show a short truthful **Preparing an open conversation** transition.
-- The response contains a generic discovery plan and `interviewGrant`; it contains no candidate facts, suggested vacancy, or CV source.
+- On selection, call the SP-010A-migrated `POST /v1/interview/prepare` without a fixed catalogue key and show a short truthful **Preparing an open conversation** transition.
+- The response contains the universal role-neutral discovery plan and `interviewGrant`; it contains no candidate facts, CV role suggestion, fixed vacancy branches, or CV source.
 - This path skips upload, extraction, OpenAI CV analysis, CV fact preview, and plan preview entirely, then enters the same shared preflight as the CV path.
 - Later live behavior begins with an open target-position question and may become more specific only from candidate-evidenced answers.
-- Employer/vacancy context comes from `GET /v1/demo/bootstrap`; the frontend does not compile a duplicate catalogue. Browser requests use the shared relative `/v1` client.
+- Role-neutral synthetic-demo disclosure comes from `GET /v1/demo/bootstrap`; the frontend does not compile a role allow-list or employer facts. Browser requests use the shared relative `/v1` client.
 
 ## Scope boundaries
 
-- Do not ask the candidate to fill a pre-call form, choose Frontend/Backend from a picker, or upload a CV.
+- Do not ask the candidate to fill a pre-call form, choose from a supported-role picker, or upload a CV.
 - Do not display fake personalization, CV silhouettes, extracted facts, a generated plan, or provider-analysis progress.
 - Do not call OpenAI, ElevenLabs, or Turnstile during deterministic preparation.
 - Do not create a separate interview/review implementation for this mode.
@@ -49,7 +49,8 @@ Deliver the equally prominent no-CV preparation path from landing choice to shar
 
 - [ ] A visitor can reach shared preflight without providing a file or triggering a paid preparation call.
 - [ ] No screen in the path claims to analyze or know the candidate.
-- [ ] The generic plan has discovery branch, no suggested vacancy, no CV IDs, and both dormant vacancy branches.
+- [ ] The generic plan has a discovery structure, universal HR intents, no CV suggestion/IDs, and no dormant profession-specific branches.
+- [ ] The path discloses that any bounded candidate-stated role becomes a synthetic session-only demo vacancy, offers an undecided route, and contains no role allow-list or unavailable state.
 - [ ] Retry stays in conversation-first; Back returns to the equal choice screen instead of CV upload.
 - [ ] Mobile and desktop show the same information/actions with intentional reflow.
 
@@ -59,6 +60,8 @@ Deliver the equally prominent no-CV preparation path from landing choice to shar
 - [ ] Inspect network calls and prove the only preparation call is `POST /v1/interview/prepare`.
 - [ ] Inspect stored session JSON and confirm no `cv` field or CV provenance exists.
 - [ ] Manually exercise success, slow response, typed failure, retry, Back, expiry, Clear session, keyboard, and responsive layouts.
+- [ ] Inspect bootstrap, prepared state, and persisted state before preflight to confirm the role-neutral disclosure appears, no role picker/catalogue/unavailable state or candidate role exists yet, and every conversation-first start uses the same deterministic universal plan and shared preflight.
+- Spoken role-label, correction, compound-role, and undecided scenarios belong to the later live interview/insight policy and release QA work in SP-016, SP-017, and SP-025; they are not SP-011 preflight assertions.
 
 ## Commit boundary
 

@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
-Last synchronized: 2026-08-31  
-Depends on: SP-017, SP-018, SP-021, SP-022, SP-023, SP-024  
+Last synchronized: 2026-09-11<br>
+Depends on: SP-010A, SP-017, SP-018, SP-021, SP-022, SP-023, SP-024<br>
 Suggested commit: `test: complete focused demo release checks`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -42,7 +42,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Verify sample CV → local extraction → protected analysis → grounded plan preview → shared preflight.
 - [ ] Verify a different uploaded text PDF produces materially different grounded facts/topics and no sample leakage.
 - [ ] Verify conversation-first skips CV/provider preparation, begins open, focuses progressively, and yields Candidate-only review.
-- [ ] Verify missing/incorrect name, suggested-role confirmation, opposite-role correction, Frontend, Backend, both, Full Stack redirection, and neither-role general follow-up.
+- [ ] Verify missing/incorrect name, evidence-linked CV suggestion/confirmation, correction to another role, Graphic Designer, Customer Support Representative, Product Manager, Backend Developer without technical questions, Full Stack Developer without redirection, compound/multiple-role wording, and undecided role-neutral completion.
 - [ ] Verify invalid/scanned PDF failure remains local and does not affect conversation-first.
 - [ ] Verify consent, microphone, valid grant, and Turnstile readiness prevent premature voice-token requests.
 - [ ] Verify fake/controlled live voice produces captions, evidence-linked insight cards, corrections, transcript, summary, and review in both modes.
@@ -53,7 +53,8 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Verify both complete flows and all error/retry states at every responsive anchor and intermediate widths, including portrait/landscape, safe areas, virtual keyboard, long captions, sticky controls, reduced motion, 200% zoom, and keyboard.
 - [ ] Read representative agent turns aloud: 8–25-word target, normal 35-word ceiling, one question, direct tone, no canned acknowledgement/praise/tool narration.
 - [ ] Verify candidate counterquestions are answered first, unclear audio is clarified without evidence, and timing/interruption settings—not prompt filler—handle latency.
-- [ ] Verify normal 8–10-prompt HR coverage, multi-field answer credit, one broad role-context clarification maximum, and zero technical follow-up chains.
+- [ ] Verify normal 8–10-prompt HR coverage, multi-field answer credit, one broad role-context clarification maximum, and zero technical, portfolio, competency, roleplay, professional-knowledge, or suitability chains.
+- [ ] Verify unsupported employer/vacancy questions become human follow-up without blocking completion and that no selected role invents responsibilities, qualifications, salary, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines.
 - [ ] Run the smallest targeted release-critical unit/backend checks, then the complete fast default commands once.
 - [ ] Run one controlled live smoke interview per entry mode and record provider revision, date, measured behavior, and cost.
 - [ ] Create `docs/operations/full-flow-cost-baseline.md` from a blank sanitized template and record each flow's date, mode, revision, connection duration, direct OpenAI usage, ElevenLabs standard/burst minute charge, live-LLM Detailed costs, credits/free minutes applied, infrastructure overage, and total.
@@ -66,6 +67,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] The complete quick gate passes once on the release candidate.
 - [ ] Both controlled live entry-mode smokes pass without retention/privacy/scope drift.
 - [ ] No release-blocking conversation, latency, evidence, Turnstile, responsive, accessibility, privacy, or provider defect remains.
+- [ ] Every required role-neutral scenario proves one universal HR screen, no allow-list/redirection, no profession-specific assessment, and no invented employer/vacancy fact.
 - [ ] Any non-blocking known limitation is documented honestly and does not contradict definition of done.
 - [ ] SP-026 can deploy the exact approved release candidate.
 

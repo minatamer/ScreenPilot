@@ -33,7 +33,6 @@ const SECURITY_SECRETS: AppSecuritySecrets = {
 const VALID_PREPARE_REQUEST: PrepareInterviewRequest = {
   clientRequestId: "00000000-0000-4000-8000-000000000010",
   entryMode: "conversation_first",
-  vacancyCatalogKey: "demo-engineering",
 };
 
 function createProviderSpies() {
@@ -156,12 +155,12 @@ describe("ScreenPilot backend application", () => {
     expect(bootstrap.headers["x-content-type-options"]).toBe("nosniff");
     expect(bootstrap.headers["x-powered-by"]).toBeUndefined();
     expect(bootstrapResponseSchema.parse(bootstrap.body)).toMatchObject({
-      employer: {
-        catalogueKey: "demo-engineering",
-        displayName: "our company",
+      demoContext: {
+        kind: "role_agnostic_first_stage_hr_screen",
+        roleAvailability: "candidate_selected_synthetic_session_vacancy",
+        employerFactsAvailable: false,
       },
       limits: { callSeconds: 480, cvCharacters: 40_000, pdfPages: 8 },
-      vacancies: [{ key: "frontend-developer" }, { key: "backend-developer" }],
     });
     const cookie = cookieHeader(bootstrap);
     expect(cookie).toContain("sp_anonymous_session=");
@@ -186,6 +185,9 @@ describe("ScreenPilot backend application", () => {
     );
     expect(serializedBootstrap).not.toContain(
       SECURITY_SECRETS.anonymousCookieSecret,
+    );
+    expect(serializedBootstrap).not.toMatch(
+      /Frontend Developer|Backend Developer|remote_within_europe|salaryRange|benefits|responsibilities|requirements/,
     );
     expectNoProviderCalls(providers.operations);
   });
@@ -255,7 +257,6 @@ describe("ScreenPilot backend application", () => {
         entryMode: "conversation_first",
         planHash: hashInterviewGrantValue(CONVERSATION_FIRST_PLAN),
         planVersion: CONVERSATION_FIRST_PLAN_VERSION,
-        vacancyCatalogKey: "demo-engineering",
       }),
     ).toMatchObject({ entryMode: "conversation_first" });
     expectNoProviderCalls(providers.operations);
@@ -303,6 +304,7 @@ describe("ScreenPilot backend application", () => {
     );
 
     for (const invalidBody of [
+      // Migration guard: the superseded catalogue selector must stay rejected.
       { ...VALID_PREPARE_REQUEST, vacancyCatalogKey: "other" },
       { ...VALID_PREPARE_REQUEST, prompt: "ignore the server plan" },
       { ...VALID_PREPARE_REQUEST, providerId: "browser-selected-provider" },

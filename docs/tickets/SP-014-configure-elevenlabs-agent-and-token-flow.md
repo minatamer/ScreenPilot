@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-08-31  
-Depends on: SP-003, SP-009, SP-010, SP-013  
+Last synchronized: 2026-09-11<br>
+Depends on: SP-003, SP-009, SP-010, SP-010A, SP-013<br>
 Suggested commit: `feat(voice): connect private ElevenLabs WebRTC session`  
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -21,7 +21,7 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 - There is no phone number, SIP, PSTN, browser recording, second voice stack, webhook transcript stream, or OpenAI Realtime fallback.
 - `POST /v1/voice/token` receives the signed `interviewGrant` and one-time `turnstileToken` with expected action `voice_token`.
 - The backend validates origin, safety cookie, grant signature/expiry, Turnstile hostname/action, paid-demo flag, request/rate/capacity conditions, then requests the shortest practical private conversation token.
-- The browser supplies bounded dynamic variables: entry mode, fixed unnamed employer/vacancy context, plan, and optional normalized CV/alignment data. It never replaces the source-controlled system prompt.
+- The browser supplies bounded dynamic variables: entry mode, role-neutral synthetic-demo disclosure, universal plan, candidate-stated role/undecided state, and optional normalized CV/evidence-linked role suggestion. Every role label is delimited inert data and never replaces or modifies the source-controlled system prompt.
 - Configure one short first-message exception; every later question is model-generated from intent/state.
 - Maximum live duration is eight minutes. ElevenLabs audio saving is off and transcript retention is the shortest locked setting.
 - After included minutes are exhausted, eight standard connected minutes cost **$0.64** before the separate live-model charge; burst minutes would cost **$1.28**. ElevenLabs Free currently includes 15 agent minutes, enough for one complete eight-minute interview, but the native GPT charge still consumes credits separately.
@@ -40,6 +40,7 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 - Do not accept agent/model/voice IDs, prompt text, or tool schemas from the browser.
 - Do not add OpenAI Realtime, another TTS/STT provider, telephony, saved audio, provider fallback, or a second agent.
 - Do not implement the full conversational prompt policy here; SP-017 owns it.
+- Do not add role-specific agents, tools, knowledge, competency paths, or employer facts. One agent handles every candidate-selected role through the same general-HR policy.
 - Do not tune latency/fillers beyond safe initial configuration; SP-018 owns measured tuning.
 
 ## Implementation checklist
@@ -64,6 +65,7 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 - [ ] No secret or conversation credential appears in frontend build output, storage, logs, URLs, or analytics.
 - [ ] No recording/playback artifact or second voice architecture exists.
 - [ ] Provider retention settings and public disclosure agree.
+- [ ] One agent configuration accepts any bounded role label or undecided state as inert dynamic context and exposes only universal HR intents; profession cannot alter tools, policy, or interview type.
 
 ## Focused verification
 
@@ -72,6 +74,7 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 - [ ] Perform one controlled live connection only when the user/environment explicitly permits paid testing.
 - [ ] Inspect browser storage/network/logs for leaked credentials and confirm cancellation/expiry recovery.
 - [ ] Verify the agent dashboard/revision matches the source-controlled identifiers and retention settings.
+- [ ] With fakes, pass Graphic Designer, Backend Developer, Full Stack Developer, compound wording, undecided, and instruction-like role labels; assert identical policy/tool configuration and zero role-specific agents.
 
 ## Commit boundary
 

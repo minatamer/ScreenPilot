@@ -3,10 +3,10 @@ This document describes a fictional candidate created only for deterministic dem
 
 Casey Lumen
 Product developer with Full Stack interest
-Remote within Europe
+Work arrangement to confirm
 
 PROFILE
-Four years of fictional experience moving between workflow interfaces and supporting server-side services. Casey describes the desired direction as Full Stack. That wording must be recorded honestly, while the demo still explains that only Frontend Developer and Backend Developer are confirmed openings.
+Four years of fictional experience moving between workflow interfaces and supporting server-side services. Casey describes the desired direction as Full Stack Developer. That wording is an ordinary bounded suggestion for confirmation and receives the same universal HR screen as every profession.
 
 RECENT RESPONSIBILITIES
 Delivered responsive interface changes, maintained a small set of product-service endpoints, and coordinated release notes for a distributed team. Worked with product and design to clarify user journeys, then collaborated with service-focused teammates when the same workflow required data changes. Participated in code review and lightweight agile planning without acting as a hiring assessor or technical interviewer.
@@ -15,4 +15,4 @@ PROJECT HIGHLIGHT
 Owned a fictional internal request-tracking flow spanning a browser form, status view, and supporting service behavior. The useful recruiter-level fact is breadth of responsibility, not implementation depth. No real company, client, or user data is represented.
 
 PREFERENCES
-Interested in mixed responsibilities, learning across product boundaries, and a team that combines focused independent work with close collaboration. If Full Stack remains preferred, the screening must ask whether Frontend, Backend, both, or a general engineering discussion should anchor the call. Availability and compensation are not supplied.
+Interested in mixed responsibilities, learning across product boundaries, and a team that combines focused independent work with close collaboration. Full Stack Developer is treated as one ordinary role label for the same universal first-stage HR screen and never causes redirection or a second interview. Availability, work arrangement, and compensation expectations are not supplied.

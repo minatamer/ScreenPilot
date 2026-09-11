@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { roleLabelSchema } from "./demo-context.js";
+
 export const INSIGHT_CATEGORIES = [
   "preferred_name",
   "role_preference",
@@ -9,7 +11,7 @@ export const INSIGHT_CATEGORIES = [
   "strongest_areas",
   "team_work_style",
   "availability",
-  "work_pattern",
+  "location_work_arrangement",
   "compensation",
   "english_use",
   "motivation",
@@ -32,7 +34,7 @@ export const insightCardSchema = z
     id: z.string().trim().min(1).max(64),
     category: z.enum(INSIGHT_CATEGORIES),
     label: z.string().trim().min(1).max(120),
-    value: z.string().trim().min(1).max(600),
+    value: z.string().trim().normalize("NFC").min(1).max(600),
     source: z.enum(INSIGHT_SOURCES),
     status: z.enum(INSIGHT_STATUSES),
     evidenceTurnIds: z.array(evidenceIdSchema).max(16),
@@ -42,6 +44,16 @@ export const insightCardSchema = z
     updatedAt: z.iso.datetime({ offset: true }),
   })
   .superRefine((insight, context) => {
+    if (
+      insight.category === "role_preference" &&
+      !roleLabelSchema.safeParse(insight.value).success
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Role-preference insights require a valid bounded role label.",
+        path: ["value"],
+      });
+    }
     if (insight.source !== "CV" && insight.evidenceTurnIds.length === 0) {
       context.addIssue({
         code: "custom",

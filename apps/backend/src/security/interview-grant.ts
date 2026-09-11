@@ -2,13 +2,9 @@ import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 import { interviewGrantSchema } from "@screenpilot/contracts/api/interview-preparation";
 import { entryModeSchema } from "@screenpilot/contracts/interview/entry-mode";
-import {
-  vacancyCatalogKeySchema,
-  type VacancyCatalogKey,
-} from "@screenpilot/contracts/interview/employer-context";
 import { z } from "zod";
 
-const GRANT_VERSION = 1;
+const GRANT_VERSION = 2;
 const HASH_PATTERN = /^[A-Za-z\d_-]{43}$/;
 
 const interviewGrantClaimsSchema = z
@@ -21,7 +17,6 @@ const interviewGrantClaimsSchema = z
     issuedAtEpochSeconds: z.number().int().nonnegative(),
     planHash: z.string().regex(HASH_PATTERN),
     planVersion: z.string().trim().min(1).max(64),
-    vacancyCatalogKey: vacancyCatalogKeySchema,
     version: z.literal(GRANT_VERSION),
   })
   .superRefine((claims, context) => {
@@ -62,7 +57,6 @@ type SharedInterviewGrantBinding = Readonly<{
   planHash: string;
   planVersion: string;
   ttlSeconds: number;
-  vacancyCatalogKey: VacancyCatalogKey;
 }>;
 
 export type InterviewGrantBinding = SharedInterviewGrantBinding &
@@ -81,7 +75,6 @@ type SharedExpectedInterviewGrantBinding = Readonly<{
   anonymousSessionId: string;
   planHash?: string;
   planVersion?: string;
-  vacancyCatalogKey: VacancyCatalogKey;
 }>;
 
 export type ExpectedInterviewGrantBinding =
@@ -148,17 +141,13 @@ function signPayload(payload: string, secret: string): string {
 }
 
 function signaturesMatch(left: string, right: string): boolean {
-  const leftBytes = Buffer.from(left, "base64url");
-  const rightBytes = Buffer.from(right, "base64url");
+  const leftBytes = Buffer.from(left, "ascii");
+  const rightBytes = Buffer.from(right, "ascii");
   return (
     leftBytes.length === rightBytes.length &&
     leftBytes.length > 0 &&
     timingSafeEqual(leftBytes, rightBytes)
   );
-}
-
-function textValuesMatch(left: string, right: string): boolean {
-  return left === right;
 }
 
 export function createInterviewGrantService(input: {
@@ -223,7 +212,6 @@ export function createInterviewGrantService(input: {
       const bindingMatches =
         claims.anonymousSessionId === expected.anonymousSessionId &&
         claims.entryMode === expected.entryMode &&
-        textValuesMatch(claims.vacancyCatalogKey, expected.vacancyCatalogKey) &&
         claims.cvAnalysisHash === expected.cvAnalysisHash &&
         (expected.planHash === undefined ||
           claims.planHash === expected.planHash) &&

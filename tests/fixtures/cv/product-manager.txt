@@ -1,0 +1,15 @@
+SCREENPILOT SYNTHETIC CV FIXTURE
+This document describes a fictional candidate created only for deterministic demo testing.
+
+Mara Quill
+Product coordination generalist
+Suggested role: Product Manager
+
+PROFILE
+Six years of fictional experience coordinating product discovery and delivery across design, operations, and engineering partners. The candidate clarified outcomes, organized broad priorities, and kept decision notes visible when constraints changed. This evidence supports a provisional Product Manager direction for candidate confirmation; it is not an application claim or a real vacancy.
+
+RESPONSIBILITIES
+Prepared concise problem summaries, facilitated planning conversations, synthesized non-sensitive feedback, tracked open decisions, and communicated status to partners with different levels of context. The description stays at recruiter level and includes no product exercise, case interview, competency score, or professional-knowledge judgment.
+
+WORK PREFERENCES
+Values clear ownership, collaborative discovery, candid feedback, and enough autonomy to keep work moving. Uses English for documentation and cross-team discussion. Location and work-arrangement preferences, availability, compensation expectations, motivation, and final role confirmation remain candidate-provided interview details. No real employer, product, customer, or roadmap is represented.

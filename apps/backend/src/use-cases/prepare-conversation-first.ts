@@ -33,7 +33,6 @@ export function createPrepareConversationFirst(input: {
         planHash,
         planVersion: CONVERSATION_FIRST_PLAN_VERSION,
         ttlSeconds: input.grantTtlSeconds,
-        vacancyCatalogKey: request.vacancyCatalogKey,
       });
 
       return prepareInterviewResponseSchema.parse({

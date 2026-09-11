@@ -61,7 +61,6 @@ async function validRequest(): Promise<AnalyzeCvRequest> {
     clientRequestId: "00000000-0000-4000-8000-000000000010",
     cvText: await readFile(fixtureUrl, "utf8"),
     turnstileToken: FAKE_TURNSTILE_PASS_TOKEN,
-    vacancyCatalogKey: "demo-engineering",
   };
 }
 
@@ -122,7 +121,13 @@ describe("POST /v1/cv/analyze", () => {
     expect(result.headers["cache-control"]).toBe("no-store");
     expect(parsed.cv.displayName).toBe("Tala Venn");
     expect(parsed.plan.entryMode).toBe("cv_assisted");
-    expect(parsed.plan.vacancyClarification.confirmedVacancyKeys).toEqual([]);
+    expect(parsed.cv.suggestedRole).toMatchObject({
+      label: "Frontend Developer",
+      cvFactIds: ["role-direction-1"],
+    });
+    expect(parsed.plan.roleClarification.suggestedRole).toBe(
+      "Frontend Developer",
+    );
     expect(parsed.expiresAt).toBe("2026-09-11T08:15:00.000Z");
     expect(providers.verifyChallenge).toHaveBeenCalledOnce();
     expect(providers.analyzeCv).toHaveBeenCalledOnce();
@@ -172,6 +177,7 @@ describe("POST /v1/cv/analyze", () => {
       { ...input, clientRequestId: "not-a-uuid" },
       { ...input, cvText: "x".repeat(499) },
       { ...input, cvText: "x".repeat(40_001) },
+      // Migration guard: the superseded catalogue selector must stay rejected.
       { ...input, vacancyCatalogKey: "arbitrary-employer-role" },
     ]) {
       await agent
@@ -292,6 +298,5 @@ describe("POST /v1/cv/analyze", () => {
     expect(logs).not.toContain(input.cvText);
     expect(logs).not.toContain(input.turnstileToken);
     expect(logs).not.toContain("Tala Venn");
-    expect(logs).not.toContain("frontend-developer");
   });
 });

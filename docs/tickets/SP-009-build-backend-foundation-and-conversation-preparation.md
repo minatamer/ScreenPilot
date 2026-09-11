@@ -11,6 +11,8 @@ Ticket index: [`README.md`](README.md)
 
 ---
 
+> **Superseded preparation context — SP-010A:** This packet remains the historical backend-foundation record. Its two-vacancy bootstrap payload, fixed `demo-engineering` catalogue key, dormant vacancy branches, and catalogue-bound grant semantics must not be treated as the target for SP-011 or later work. SP-010A completed the role-neutral bootstrap/plan/grant migration while preserving the stateless application factory, cookie, security, and deterministic no-provider preparation behavior implemented here.
+
 ## Objective
 
 Create the first complete Express 5 backend slice, public bootstrap, deterministic conversation-first preparation, signed grant boundary, and reusable safe provider infrastructure without persistence or paid preparation calls.

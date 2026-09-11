@@ -3,10 +3,10 @@ This document describes a fictional candidate created only for deterministic dem
 
 Riley Vale
 Junior software developer
-Remote within Europe
+Work arrangement to confirm
 
 PROFILE
-Early-career developer with mixed product experience across accessible web interfaces and small server-side services. Interested in learning through collaborative delivery and open to discussing either the Frontend Developer or Backend Developer direction. Full Stack work is an interest, not a claim that a matching vacancy exists.
+Early-career developer with mixed product experience across accessible web interfaces and small server-side services. Interested in learning through collaborative delivery and open to discussing the role direction that best reflects the candidate's goals. The CV does not establish an application or real vacancy.
 
 EXPERIENCE
 Completed a fictional six-month product internship supporting responsive workflow screens for distributed teams. Worked with a product designer to improve keyboard navigation, clarify empty states, and document interface behavior. Participated in collaborative code review and shared short progress updates with a remote team.
@@ -18,4 +18,4 @@ EDUCATION AND LEARNING
 Completed generic computing studies and practical coursework covering web interfaces, data handling, teamwork, and responsible software delivery. Uses English regularly for project notes and distributed collaboration.
 
 PREFERENCES
-Looking for structured onboarding, mentorship, and room to grow. Comfortable with full-time remote work within Europe. Availability and compensation expectations should be confirmed during the conversation.
+Looking for structured onboarding, mentorship, and room to grow. Work-arrangement and location preferences should be discussed without assuming an employer policy. Availability and compensation expectations should be confirmed during the conversation.

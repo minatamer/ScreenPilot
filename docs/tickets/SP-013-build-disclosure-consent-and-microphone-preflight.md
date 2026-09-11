@@ -42,6 +42,7 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 
 - [ ] Build the shared dark preflight shell with mode badge and safe Back behavior.
 - [ ] Present concise disclosure and privacy/provider roles before consent.
+- [ ] State that the candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview will remain role-neutral when undecided; do not show employer facts or a supported-role list.
 - [ ] Implement an unchecked consent control and deliberate continuation.
 - [ ] Request microphone permission only from user action; show selected input and a non-recording level meter.
 - [ ] Handle denied, unavailable, in-use, removed, and permission-retry states with browser-appropriate guidance.

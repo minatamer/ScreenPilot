@@ -2,9 +2,13 @@
 
 > Pilot conducts the first screen. Humans make the decision.
 
-ScreenPilot is a stateless, privacy-minded demonstration of AI-assisted candidate screening. It gives candidates a disclosed voice conversation with **Pilot**, organizes candidate-sourced facts into evidence-linked insights, and prepares a structured review for a human recruiter.
+ScreenPilot is a stateless, privacy-minded, role-agnostic demonstration of AI-assisted first-stage HR screening. It gives candidates a disclosed voice conversation with **Pilot**, organizes candidate-sourced facts into evidence-linked insights, and prepares a structured review for a human recruiter.
 
 ScreenPilot supports recruiter judgment. It does not rank candidates, issue pass/fail decisions, or automate hiring decisions.
+
+Any non-empty role label the candidate states becomes the available **synthetic demo vacancy for that browser session**. There is no supported-role allow-list or unavailable-vacancy path: Graphic Designer, Customer Support Representative, Product Manager, Backend Developer, Full Stack Developer, multiple-role wording, and other bounded labels are handled by the same general HR screen. An undecided candidate can complete an open role-neutral screen.
+
+Role labels and CV suggestions are untrusted candidate context, not employer facts. ScreenPilot never invents responsibilities, qualifications, compensation, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines for a candidate-selected role. It gathers the candidate's preferences and records unsupported employer/vacancy questions for human follow-up. Every role stays inside the same universal HR scope—name, requested role, current context, high-level experience/responsibilities, collaboration preferences, motivation, work arrangement/location preferences, availability, compensation expectation, relevant candidate-stated English use, questions, follow-ups, and close—and never becomes a technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
 
 ## What the product does
 
@@ -16,7 +20,7 @@ Candidates can enter the same screening experience in two ways:
 The intended flow is:
 
 ```text
-vacancy context
+candidate-selected synthetic demo vacancy or open role-neutral context
   -> optional CV understanding or conversation-first preparation
   -> disclosure, consent, and microphone preflight
   -> live voice interview with captions and candidate-sourced insights

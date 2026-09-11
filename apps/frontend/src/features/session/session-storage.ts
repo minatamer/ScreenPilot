@@ -7,6 +7,7 @@ import {
 
 export const SESSION_STORAGE_PREFIX = "screenpilot:";
 export const SESSION_STORAGE_KEY = `${SESSION_STORAGE_PREFIX}demo-session:v${String(PERSISTED_SESSION_SCHEMA_VERSION)}`;
+const VERSIONED_SESSION_KEY_PATTERN = /^screenpilot:demo-session:v\d+$/u;
 
 export type SessionStorageLike = Pick<
   Storage,
@@ -18,7 +19,7 @@ export type LoadPersistedSessionResult =
   | Readonly<{ status: "restored"; session: PersistedDemoSession }>
   | Readonly<{
       status: "cleared";
-      reason: "corrupt" | "expired" | "future_version" | "oversized";
+      reason: "corrupt" | "expired" | "unsupported_version" | "oversized";
     }>
   | Readonly<{ status: "unavailable" }>;
 
@@ -37,6 +38,30 @@ function removeSessionKey(storage: SessionStorageLike): boolean {
     return true;
   } catch {
     return false;
+  }
+}
+
+function clearUnsupportedVersionKeys(
+  storage: SessionStorageLike,
+): "cleared" | "none" | "unavailable" {
+  try {
+    const unsupportedKeys: string[] = [];
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (
+        key !== null &&
+        key !== SESSION_STORAGE_KEY &&
+        VERSIONED_SESSION_KEY_PATTERN.test(key)
+      ) {
+        unsupportedKeys.push(key);
+      }
+    }
+    for (const key of unsupportedKeys) {
+      storage.removeItem(key);
+    }
+    return unsupportedKeys.length > 0 ? "cleared" : "none";
+  } catch {
+    return "unavailable";
   }
 }
 
@@ -69,6 +94,11 @@ export function loadPersistedSession(
     return { status: "unavailable" };
   }
 
+  const unsupportedVersionResult = clearUnsupportedVersionKeys(storage);
+  if (unsupportedVersionResult === "unavailable") {
+    return { status: "unavailable" };
+  }
+
   let serializedSession: string | null;
   try {
     serializedSession = storage.getItem(SESSION_STORAGE_KEY);
@@ -77,6 +107,9 @@ export function loadPersistedSession(
   }
 
   if (serializedSession === null) {
+    if (unsupportedVersionResult === "cleared") {
+      return { status: "cleared", reason: "unsupported_version" };
+    }
     return { status: "empty" };
   }
 
@@ -97,7 +130,7 @@ export function loadPersistedSession(
 
   if (unsupportedSchemaVersion(candidateSession)) {
     return removeSessionKey(storage)
-      ? { status: "cleared", reason: "future_version" }
+      ? { status: "cleared", reason: "unsupported_version" }
       : { status: "unavailable" };
   }
 

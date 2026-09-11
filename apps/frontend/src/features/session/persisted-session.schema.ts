@@ -1,10 +1,9 @@
 import { interviewGrantSchema } from "@screenpilot/contracts/api/interview-preparation";
 import { voiceMetadataSchema } from "@screenpilot/contracts/api/voice-token";
 import {
-  publicEmployerContextSchema,
-  publicVacancyCatalogueSchema,
-  vacancyKeySchema,
-} from "@screenpilot/contracts/interview/employer-context";
+  publicRoleNeutralDemoContextSchema,
+  rolePreferenceSchema,
+} from "@screenpilot/contracts/interview/demo-context";
 import { entryModeSchema } from "@screenpilot/contracts/interview/entry-mode";
 import { insightCardSchema } from "@screenpilot/contracts/interview/insight-card";
 import { normalizedCvSchema } from "@screenpilot/contracts/interview/normalized-cv";
@@ -20,7 +19,7 @@ import {
   type DemoStage,
 } from "./demo-session.types";
 
-export const PERSISTED_SESSION_SCHEMA_VERSION = 1 as const;
+export const PERSISTED_SESSION_SCHEMA_VERSION = 2 as const;
 export const SESSION_LIFETIME_MS = 2 * 60 * 60 * 1_000;
 export const MAX_PERSISTED_SESSION_BYTES = 512 * 1_024;
 
@@ -76,13 +75,6 @@ export const preferredNameSchema = z
     }
   });
 
-export const rolePreferenceSchema = z.strictObject({
-  requestedLabel: z.string().trim().min(1).max(120),
-  screeningVacancyKeys: z.array(vacancyKeySchema).max(2),
-  status: z.enum(["confirmed", "unavailable_requested", "undecided"]),
-  evidenceTurnIds: z.array(z.string().trim().min(1).max(64)).min(1).max(16),
-});
-
 export const persistedDemoSessionSchema = z
   .strictObject({
     schemaVersion: z.literal(PERSISTED_SESSION_SCHEMA_VERSION),
@@ -90,8 +82,7 @@ export const persistedDemoSessionSchema = z
     entryMode: entryModeSchema.nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     expiresAt: z.iso.datetime({ offset: true }),
-    employer: publicEmployerContextSchema,
-    vacancies: publicVacancyCatalogueSchema,
+    demoContext: publicRoleNeutralDemoContextSchema,
     preferredName: preferredNameSchema.optional(),
     rolePreference: rolePreferenceSchema.optional(),
     cv: normalizedCvSchema.optional(),
@@ -338,7 +329,7 @@ export function projectPersistedDemoSession(
     state.stage === "cleared" ||
     state.createdAt === null ||
     state.expiresAt === null ||
-    state.employer === null
+    state.demoContext === null
   ) {
     return null;
   }
@@ -349,8 +340,7 @@ export function projectPersistedDemoSession(
     entryMode: state.entryMode,
     createdAt: state.createdAt,
     expiresAt: state.expiresAt,
-    employer: state.employer,
-    vacancies: [...state.vacancies],
+    demoContext: state.demoContext,
     ...(state.preferredName ? { preferredName: state.preferredName } : {}),
     ...(state.rolePreference ? { rolePreference: state.rolePreference } : {}),
     ...(state.cv ? { cv: state.cv } : {}),

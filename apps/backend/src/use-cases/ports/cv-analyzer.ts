@@ -1,6 +1,5 @@
 export type CvAnalyzerInput = Readonly<{
   cvText: string;
-  vacancyCatalogKey: "demo-engineering";
 }>;
 
 export type CvAnalyzerResult<

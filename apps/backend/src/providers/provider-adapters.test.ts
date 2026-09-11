@@ -39,11 +39,9 @@ describe("provider adapter composition", () => {
 
     const firstCvResult = await adapters.cvAnalyzer.analyzeCv({
       cvText: frontendCvText,
-      vacancyCatalogKey: "demo-engineering",
     });
     const secondCvResult = await adapters.cvAnalyzer.analyzeCv({
       cvText: backendCvText,
-      vacancyCatalogKey: "demo-engineering",
     });
     const summaryResult = await adapters.interviewSummarizer.summarizeInterview(
       {
@@ -60,13 +58,11 @@ describe("provider adapter composition", () => {
 
     expect(secondCvResult).not.toEqual(firstCvResult);
     expect(firstCvResult.screeningPlan.entryMode).toBe("cv_assisted");
-    expect(firstCvResult.screeningPlan.vacancyClarification).toMatchObject({
-      confirmedVacancyKeys: [],
-      suggestedVacancyKey: "frontend-developer",
+    expect(firstCvResult.screeningPlan.roleClarification).toMatchObject({
+      suggestedRole: "Frontend Developer",
     });
-    expect(secondCvResult.screeningPlan.vacancyClarification).toMatchObject({
-      confirmedVacancyKeys: [],
-      suggestedVacancyKey: "backend-developer",
+    expect(secondCvResult.screeningPlan.roleClarification).toMatchObject({
+      suggestedRole: "Backend Developer",
     });
     expect(JSON.stringify(summaryResult)).not.toContain(privateCandidateText);
     expect(firstCvResult.usage).toMatchObject({
@@ -108,7 +104,7 @@ describe("provider adapter composition", () => {
     const abortedOperations = [
       () =>
         adapters.cvAnalyzer.analyzeCv(
-          { cvText: "synthetic", vacancyCatalogKey: "demo-engineering" },
+          { cvText: "synthetic" },
           abortController.signal,
         ),
       () =>

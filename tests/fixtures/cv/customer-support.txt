@@ -1,0 +1,15 @@
+SCREENPILOT SYNTHETIC CV FIXTURE
+This document describes a fictional candidate created only for deterministic demo testing.
+
+Ilan Moss
+Early-career customer service generalist
+Suggested role: Customer Support Representative
+
+PROFILE
+Two years of fictional experience helping people understand product processes through written and live support. The candidate organized incoming requests, clarified the issue in neutral language, and kept customers informed when another team needed to follow up. This supports a provisional Customer Support Representative direction only and does not prove an application or real opening.
+
+RESPONSIBILITIES
+Summarized recurring questions, maintained plain-language response notes, handed unresolved cases to the appropriate fictional team, and shared broad service observations during planning. The CV contains no support simulation, knowledge score, customer sentiment rating, or claim about hiring suitability.
+
+WORK PREFERENCES
+Prefers a calm team that shares context, gives direct feedback, and allows focused ownership between check-ins. Uses English in written updates and scheduled conversations. Location, work arrangement, availability, compensation expectations, motivation, and the candidate's final role wording remain topics for the interview. No real customer, employer, account, or incident is represented.

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { vacancyKeySchema } from "./employer-context.js";
+import { rolePreferenceSchema } from "./demo-context.js";
 
 const evidenceIdSchema = z.string().trim().min(1).max(64);
 const evidenceIdsSchema = z.array(evidenceIdSchema).min(1).max(16);
@@ -17,13 +17,7 @@ const candidateStatementSchema = z.strictObject({
 
 export const screeningSummarySchema = z.strictObject({
   overview: z.string().trim().min(1).max(1_500),
-  rolePreference: z
-    .strictObject({
-      requestedLabel: z.string().trim().min(1).max(120),
-      screeningVacancyKeys: z.array(vacancyKeySchema).max(2),
-      evidenceTurnIds: evidenceIdsSchema,
-    })
-    .optional(),
+  rolePreference: rolePreferenceSchema.optional(),
   confirmedFacts: z.array(evidenceStatementSchema).max(24),
   clarifications: z.array(evidenceStatementSchema).max(16),
   topicsCovered: z
