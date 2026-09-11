@@ -6,9 +6,9 @@ import { DemoSessionProvider } from "@/features/session/demo-session-provider";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "ScreenPilot · Adaptive AI screening",
+  title: "ScreenPilot · Automate first-round screening interviews",
   description:
-    "A private, role-neutral AI screening demo with human hiring decisions.",
+    "Run consistent AI voice screening interviews and turn candidate answers into clear notes for your hiring team to review.",
 };
 
 type RootLayoutProps = Readonly<{
@@ -17,7 +17,7 @@ type RootLayoutProps = Readonly<{
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
+    <html data-scroll-behavior="smooth" lang="en">
       <body>
         <DemoSessionProvider>{children}</DemoSessionProvider>
       </body>

@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 3 — same-session review  
 Last synchronized: 2026-08-26  
 Depends on: SP-015, SP-016  
-Suggested commit: `feat(review): link local transcript evidence`  
+Suggested commit: `SP-019: link local transcript evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 
@@ -22,6 +22,7 @@ Turn bounded final local turns into an accessible review timeline and let insigh
 - Evidence navigation must work with keyboard/focus and long transcripts on desktop and mobile.
 - The review is not a recording, certified transcript, searchable archive, editable case file, or provider conversation lookup.
 - Conversation-first evidence is Candidate-only; CV-assisted may distinguish CV, Candidate, and CV + Candidate on cards.
+- Transcript and evidence navigation remain inside SP-011A's centralized dark `/demo` workspace with the same inert stage status, compact context band, home/exit behavior, and natural page-scroll fallback for long content; review does not switch to a white document shell.
 
 ## Scope boundaries
 
@@ -70,4 +71,3 @@ Keep SP-019 reviewable as one logical change represented by `feat(review): link 
 ## Completion handoff
 
 Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
-

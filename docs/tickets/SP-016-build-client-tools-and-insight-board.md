@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 2 — browser voice experience  
 Last synchronized: 2026-09-11<br>
 Depends on: SP-005, SP-006, SP-010A, SP-015<br>
-Suggested commit: `feat(insights): visualize live interview understanding`  
+Suggested commit: `SP-016: visualize live interview understanding`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 
@@ -25,6 +25,7 @@ Make ScreenPilot's understanding visible by validating five browser client tools
 - Role-preference tools accept any bounded candidate-stated label or an undecided state. They do not classify professions, check an allow-list, split compound labels, or create unavailable-role behavior.
 - Desktop uses a fixed constellation; mobile retains identical categories/sources/states in a vertical composition with swipeable rail and expandable evidence.
 - Card lifecycle is empty → appearing → confirmed, with confirmed → corrected or needs-clarification.
+- The live Insight Board stays inside SP-011A's centralized Deep Ink/plum/coral `/demo` workspace. It preserves the same home/exit/status language and layered dark hierarchy; cards use raised dark surfaces rather than white panels or a separate dashboard shell.
 
 ## Manual credential gate
 

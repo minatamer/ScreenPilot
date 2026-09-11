@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
-import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
 import { useDemoSession } from "@/features/session/use-demo-session";
 import { AppShell } from "@/shared/ui/app-shell";
 import { Button, ButtonGroup } from "@/shared/ui/button";
@@ -14,11 +13,11 @@ import { SiteHeader } from "@/shared/ui/site-header";
 
 import { BootstrapStatus } from "./bootstrap-status";
 import { EntryModeChooser } from "./entry-mode-chooser";
+import { HeroFeatureStack } from "./hero-feature-stack";
+import { HowItWorksStory } from "./how-it-works-story";
+import { IllustrativeInterviewPreview } from "./illustrative-interview-preview";
+import { MarketSignals } from "./market-signals";
 import { useDemoBootstrap } from "./use-demo-bootstrap";
-
-const landingNavigation = [
-  { href: "#how-it-works", label: "How it works" },
-] as const;
 
 const ACTIVE_SESSION_STAGES = new Set([
   "awaiting_cv",
@@ -55,82 +54,140 @@ export function LandingExperience() {
     state.stage === "cleared";
 
   return (
-    <AppShell id="top" tone="light">
+    <AppShell className="sp-landing-shell" id="top" tone="dark">
       <a className="sp-skip-link" href="#main-content">
         Skip to main content
       </a>
       <SiteHeader
+        className="sp-site-header--landing"
         actions={
           <>
-            <PrivacyDialog />
-            <a
-              className="sp-header-link"
-              href="https://github.com/minatamer/ScreenPilot"
-              rel="noreferrer"
-              target="_blank"
-            >
-              Project source
+            <a className="sp-landing-header-link" href="#how-it-works">
+              How it works
+            </a>
+            <a className="sp-landing-header-cta" href="#start">
+              Start demo
             </a>
           </>
         }
-        navigation={landingNavigation}
       />
       <main className="sp-landing" id="main-content">
-        <PageContainer as="section" className="sp-landing__hero">
-          <div>
-            <p className="sp-eyebrow">Private, disposable screening demo</p>
-            <h1>Adaptive AI screening, live in your browser.</h1>
-            <p className="sp-landing__lead">
-              Bring a CV for focused questions, or start talking and let
-              ScreenPilot learn as you go.
-            </p>
-          </div>
-          <Card className="sp-landing__decision-note" tone="soft">
-            <p>Human decision boundary</p>
-            <h2>ScreenPilot organizes a first conversation.</h2>
-            <p>
-              It supports recruiter judgment and never makes an automated hiring
-              decision.
-            </p>
-          </Card>
+        <section
+          aria-labelledby="landing-hero-title"
+          className="sp-landing__hero-field"
+        >
+          <PageContainer className="sp-landing__hero">
+            <div className="sp-landing__hero-intro">
+              <div className="sp-landing__hero-copy">
+                <h1 id="landing-hero-title">
+                  Automate the first interview.{" "}
+                  <span>
+                    ScreenPilot takes the{" "}
+                    <span className="sp-landing__written-word">
+                      <span className="sp-visually-hidden">notes.</span>
+                      <svg
+                        aria-hidden="true"
+                        className="sp-landing__handwritten-word"
+                        viewBox="0 0 220 96"
+                      >
+                        <path
+                          d="M7 74C10 61 12 48 15 41C13 52 12 64 14 74C20 57 27 46 36 46C45 46 48 57 44 74"
+                          pathLength="1"
+                        />
+                        <path
+                          d="M61 48C53 54 52 68 59 74C67 81 79 76 84 66C88 56 84 47 75 45C69 44 64 45 61 48Z"
+                          pathLength="1"
+                        />
+                        <path
+                          d="M108 24C106 39 102 58 100 70C99 76 102 78 107 74"
+                          pathLength="1"
+                        />
+                        <path d="M92 45C103 42 116 43 125 41" pathLength="1" />
+                        <path
+                          d="M132 61C143 63 158 57 158 51C158 46 151 43 144 46C134 50 131 63 136 71C142 79 155 77 164 70"
+                          pathLength="1"
+                        />
+                        <path
+                          d="M195 49C188 43 176 44 172 50C168 58 180 60 187 63C195 66 195 74 189 77C181 81 170 77 166 72"
+                          pathLength="1"
+                        />
+                        <circle cx="210" cy="75" r="3.5" />
+                      </svg>
+                      <svg
+                        aria-hidden="true"
+                        className="sp-landing__written-word-underline"
+                        preserveAspectRatio="none"
+                        viewBox="0 0 220 18"
+                      >
+                        <path d="M4 11C46 4 82 15 124 9S181 7 216 12" />
+                      </svg>
+                    </span>
+                  </span>
+                </h1>
+                <p className="sp-landing__lead">
+                  Give every candidate a consistent first-round conversation
+                  without asking recruiters to repeat the same questions all
+                  day. ScreenPilot captures each answer as clear notes, ready
+                  for your team to review.
+                </p>
+                <ButtonGroup className="sp-landing__hero-actions">
+                  <a className="sp-button sp-button--primary" href="#start">
+                    <span>Try the screening demo</span>
+                  </a>
+                  <a
+                    className="sp-button sp-landing__secondary-action"
+                    href="#how-it-works"
+                  >
+                    <span>See it step by step</span>
+                  </a>
+                </ButtonGroup>
+              </div>
+              <HeroFeatureStack />
+            </div>
+            <div className="sp-landing__product-frame">
+              <div
+                aria-hidden="true"
+                className="sp-landing__product-frame-chrome"
+              >
+                <span />
+                <span />
+                <span />
+              </div>
+              <IllustrativeInterviewPreview />
+            </div>
+            <a className="sp-landing__scroll-cue" href="#how-it-works">
+              <span>Scroll to see the journey</span>
+              <span aria-hidden="true">↓</span>
+            </a>
+          </PageContainer>
+        </section>
+
+        <PageContainer>
+          <MarketSignals />
         </PageContainer>
 
-        <PageContainer as="section" className="sp-landing__context">
-          <div>
-            <p className="sp-eyebrow">Role-neutral by design</p>
-            <h2>You choose the role in the conversation.</h2>
-          </div>
-          <p>
-            Any bounded role you state becomes a synthetic vacancy for this
-            browser session only. It is not a real employer opening, and you can
-            stay undecided for an open role-neutral screen.
-          </p>
-          <p className="sp-landing__privacy-line">
-            No account. No phone call. No ScreenPilot recording or durable
-            candidate storage.
-          </p>
+        <PageContainer>
+          <HowItWorksStory />
         </PageContainer>
 
-        <PageContainer as="section" className="sp-landing__choices">
+        <PageContainer as="section" className="sp-landing__choices" id="start">
           <div className="sp-section-heading">
             <div>
-              <p className="sp-eyebrow">Choose your starting point</p>
-              <h2>Two paths, one shared screening experience.</h2>
+              <p className="sp-eyebrow">Start your interview</p>
+              <h2>Bring a CV, or just start talking.</h2>
             </div>
             <p>
-              Both routes reach the same disclosure and preflight. One begins
-              with document context; the other begins with open discovery.
+              Both options lead to the same voice interview. A CV helps Pilot
+              ask more focused follow-up questions.
             </p>
           </div>
 
           {hasActiveSession ? (
             <Card className="sp-resume-session">
               <div>
-                <p className="sp-eyebrow">Private session in progress</p>
+                <p className="sp-eyebrow">Your demo is still open</p>
                 <h2>Continue where you left off.</h2>
-                <p>
-                  Your current preparation remains only in this browser tab.
-                </p>
+                <p>Pick up here, or clear it and start again.</p>
               </div>
               <ButtonGroup>
                 <Button
@@ -160,67 +217,6 @@ export function LandingExperience() {
               }}
             />
           ) : null}
-        </PageContainer>
-
-        <PageContainer
-          as="section"
-          className="sp-landing__explanation"
-          id="how-it-works"
-        >
-          <div className="sp-section-heading">
-            <div>
-              <p className="sp-eyebrow">How it works</p>
-              <h2>A useful screen without a candidate record.</h2>
-            </div>
-            <p>
-              The experience becomes more specific only when evidence appears in
-              the current session.
-            </p>
-          </div>
-          <ol className="sp-how-grid">
-            <li>
-              <span>01</span>
-              <h3>Set the context</h3>
-              <p>
-                Use a synthetic CV or let the voice conversation discover it.
-              </p>
-            </li>
-            <li>
-              <span>02</span>
-              <h3>Have one open interview</h3>
-              <p>Universal first-stage HR topics adapt to confirmed answers.</p>
-            </li>
-            <li>
-              <span>03</span>
-              <h3>Review structured notes</h3>
-              <p>
-                Evidence stays local and is clearly separated from judgment.
-              </p>
-            </li>
-          </ol>
-        </PageContainer>
-
-        <PageContainer
-          as="section"
-          className="sp-landing__privacy"
-          id="privacy"
-        >
-          <div>
-            <p className="sp-eyebrow">Privacy and demo limits</p>
-            <h2>Your session is designed to disappear.</h2>
-          </div>
-          <div>
-            <p>
-              Candidate content stays in the active browser/request lifecycle.
-              Closing or clearing the tab ends the recoverable demo session.
-            </p>
-            <p>
-              Conversation-first uses your answers—not a document—as local
-              transcript and insight evidence. Before voice starts, ScreenPilot
-              will separately disclose AI voice, transcription, provider
-              processing, the eight-minute limit, and microphone access.
-            </p>
-          </div>
         </PageContainer>
       </main>
     </AppShell>

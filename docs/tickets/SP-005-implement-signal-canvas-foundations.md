@@ -6,7 +6,7 @@ Implementation state: Completed, revised against the approved Deep Ink + Warm Co
 Milestone: Milestone 0 — repository and visual foundations  
 Last synchronized: 2026-09-08
 Depends on: SP-002, SP-004  
-Suggested commit: `feat(frontend): establish Signal Canvas design system`  
+Suggested commit: `SP-005: establish the Signal Canvas design system`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 
@@ -24,8 +24,8 @@ Translate the approved visual reference into maintainable frontend tokens, share
 - The approved concept informs composition and atmosphere only; written behavior, accessibility, and tokens win if it conflicts.
 - Use shared React primitives and composition. There must not be separate desktop/mobile component trees or scattered page-specific color/spacing values.
 - Tokens/global styles belong under `apps/frontend/src/styles`; reusable design primitives belong under `apps/frontend/src/shared/ui`. Feature-specific composed UI stays with its feature rather than growing a universal component catalogue.
-- The light shell serves landing, preparation, and review. The dark shell serves preflight and the active interview.
-- SP-011A later extends the same tokens into a mixed-surface landing—Deep Ink product-story hero followed by Warm White working sections—and an early-demo context rail. This is an approved composition correction, not a second token system or device-specific theme.
+- The original foundation exposed light and dark shell variants. SP-011A supersedes their route assignment: landing and every `/demo` state now use the continuous Deep Ink/plum/coral atmosphere, with layered dark task surfaces and near-white type instead of white page, card, form, or review backgrounds.
+- SP-011A reuses this token system for its stacked landing story and centralized `/demo` workspace with a compact context band. This is an approved composition correction, not a second token system or device-specific theme.
 - Responsiveness is continuous from 320 px through large monitors, with content-pressure breakpoints, bounded reading widths, safe-area support, and reduced motion.
 
 ## Scope boundaries
@@ -41,7 +41,7 @@ Translate the approved visual reference into maintainable frontend tokens, share
 - [x] Translate approved colors, typography, spacing, radius, elevation, grid, opacity, and motion into maintainable frontend tokens under `apps/frontend/src/styles`.
 - [x] Keep token names and values aligned with `docs/SCREENPILOT_DESIGN_SYSTEM.html`; update both when an approved accessibility correction changes a value.
 - [x] Build the shared ScreenPilot mark, navbar, entry-mode card/badge, buttons, cards, stage indicator, error panel, and layout primitives under the narrow `shared/ui` boundary.
-- [x] Implement reusable light landing/review and dark preflight/interview shells.
+- [x] Implement reusable shell primitives; SP-011A later standardizes landing and every `/demo` stage on the continuous dark product atmosphere.
 - [x] Provide focus-visible, disabled, loading, error, reduced-motion, high-contrast, safe-area, and long-text behavior.
 - [x] Use semantic HTML and composable variants rather than duplicated markup.
 - [x] Constrain large-screen reading widths and prove fluid intermediate-width behavior.

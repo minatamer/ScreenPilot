@@ -32,6 +32,7 @@ const normalizeBackendOrigin = (
 const backendOrigin = normalizeBackendOrigin(process.env["BACKEND_ORIGIN"]);
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   reactStrictMode: true,
   transpilePackages: ["@screenpilot/contracts"],
   ...(backendOrigin === undefined

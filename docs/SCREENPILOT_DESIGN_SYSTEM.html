@@ -246,124 +246,151 @@
       .landing-sample {
         position: relative;
         isolation: isolate;
-        padding-block: clamp(48px, 8vw, 96px);
+        margin-top: 24px;
+        padding: clamp(32px, 5vw, 72px);
         overflow: hidden;
+        border-radius: var(--radius-canvas);
+        background: var(--ink-950);
+        color: var(--paper-50);
       }
 
       .landing-sample::before {
         position: absolute;
         z-index: -1;
-        width: min(820px, 95vw);
-        height: 460px;
-        top: 10px;
-        left: 50%;
+        width: min(760px, 90vw);
+        height: 608px;
+        top: -260px;
+        right: -180px;
         border-radius: 50%;
         background:
-          radial-gradient(circle at 28% 40%, rgb(242 107 91 / 20%), transparent 46%),
-          radial-gradient(circle at 73% 36%, rgb(253 232 228 / 92%), transparent 42%);
-        filter: blur(34px);
-        content: "";
-        translate: -50% 0;
-      }
-
-      .sample-tag {
-        width: fit-content;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 22px;
-        color: var(--coral-800);
-      }
-
-      .sample-tag::before {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--coral-500);
-        box-shadow: 0 0 0 5px rgb(242 107 91 / 14%);
+          radial-gradient(circle at 32% 48%, rgb(242 107 91 / 34%), transparent 48%),
+          radial-gradient(circle at 68% 38%, rgb(253 232 228 / 18%), transparent 44%);
+        filter: blur(28px);
         content: "";
       }
 
       .hero-grid {
         display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(290px, 0.65fr);
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
         gap: clamp(28px, 5vw, 64px);
-        align-items: start;
       }
 
       .hero-copy {
-        max-width: 670px;
+        max-width: 590px;
         margin-bottom: 0;
-        color: var(--slate-500);
+        color: #c7cfda;
         font-size: 18px;
         line-height: 28px;
       }
 
-      .context-card {
-        padding: 22px;
-        border: 1px solid var(--line-200);
-        border-radius: var(--radius-card);
-        background: rgb(255 255 255 / 90%);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .context-top {
+      .sample-hero-actions,
+      .sample-trust {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 18px;
+        gap: 10px;
       }
 
-      .context-card p {
-        margin-bottom: 16px;
-        color: var(--slate-500);
-        font-size: 14px;
+      .sample-hero-actions {
+        margin-top: 24px;
       }
 
-      .pill,
-      .status,
-      .evidence-chip {
-        width: fit-content;
+      .sample-hero-action {
+        min-height: 44px;
         display: inline-flex;
         align-items: center;
-        gap: 6px;
-        padding: 5px 9px;
-        border-radius: 999px;
+        padding: 9px 16px;
+        border: 1px solid rgb(255 255 255 / 28%);
+        border-radius: var(--radius-control);
+        color: var(--paper-50);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .sample-hero-action.primary {
+        border-color: var(--coral-700);
+        background: var(--coral-700);
+      }
+
+      .sample-trust {
+        margin: 24px 0 0;
+        padding: 0;
+        color: #c7cfda;
         font-size: 12px;
-        font-weight: 650;
-        line-height: 18px;
+        list-style: none;
       }
 
-      .pill {
-        background: var(--coral-100);
-        color: var(--coral-800);
+      .sample-trust li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
-      .context-list {
+      .sample-trust li::before {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--coral-300);
+        content: "";
+      }
+
+      .sample-preview {
+        margin: 0;
+        padding: clamp(18px, 3vw, 28px);
+        border: 1px solid rgb(255 255 255 / 18%);
+        border-radius: var(--radius-card);
+        background: rgb(34 49 75 / 88%);
+        box-shadow: 0 30px 80px rgb(0 0 0 / 24%);
+      }
+
+      .sample-dialogue {
         display: grid;
         gap: 10px;
+        padding-block: 16px;
+        border-block: 1px solid rgb(255 255 255 / 12%);
       }
 
-      .context-row {
-        display: flex;
-        align-items: start;
-        gap: 10px;
+      .sample-turn {
+        margin: 0;
+        color: #dce2ea;
         font-size: 14px;
       }
 
-      .dot-check {
-        width: 18px;
-        height: 18px;
-        flex: 0 0 auto;
+      .sample-turn strong {
+        color: var(--coral-300);
+      }
+
+      .sample-evidence {
         display: grid;
-        place-items: center;
-        margin-top: 2px;
-        border-radius: 50%;
-        background: var(--coral-100);
-        color: var(--coral-800);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .sample-evidence div {
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 12px;
+        background: rgb(24 36 58 / 72%);
+      }
+
+      .sample-evidence span,
+      .sample-evidence strong {
+        display: block;
+        overflow-wrap: anywhere;
+      }
+
+      .sample-evidence span {
+        color: #aeb9c8;
         font-size: 11px;
-        font-weight: 800;
+      }
+
+      .sample-evidence strong {
+        margin-top: 5px;
+        color: var(--paper-50);
+        font-size: 13px;
       }
 
       .entry-grid {
@@ -381,6 +408,7 @@
         border: 1px solid var(--line-200);
         border-radius: var(--radius-card);
         background: var(--paper-0);
+        color: var(--ink-950);
         box-shadow: 0 12px 36px rgb(24 36 58 / 6%);
       }
 
@@ -1272,7 +1300,7 @@
           grid-template-columns: 1fr;
         }
 
-        .context-card {
+        .sample-preview {
           max-width: 620px;
         }
 
@@ -1299,6 +1327,7 @@
         }
 
         .entry-grid,
+        .sample-evidence,
         .layout-grid,
         .page-feel,
         .state-grid,
@@ -1386,7 +1415,8 @@
         }
 
         .landing-sample {
-          padding-top: 40px;
+          margin-top: 12px;
+          padding: 32px 20px;
         }
 
         .swatch-grid {
@@ -1410,9 +1440,873 @@
         }
       }
 
+      /* SP-011A visual-review correction: split copy and product-led sample. */
+      .landing-sample {
+        padding-top: clamp(16px, 2vw, 28px);
+        background:
+          radial-gradient(circle at 12% 12%, rgb(242 107 91 / 18%), transparent 300px),
+          radial-gradient(circle at 88% 62%, rgb(131 77 122 / 34%), transparent 420px),
+          linear-gradient(160deg, #18243a, #211f39 58%, #38233c);
+      }
+
+      .landing-sample::before {
+        top: -290px;
+        right: 5%;
+      }
+
+      .hero-grid {
+        grid-template-columns: minmax(0, 1fr);
+        justify-items: center;
+      }
+
+      .sample-hero-intro {
+        display: grid;
+        width: 100%;
+        min-width: 0;
+        align-items: center;
+        grid-template-columns: minmax(0, 1.04fr) minmax(380px, .96fr);
+        gap: clamp(32px, 4vw, 64px);
+      }
+
+      .sample-hero-copy {
+        display: grid;
+        max-width: 590px;
+        justify-items: start;
+        text-align: left;
+      }
+
+      .sample-hero-copy h1 {
+        max-width: 620px;
+        font-size: clamp(44px, 5.2vw, 74px);
+        line-height: 1;
+      }
+
+      .sample-hero-copy h1 span {
+        color: var(--coral-300);
+      }
+
+      .sample-written-word {
+        position: relative;
+        display: inline-block;
+        width: 2.85em;
+        height: 0.92em;
+        vertical-align: -0.14em;
+        white-space: nowrap;
+      }
+
+      .sample-visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .sample-handwritten-word {
+        position: absolute;
+        width: 100%;
+        height: 1.08em;
+        inset: -0.08em 0 auto;
+        overflow: visible;
+        color: var(--coral-300);
+        pointer-events: none;
+      }
+
+      .sample-handwritten-word path {
+        fill: none;
+        stroke: currentcolor;
+        stroke-dasharray: 1;
+        stroke-dashoffset: 1;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 6.5;
+        animation: sample-handwriting 230ms cubic-bezier(0.32, 0, 0.2, 1) both;
+      }
+
+      .sample-handwritten-word path:nth-child(1) { animation-delay: 120ms; }
+      .sample-handwritten-word path:nth-child(2) { animation-delay: 310ms; animation-duration: 210ms; }
+      .sample-handwritten-word path:nth-child(3) { animation-delay: 470ms; animation-duration: 180ms; }
+      .sample-handwritten-word path:nth-child(4) { animation-delay: 600ms; animation-duration: 100ms; }
+      .sample-handwritten-word path:nth-child(5) { animation-delay: 660ms; animation-duration: 210ms; }
+      .sample-handwritten-word path:nth-child(6) { animation-delay: 830ms; }
+
+      .sample-handwritten-word circle {
+        fill: currentcolor;
+        opacity: 0;
+        transform: scale(0.4);
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: sample-handwritten-dot 120ms var(--ease) 1.01s both;
+      }
+
+      .sample-written-word-underline {
+        position: absolute;
+        width: 106%;
+        height: 0.22em;
+        right: -3%;
+        bottom: -0.01em;
+        overflow: visible;
+        color: var(--coral-500);
+        pointer-events: none;
+      }
+
+      .sample-written-word-underline path {
+        fill: none;
+        stroke: currentcolor;
+        stroke-dasharray: 220;
+        stroke-dashoffset: 220;
+        stroke-linecap: round;
+        stroke-width: 5;
+        animation: sample-underline-write 560ms var(--ease) 1.12s both;
+      }
+
+      .sample-hero-actions {
+        justify-content: flex-start;
+      }
+
+      .sample-feature-stack {
+        position: relative;
+        min-width: 0;
+        height: 576px;
+      }
+
+      .sample-feature-stack::before {
+        position: absolute;
+        width: 70%;
+        height: 64%;
+        border-radius: 50%;
+        background: rgb(242 107 91 / 14%);
+        content: "";
+        filter: blur(72px);
+        inset: 17% 8% auto auto;
+        pointer-events: none;
+      }
+
+      .sample-feature-stack ol {
+        position: relative;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .sample-feature-card {
+        --sample-card-angle: 0deg;
+
+        position: absolute;
+        display: grid;
+        width: 59%;
+        min-width: 220px;
+        min-height: 144px;
+        align-content: start;
+        padding: 16px;
+        border: 1px solid rgb(253 232 228 / 19%);
+        border-radius: 22px;
+        background:
+          linear-gradient(140deg, rgb(255 255 255 / 10%), transparent 48%),
+          rgb(28 40 64 / 96%);
+        box-shadow: 0 24px 56px rgb(4 9 18 / 34%), inset 0 1px rgb(255 255 255 / 9%);
+        opacity: 0;
+        rotate: var(--sample-card-angle);
+        animation: sample-feature-card-in 1100ms var(--ease) both;
+        transition:
+          border-color 220ms var(--ease),
+          box-shadow 220ms var(--ease),
+          scale 220ms var(--ease),
+          translate 220ms var(--ease);
+      }
+
+      .sample-feature-card::after {
+        position: absolute;
+        width: 64px;
+        height: 2px;
+        border-radius: 999px;
+        background: var(--coral-500);
+        content: "";
+        inset: -1px auto auto 16px;
+      }
+
+      .sample-feature-card:nth-child(1) { --sample-card-angle: -3.5deg; z-index: 1; top: 0; left: 0; animation-delay: 100ms; }
+      .sample-feature-card:nth-child(2) { --sample-card-angle: 2deg; z-index: 2; top: 24%; left: 13.5%; animation-delay: 1050ms; }
+      .sample-feature-card:nth-child(3) { --sample-card-angle: -1.5deg; z-index: 3; top: 48%; left: 27%; animation-delay: 2000ms; }
+      .sample-feature-card:nth-child(4) { --sample-card-angle: 3deg; z-index: 4; top: 72%; left: 40.5%; animation-delay: 2950ms; }
+
+      .sample-feature-card-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        color: var(--coral-300);
+        font: 700 10px/1 Geist Mono, monospace;
+        letter-spacing: .14em;
+      }
+
+      .sample-feature-icon {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border: 1px solid rgb(252 163 154 / 24%);
+        border-radius: 13px;
+        background: rgb(242 107 91 / 10%);
+      }
+
+      .sample-feature-icon svg {
+        width: 22px;
+        height: 22px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.7;
+      }
+
+      .sample-feature-card > strong {
+        color: var(--paper-50);
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .sample-feature-card > p {
+        max-width: 28ch;
+        margin: 8px 0 0;
+        color: rgb(250 250 248 / 66%);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .sample-feature-card.human {
+        border-color: rgb(82 214 162 / 27%);
+      }
+
+      .sample-feature-card.human::after {
+        background: var(--success-400);
+      }
+
+      .sample-feature-card.human .sample-feature-card-heading {
+        color: var(--success-400);
+      }
+
+      .sample-feature-card.human .sample-feature-icon {
+        border-color: rgb(82 214 162 / 25%);
+        background: rgb(82 214 162 / 10%);
+      }
+
+      @media (hover: hover) {
+        .sample-feature-card:hover {
+          z-index: 10;
+          border-color: rgb(253 232 228 / 38%);
+          box-shadow: 0 32px 72px rgb(4 9 18 / 46%), inset 0 1px rgb(255 255 255 / 13%);
+          scale: 1.02;
+          translate: 0 -6px;
+        }
+      }
+
+      .sample-market {
+        margin-block: clamp(68px, 9vw, 112px);
+        padding-block: clamp(52px, 7vw, 88px);
+        border-block: 1px solid rgb(255 255 255 / 13%);
+      }
+
+      .sample-market-heading {
+        display: grid;
+        justify-items: center;
+        text-align: center;
+      }
+
+      .sample-market-heading h2,
+      .sample-market-heading p {
+        margin: 0;
+      }
+
+      .sample-market-heading h2 {
+        max-width: 26ch;
+        margin-top: 10px;
+        color: var(--paper-50);
+        font-size: clamp(42px, 5vw, 72px);
+        letter-spacing: -0.055em;
+        line-height: 1;
+      }
+
+      .sample-market-heading h2 span {
+        display: block;
+        color: var(--coral-300);
+      }
+
+      .sample-market-heading > p {
+        max-width: 820px;
+        margin-top: 22px;
+        color: #c7cfda;
+        font-size: 18px;
+        line-height: 1.65;
+      }
+
+      .sample-market-grid {
+        display: grid;
+        margin: 48px 0 0;
+        padding: 0;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(270px, auto));
+        grid-template-areas:
+          "adoption adoption adoption time time time time"
+          "outlook outlook outlook exposure exposure trust trust";
+        gap: 14px;
+        list-style: none;
+      }
+
+      .sample-market-card {
+        position: relative;
+        min-width: 0;
+        display: flex;
+        overflow: hidden;
+        padding: 22px;
+        border: 1px solid rgb(255 255 255 / 16%);
+        border-radius: 26px;
+        background:
+          radial-gradient(circle at 100% 0, rgb(242 107 91 / 14%), transparent 42%),
+          linear-gradient(145deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 2%));
+        flex-direction: column;
+      }
+
+      .sample-market-card--adoption {
+        grid-area: adoption;
+        background:
+          radial-gradient(circle at 84% 16%, rgb(242 107 91 / 30%), transparent 34%),
+          linear-gradient(145deg, rgb(255 255 255 / 13%), rgb(255 255 255 / 2%));
+      }
+
+      .sample-market-card--outlook {
+        grid-area: outlook;
+        background:
+          radial-gradient(circle at 88% 8%, rgb(131 77 122 / 28%), transparent 38%),
+          linear-gradient(145deg, rgb(255 255 255 / 11%), rgb(255 255 255 / 2%));
+      }
+
+      .sample-market-card--adoption,
+      .sample-market-card--outlook {
+        display: grid;
+        grid-template-columns: minmax(152px, 0.58fr) minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        column-gap: 30px;
+      }
+
+      .sample-market-card--time {
+        display: grid;
+        grid-area: time;
+        grid-template-columns: minmax(160px, 0.55fr) minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        column-gap: 32px;
+      }
+
+      .sample-market-card--exposure {
+        grid-area: exposure;
+      }
+
+      .sample-market-card--trust {
+        grid-area: trust;
+      }
+
+      .sample-market-card-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        color: #9eaaba;
+        font: 700 11px/1.4 Geist Mono, monospace;
+        letter-spacing: 0.065em;
+        text-transform: uppercase;
+      }
+
+      .sample-market-card-heading span:last-child {
+        color: var(--coral-300);
+      }
+
+      .sample-market-metric {
+        margin-top: 30px;
+      }
+
+      .sample-market-metric strong {
+        display: block;
+        color: var(--coral-300);
+        font-size: clamp(58px, 7vw, 100px);
+        letter-spacing: -0.065em;
+        line-height: 0.9;
+      }
+
+      .sample-market-card--adoption .sample-market-metric strong,
+      .sample-market-card--outlook .sample-market-metric strong {
+        font-size: clamp(58px, 6.2vw, 92px);
+      }
+
+      .sample-market-copy {
+        min-width: 0;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+      }
+
+      .sample-market-card--adoption .sample-market-card-heading,
+      .sample-market-card--outlook .sample-market-card-heading,
+      .sample-market-card--time .sample-market-card-heading {
+        grid-column: 1 / -1;
+      }
+
+      .sample-market-card--adoption .sample-market-metric,
+      .sample-market-card--outlook .sample-market-metric,
+      .sample-market-card--time .sample-market-metric {
+        align-self: center;
+      }
+
+      @media (min-width: 961px) {
+        .sample-market-card--adoption .sample-market-metric,
+        .sample-market-card--outlook .sample-market-metric,
+        .sample-market-card--time .sample-market-metric {
+          margin-top: 0;
+        }
+      }
+
+      .sample-market-card--adoption .sample-market-copy,
+      .sample-market-card--outlook .sample-market-copy,
+      .sample-market-card--time .sample-market-copy {
+        align-self: end;
+      }
+
+      .sample-market-copy p {
+        margin: 24px 0 0;
+        color: var(--paper-50);
+        font-weight: 600;
+        line-height: 1.5;
+      }
+
+      .sample-market-copy small {
+        margin-top: 16px;
+        color: #9eaaba;
+        line-height: 1.5;
+      }
+
+      .sample-market-copy a {
+        min-height: 44px;
+        display: inline-flex;
+        margin-top: auto;
+        align-items: center;
+        gap: 8px;
+        color: var(--coral-300);
+        font: 700 12px/1.4 Geist Mono, monospace;
+        text-decoration: none;
+      }
+
+      .sample-market-copy a span:first-child {
+        border-bottom: 1px solid currentColor;
+      }
+
+      .sample-preview {
+        position: relative;
+        width: min(100%, 980px);
+        padding: 38px 8px 8px;
+        border: 1px solid rgb(255 255 255 / 18%);
+        border-radius: var(--radius-canvas);
+        background: linear-gradient(145deg, rgb(255 255 255 / 10%), rgb(255 255 255 / 3%));
+        box-shadow: 0 42px 90px rgb(0 0 0 / 30%);
+      }
+
+      .sample-preview::before {
+        position: absolute;
+        width: 48px;
+        height: 8px;
+        top: 16px;
+        left: 20px;
+        background:
+          radial-gradient(circle at 4px 4px, var(--coral-500) 0 4px, transparent 4.5px),
+          radial-gradient(circle at 24px 4px, var(--warning-400) 0 4px, transparent 4.5px),
+          radial-gradient(circle at 44px 4px, var(--success-400) 0 4px, transparent 4.5px);
+        content: "";
+      }
+
+      @keyframes sample-handwriting {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes sample-handwritten-dot {
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes sample-underline-write {
+        0% {
+          opacity: 0;
+          stroke-dashoffset: 220;
+        }
+
+        18% {
+          opacity: 1;
+        }
+
+        100% {
+          opacity: 0.92;
+          stroke-dashoffset: 0;
+        }
+      }
+
+      @keyframes sample-word-fade {
+        from { opacity: 0.48; }
+        to { opacity: 1; }
+      }
+
+      @keyframes sample-underline-fade {
+        from { opacity: 0; }
+        to { opacity: 0.92; }
+      }
+
+      @keyframes sample-feature-card-in {
+        from {
+          opacity: 0;
+          transform: translate3d(-96px, -16px, 0) scale(.96);
+        }
+
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0) scale(1);
+        }
+      }
+
+      @keyframes sample-feature-card-reduced-in {
+        from {
+          opacity: 0;
+          transform: translate3d(-24px, 0, 0);
+        }
+
+        to {
+          opacity: 1;
+          transform: translate3d(0, 0, 0);
+        }
+      }
+
+      .sample-interview-stage {
+        min-height: 320px;
+        display: grid;
+        overflow: hidden;
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: var(--radius-card);
+        background: rgb(15 25 44 / 66%);
+        grid-template-columns: minmax(230px, 0.72fr) minmax(0, 1.28fr);
+      }
+
+      .sample-person {
+        min-width: 0;
+        display: grid;
+        padding: 24px;
+        border-right: 1px solid rgb(255 255 255 / 12%);
+        place-items: center;
+      }
+
+      .sample-person svg {
+        width: min(100%, 300px);
+        margin: 0 auto;
+      }
+
+      .sample-person__voice rect {
+        fill: var(--coral-500);
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: sample-person-voice 420ms ease-in-out infinite alternate;
+      }
+
+      .sample-person__voice rect:nth-child(2n) {
+        animation-delay: 110ms;
+      }
+
+      .sample-person__voice rect:nth-child(3n) {
+        animation-delay: 220ms;
+      }
+
+      @keyframes sample-person-voice {
+        from {
+          opacity: 0.4;
+          transform: scaleY(0.28);
+        }
+
+        to {
+          opacity: 1;
+          transform: scaleY(1);
+        }
+      }
+
+      @keyframes sample-person-voice-opacity {
+        from {
+          opacity: 0.38;
+        }
+
+        to {
+          opacity: 1;
+        }
+      }
+
+      .sample-dialogue {
+        min-width: 0;
+        display: grid;
+        padding: clamp(18px, 3vw, 32px);
+        border: 0;
+        align-content: center;
+        gap: 12px;
+      }
+
+      .sample-turn {
+        padding: 16px;
+        border: 1px solid rgb(255 255 255 / 8%);
+        border-radius: 16px;
+        background: rgb(255 255 255 / 4%);
+      }
+
+      .sample-turn p {
+        min-height: 26px;
+        margin: 7px 0 0;
+        color: #dce2ea;
+      }
+
+      .sample-turn mark {
+        padding-inline: 3px;
+        border-radius: 4px;
+        background: rgb(252 163 154 / 22%);
+        color: var(--paper-50);
+      }
+
+      .sample-notes-board {
+        margin-top: 8px;
+        padding: 14px;
+        border: 1px solid rgb(255 255 255 / 12%);
+        border-radius: 16px;
+        background: rgb(15 25 44 / 58%);
+      }
+
+      .sample-notes-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: #aeb9c8;
+        font: 700 11px/1.4 Geist Mono, monospace;
+        letter-spacing: 0.055em;
+        text-transform: uppercase;
+      }
+
+      .sample-notes-heading strong {
+        color: var(--coral-300);
+      }
+
+      .sample-note-grid {
+        display: grid;
+        margin: 12px 0 0;
+        padding: 0;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+        list-style: none;
+      }
+
+      .sample-note-card {
+        min-height: 96px;
+        display: grid;
+        padding: 12px;
+        border: 1px solid rgb(252 163 154 / 26%);
+        border-radius: 12px;
+        background: linear-gradient(140deg, rgb(242 107 91 / 8%), rgb(255 255 255 / 4%));
+        align-content: space-between;
+        gap: 4px;
+      }
+
+      .sample-note-card-heading {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .sample-note-card-heading span {
+        color: var(--coral-300);
+        font: 700 10px/1 Geist Mono, monospace;
+        letter-spacing: .06em;
+      }
+
+      .sample-note-card-heading i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--coral-300);
+        box-shadow: 0 0 0 4px rgb(242 107 91 / 10%);
+      }
+
+      .sample-note-card strong,
+      .sample-note-card p {
+        display: block;
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+
+      .sample-note-card strong {
+        font-size: 12px;
+      }
+
+      .sample-note-card p {
+        margin-top: 4px;
+        color: var(--coral-300);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .landing-sample .entry-grid {
+        width: min(100%, 980px);
+        margin-inline: auto;
+      }
+
+      .landing-sample .entry-card {
+        border-color: rgb(252 163 154 / 22%);
+        background: linear-gradient(145deg, rgb(42 57 84 / 94%), rgb(24 36 58 / 92%));
+        color: var(--paper-50);
+        box-shadow: 0 20px 54px rgb(0 0 0 / 22%);
+      }
+
+      .landing-sample .entry-card p {
+        color: #aeb9c8;
+      }
+
+      .landing-sample .entry-icon {
+        border-color: rgb(252 163 154 / 22%);
+        background: rgb(242 107 91 / 12%);
+        color: var(--coral-300);
+      }
+
+      @media (max-width: 960px) {
+        .sample-hero-intro {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .sample-feature-stack {
+          height: auto;
+        }
+
+        .sample-feature-stack ol {
+          display: grid;
+          height: auto;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 16px;
+        }
+
+        .sample-feature-card,
+        .sample-feature-card:nth-child(n) {
+          position: relative;
+          width: auto;
+          min-width: 0;
+          min-height: 144px;
+          inset: auto;
+          rotate: 0deg;
+        }
+
+        .sample-market-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-template-rows: none;
+          grid-template-areas: none;
+        }
+
+        .sample-market-card {
+          display: flex;
+          min-height: 320px;
+          grid-area: auto;
+          grid-row: auto;
+          grid-column: auto;
+        }
+      }
+
+      @media (max-width: 700px) {
+        .sample-market-heading,
+        .sample-market-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .sample-interview-stage {
+          grid-template-columns: 1fr;
+        }
+
+        .sample-person {
+          min-height: 260px;
+          border-right: 0;
+          border-bottom: 1px solid rgb(255 255 255 / 12%);
+        }
+
+      }
+
+      @media (max-width: 420px) {
+        .sample-hero-copy h1 {
+          font-size: 42px;
+        }
+
+        .sample-hero-actions,
+        .sample-hero-action {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .sample-note-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .sample-feature-stack ol {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .sample-feature-card,
+        .sample-feature-card:nth-child(n) {
+          min-height: 0;
+        }
+      }
+
       @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto;
+        .sample-feature-card,
+        .sample-feature-card:nth-child(1) {
+          animation-delay: 80ms !important;
+          animation-name: sample-feature-card-reduced-in;
+          animation-duration: 720ms !important;
+        }
+
+        .sample-feature-card:nth-child(2) {
+          animation-delay: 680ms !important;
+        }
+
+        .sample-feature-card:nth-child(3) {
+          animation-delay: 1280ms !important;
+        }
+
+        .sample-feature-card:nth-child(4) {
+          animation-delay: 1880ms !important;
+        }
+
+        .sample-feature-card:hover {
+          scale: 1;
+          translate: 0;
+        }
+
+        .sample-handwritten-word {
+          animation: sample-word-fade 520ms ease-out 160ms both !important;
+        }
+
+        .sample-handwritten-word path {
+          animation: none !important;
+          stroke-dashoffset: 0;
+        }
+
+        .sample-handwritten-word circle {
+          animation: none !important;
+          opacity: 1;
+          transform: scale(1);
+        }
+
+        .sample-written-word-underline path {
+          stroke-dashoffset: 0;
+          animation: sample-underline-fade 520ms ease-out 520ms both !important;
         }
 
         *,
@@ -1420,8 +2314,12 @@
         *::after {
           animation-duration: 0.01ms !important;
           animation-iteration-count: 1 !important;
-          scroll-behavior: auto !important;
           transition-duration: 0.01ms !important;
+        }
+
+        .sample-person__voice rect {
+          animation: sample-person-voice-opacity 820ms ease-in-out infinite alternate !important;
+          transform: none;
         }
       }
     </style>
@@ -1452,30 +2350,135 @@
 
     <main id="main-content">
       <section class="landing-sample shell" id="top" aria-labelledby="hero-title">
-        <p class="sample-tag meta">FINAL LANDING HERO DIRECTION</p>
         <div class="hero-grid">
-          <div>
-            <h1 id="hero-title">Practice the interview. Keep the judgment human.</h1>
-            <p class="hero-copy">
-              ScreenPilot turns a candidate-chosen synthetic role and an optional CV into a focused first-stage
-              HR conversation. You get clear, evidence-linked notes—not a hiring decision.
-            </p>
+          <div class="sample-hero-intro">
+            <div class="sample-hero-copy">
+              <h1 id="hero-title">
+                Automate the first interview.
+                <span>
+                  ScreenPilot takes the
+                  <span class="sample-written-word">
+                    <span class="sample-visually-hidden">notes.</span>
+                    <svg aria-hidden="true" class="sample-handwritten-word" viewBox="0 0 220 96">
+                      <path d="M7 74C10 61 12 48 15 41C13 52 12 64 14 74C20 57 27 46 36 46C45 46 48 57 44 74" pathLength="1" />
+                      <path d="M61 48C53 54 52 68 59 74C67 81 79 76 84 66C88 56 84 47 75 45C69 44 64 45 61 48Z" pathLength="1" />
+                      <path d="M108 24C106 39 102 58 100 70C99 76 102 78 107 74" pathLength="1" />
+                      <path d="M92 45C103 42 116 43 125 41" pathLength="1" />
+                      <path d="M132 61C143 63 158 57 158 51C158 46 151 43 144 46C134 50 131 63 136 71C142 79 155 77 164 70" pathLength="1" />
+                      <path d="M195 49C188 43 176 44 172 50C168 58 180 60 187 63C195 66 195 74 189 77C181 81 170 77 166 72" pathLength="1" />
+                      <circle cx="210" cy="75" r="3.5" />
+                    </svg>
+                    <svg aria-hidden="true" class="sample-written-word-underline" preserveAspectRatio="none" viewBox="0 0 220 18">
+                      <path d="M4 11C46 4 82 15 124 9S181 7 216 12" />
+                    </svg>
+                  </span>
+                </span>
+              </h1>
+              <p class="hero-copy">
+                Give every candidate a consistent first-round conversation without asking recruiters to repeat the same
+                questions all day. ScreenPilot captures each answer as clear notes, ready for your team to review.
+              </p>
+              <div class="sample-hero-actions" aria-label="Landing hero actions sample">
+                <a class="sample-hero-action primary" href="#components">Try the screening demo</a>
+                <a class="sample-hero-action" href="#layout">See it step by step</a>
+              </div>
+            </div>
+
+            <div class="sample-feature-stack">
+              <ol aria-label="ScreenPilot core features">
+                <li class="sample-feature-card">
+                  <div class="sample-feature-card-heading"><span>01</span><span class="sample-feature-icon"><svg aria-hidden="true" viewBox="0 0 32 32"><rect height="13" rx="5" width="8" x="12" y="4" /><path d="M8.5 14.5A7.5 7.5 0 0 0 16 22a7.5 7.5 0 0 0 7.5-7.5M16 22v5M12 27h8M5 11v5M27 9v9" /></svg></span></div>
+                  <strong>Voice interviews</strong>
+                  <p>Runs first-round interviews.</p>
+                </li>
+                <li class="sample-feature-card">
+                  <div class="sample-feature-card-heading"><span>02</span><span class="sample-feature-icon"><svg aria-hidden="true" viewBox="0 0 32 32"><circle cx="7" cy="8" r="3" /><circle cx="25" cy="8" r="3" /><circle cx="16" cy="25" r="3" /><path d="M10 8h4a2 2 0 0 1 2 2v12M22 8h-4a2 2 0 0 0-2 2" /></svg></span></div>
+                  <strong>Adaptive follow-ups</strong>
+                  <p>Adapts to answers and CVs.</p>
+                </li>
+                <li class="sample-feature-card">
+                  <div class="sample-feature-card-heading"><span>03</span><span class="sample-feature-icon"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 4h14l5 5v19H7V4ZM21 4v6h5M11 15h10M11 20h7m-7 5 2 2 5-5" /></svg></span></div>
+                  <strong>Clear interview notes</strong>
+                  <p>Turns spoken details into notes.</p>
+                </li>
+                <li class="sample-feature-card human">
+                  <div class="sample-feature-card-heading"><span>04</span><span class="sample-feature-icon"><svg aria-hidden="true" viewBox="0 0 32 32"><circle cx="12" cy="10" r="4" /><path d="M4.5 25c.8-5.1 3.3-7.7 7.5-7.7 2.4 0 4.2.8 5.5 2.4" /><circle cx="23" cy="22" r="6" /><path d="m20.5 22 1.7 1.8 3.5-4" /></svg></span></div>
+                  <strong>Human decisions</strong>
+                  <p>No scores, rankings, or automatic rejection.</p>
+                </li>
+              </ol>
+            </div>
           </div>
 
-          <aside class="context-card" aria-label="Role-neutral demo context sample">
-            <div class="context-top">
-              <span class="meta">SYNTHETIC ROLE CONTEXT</span>
-              <span class="pill">Session only</span>
+          <figure class="sample-preview" aria-label="Example interview">
+            <div class="sample-interview-stage">
+              <div class="sample-person">
+                <svg viewBox="0 0 360 300" role="img" aria-label="Abstract person speaking beside a laptop">
+                  <circle cx="180" cy="145" r="116" fill="#FCA39A" opacity=".045" />
+                  <path d="M68 260c10-61 48-96 108-96 61 0 100 35 112 96H68Z" fill="#FCA39A" opacity=".94" />
+                  <path d="M146 162c8 13 19 20 32 20 14 0 25-7 33-20l-10-24h-45l-10 24Z" fill="#F7CEC9" />
+                  <circle cx="177" cy="108" r="50" fill="#FDE8E4" />
+                  <circle cx="128" cy="111" r="9" fill="#FDE8E4" />
+                  <circle cx="226" cy="111" r="9" fill="#FDE8E4" />
+                  <path d="M127 105c1-39 20-61 55-61 34 0 56 26 54 65-21-1-40-11-55-29-13 15-31 24-54 27v-2Z" fill="#18243A" />
+                  <circle cx="158" cy="111" r="3.5" fill="#22314B" />
+                  <circle cx="198" cy="111" r="3.5" fill="#22314B" />
+                  <path d="M157 129c6 7 13 11 21 11 9 0 16-4 22-12" fill="none" stroke="#CC493F" stroke-linecap="round" stroke-width="5" />
+                  <path d="M105 216c21 1 42 10 62 29" fill="none" stroke="#FDE8E4" stroke-linecap="round" stroke-width="17" />
+                  <circle cx="171" cy="247" r="9" fill="#FDE8E4" />
+                  <path d="M250 222c12 5 23 14 32 27" fill="none" stroke="#FDE8E4" stroke-linecap="round" stroke-width="17" />
+                  <path d="M211 202h111l-19 57H191l20-57Z" fill="#22314B" stroke="#FAFAF8" stroke-linejoin="round" stroke-width="4" />
+                  <circle cx="263" cy="230" r="7" fill="#F26B5B" />
+                  <path d="M35 260h290" fill="none" stroke="#FAFAF8" stroke-linecap="round" stroke-width="5" />
+                  <g class="sample-person__voice" aria-hidden="true">
+                    <rect x="40" y="106" width="6" height="18" rx="3" />
+                    <rect x="50" y="98" width="6" height="34" rx="3" />
+                    <rect x="60" y="103" width="6" height="24" rx="3" />
+                    <rect x="70" y="93" width="6" height="44" rx="3" />
+                    <rect x="80" y="101" width="6" height="28" rx="3" />
+                    <rect x="90" y="97" width="6" height="36" rx="3" />
+                    <rect x="100" y="106" width="6" height="18" rx="3" />
+                  </g>
+                </svg>
+              </div>
+              <div class="sample-dialogue">
+                <div class="sample-turn">
+                  <strong>Pilot asks</strong>
+                  <p>What are your <mark>salary expectations</mark>?</p>
+                </div>
+                <div class="sample-turn">
+                  <strong>You answer</strong>
+                  <p><mark>Around 25k–30k.</mark></p>
+                </div>
+              </div>
             </div>
-            <h2>What Pilot will screen for</h2>
-            <p>The candidate's role guides wording, not the universal HR scope.</p>
-            <div class="context-list">
-              <div class="context-row"><span class="dot-check">✓</span><span>Any bounded candidate-stated role</span></div>
-              <div class="context-row"><span class="dot-check">✓</span><span>One universal first-stage HR screen</span></div>
-              <div class="context-row"><span class="dot-check">✓</span><span>No real opening or application claim</span></div>
-            </div>
-          </aside>
+            <section class="sample-notes-board" aria-label="Notes created from this interview">
+              <div class="sample-notes-heading"><span>Interview notes</span><strong>3 / 3</strong></div>
+              <ol class="sample-note-grid">
+                <li class="sample-note-card"><div class="sample-note-card-heading"><span>01</span><i aria-hidden="true"></i></div><strong>Salary expectation</strong><p>25k–30k</p></li>
+                <li class="sample-note-card"><div class="sample-note-card-heading"><span>02</span><i aria-hidden="true"></i></div><strong>Relevant experience</strong><p>3 years in customer support</p></li>
+                <li class="sample-note-card"><div class="sample-note-card-heading"><span>03</span><i aria-hidden="true"></i></div><strong>Availability</strong><p>About 4 weeks</p></li>
+              </ol>
+            </section>
+          </figure>
         </div>
+
+        <section class="sample-market" aria-labelledby="sample-market-title">
+          <div class="sample-market-heading">
+            <div>
+              <p class="eyebrow">THE HIRING MARKET IS MOVING</p>
+              <h2 id="sample-market-title">AI hiring is already here. <span>Candidate trust still matters.</span></h2>
+            </div>
+            <p>Recruiting teams are getting real time back from AI, while candidates are asking for clearer boundaries. ScreenPilot runs the repeatable first conversation and leaves every hiring decision with people.</p>
+          </div>
+          <ul class="sample-market-grid">
+            <li class="sample-market-card sample-market-card--adoption"><div class="sample-market-card-heading"><span>Recruiting adoption</span><span>01</span></div><div class="sample-market-metric"><strong>37%</strong></div><div class="sample-market-copy"><p>of recruiting organizations are integrating or testing generative AI in hiring.</p><small>1,271 recruiting professionals · 23 countries</small><a href="https://business.linkedin.com/hire/resources/future-of-recruiting"><span>LinkedIn, 2025</span><span aria-hidden="true">↗</span></a></div></li>
+            <li class="sample-market-card sample-market-card--outlook"><div class="sample-market-card-heading"><span>Where teams think hiring is headed</span><span>02</span></div><div class="sample-market-metric"><strong>73%</strong></div><div class="sample-market-copy"><p>of talent-acquisition professionals agree AI will change how organizations hire. That shift creates room to automate repetitive screening while keeping judgment with hiring teams.</p><small>1,271 recruiting professionals · 23 countries</small><a href="https://business.linkedin.com/hire/resources/future-of-recruiting"><span>LinkedIn, 2025</span><span aria-hidden="true">↗</span></a></div></li>
+            <li class="sample-market-card sample-market-card--time"><div class="sample-market-card-heading"><span>Reported time saved</span><span>03</span></div><div class="sample-market-metric"><strong>20%</strong></div><div class="sample-market-copy"><p>of the workweek is the average time talent teams using generative AI say it saves them. That is about one day.</p><small>Teams integrating or experimenting with generative AI</small><a href="https://business.linkedin.com/hire/resources/future-of-recruiting"><span>LinkedIn, 2025</span><span aria-hidden="true">↗</span></a></div></li>
+            <li class="sample-market-card sample-market-card--exposure"><div class="sample-market-card-heading"><span>AI interview exposure</span><span>04</span></div><div class="sample-market-metric"><strong>63%</strong></div><div class="sample-market-copy"><p>of U.S. job seekers say they have already had an AI interview.</p><small>1,200 active job seekers in the United States</small><a href="https://www.greenhouse.com/newsroom/63-of-job-seekers-have-faced-an-ai-interview-most-havent-had-a-good-one-yet"><span>Greenhouse, 2026</span><span aria-hidden="true">↗</span></a></div></li>
+            <li class="sample-market-card sample-market-card--trust"><div class="sample-market-card-heading"><span>Candidate trust</span><span>05</span></div><div class="sample-market-metric"><strong>26%</strong></div><div class="sample-market-copy"><p>of candidates trust AI to evaluate them fairly.</p><small>2,918 job candidates surveyed</small><a href="https://www.gartner.com/en/newsroom/press-releases/2025-07-31-gartner-survey-shows-just-26-percent-of-job-applicants-trust-ai-will-fairly-evaluate-them"><span>Gartner, 2025</span><span aria-hidden="true">↗</span></a></div></li>
+          </ul>
+        </section>
 
         <div class="entry-grid" aria-label="Two equal ways to begin">
           <article class="entry-card">
@@ -1483,7 +2486,7 @@
               <svg class="icon" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v5h5M9 13h6M9 17h4" /></svg>
             </div>
             <h2>Use a CV</h2>
-            <p>Pilot reads a text-based PDF and prepares evidence-grounded discussion areas before the call.</p>
+            <p>Bring a CV to help Pilot ask more focused follow-up questions. It stays inside this demo while you use it.</p>
             <div class="entry-actions">
               <button class="button" type="button">Upload CV</button>
               <button class="button secondary" type="button">Use sample</button>
@@ -1495,7 +2498,7 @@
               <svg class="icon" viewBox="0 0 24 24"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z" /><path d="M8 10h8M8 14h5" /></svg>
             </div>
             <h2>Start without a CV</h2>
-            <p>No CV needed—Pilot learns through broader opening questions and builds the same kind of review.</p>
+            <p>Skip the document. Pilot starts with a few broad questions and builds the interview from your answers.</p>
             <div class="entry-actions">
               <button class="button" type="button">Start conversation</button>
             </div>
@@ -1510,7 +2513,7 @@
               <p class="eyebrow">COLOR THEME</p>
               <h2 id="colors-title">Deep Ink + Warm Coral</h2>
             </div>
-            <p>Warm white keeps setup and review calm. Deep ink makes the live interview focused. Coral marks the brand, live signal, selection, and main actions.</p>
+            <p>Deep ink carries the complete product workflow. Plum and raised ink separate tasks; coral marks brand, live signal, selection, and main actions. Near-white is primarily for readable type and small details.</p>
           </div>
 
           <div class="swatch-grid">
@@ -1530,7 +2533,7 @@
             <article class="swatch"><div class="swatch-color" style="--swatch:#B42318;--foreground:#FFFFFF"><span>Error / End</span></div><div class="swatch-copy"><strong>Danger</strong><code>#B42318 · danger-600</code></div></article>
           </div>
 
-          <p class="plain-note"><strong>Simple rule:</strong> use coral for brand and action—not for success, warnings, or errors. White text uses the darker action coral. Cool gray separates quiet cards; interactive controls use the stronger <code>#7D899B</code> border.</p>
+          <p class="plain-note"><strong>Simple rule:</strong> use coral for brand and action—not for success, warnings, or errors. White text uses the darker action coral. Cool gray separates quiet cards; interactive controls use the stronger <code>#7D899B</code> border. Inside <code>/demo</code>, Warm White and Card White are typography/icon/detail colors, never page, card, form, drop-zone, or review backgrounds.</p>
           <p class="motion-note"><strong>Approved logo:</strong> use the header mark in the actual web app—a Deep Ink rounded square with the Warm Coral forward/paper-plane shape and Pale Coral inner facet. The inline SVG in this HTML is the shape authority; generated-image logos are only visual approximations.</p>
         </div>
       </section>
@@ -1598,10 +2601,12 @@
           </table>
 
           <div class="page-feel" style="margin-top:16px">
-            <article class="page-card light"><h3>Setup</h3><p>Warm white document surface with quiet coral atmosphere.</p></article>
-            <article class="page-card dark"><h3>Live interview</h3><p>Deep ink signal field with coral voice activity and distinct status colors.</p></article>
-            <article class="page-card light"><h3>Review</h3><p>Return to warm white for clear evidence and human interpretation.</p></article>
+            <article class="page-card dark"><h3>Setup</h3><p>Centralized Deep Ink workspace with one raised task region and contextual recovery.</p></article>
+            <article class="page-card dark"><h3>Live interview</h3><p>The same bounded frame deepens into coral voice activity and distinct status colors.</p></article>
+            <article class="page-card dark"><h3>Review</h3><p>Calmer dark spacing and quieter borders organize evidence without changing products.</p></article>
           </div>
+
+          <p class="plain-note"><strong>Shared <code>/demo</code> workspace:</strong> the header, inert progress status, compact session/privacy/human-decision band, active task, and recovery actions stay in one stable max-width frame. Normal desktop and tablet heights keep the task and primary action visible beneath the header; phones, zoom, short heights, errors, and long review content use natural page scrolling. The ScreenPilot logo returns to <code>/</code> without clearing, while <strong>Clear &amp; exit</strong> deliberately clears and replaces the route.</p>
         </div>
       </section>
 
@@ -1624,7 +2629,7 @@
                 <button class="button is-focus" type="button">Focus</button>
                 <button class="button" type="button"><span class="spinner" aria-hidden="true"></span>Preparing</button>
                 <button class="button" type="button" disabled>Not ready</button>
-                <button class="button danger" type="button">Clear session</button>
+                <button class="button danger" type="button">Clear &amp; exit</button>
               </div>
             </article>
 
@@ -1766,14 +2771,16 @@
             </article>
           </div>
 
-          <p class="plain-note"><strong>Motion:</strong> normal transitions last 180–240 ms. Insight cards may enter over 320–450 ms. Corrections use a quiet border/color change—never a shake. Reduced-motion mode removes travel, pulsing, and smooth scrolling.</p>
+          <p class="plain-note"><strong>Motion:</strong> normal transitions last 180–240 ms. The hero word “notes.” is a slightly informal handwritten SVG whose individual pen strokes draw over about 1.1 seconds; an imperfect coral underline follows immediately, then the treatment stays still. The ordinary word remains in the accessible headline. Same-page landing links glide smoothly to their targets instead of jumping. The landing preview loops slowly through two three-topic boards: salary, experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It has no playback/topic controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. The active speaker bars and participant waveform scale in place, both question and answer subtitles reveal one spoken word at a time inside fixed-height regions, and note boards/cards enter with opacity plus a small transform. The four-step how-it-works scene changes in response to normal scrolling without hijacking it. Reduced-motion mode keeps the completed handwritten word visible and uses only a gentle opacity finish, cycles through complete speaking and note states without word-by-word or automatic spatial movement, and limits voice bars to slow opacity changes; every story step remains readable.</p>
+          <p class="motion-note"><strong>Hero layout:</strong> keep the opening permanently stacked and centered. The promise and actions come first, and the wide interview product frame sits directly beneath them at every viewport width—never beside them.</p>
+          <p class="motion-note"><strong>Landing header:</strong> keep its surface fully transparent and non-sticky inside the edge-to-edge continuous atmosphere so it scrolls away with the page. Place the enlarged ScreenPilot mark and wordmark at the left and the larger How it works / Start demo action cluster at the right; keyboard order follows the same familiar layout. The page-wide grid and glow continue behind the header and hero without restarting at their boundary.</p>
           <p class="motion-note"><strong>Reference boundary:</strong> the supplied dashboard image influenced only the Deep Ink + Warm Coral palette and warm visual mood. ScreenPilot does not inherit its recruiter navigation, candidate profiles, pipeline, analytics, scoring, phone controls, or other unsupported features.</p>
         </div>
       </section>
     </main>
 
     <footer class="footer">
-      <div class="shell">ScreenPilot visual reference · Deep Ink + Warm Coral revision · SP-004</div>
+      <div class="shell">ScreenPilot visual reference · Deep Ink + Warm Coral · SP-004 + SP-011A</div>
     </footer>
   </body>
 </html>

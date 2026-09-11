@@ -100,11 +100,11 @@ export function ConversationPreparationStage({
               <ButtonGroup>
                 {failure.retryable ? (
                   <Button onClick={onRetry} variant="secondary">
-                    Retry preparation
+                    Retry
                   </Button>
                 ) : null}
                 <Button onClick={onBack} variant="quiet">
-                  Back to choices
+                  Change starting option
                 </Button>
               </ButtonGroup>
             }
@@ -127,12 +127,12 @@ export function ConversationPreparationStage({
                 : "Preparing an open conversation"}
             </h1>
             <p>
-              ScreenPilot is loading one universal first-stage HR plan. It is
-              not analyzing a CV or inventing candidate facts.
+              Pilot is setting up a role-neutral first interview. No CV is being
+              analyzed and no candidate facts are being invented.
             </p>
           </div>
           <Button onClick={onBack} variant="quiet">
-            Back to choices
+            Change starting option
           </Button>
         </Card>
       )}

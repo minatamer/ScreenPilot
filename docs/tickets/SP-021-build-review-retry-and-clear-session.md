@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 3 — same-session review  
 Last synchronized: 2026-09-11<br>
 Depends on: SP-005, SP-006, SP-010A, SP-019, SP-020<br>
-Suggested commit: `feat(review): complete disposable session review`  
+Suggested commit: `SP-021: complete disposable session review`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 
@@ -25,6 +25,7 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - Summary failure still shows transcript and insight cards and offers Retry with a fresh Turnstile token.
 - Clear session removes all ScreenPilot browser-held session content and returns to landing.
 - Copy summary is in scope. Local JSON download remains a final-scope decision and is the first optional cut.
+- Review retains SP-011A's centralized Deep Ink/plum/coral `/demo` workspace. Calmer spacing and quieter borders distinguish completion; no white/Warm White page, card, transcript, or summary surface is reintroduced.
 
 ## Manual credential gate
 
@@ -49,7 +50,7 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - [ ] Show mode badge and enforce correct source/provenance language for both modes.
 - [ ] Wire every summary/insight evidence chip to the SP-019 transcript navigation.
 - [ ] Implement partial/disconnected and unavailable-evidence presentation.
-- [ ] Implement Retry summary with a fresh token, Copy summary, and deliberate Clear-session confirmation/action.
+- [ ] Implement Retry summary with a fresh token, Copy summary, and deliberate **Clear & exit** confirmation/action that follows the shared route/session contract.
 - [ ] Decide and document whether local JSON download earns its complexity; omit it if not clearly useful.
 - [ ] Clear all ScreenPilot session keys/content UI and release remaining in-memory candidate data.
 - [ ] Test complete/partial/no-summary, Turnstile failure, summary failure/retry, evidence navigation, mode provenance, copy, clear, refresh, and responsive behavior.

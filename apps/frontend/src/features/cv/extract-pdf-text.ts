@@ -11,8 +11,8 @@ export const SAMPLE_CV_URL = "/fixtures/screenpilot-sample-cv.pdf";
 
 export const CV_EXTRACTION_PROGRESS = {
   reading: "Reading PDF",
-  checking: "Checking text",
-  preparing: "Preparing secure analysis",
+  checking: "Extracting text",
+  preparing: "Preparing interview context",
 } as const;
 
 export type CvExtractionPhase = keyof typeof CV_EXTRACTION_PROGRESS;

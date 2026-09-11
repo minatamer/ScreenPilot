@@ -8,19 +8,20 @@ import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
 import { CvStage } from "@/features/cv/cv-stage";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
-import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
 import type {
   DemoStage,
   SessionFailure,
 } from "@/features/session/demo-session.types";
 import { useDemoSession } from "@/features/session/use-demo-session";
 import { AppShell } from "@/shared/ui/app-shell";
+import { Button } from "@/shared/ui/button";
 import { PageContainer } from "@/shared/ui/layout";
 import { SiteHeader } from "@/shared/ui/site-header";
 import { StageIndicator } from "@/shared/ui/stage-indicator";
 
 import { BootstrapStatus } from "./bootstrap-status";
 import { ConversationPreparationStage } from "./conversation-preparation-stage";
+import { DemoSafeguardsFooter } from "./demo-safeguards-footer";
 import { EntryModeChooser } from "./entry-mode-chooser";
 import { useDemoBootstrap } from "./use-demo-bootstrap";
 
@@ -98,6 +99,7 @@ export function DemoExperience() {
       <div className="sp-demo-stage">
         <BootstrapStatus
           failure={state.failure}
+          onExit={returnHomeAfterClear}
           onRetry={() => {
             dispatch({ type: "RETRY" });
           }}
@@ -108,10 +110,10 @@ export function DemoExperience() {
     stageContent = (
       <div className="sp-demo-stage">
         <div className="sp-demo-stage__heading">
-          <p className="sp-eyebrow">Choose your starting point</p>
-          <h1>How should this conversation begin?</h1>
+          <p className="sp-eyebrow">Choose how to start</p>
+          <h1>Bring a CV, or start with a conversation.</h1>
           <p className="sp-demo-stage__lead">
-            Both paths are role-neutral and reach the same shared preflight.
+            A CV helps Pilot ask more focused questions. You can also skip it.
           </p>
         </div>
         <EntryModeChooser onSelect={selectEntryMode} />
@@ -147,50 +149,60 @@ export function DemoExperience() {
         onBack={() => {
           dispatch({ type: "BACK_FROM_PREFLIGHT" });
         }}
-        onStartOver={startOver}
       />
     );
   } else {
     stageContent = (
       <div className="sp-demo-stage">
         <p className="sp-eyebrow">Private browser session</p>
-        <h1>Your session is ready to continue.</h1>
+        <h1>This step is not available in the current demo yet.</h1>
         <p className="sp-demo-stage__lead">
-          This prepared stage is owned by the next focused implementation
-          ticket.
+          Your browser session is still private. Clear it to return home and
+          start again.
         </p>
+        <Button onClick={returnHomeAfterClear} variant="secondary">
+          Clear &amp; exit
+        </Button>
       </div>
     );
   }
 
   return (
-    <AppShell id="top" tone="light">
+    <AppShell className="sp-demo-shell" id="top" tone="dark">
       <a className="sp-skip-link" href="#main-content">
         Skip to main content
       </a>
       <SiteHeader
+        brandHref="/"
+        className="sp-site-header--demo"
         actions={
-          <>
-            <PrivacyDialog />
-            <button
-              className="sp-header-link"
-              onClick={returnHomeAfterClear}
-              type="button"
-            >
-              Clear session
-            </button>
-          </>
-        }
-        middle={
-          <StageIndicator
-            currentIndex={DEMO_STAGE_PROGRESS[state.stage]}
-            label="Demo progress"
-            stages={DEMO_PROGRESS_STAGES}
-          />
+          <button
+            className="sp-header-link"
+            onClick={returnHomeAfterClear}
+            type="button"
+          >
+            Clear &amp; exit
+          </button>
         }
       />
       <main className="sp-demo-main" id="main-content">
-        <PageContainer>{stageContent}</PageContainer>
+        <PageContainer className="sp-demo-layout">
+          <section
+            aria-label="Current demo stage"
+            className="sp-demo-workspace"
+            data-stage={state.stage}
+          >
+            <div className="sp-demo-progress-panel">
+              <StageIndicator
+                currentIndex={DEMO_STAGE_PROGRESS[state.stage]}
+                label="Demo progress"
+                stages={DEMO_PROGRESS_STAGES}
+              />
+            </div>
+            <div className="sp-demo-workspace__task">{stageContent}</div>
+            <DemoSafeguardsFooter />
+          </section>
+        </PageContainer>
       </main>
     </AppShell>
   );

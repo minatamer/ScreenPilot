@@ -11,6 +11,7 @@ These instructions apply to the entire repository. The implementation authority 
 - Default development and CI must be deterministic, fake, and unable to spend provider credits unless a later ticket and the user explicitly authorize live testing.
 - Treat public `docs/` as source-controlled project documentation. Keep deliberate private notes/exports only in the narrow paths excluded by `.gitignore`.
 - Do not stage, commit, push, or rewrite Git history unless the user explicitly asks for that Git action.
+- When the user authorizes a ticket commit, its subject must start with the exact ticket ID followed by a colon and space: `SP-###: description` or `SP-###A: description`. Do not place a Conventional Commit type before the ticket ID.
 
 ## Role-neutral product guardrails
 

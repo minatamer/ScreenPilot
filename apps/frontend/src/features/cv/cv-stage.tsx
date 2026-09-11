@@ -35,6 +35,32 @@ type CvStageProps = Readonly<{
   onTextReady?: (result: ExtractedPdfText, releaseText: () => void) => void;
 }>;
 
+const MINIMUM_EXTRACTION_FEEDBACK_MS = 900;
+
+function waitForExtractionFeedback(
+  startedAt: number,
+  signal: AbortSignal,
+): Promise<void> {
+  const remainingMs = Math.max(
+    0,
+    MINIMUM_EXTRACTION_FEEDBACK_MS - (Date.now() - startedAt),
+  );
+  if (remainingMs === 0 || signal.aborted) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve) => {
+    const finish = () => {
+      clearTimeout(timeoutId);
+      signal.removeEventListener("abort", finish);
+      resolve();
+    };
+
+    const timeoutId = setTimeout(finish, remainingMs);
+    signal.addEventListener("abort", finish, { once: true });
+  });
+}
+
 export function CvStage({
   onReturnToChoices,
   onTextCleared,
@@ -80,6 +106,7 @@ export function CvStage({
       const controller = new AbortController();
       extractionControllerRef.current = controller;
       setState({ status: "extracting", phase: "reading" });
+      const progressStartedAt = Date.now();
 
       try {
         let activeFile: PdfInput | null = await loadFile(controller.signal);
@@ -92,6 +119,7 @@ export function CvStage({
           },
         });
         activeFile = null;
+        await waitForExtractionFeedback(progressStartedAt, controller.signal);
         if (controller.signal.aborted) {
           return;
         }
@@ -136,39 +164,61 @@ export function CvStage({
       <div className="sp-cv-stage__heading">
         <p className="sp-cv-stage__eyebrow">CV-assisted path</p>
         <h1>Prepare a focused screening conversation.</h1>
-        <p>
-          ScreenPilot reads text in your browser, keeps no PDF copy, and asks
-          you to confirm the role during the conversation.
-        </p>
       </div>
 
-      <CvDropzone
-        disabled={isExtracting}
-        onFilesSelected={handleFilesSelected}
-        onSampleRequested={handleSampleRequested}
-      />
+      <div className="sp-cv-stage__body">
+        <CvDropzone
+          disabled={isExtracting}
+          onFilesSelected={handleFilesSelected}
+          onSampleRequested={handleSampleRequested}
+        />
 
-      <Card
-        aria-label="Synthetic screening context"
-        className="sp-cv-context"
-        tone="soft"
-      >
-        <div>
-          <p className="sp-cv-ready__status">Session-only demo</p>
-          <h2>Your role stays open until you confirm it.</h2>
-          <p>
-            Any bounded role you state becomes the synthetic vacancy for this
-            browser session. You may also stay undecided.
-          </p>
-        </div>
-      </Card>
+        <Card
+          aria-label="Synthetic screening context"
+          className="sp-cv-context"
+          tone="soft"
+        >
+          <div>
+            <p className="sp-cv-ready__status">Role stays flexible</p>
+            <h2>Confirm it when you talk.</h2>
+            <p>
+              Use any role, or stay undecided. This is not a real application.
+            </p>
+          </div>
+        </Card>
+      </div>
 
       {state.status === "extracting" ? (
-        <Card aria-live="polite" className="sp-cv-progress" tone="soft">
-          <span aria-hidden="true" className="sp-cv-progress__indicator" />
-          <div>
+        <Card
+          aria-live="polite"
+          className="sp-cv-progress"
+          data-phase={state.phase}
+          tone="soft"
+        >
+          <div
+            aria-hidden="true"
+            className="sp-cv-progress__visual"
+            data-testid="cv-extraction-animation"
+          >
+            <div className="sp-cv-progress__document">
+              <span />
+              <span />
+              <span />
+              <i />
+            </div>
+            <div className="sp-cv-progress__activity">
+              <span />
+              <span />
+              <span />
+            </div>
+          </div>
+          <div className="sp-cv-progress__copy">
+            <span>Processing in this tab</span>
             <h2>{CV_EXTRACTION_PROGRESS[state.phase]}</h2>
             <p>The document remains in this tab while its text is checked.</p>
+            <span aria-hidden="true" className="sp-cv-progress__track">
+              <i />
+            </span>
           </div>
         </Card>
       ) : null}
@@ -179,9 +229,6 @@ export function CvStage({
             <ButtonGroup>
               <Button onClick={handleSampleRequested} variant="secondary">
                 Use sample CV
-              </Button>
-              <Button onClick={handleReturnToChoices} variant="quiet">
-                Return to choices
               </Button>
             </ButtonGroup>
           }
@@ -194,8 +241,8 @@ export function CvStage({
       {state.status === "ready" ? (
         <Card aria-live="polite" className="sp-cv-ready" tone="soft">
           <div>
-            <p className="sp-cv-ready__status">Text ready in this tab</p>
-            <h2>Your PDF passed the local checks.</h2>
+            <p className="sp-cv-ready__status">CV text ready</p>
+            <h2>Your PDF is ready for interview planning.</h2>
             <p>
               {state.result.pageCount}{" "}
               {state.result.pageCount === 1 ? "page" : "pages"}
@@ -203,13 +250,11 @@ export function CvStage({
               {state.result.characterCount.toLocaleString()} extracted
               characters
             </p>
+            <span>Focused interview topics are the next step.</span>
           </div>
           <ButtonGroup>
             <Button onClick={releaseText} variant="secondary">
               Use another PDF
-            </Button>
-            <Button onClick={handleReturnToChoices} variant="quiet">
-              Return to choices
             </Button>
           </ButtonGroup>
         </Card>
@@ -219,9 +264,9 @@ export function CvStage({
         <Button
           disabled={isExtracting}
           onClick={handleReturnToChoices}
-          variant="quiet"
+          variant="primary"
         >
-          Back to entry choices
+          Change starting option
         </Button>
       </ButtonGroup>
     </Stack>

@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 2 — browser voice experience  
 Last synchronized: 2026-09-11<br>
 Depends on: SP-003, SP-009, SP-010, SP-010A, SP-013<br>
-Suggested commit: `feat(voice): connect private ElevenLabs WebRTC session`  
+Suggested commit: `SP-014: connect the private ElevenLabs WebRTC session`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

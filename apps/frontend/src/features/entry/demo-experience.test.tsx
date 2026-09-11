@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { DemoSessionProvider } from "@/features/session/demo-session-provider";
@@ -96,26 +102,54 @@ describe("DemoExperience conversation-first path", () => {
       </DemoSessionProvider>,
     );
 
-    expect(
-      screen.getByRole("navigation", { name: "Demo progress" }),
-    ).toBeInTheDocument();
+    const progress = screen.getByRole("group", { name: "Demo progress" });
+    expect(progress.closest(".sp-demo-progress-panel")).not.toBeNull();
     expect(screen.getByText("Choose").closest("li")).toHaveAttribute(
       "aria-current",
       "step",
     );
-    expect(screen.getByRole("button", { name: "Privacy" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Clear session" })).toBeEnabled();
+    const safeguardsFooter = screen.getByLabelText("Demo safeguards");
+    expect(safeguardsFooter.tagName).toBe("FOOTER");
+    expect(within(safeguardsFooter).getByText("Demo-only role")).toBeVisible();
+    expect(
+      within(safeguardsFooter).getByText(
+        /Name any role or stay undecided.*only for this tab session/iu,
+      ),
+    ).toBeVisible();
+    expect(
+      within(safeguardsFooter).getByRole("button", {
+        name: "Privacy details",
+      }),
+    ).toBeEnabled();
+    const header = document.querySelector(".sp-site-header");
+    expect(header).not.toBeNull();
+    expect(
+      within(header as HTMLElement).queryByRole("group", {
+        name: "Demo progress",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(header as HTMLElement).queryByRole("button", {
+        name: /privacy/iu,
+      }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear & exit" })).toBeEnabled();
+    expect(
+      screen.getByRole("link", { name: "ScreenPilot home" }),
+    ).toHaveAttribute("href", "/");
 
     fireEvent.click(
       await screen.findByRole("button", { name: "Start without a CV" }),
     );
     expect(
       await screen.findByRole("heading", {
-        name: "Your open conversation is ready.",
+        name: "Your first interview is prepared.",
       }),
     ).toBeVisible();
     expect(screen.getByText("Conversation-first")).toBeVisible();
-    expect(screen.getByText(/Candidate-only evidence/)).toBeVisible();
+    expect(
+      screen.getByText(/Notes grounded only in what you say/),
+    ).toBeVisible();
     expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
       "aria-current",
       "step",
@@ -188,16 +222,20 @@ describe("DemoExperience conversation-first path", () => {
       "aria-current",
       "step",
     );
-    expect(screen.getByRole("button", { name: "Privacy" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Clear session" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Privacy details" }),
+    ).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Clear & exit" })).toBeEnabled();
     await waitFor(() => {
       expect(preparationSignal).toBeDefined();
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Back to choices" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Change starting option" }),
+    );
     expect(
       await screen.findByRole("heading", {
-        name: "How should this conversation begin?",
+        name: "Bring a CV, or start with a conversation.",
       }),
     ).toBeVisible();
     expect(preparationSignal?.aborted).toBe(true);
@@ -250,10 +288,10 @@ describe("DemoExperience conversation-first path", () => {
       ),
     ).toBeVisible();
 
-    fireEvent.click(screen.getByRole("button", { name: "Retry preparation" }));
+    fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(
       await screen.findByRole("heading", {
-        name: "Your open conversation is ready.",
+        name: "Your first interview is prepared.",
       }),
     ).toBeVisible();
     expect(requestIds).toHaveLength(2);
@@ -282,10 +320,12 @@ describe("DemoExperience conversation-first path", () => {
       await screen.findByRole("button", { name: "Start without a CV" }),
     );
     await screen.findByRole("heading", {
-      name: "Your open conversation is ready.",
+      name: "Your first interview is prepared.",
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Back to choices" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Change starting option" }),
+    );
     expect(
       await screen.findByRole("button", { name: "Use a CV" }),
     ).toBeEnabled();
@@ -295,16 +335,19 @@ describe("DemoExperience conversation-first path", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Start without a CV" }));
     await screen.findByRole("heading", {
-      name: "Your open conversation is ready.",
+      name: "Your first interview is prepared.",
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "Privacy" }));
+    fireEvent.click(screen.getByRole("button", { name: "Privacy details" }));
     expect(
-      screen.getByRole("dialog", { name: "Privacy and demo limits" }),
+      screen.getByRole("dialog", { name: "What happens to your information" }),
     ).toHaveAttribute("open");
+    expect(
+      screen.getByText(/removed when you choose Clear & exit/iu),
+    ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
 
-    fireEvent.click(screen.getByRole("button", { name: "Clear session" }));
+    fireEvent.click(screen.getByRole("button", { name: "Clear & exit" }));
     expect(router.replace).toHaveBeenCalledWith("/");
   });
 });

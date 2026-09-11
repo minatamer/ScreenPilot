@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 4 — public-demo hardening  
 Last synchronized: 2026-08-31  
 Depends on: SP-006, SP-009, SP-010, SP-014, SP-020  
-Suggested commit: `security: harden stateless data handling`  
+Suggested commit: `SP-023: harden stateless data handling`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

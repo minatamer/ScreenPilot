@@ -4,7 +4,7 @@ Status: Optional; cannot block release
 Milestone: Milestone 7 — optional extended automation  
 Last synchronized: 2026-09-11<br>
 Depends on: SP-010A, SP-026. SP-027 is independent and optional<br>
-Suggested commit: `test: add optional extended demo automation`  
+Suggested commit: `SP-028: add optional extended demo automation`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

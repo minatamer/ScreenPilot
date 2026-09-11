@@ -5,7 +5,7 @@ Milestone: Milestone 1 — interview preparation paths
 Implementation state: Completed, verified, and committed on 2026-09-11<br>
 Last synchronized: 2026-09-11<br>
 Depends on: SP-003, SP-007, SP-009  
-Suggested commit: `feat(backend): analyze CVs without persistence`  
+Suggested commit: `SP-010: analyze CVs without persistence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

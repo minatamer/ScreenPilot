@@ -6,7 +6,7 @@ Implementation state: Completed, user-approved, reviewed, revised, and committed
 Milestone: Milestone 0 — repository and visual foundations  
 Last synchronized: 2026-09-08<br>
 Depends on: SP-001, SP-002  
-Suggested commit: `docs(design): approve ScreenPilot visual direction`  
+Suggested commit: `SP-004: approve ScreenPilot visual direction`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 
@@ -19,7 +19,7 @@ Produce one lightweight browser-viewable HTML living style guide and one approve
 ## Standalone implementation context
 
 - The design language is **Signal Canvas** in its **Deep Ink + Warm Coral** direction: a calm, precise, modern, transparent AI workspace—not an HR dashboard, sci-fi interface, or neon robot theme.
-- The experience moves from a clean light document surface into a dark live signal field and back to a light evidence review.
+- The original reference moved from a clean light document surface into a dark live signal field and back to a light evidence review. SP-011A supersedes that route-level surface split: landing, setup, live interview, and review now share one Deep Ink/plum/coral atmosphere, while hierarchy comes from layered dark surfaces and near-white type rather than white page or card backgrounds.
 - Core colors: `ink-950 #18243A`, `ink-900 #22314B`, `paper-50 #FAFAF8`, `paper-0 #FFFFFF`, `coral-300 #FCA39A`, `coral-500 #F26B5B`, `coral-700 #CC493F`, `coral-800 #B93831`, `coral-100 #FDE8E4`, `line-200 #E4E7EC`, `line-strong #7D899B`, and `slate-500 #667085`. Confirmed, clarification, and danger states keep separate green, amber, and red tokens.
 - Typography uses Geist Sans, with Geist Mono only for technical metadata. Display is 56/60 desktop and 38/44 mobile at weight 600; body is 16/25.
 - Use an 8 px spacing base, 12 px control radius, 18–22 px card radius, and 28 px main-canvas radius. Borders do most separation; shadows and glass are sparse.

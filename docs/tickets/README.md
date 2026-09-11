@@ -47,6 +47,10 @@ The implementation agent should:
 - report changed files, verification performed, remaining risks, and any checklist item not completed;
 - create a commit only when the user explicitly asks or the active workflow already authorizes committing.
 
+## Ticket commit-message convention
+
+Every commit that implements or completes a ticket must begin with that ticket's exact ID, followed by a colon and a short imperative description: `SP-###: description` or `SP-###A: description`. For example, SP-011A uses `SP-011A: modernize the ScreenPilot entry experience`. The ticket ID always comes first; do not prefix the subject with `feat`, `fix`, `docs`, or another Conventional Commit type. This naming rule does not authorize staging or committing—the user must still explicitly request the Git action.
+
 If a dependency is missing or materially different, stop at that boundary and report it. Do not silently reimplement several earlier tickets inside the current one.
 
 ## Project-wide guardrails carried by every ticket
@@ -84,7 +88,7 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-010 is completed, verified, and represented by implementation commit `744901e`. Its fixed Frontend/Backend role-alignment boundary is now historical and explicitly superseded by SP-010A; its evidence, safety, statelessness, and provider protections remain required.
 - SP-010A is completed, verified, and represented by implementation commit `6febf01`; its role-neutral contract/domain migration supersedes the earlier fixed-role direction without making a paid provider call.
 - SP-011 is completed and verified on 2026-09-11, including its focused corrective validation pass and commit `a04e04a`.
-- SP-011A is the active corrective ticket. It records the current-product research and replaces SP-011's generic light composition with the Editorial Live Signal landing and early-demo shell before SP-012 extends the frontend. Its privacy placement supersedes SP-011's temporary header placement without changing the privacy, role-neutral, or session-state contract. SP-012 becomes next only after SP-011A is complete.
+- SP-011A was reopened after user visual review on 2026-09-11. Its accepted corrected direction centers the live interview, simplifies the language, adds an automatically playing six-example/two-board note-taking sequence with no visible playback/topic controls, and uses a meaningful scroll story without a detached privacy/footer treatment. A later correction extends the same Deep Ink/plum/coral language into one centralized `/demo` workspace with a compact context band, inert progress status, predictable home/Back/exit behavior, and no white setup/review surfaces. The privacy, role-neutral, and canonical session-state contracts are unchanged. User visual/manual approval is recorded, so SP-012 is no longer blocked on this design gate; SP-011A still awaits its deferred broad automated verification before completion.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

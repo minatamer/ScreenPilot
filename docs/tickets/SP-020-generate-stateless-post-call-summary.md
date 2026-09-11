@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 3 — same-session review  
 Last synchronized: 2026-09-11<br>
 Depends on: SP-009, SP-010, SP-010A, SP-017, SP-019<br>
-Suggested commit: `feat(backend): summarize local interview evidence`  
+Suggested commit: `SP-020: summarize local interview evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

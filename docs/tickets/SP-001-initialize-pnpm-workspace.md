@@ -5,7 +5,7 @@ Implementation state: Completed, reviewed, revised, and verified; committed as `
 Milestone: Milestone 0 — repository and visual foundations  
 Last synchronized: 2026-09-08<br>
 Depends on: Nothing  
-Suggested commit: `chore(repo): initialize stateless ScreenPilot workspace`  
+Suggested commit: `SP-001: initialize stateless ScreenPilot workspace`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

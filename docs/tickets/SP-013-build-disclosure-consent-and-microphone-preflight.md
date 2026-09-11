@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 2 — browser voice experience  
 Last synchronized: 2026-08-31  
 Depends on: SP-006, SP-011, SP-011A, SP-012  
-Suggested commit: `feat(frontend): add voice disclosure and preflight`  
+Suggested commit: `SP-013: add voice disclosure and preflight`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 
@@ -17,7 +17,7 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 ## Standalone implementation context
 
 - Both entry modes arrive with an unexpired `interviewGrant` and use this exact shared preflight.
-- SP-011A's in-workspace Privacy access and session/human-decision context remain visible, but they do not replace this ticket's complete provider/AI/voice/microphone disclosure immediately before consent.
+- SP-011A's compact in-workspace Privacy/session/human-decision context band remains visible inside the centralized dark `/demo` shell, but it does not replace this ticket's complete provider/AI/voice/microphone disclosure immediately before consent.
 - Disclosure identifies OpenAI/ElevenLabs processing, Cloudflare Turnstile anti-abuse verification, no ScreenPilot audio recording, session-only review, eight-minute maximum, and the expectation to use synthetic data.
 - The mode badge explains whether the interviewer has CV-derived context or will learn only from spoken answers.
 - Consent begins unchecked and requires a deliberate action.
@@ -41,7 +41,7 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 
 ## Implementation checklist
 
-- [ ] Build the shared dark preflight shell with mode badge and safe Back behavior.
+- [ ] Build preflight inside the shared centralized dark workspace with mode badge, inert stage status, **Clear & exit**, and reducer-valid Back behavior; do not add white panels or a second shell.
 - [ ] Present concise disclosure and privacy/provider roles before consent.
 - [ ] State that the candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview will remain role-neutral when undecided; do not show employer facts or a supported-role list.
 - [ ] Implement an unchecked consent control and deliberate continuation.

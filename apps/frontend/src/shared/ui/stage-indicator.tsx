@@ -16,9 +16,13 @@ export function StageIndicator({
     Math.max(normalizedCurrentIndex, 0),
     Math.max(stages.length - 1, 0),
   );
+  const currentStage = stages[safeCurrentIndex] ?? "Current step";
 
   return (
-    <nav aria-label={label} className="sp-stage-indicator">
+    <div aria-label={label} className="sp-stage-indicator" role="group">
+      <span className="sp-stage-indicator__summary">
+        Step {safeCurrentIndex + 1} of {stages.length} · {currentStage}
+      </span>
       <ol>
         {stages.map((stage, index) => {
           const state =
@@ -34,14 +38,12 @@ export function StageIndicator({
               data-state={state}
               key={`${String(index)}:${stage}`}
             >
-              <span aria-hidden="true" className="sp-stage-indicator__marker">
-                {state === "complete" ? "✓" : index + 1}
-              </span>
+              <span aria-hidden="true" className="sp-stage-indicator__marker" />
               <span className="sp-stage-indicator__label">{stage}</span>
             </li>
           );
         })}
       </ol>
-    </nav>
+    </div>
   );
 }

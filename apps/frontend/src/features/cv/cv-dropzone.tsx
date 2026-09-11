@@ -99,13 +99,13 @@ export function CvDropzone({
             Use sample CV
           </Button>
         </ButtonGroup>
-      </div>
-      <div className="sp-cv-dropzone__notes">
-        <p id={requirementId}>PDF only · 5 MB maximum · 8 pages maximum</p>
-        <p id={privacyId}>
-          Use synthetic information. The PDF stays in this tab and is never
-          uploaded.
-        </p>
+        <div className="sp-cv-dropzone__notes">
+          <p id={requirementId}>PDF only · 5 MB maximum · 8 pages maximum</p>
+          <p id={privacyId}>
+            Use synthetic information. The PDF stays in this tab and is never
+            uploaded.
+          </p>
+        </div>
       </div>
     </section>
   );

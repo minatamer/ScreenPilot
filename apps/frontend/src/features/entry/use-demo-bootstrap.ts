@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import type { SessionFailure } from "@/features/session/demo-session.types";
 import { useDemoSession } from "@/features/session/use-demo-session";
@@ -30,14 +30,22 @@ function bootstrapFailure(error: unknown): SessionFailure {
 
 export function useDemoBootstrap(restartClearedSession = false) {
   const { dispatch, state } = useDemoSession();
+  const clearedSessionRestartedRef = useRef(false);
 
   useEffect(() => {
     if (state.hydrationStatus !== "ready") {
       return;
     }
     if (state.stage === "cleared" && restartClearedSession) {
+      if (clearedSessionRestartedRef.current) {
+        return;
+      }
+      clearedSessionRestartedRef.current = true;
       dispatch({ type: "BEGIN_NEW_SESSION", now: new Date().toISOString() });
       return;
+    }
+    if (state.stage !== "cleared") {
+      clearedSessionRestartedRef.current = false;
     }
     if (state.stage === "empty") {
       dispatch({ type: "BOOTSTRAP_STARTED" });

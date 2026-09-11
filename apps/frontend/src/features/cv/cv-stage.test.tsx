@@ -51,14 +51,14 @@ describe("CvStage", () => {
     );
     expect(screen.getByText(/5 MB maximum · 8 pages maximum/)).toBeVisible();
     expect(screen.getByText(/never uploaded/)).toBeVisible();
-    expect(screen.getByText("Session-only demo")).toBeVisible();
-    expect(screen.getByText(/Any bounded role you state/)).toBeVisible();
+    expect(screen.getByText("Role stays flexible")).toBeVisible();
+    expect(screen.getByText(/Use any role, or stay undecided/)).toBeVisible();
     expect(screen.queryByText("Frontend Developer")).not.toBeInTheDocument();
     expect(screen.queryByText("Backend Developer")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Use sample CV" })).toBeEnabled();
     expect(
-      screen.getByRole("button", { name: "Back to entry choices" }),
-    ).toBeEnabled();
+      screen.getByRole("button", { name: "Change starting option" }),
+    ).toHaveClass("sp-button--primary");
   });
 
   it("runs a selected file through extraction and releases retained text on reset", async () => {
@@ -88,7 +88,7 @@ describe("CvStage", () => {
 
     expect(
       await screen.findByRole("heading", {
-        name: "Your PDF passed the local checks.",
+        name: "Your PDF is ready for interview planning.",
       }),
     ).toBeVisible();
     const selectedExtractionCall = mockedExtractPdfText.mock.calls[0];
@@ -102,7 +102,7 @@ describe("CvStage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Use another PDF" }));
     expect(onTextCleared).toHaveBeenCalledOnce();
     expect(
-      screen.queryByText("Your PDF passed the local checks."),
+      screen.queryByText("Your PDF is ready for interview planning."),
     ).not.toBeInTheDocument();
   });
 
@@ -115,7 +115,7 @@ describe("CvStage", () => {
     fireEvent.click(screen.getByRole("button", { name: "Use sample CV" }));
 
     expect(
-      await screen.findByText("Your PDF passed the local checks."),
+      await screen.findByText("Your PDF is ready for interview planning."),
     ).toBeVisible();
     const sampleFetchCall = mockedFetchSampleCvFile.mock.calls[0];
     const sampleExtractionCall = mockedExtractPdfText.mock.calls[0];
@@ -143,7 +143,7 @@ describe("CvStage", () => {
       expect(sampleButton).toBeEnabled();
     }
     expect(
-      screen.getByRole("button", { name: "Return to choices" }),
+      screen.getByRole("button", { name: "Change starting option" }),
     ).toBeEnabled();
     expect(screen.getByLabelText("Choose PDF file")).toBeEnabled();
   });
@@ -173,6 +173,8 @@ describe("CvStage", () => {
     await waitFor(() => {
       expect(extractionSignal).toBeDefined();
     });
+    expect(screen.getByRole("heading", { name: "Reading PDF" })).toBeVisible();
+    expect(screen.getByTestId("cv-extraction-animation")).toBeVisible();
 
     unmount();
     expect(extractionSignal?.aborted).toBe(true);
@@ -193,7 +195,7 @@ describe("CvStage", () => {
       target: { files: [syntheticPdf()] },
     });
     expect(
-      await screen.findByText("Your PDF passed the local checks."),
+      await screen.findByText("Your PDF is ready for interview planning."),
     ).toBeVisible();
 
     unmount();

@@ -4,7 +4,7 @@ Status: Required
 Milestone: Milestone 2 — browser voice experience  
 Last synchronized: 2026-08-31  
 Depends on: SP-014, SP-015, SP-017  
-Suggested commit: `perf(voice): enforce conversational latency gates`  
+Suggested commit: `SP-018: enforce conversational latency gates`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

@@ -5,7 +5,7 @@ Milestone: Milestone 1 — role-neutral preparation foundation<br>
 Implementation state: Completed and verified locally after final application-claim guardrail correction on 2026-09-11; awaiting user-directed commit<br>
 Last synchronized: 2026-09-11<br>
 Depends on: SP-006, SP-007, SP-009, SP-010<br>
-Suggested commit: `refactor(domain): make screening roles session-defined`<br>
+Suggested commit: `SP-010A: make screening roles session-defined`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
 Ticket index: [`README.md`](README.md)
 

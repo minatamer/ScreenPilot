@@ -6,7 +6,7 @@ Implementation state: Completed, reviewed, revised, and verified; original imple
 Milestone: Milestone 0 — repository and visual foundations  
 Last synchronized: 2026-09-08<br>
 Depends on: SP-001  
-Suggested commit: `feat(config): validate stateless provider configuration`  
+Suggested commit: `SP-003: validate stateless provider configuration`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

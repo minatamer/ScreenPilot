@@ -63,8 +63,8 @@ export function EntryModeChooser({
             Use a CV
           </Button>
         }
-        badge={<EntryModeBadge>More focused from the start</EntryModeBadge>}
-        description="Bring one synthetic text PDF. ScreenPilot reads it locally, then prepares focused questions without treating the document as an application record."
+        badge={<EntryModeBadge>More tailored questions</EntryModeBadge>}
+        description="Bring a CV to help Pilot ask more focused follow-up questions. It stays inside this demo while you use it."
         icon={<DocumentIcon />}
         title="Use a CV"
       />
@@ -79,10 +79,8 @@ export function EntryModeChooser({
             Start without a CV
           </Button>
         }
-        badge={
-          <EntryModeBadge>Fastest way to try the conversation</EntryModeBadge>
-        }
-        description="Skip documents and forms. The interviewer starts open, learns from your answers, and keeps every insight candidate-sourced."
+        badge={<EntryModeBadge>Jump straight in</EntryModeBadge>}
+        description="Skip the document. Pilot starts with a few broad questions and builds the interview from your answers."
         icon={<ConversationIcon />}
         title="Start without a CV"
       />

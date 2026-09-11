@@ -4,7 +4,7 @@ Status: Required release boundary
 Milestone: Milestone 5 — deploy  
 Last synchronized: 2026-08-31  
 Depends on: SP-022, SP-023, SP-025  
-Suggested commit: `chore(deploy): publish stateless ScreenPilot demo`  
+Suggested commit: `SP-026: publish the stateless ScreenPilot demo`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

@@ -41,8 +41,9 @@ describe("Signal Canvas foundations", () => {
     );
 
     expect(
-      screen.getByRole("navigation", { name: "Interview progress" }),
+      screen.getByRole("group", { name: "Interview progress" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Step 2 of 3 · Preflight")).toBeVisible();
     expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
       "aria-current",
       "step",

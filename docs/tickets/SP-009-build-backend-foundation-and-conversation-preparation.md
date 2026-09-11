@@ -5,7 +5,7 @@ Milestone: Milestone 1 — interview preparation paths
 Implementation state: Completed, verified, and committed on 2026-09-09<br>
 Last synchronized: 2026-09-09<br>
 Depends on: SP-003, SP-006, SP-007  
-Suggested commit: `feat(backend): prepare conversation-first interviews`  
+Suggested commit: `SP-009: prepare conversation-first interviews`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

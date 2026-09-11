@@ -6,7 +6,7 @@ Implementation state: Completed, revised, and committed in `c8bbaf2`
 Milestone: Milestone 1 — interview preparation paths  
 Last synchronized: 2026-09-09<br>
 Depends on: SP-001, SP-003  
-Suggested commit: `feat(frontend): add disposable demo session state`  
+Suggested commit: `SP-006: add disposable demo session state`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

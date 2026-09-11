@@ -5,7 +5,7 @@ Milestone: Milestone 1 — interview preparation paths
 Implementation state: Completed and committed on 2026-09-09 in `0b6819f`<br>
 Last synchronized: 2026-09-09<br>
 Depends on: SP-005, SP-006  
-Suggested commit: `feat(frontend): extract CV text in browser memory`  
+Suggested commit: `SP-008: extract CV text in browser memory`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
 

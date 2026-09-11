@@ -5,6 +5,8 @@ import { useId, useRef } from "react";
 import { Button } from "@/shared/ui/button";
 
 type PrivacyDialogProps = Readonly<{
+  clearActionLabel?: "Clear session" | "Clear & exit";
+  triggerClassName?: string;
   triggerLabel?: string;
 }>;
 
@@ -35,6 +37,8 @@ function closeDialog(dialog: HTMLDialogElement | null) {
 }
 
 export function PrivacyDialog({
+  clearActionLabel = "Clear session",
+  triggerClassName = "sp-header-link",
   triggerLabel = "Privacy",
 }: PrivacyDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -45,7 +49,7 @@ export function PrivacyDialog({
     <>
       <button
         aria-haspopup="dialog"
-        className="sp-header-link"
+        className={triggerClassName}
         onClick={() => {
           openDialog(dialogRef.current);
         }}
@@ -67,8 +71,8 @@ export function PrivacyDialog({
         <div className="sp-privacy-dialog__content">
           <div className="sp-privacy-dialog__heading">
             <div>
-              <p className="sp-eyebrow">Private, disposable demo</p>
-              <h2 id={titleId}>Privacy and demo limits</h2>
+              <p className="sp-eyebrow">Your privacy</p>
+              <h2 id={titleId}>What happens to your information</h2>
             </div>
             <Button
               autoFocus
@@ -82,9 +86,9 @@ export function PrivacyDialog({
           </div>
           <div className="sp-privacy-dialog__body" id={descriptionId}>
             <p>
-              ScreenPilot has no account or candidate history. Structured demo
-              data stays in this browser tab for at most two hours and is
-              removed when you choose Clear session.
+              ScreenPilot does not create an account or candidate profile. Demo
+              notes stay in this browser tab for at most two hours and are
+              removed when you choose {clearActionLabel}.
             </p>
             <ul>
               <li>
@@ -93,8 +97,8 @@ export function PrivacyDialog({
                 ScreenPilot.
               </li>
               <li>
-                Conversation-first uses your answers—not a document—as local
-                transcript and insight evidence.
+                If you start without a CV, Pilot learns only from the answers
+                you give during the conversation.
               </li>
               <li>
                 Before voice begins, the demo separately explains AI voice,
