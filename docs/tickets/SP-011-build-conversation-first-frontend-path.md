@@ -35,33 +35,52 @@ Deliver the equally prominent no-CV preparation path from landing choice to shar
 
 ## Implementation checklist
 
-- [ ] Build the responsive landing chooser with equal-weight CV-assisted and conversation-first cards.
-- [ ] Connect **Start without a CV** to the deterministic preparation endpoint with a unique client request ID.
-- [ ] Show only the brief approved conversation-preparation transition and specific retry/back errors.
-- [ ] Validate the response and persist only the generic plan, grant, entry mode, and shared public context.
-- [ ] Guarantee `cv` remains absent and CV/CV+Candidate source labels are impossible.
-- [ ] Enter the shared preflight state with the Conversation-first badge.
-- [ ] Implement mode-aware Back, retry, grant expiry, Start over/Clear session, keyboard, and responsive behavior.
-- [ ] Preserve equal visual quality on phones, tablets, laptops, desktops, large monitors, and intermediate widths.
-- [ ] Add focused reducer/component/API tests for branch isolation, no provider preparation calls, failure recovery, and shared-stage convergence.
+- [x] Build the responsive landing chooser with equal-weight CV-assisted and conversation-first cards.
+- [x] Connect **Start without a CV** to the deterministic preparation endpoint with a unique client request ID.
+- [x] Show only the brief approved conversation-preparation transition and specific retry/back errors.
+- [x] Validate the response and persist only the generic plan, grant, grant expiry, entry mode, and shared public context.
+- [x] Guarantee `cv` remains absent and CV/CV+Candidate source labels are impossible.
+- [x] Enter the shared preflight state with the Conversation-first badge.
+- [x] Implement mode-aware Back, retry, grant expiry, Start over/Clear session, keyboard, and responsive behavior.
+- [x] Preserve equal visual quality on phones, tablets, laptops, desktops, large monitors, and intermediate widths.
+- [x] Add focused reducer/component/API tests for branch isolation, no provider preparation calls, failure recovery, and shared-stage convergence.
 
 ## Acceptance criteria
 
-- [ ] A visitor can reach shared preflight without providing a file or triggering a paid preparation call.
-- [ ] No screen in the path claims to analyze or know the candidate.
-- [ ] The generic plan has a discovery structure, universal HR intents, no CV suggestion/IDs, and no dormant profession-specific branches.
-- [ ] The path discloses that any bounded candidate-stated role becomes a synthetic session-only demo vacancy, offers an undecided route, and contains no role allow-list or unavailable state.
-- [ ] Retry stays in conversation-first; Back returns to the equal choice screen instead of CV upload.
-- [ ] Mobile and desktop show the same information/actions with intentional reflow.
+- [x] A visitor can reach shared preflight without providing a file or triggering a paid preparation call.
+- [x] No screen in the path claims to analyze or know the candidate.
+- [x] The generic plan has a discovery structure, universal HR intents, no CV suggestion/IDs, and no dormant profession-specific branches.
+- [x] The path discloses that any bounded candidate-stated role becomes a synthetic session-only demo vacancy, offers an undecided route, and contains no role allow-list or unavailable state.
+- [x] Retry stays in conversation-first; Back returns to the equal choice screen instead of CV upload.
+- [x] Mobile and desktop show the same information/actions with intentional reflow.
 
 ## Focused verification
 
-- [ ] Run targeted frontend component/reducer/API tests.
-- [ ] Inspect network calls and prove the only preparation call is `POST /v1/interview/prepare`.
-- [ ] Inspect stored session JSON and confirm no `cv` field or CV provenance exists.
-- [ ] Manually exercise success, slow response, typed failure, retry, Back, expiry, Clear session, keyboard, and responsive layouts.
-- [ ] Inspect bootstrap, prepared state, and persisted state before preflight to confirm the role-neutral disclosure appears, no role picker/catalogue/unavailable state or candidate role exists yet, and every conversation-first start uses the same deterministic universal plan and shared preflight.
+- [x] Run targeted frontend component/reducer/API tests.
+- [x] Inspect network calls and prove the only preparation call is `POST /v1/interview/prepare`.
+- [x] Inspect stored session JSON and confirm no `cv` field or CV provenance exists.
+- [x] Exercise success, slow response, typed failure, retry, Back, expiry, Clear session, keyboard, and responsive layouts through focused browser and deterministic component/reducer coverage.
+- [x] Inspect bootstrap, prepared state, and persisted state before preflight to confirm the role-neutral disclosure appears, no role picker/catalogue/unavailable state or candidate role exists yet, and every conversation-first start uses the same deterministic universal plan and shared preflight.
 - Spoken role-label, correction, compound-role, and undecided scenarios belong to the later live interview/insight policy and release QA work in SP-016, SP-017, and SP-025; they are not SP-011 preflight assertions.
+
+## Implemented result
+
+- Replaced the temporary SP-005 foundation showcase with the real responsive landing experience, keeping **Use a CV** and **Start without a CV** equal in visual weight and keyboard order.
+- Added one shared relative `/v1` frontend API client that validates bootstrap, preparation, and stable error envelopes without exposing a provider URL or secret to the browser.
+- Connected conversation-first to deterministic preparation with a fresh request ID, abortable Back behavior, typed Retry handling, strict response validation, and no CV, OpenAI, ElevenLabs, or Turnstile operation.
+- Extended the allow-listed browser session with paired grant-expiry state so an expired conversation-first grant safely reruns only deterministic preparation.
+- Added the shared preflight handoff shell and mode badge while deliberately leaving consent, microphone, Turnstile, and live voice behavior to SP-013 and later tickets.
+- Removed stale fixed-role showcase language from the existing CV entry stage so both entry paths remain role-neutral after SP-010A.
+- Preserved the approved design reference HTML, bundled sample CV, and immutable project specification unchanged.
+
+## Verification evidence
+
+- Frontend lint, TypeScript, 67 deterministic unit/component/API tests, and the production build passed on the repository-pinned Node.js 24 and pnpm 11.24 runtime.
+- Contract and backend production builds passed after rebuilding contract output; the contracts package was also corrected to resolve its source exports in Next.js development without stale compiled output.
+- A fresh Turbopack development server returned HTTP 200 for both `/` and `/demo` with no compilation errors. The production browser flow reached shared preflight using only bootstrap plus deterministic preparation, and its clean-tab console contained no errors.
+- Browser checks covered keyboard order and activation, Back behavior, conversation-first badge/handoff content, role-neutral CV entry copy, and continuous no-overflow layouts at 390, 768, 1100, 1440, and 1920 CSS pixels.
+- Focused tests covered the slow/abort path, typed error and Retry with a new request ID, expiry recovery, Clear session, persisted allow-list projection, absent `cv`/candidate role/CV provenance, and the universal discovery plan.
+- All checks used deterministic local services and spent no provider credits. SP-013 consent/microphone behavior and later Turnstile/ElevenLabs live behavior remain deliberately outside this ticket.
 
 ## Commit boundary
 

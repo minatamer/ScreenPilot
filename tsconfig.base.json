@@ -13,6 +13,7 @@
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
+    "rewriteRelativeImportExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "resolveJsonModule": true,

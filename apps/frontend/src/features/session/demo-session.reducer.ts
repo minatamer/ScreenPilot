@@ -58,8 +58,11 @@ export type DemoSessionEvent =
       type: "CONVERSATION_PREPARATION_SUCCEEDED";
       plan: ScreeningPlan;
       interviewGrant: InterviewGrant;
+      interviewGrantExpiresAt: string;
     }>
   | Readonly<{ type: "CONTINUE_TO_PREFLIGHT" }>
+  | Readonly<{ type: "BACK_FROM_PREFLIGHT" }>
+  | Readonly<{ type: "CONVERSATION_GRANT_EXPIRED" }>
   | Readonly<{ type: "PREFLIGHT_READY" }>
   | Readonly<{ type: "VOICE_CONNECTING" }>
   | Readonly<{ type: "VOICE_CONNECTED"; voice: VoiceMetadata }>
@@ -75,6 +78,7 @@ export type DemoSessionEvent =
   | Readonly<{ type: "SET_PREFERRED_NAME"; preferredName: PreferredName }>
   | Readonly<{ type: "SET_ROLE_PREFERENCE"; rolePreference: RolePreference }>
   | Readonly<{ type: "START_OVER" }>
+  | Readonly<{ type: "BEGIN_NEW_SESSION"; now: string }>
   | Readonly<{ type: "SESSION_EXPIRED" }>
   | Readonly<{ type: "CLEAR_SESSION" }>;
 
@@ -371,12 +375,33 @@ export function demoSessionReducer(
         stage: "preflight",
         screeningPlan: event.plan,
         interviewGrant: event.interviewGrant,
+        interviewGrantExpiresAt: event.interviewGrantExpiresAt,
         failure: undefined,
+        restoreNotice: undefined,
       };
     case "CONTINUE_TO_PREFLIGHT":
       assertMode(state, event.type, "cv_assisted");
       assertStage(state, event.type, ["plan_ready"]);
       return { ...state, stage: "preflight", failure: undefined };
+    case "BACK_FROM_PREFLIGHT":
+      assertStage(state, event.type, ["preflight"]);
+      if (state.entryMode === "conversation_first") {
+        return clearModeSpecificState(state);
+      }
+      assertMode(state, event.type, "cv_assisted");
+      return { ...state, stage: "plan_ready", failure: undefined };
+    case "CONVERSATION_GRANT_EXPIRED":
+      assertMode(state, event.type, "conversation_first");
+      assertStage(state, event.type, ["preflight", "ready"]);
+      return {
+        ...state,
+        stage: "preparing_conversation",
+        screeningPlan: undefined,
+        interviewGrant: undefined,
+        interviewGrantExpiresAt: undefined,
+        failure: undefined,
+        restoreNotice: "interview_grant_expired",
+      };
     case "PREFLIGHT_READY":
       assertStage(state, event.type, ["preflight"]);
       return { ...state, stage: "ready", failure: undefined };
@@ -532,8 +557,17 @@ export function demoSessionReducer(
         "analyzing_cv",
         "plan_ready",
         "preparing_conversation",
+        "preflight",
       ]);
       return clearModeSpecificState(state);
+    case "BEGIN_NEW_SESSION":
+      assertStage(state, event.type, ["cleared"]);
+      return {
+        ...createInitialDemoSessionState(),
+        ...createSessionWindow(event.now),
+        hydrationStatus: "ready",
+        restoreNotice: state.restoreNotice,
+      };
     case "SESSION_EXPIRED":
       return {
         ...createInitialDemoSessionState(),

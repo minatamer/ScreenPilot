@@ -1,18 +1,18 @@
 import { z } from "zod";
 
-import { roleSuggestionSchema } from "../interview/demo-context.js";
+import { roleSuggestionSchema } from "../interview/demo-context.ts";
 import {
   EXPERIENCE_LEVELS,
   normalizedCvFactSchema,
   normalizedCvSchema,
   type NormalizedCv,
-} from "../interview/normalized-cv.js";
+} from "../interview/normalized-cv.ts";
 import {
   FIXED_TOPIC_KEYS,
   screeningPlanSchema,
   type ScreeningPlan,
   UNIVERSAL_TOPIC_KEYS,
-} from "../interview/screening-plan.js";
+} from "../interview/screening-plan.ts";
 
 const technicalEvaluationPattern =
   /\b(?:coding challenge|framework trivia|system design|technical (?:assessment|exercise|interview|question|quiz|screen))\b|\b(?:ask|assess|evaluate|explore|follow up|grade|probe|question|quiz|score|test)\b.{0,80}\b(?:algorithm|api|architecture|coding|debugging|framework|implementation|system design|technical|testing)\b/i;

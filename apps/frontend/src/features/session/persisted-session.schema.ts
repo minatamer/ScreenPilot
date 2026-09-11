@@ -88,6 +88,7 @@ export const persistedDemoSessionSchema = z
     cv: normalizedCvSchema.optional(),
     screeningPlan: screeningPlanSchema.optional(),
     interviewGrant: interviewGrantSchema.optional(),
+    interviewGrantExpiresAt: z.iso.datetime({ offset: true }).optional(),
     voice: voiceMetadataSchema.optional(),
     transcript: z.array(transcriptTurnSchema).max(160),
     insights: z.array(insightCardSchema).max(24),
@@ -137,6 +138,14 @@ export const persistedDemoSessionSchema = z
         message:
           "This workflow stage requires a screening plan and interview grant.",
         path: ["stage"],
+      });
+    }
+
+    if (session.interviewGrantExpiresAt && !session.interviewGrant) {
+      context.addIssue({
+        code: "custom",
+        message: "A grant expiry requires an interview grant.",
+        path: ["interviewGrantExpiresAt"],
       });
     }
 
@@ -346,6 +355,9 @@ export function projectPersistedDemoSession(
     ...(state.cv ? { cv: state.cv } : {}),
     ...(state.screeningPlan ? { screeningPlan: state.screeningPlan } : {}),
     ...(state.interviewGrant ? { interviewGrant: state.interviewGrant } : {}),
+    ...(state.interviewGrantExpiresAt
+      ? { interviewGrantExpiresAt: state.interviewGrantExpiresAt }
+      : {}),
     ...(state.voice ? { voice: state.voice } : {}),
     transcript: [...state.transcript],
     insights: [...state.insights],

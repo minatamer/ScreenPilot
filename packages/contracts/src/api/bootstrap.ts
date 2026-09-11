@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { publicRuntimeConfigSchema } from "./public-runtime-config.js";
-import { publicRoleNeutralDemoContextSchema } from "../interview/demo-context.js";
+import { publicRoleNeutralDemoContextSchema } from "../interview/demo-context.ts";
+import { publicRuntimeConfigSchema } from "./public-runtime-config.ts";
 
 export const bootstrapResponseSchema = publicRuntimeConfigSchema.extend({
   demoContext: publicRoleNeutralDemoContextSchema,

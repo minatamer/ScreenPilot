@@ -24,11 +24,6 @@ const extractedResult: ExtractedPdfText = {
   characterCount: 62,
 };
 
-const confirmedVacancyTitles = [
-  "Frontend Developer",
-  "Backend Developer",
-] as const;
-
 function syntheticPdf(name = "synthetic.pdf") {
   return new File(["%PDF-1.7 synthetic"], name, {
     type: "application/pdf",
@@ -45,12 +40,7 @@ describe("CvStage", () => {
   });
 
   it("offers accessible picker, drop, privacy, limits, sample, and back actions", () => {
-    render(
-      <CvStage
-        confirmedVacancyTitles={confirmedVacancyTitles}
-        onReturnToChoices={vi.fn()}
-      />,
-    );
+    render(<CvStage onReturnToChoices={vi.fn()} />);
 
     expect(
       screen.getByRole("heading", { name: "Bring a synthetic CV" }),
@@ -61,8 +51,10 @@ describe("CvStage", () => {
     );
     expect(screen.getByText(/5 MB maximum · 8 pages maximum/)).toBeVisible();
     expect(screen.getByText(/never uploaded/)).toBeVisible();
-    expect(screen.getByText("Frontend Developer")).toBeVisible();
-    expect(screen.getByText("Backend Developer")).toBeVisible();
+    expect(screen.getByText("Session-only demo")).toBeVisible();
+    expect(screen.getByText(/Any bounded role you state/)).toBeVisible();
+    expect(screen.queryByText("Frontend Developer")).not.toBeInTheDocument();
+    expect(screen.queryByText("Backend Developer")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Use sample CV" })).toBeEnabled();
     expect(
       screen.getByRole("button", { name: "Back to entry choices" }),
@@ -83,7 +75,6 @@ describe("CvStage", () => {
     });
     render(
       <CvStage
-        confirmedVacancyTitles={confirmedVacancyTitles}
         onReturnToChoices={vi.fn()}
         onTextCleared={onTextCleared}
         onTextReady={onTextReady}
@@ -119,12 +110,7 @@ describe("CvStage", () => {
     const sample = syntheticPdf("screenpilot-sample-cv.pdf");
     mockedFetchSampleCvFile.mockResolvedValue(sample);
     mockedExtractPdfText.mockResolvedValue(extractedResult);
-    render(
-      <CvStage
-        confirmedVacancyTitles={confirmedVacancyTitles}
-        onReturnToChoices={vi.fn()}
-      />,
-    );
+    render(<CvStage onReturnToChoices={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Use sample CV" }));
 
@@ -139,12 +125,7 @@ describe("CvStage", () => {
   });
 
   it("rejects a multi-file drop before extraction and keeps all recovery paths", async () => {
-    render(
-      <CvStage
-        confirmedVacancyTitles={confirmedVacancyTitles}
-        onReturnToChoices={vi.fn()}
-      />,
-    );
+    render(<CvStage onReturnToChoices={vi.fn()} />);
 
     fireEvent.drop(screen.getByTestId("cv-dropzone"), {
       dataTransfer: {
@@ -184,12 +165,7 @@ describe("CvStage", () => {
         );
       });
     });
-    const { unmount } = render(
-      <CvStage
-        confirmedVacancyTitles={confirmedVacancyTitles}
-        onReturnToChoices={vi.fn()}
-      />,
-    );
+    const { unmount } = render(<CvStage onReturnToChoices={vi.fn()} />);
 
     fireEvent.change(screen.getByLabelText("Choose PDF file"), {
       target: { files: [syntheticPdf()] },
@@ -207,7 +183,6 @@ describe("CvStage", () => {
     mockedExtractPdfText.mockResolvedValue(extractedResult);
     const { unmount } = render(
       <CvStage
-        confirmedVacancyTitles={confirmedVacancyTitles}
         onReturnToChoices={vi.fn()}
         onTextCleared={onTextCleared}
         onTextReady={vi.fn()}

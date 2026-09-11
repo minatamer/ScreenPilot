@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 
+import { DemoSessionProvider } from "@/features/session/demo-session-provider";
+
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
-  title: "ScreenPilot · Signal Canvas",
-  description: "Privacy-minded AI screening support with human decisions.",
+  title: "ScreenPilot · Adaptive AI screening",
+  description:
+    "A private, role-neutral AI screening demo with human hiring decisions.",
 };
 
 type RootLayoutProps = Readonly<{
@@ -15,7 +18,9 @@ type RootLayoutProps = Readonly<{
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <DemoSessionProvider>{children}</DemoSessionProvider>
+      </body>
     </html>
   );
 }

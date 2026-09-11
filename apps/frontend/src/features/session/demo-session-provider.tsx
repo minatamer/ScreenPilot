@@ -159,6 +159,34 @@ export function DemoSessionProvider({
     };
   }, [state.expiresAt, state.hydrationStatus, state.stage]);
 
+  useEffect(() => {
+    if (
+      state.entryMode !== "conversation_first" ||
+      (state.stage !== "preflight" && state.stage !== "ready") ||
+      !state.interviewGrantExpiresAt
+    ) {
+      return;
+    }
+
+    const expireGrant = () => {
+      dispatch({ type: "CONVERSATION_GRANT_EXPIRED" });
+    };
+    const remainingGrantLifetimeMs =
+      Date.parse(state.interviewGrantExpiresAt) - Date.now();
+    if (remainingGrantLifetimeMs <= 0) {
+      expireGrant();
+      return;
+    }
+
+    const grantExpiryTimer = window.setTimeout(
+      expireGrant,
+      remainingGrantLifetimeMs,
+    );
+    return () => {
+      window.clearTimeout(grantExpiryTimer);
+    };
+  }, [state.entryMode, state.interviewGrantExpiresAt, state.stage]);
+
   const clearSession = useCallback(() => {
     clearScreenPilotSession(storageRef.current);
     dispatch({ type: "CLEAR_SESSION" });

@@ -68,7 +68,8 @@ export type SessionRestoreNotice =
   | "storage_unavailable"
   | "call_interrupted"
   | "cv_file_required_after_refresh"
-  | "summary_interrupted";
+  | "summary_interrupted"
+  | "interview_grant_expired";
 
 export type DemoSessionState = Readonly<{
   schemaVersion: 2;
@@ -83,6 +84,7 @@ export type DemoSessionState = Readonly<{
   cv?: NormalizedCv | undefined;
   screeningPlan?: ScreeningPlan | undefined;
   interviewGrant?: InterviewGrant | undefined;
+  interviewGrantExpiresAt?: string | undefined;
   voice?: VoiceMetadata | undefined;
   transcript: readonly TranscriptTurn[];
   insights: readonly InsightCard[];

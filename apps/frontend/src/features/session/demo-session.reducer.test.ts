@@ -19,6 +19,7 @@ import { projectPersistedDemoSession } from "./persisted-session.schema";
 const NOW = "2026-09-09T09:00:00.000Z";
 const LATER = "2026-09-09T09:20:00.000Z";
 const INTERVIEW_GRANT = "signed-test-grant";
+const INTERVIEW_GRANT_EXPIRES_AT = "2026-09-09T09:15:00.000Z";
 
 const demoContext: PublicRoleNeutralDemoContext = {
   kind: "role_agnostic_first_stage_hr_screen",
@@ -103,6 +104,7 @@ function conversationPreflightState(): DemoSessionState {
     type: "CONVERSATION_PREPARATION_SUCCEEDED",
     plan: plan("conversation_first"),
     interviewGrant: INTERVIEW_GRANT,
+    interviewGrantExpiresAt: INTERVIEW_GRANT_EXPIRES_AT,
   });
 }
 
@@ -227,6 +229,56 @@ describe("demoSessionReducer", () => {
     });
     expect(restartedState.screeningPlan).toBeUndefined();
     expect(restartedState.interviewGrant).toBeUndefined();
+  });
+
+  it("returns from shared preflight by mode and refreshes an expired conversation grant", () => {
+    const conversationState = conversationPreflightState();
+    const refreshedState = demoSessionReducer(conversationState, {
+      type: "CONVERSATION_GRANT_EXPIRED",
+    });
+
+    expect(refreshedState).toMatchObject({
+      stage: "preparing_conversation",
+      entryMode: "conversation_first",
+      restoreNotice: "interview_grant_expired",
+    });
+    expect(refreshedState.screeningPlan).toBeUndefined();
+    expect(refreshedState.interviewGrant).toBeUndefined();
+    expect(refreshedState.interviewGrantExpiresAt).toBeUndefined();
+
+    const backToChoices = demoSessionReducer(conversationState, {
+      type: "BACK_FROM_PREFLIGHT",
+    });
+    expect(backToChoices).toMatchObject({
+      stage: "choosing_entry_mode",
+      entryMode: null,
+    });
+
+    let cvState = cvPreparationState("plan_ready");
+    cvState = demoSessionReducer(cvState, { type: "CONTINUE_TO_PREFLIGHT" });
+    const backToPlan = demoSessionReducer(cvState, {
+      type: "BACK_FROM_PREFLIGHT",
+    });
+    expect(backToPlan.stage).toBe("plan_ready");
+    expect(backToPlan.entryMode).toBe("cv_assisted");
+  });
+
+  it("starts a fresh browser-session window after clear", () => {
+    const cleared = demoSessionReducer(conversationPreflightState(), {
+      type: "CLEAR_SESSION",
+    });
+    const restarted = demoSessionReducer(cleared, {
+      type: "BEGIN_NEW_SESSION",
+      now: LATER,
+    });
+
+    expect(restarted).toMatchObject({
+      hydrationStatus: "ready",
+      stage: "empty",
+      entryMode: null,
+      createdAt: LATER,
+    });
+    expect(restarted.expiresAt).not.toBeNull();
   });
 
   it("keeps only bounded final transcript evidence", () => {

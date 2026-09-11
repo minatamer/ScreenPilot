@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { roleSuggestionSchema } from "./demo-context.js";
+import { roleSuggestionSchema } from "./demo-context.ts";
 
 export const CV_FACT_CATEGORIES = [
   "education",

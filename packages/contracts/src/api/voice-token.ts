@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { interviewGrantSchema } from "./interview-preparation.js";
+import { interviewGrantSchema } from "./interview-preparation.ts";
 
 export const VOICE_CONNECTION_STATUSES = [
   "idle",

@@ -30,14 +30,12 @@ type CvStageState =
   | Readonly<{ status: "error"; error: CvPdfError }>;
 
 type CvStageProps = Readonly<{
-  confirmedVacancyTitles: readonly string[];
   onReturnToChoices: () => void;
   onTextCleared?: () => void;
   onTextReady?: (result: ExtractedPdfText, releaseText: () => void) => void;
 }>;
 
 export function CvStage({
-  confirmedVacancyTitles,
   onReturnToChoices,
   onTextCleared,
   onTextReady,
@@ -151,19 +149,18 @@ export function CvStage({
       />
 
       <Card
-        aria-label="Confirmed screening context"
+        aria-label="Synthetic screening context"
         className="sp-cv-context"
         tone="soft"
       >
         <div>
-          <p className="sp-cv-ready__status">Confirmed openings</p>
-          <h2>Role direction stays open until the conversation.</h2>
+          <p className="sp-cv-ready__status">Session-only demo</p>
+          <h2>Your role stays open until you confirm it.</h2>
+          <p>
+            Any bounded role you state becomes the synthetic vacancy for this
+            browser session. You may also stay undecided.
+          </p>
         </div>
-        <ul>
-          {confirmedVacancyTitles.map((title) => (
-            <li key={title}>{title}</li>
-          ))}
-        </ul>
       </Card>
 
       {state.status === "extracting" ? (

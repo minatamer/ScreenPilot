@@ -1,13 +1,13 @@
 import { z } from "zod";
 
-import { interviewGrantSchema } from "./interview-preparation.js";
-import { providerUsageSchema } from "./cv-analysis.js";
-import { entryModeSchema } from "../interview/entry-mode.js";
-import { insightCardSchema } from "../interview/insight-card.js";
-import { screeningPlanSchema } from "../interview/screening-plan.js";
-import { screeningSummarySchema } from "../interview/screening-summary.js";
-import { topicProgressSchema } from "../interview/topic-progress.js";
-import { transcriptTurnSchema } from "../interview/transcript-turn.js";
+import { entryModeSchema } from "../interview/entry-mode.ts";
+import { insightCardSchema } from "../interview/insight-card.ts";
+import { screeningPlanSchema } from "../interview/screening-plan.ts";
+import { screeningSummarySchema } from "../interview/screening-summary.ts";
+import { topicProgressSchema } from "../interview/topic-progress.ts";
+import { transcriptTurnSchema } from "../interview/transcript-turn.ts";
+import { providerUsageSchema } from "./cv-analysis.ts";
+import { interviewGrantSchema } from "./interview-preparation.ts";
 
 export const summarizeInterviewRequestSchema = z
   .strictObject({

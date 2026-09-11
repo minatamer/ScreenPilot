@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-import { roleLabelSchema } from "./demo-context.js";
-import { entryModeSchema } from "./entry-mode.js";
+import { roleLabelSchema } from "./demo-context.ts";
+import { entryModeSchema } from "./entry-mode.ts";
 
 export const SCREENING_BRANCHES = [
   "graduate",

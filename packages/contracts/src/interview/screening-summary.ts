@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { rolePreferenceSchema } from "./demo-context.js";
+import { rolePreferenceSchema } from "./demo-context.ts";
 
 const evidenceIdSchema = z.string().trim().min(1).max(64);
 const evidenceIdsSchema = z.array(evidenceIdSchema).min(1).max(16);

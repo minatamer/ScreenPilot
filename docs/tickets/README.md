@@ -82,7 +82,8 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-008 is completed, verified, and represented by implementation commit `0b6819f`.
 - SP-009 is completed, verified, and represented by implementation commit `db65b2c`.
 - SP-010 is completed, verified, and represented by implementation commit `744901e`. Its fixed Frontend/Backend role-alignment boundary is now historical and explicitly superseded by SP-010A; its evidence, safety, statelessness, and provider protections remain required.
-- SP-010A is completed and verified locally after final application-claim guardrail correction on 2026-09-11, with its contract/domain migration awaiting a user-directed commit. Current verification covers formatting, lint, all three typechecks, frontend route type generation, and 224 deterministic unit tests (48 contracts, 119 backend, 57 frontend). All three builds passed before the corrective passes but were not rerun afterward; paid/live provider verification was not run and is prohibited for SP-010A. SP-011 is now the next eligible implementation ticket.
+- SP-010A is completed, verified, and represented by implementation commit `6febf01`; its role-neutral contract/domain migration supersedes the earlier fixed-role direction without making a paid provider call.
+- SP-011 is completed and verified on 2026-09-11. The real landing now exposes equal CV-assisted and conversation-first paths, deterministic conversation-first preparation reaches the shared preflight boundary, and the temporary SP-005 showcase is gone. SP-012 is now the next eligible implementation ticket.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

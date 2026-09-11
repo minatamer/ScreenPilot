@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-import { interviewGrantSchema } from "./interview-preparation.js";
-import { normalizedCvSchema } from "../interview/normalized-cv.js";
-import { screeningPlanSchema } from "../interview/screening-plan.js";
+import { normalizedCvSchema } from "../interview/normalized-cv.ts";
+import { screeningPlanSchema } from "../interview/screening-plan.ts";
+import { interviewGrantSchema } from "./interview-preparation.ts";
 
 export const analyzeCvRequestSchema = z.strictObject({
   cvText: z.string().trim().min(500).max(40_000),

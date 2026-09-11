@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { screeningPlanSchema } from "../interview/screening-plan.js";
+import { screeningPlanSchema } from "../interview/screening-plan.ts";
 
 export const interviewGrantSchema = z.string().trim().min(16).max(8_192);
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { roleLabelSchema } from "./demo-context.js";
+import { roleLabelSchema } from "./demo-context.ts";
 
 export const INSIGHT_CATEGORIES = [
   "preferred_name",

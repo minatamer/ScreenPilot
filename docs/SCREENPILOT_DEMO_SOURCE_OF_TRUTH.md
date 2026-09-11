@@ -275,7 +275,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **API:** `POST /v1/interview/prepare` with `entryMode: "conversation_first"`.
 - **Backend behavior:** validates the anonymous session and returns a versioned deterministic discovery plan plus a short-lived signed `interviewGrant`. It makes no OpenAI or ElevenLabs call.
 - **Universal plan:** preferred name, open-ended requested role, current work/study context, high-level experience/responsibilities, team/work style, motivation/next-role priorities, location/work-arrangement preferences, availability, compensation expectation, candidate-stated English-use context where relevant, candidate questions, human follow-ups, and graceful close. Candidate experience/status may change ordering or depth; profession never creates a competency or technical branch.
-- **Browser behavior:** stores only the generic plan and grant in `sessionStorage`; `cv` remains absent.
+- **Browser behavior:** stores only the generic plan, grant, and grant expiry in `sessionStorage`; `cv` remains absent. If the grant expires while preparation or preflight is visible, return to deterministic conversation-first preparation without changing modes or calling a provider.
 - **Output state:** `preflight`.
 - **Failure:** show a quick Retry and preserve the chosen entry mode; never redirect the visitor into CV upload.
 
@@ -342,6 +342,7 @@ type DemoSession = {
   cv?: NormalizedCv;
   screeningPlan?: ScreeningPlan;
   interviewGrant?: string;
+  interviewGrantExpiresAt?: string;
   voice?: {
     conversationId?: string;
     status: "idle" | "connecting" | "connected" | "ended" | "failed";
@@ -370,6 +371,7 @@ Rules:
 - Expire a session after two hours even if the tab stays open.
 - Clear malformed or oversized session data safely.
 - Validate one bounded candidate-stated role label or an undecided state under the SP-010A session schema, and reject impossible workflow-stage/entry-mode combinations during restore.
+- Persist `interviewGrant` and `interviewGrantExpiresAt` together, clear both when preparation is invalidated, and rerun only the selected mode's preparation step when the grant expires.
 - The browser is authoritative only for this visitor's disposable demo; its content is untrusted when sent back to the backend.
 - `cv` must remain absent in conversation-first mode, and conversation-first insights may never acquire a `CV` source label.
 
@@ -3243,7 +3245,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 #### [SP-011 — Build the conversation-first frontend entry path](tickets/SP-011-build-conversation-first-frontend-path.md)
 
-**Outcome:** A visitor can choose the no-CV path, receive deterministic preparation, and reach the shared preflight boundary immediately.
+**Outcome:** Completed on 2026-09-11. A visitor can choose the no-CV path, receive deterministic preparation, and reach the shared preflight boundary immediately without a CV or pre-call provider operation.
 
 **Depends on:** SP-005, SP-006, SP-007, SP-009, SP-010A.
 
@@ -3251,14 +3253,14 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Checklist:**
 
-- [ ] Build the landing entry-mode chooser with equal-weight **Use a CV** and **Start without a CV** cards across phone, tablet, laptop/desktop, large-monitor, and intermediate widths.
-- [ ] Connect conversation-first to `POST /v1/interview/prepare` and show only the truthful brief preparation transition.
-- [ ] Skip upload, extraction, AI-analysis, CV facts, and plan-preview stages entirely.
-- [ ] Ensure the mode creates no `cv` state, CV cards, CV source chips, fake facts, or pre-call model request.
-- [ ] Enter the shared preflight state with the deterministic plan, `interviewGrant`, and Conversation-first badge data.
-- [ ] Explain that any candidate-stated role is a synthetic session-only demo vacancy, offer an undecided path, and show no catalogue, unavailable state, or profession-specific branch.
-- [ ] Implement Back, retry, expiry, Clear-session, responsive, and keyboard behavior without redirecting to CV upload.
-- [ ] Add focused reducer/component/API tests proving mode isolation and no provider preparation call.
+- [x] Build the landing entry-mode chooser with equal-weight **Use a CV** and **Start without a CV** cards across phone, tablet, laptop/desktop, large-monitor, and intermediate widths.
+- [x] Connect conversation-first to `POST /v1/interview/prepare` and show only the truthful brief preparation transition.
+- [x] Skip upload, extraction, AI-analysis, CV facts, and plan-preview stages entirely.
+- [x] Ensure the mode creates no `cv` state, CV cards, CV source chips, fake facts, or pre-call model request.
+- [x] Enter the shared preflight state with the deterministic plan, `interviewGrant`, and Conversation-first badge data.
+- [x] Explain that any candidate-stated role is a synthetic session-only demo vacancy, offer an undecided path, and show no catalogue, unavailable state, or profession-specific branch.
+- [x] Implement Back, retry, expiry, Clear-session, responsive, and keyboard behavior without redirecting to CV upload.
+- [x] Add focused reducer/component/API tests proving mode isolation and no provider preparation call.
 
 #### [SP-012 — Build the CV-assisted frontend preparation path](tickets/SP-012-build-cv-assisted-frontend-path.md)
 
