@@ -88,12 +88,31 @@ function mapApiError(error: unknown, requestId: string): MappedApiError {
     });
   }
   if (error instanceof UseCaseError) {
-    return createMappedError(requestId, {
+    const statusByCode = {
+      CAPACITY_REACHED: 503,
+      INVALID_CV_TEXT: 400,
+      PREPARATION_FAILED: 503,
+      PROVIDER_UNAVAILABLE: 503,
+      RATE_LIMITED: 429,
+      TURNSTILE_REJECTED: 403,
+    } as const;
+    const mapped = createMappedError(requestId, {
       code: error.code,
       message: error.message,
       retryable: error.retryable,
-      status: 503,
+      status: statusByCode[error.code],
     });
+    return error.retryAfterSeconds === undefined
+      ? mapped
+      : {
+          ...mapped,
+          body: apiErrorSchema.parse({
+            error: {
+              ...mapped.body.error,
+              retryAfterSeconds: error.retryAfterSeconds,
+            },
+          }),
+        };
   }
 
   const bodyParserError = bodyParserErrorSchema.safeParse(error);
@@ -145,6 +164,12 @@ export const terminalErrorHandler: ErrorRequestHandler = (
     return;
   }
   const mapped = mapApiError(error, getRequestId(response));
+  if (mapped.body.error.retryAfterSeconds !== undefined) {
+    response.setHeader(
+      "retry-after",
+      String(mapped.body.error.retryAfterSeconds),
+    );
+  }
   request.log.error(
     { code: mapped.body.error.code, requestId: mapped.body.error.requestId },
     "request_failed",

@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./ai/cv-analysis-output": {
+      "types": "./src/ai/cv-analysis-output.ts",
+      "development": "./src/ai/cv-analysis-output.ts",
+      "default": "./dist/ai/cv-analysis-output.js"
+    },
     "./api/bootstrap": {
       "types": "./src/api/bootstrap.ts",
       "development": "./src/api/bootstrap.ts",

@@ -5,6 +5,8 @@ import {
   createProviderAdapters,
   MissingLiveProviderAdaptersError,
 } from "./provider-adapters.js";
+import { OpenAiCvAnalyzer } from "./openai/openai-cv-analyzer.js";
+import { CloudflareTurnstileVerifier } from "./turnstile/cloudflare-turnstile-verifier.js";
 import { FAKE_TURNSTILE_PASS_TOKEN } from "./turnstile/fake-turnstile-verifier.js";
 
 const fakeConfig = loadBackendConfig({
@@ -12,18 +14,35 @@ const fakeConfig = loadBackendConfig({
   PAID_DEMO_ENABLED: "false",
   PROVIDER_MODE: "fake",
 });
+const liveConfig = loadBackendConfig({
+  ALLOWED_ORIGINS: "http://localhost:3000",
+  ANONYMOUS_COOKIE_SECRET: "unit-test-cookie-secret-000000000000",
+  APP_ENV: "test",
+  ELEVENLABS_AGENT_ID: "test-agent",
+  ELEVENLABS_API_KEY: "not-a-real-elevenlabs-key",
+  ELEVENLABS_VOICE_ID: "test-voice",
+  INTERVIEW_GRANT_SIGNING_SECRET: "unit-test-grant-secret-0000000000000",
+  OPENAI_API_KEY: "not-a-real-openai-key",
+  PAID_DEMO_ENABLED: "false",
+  PROVIDER_MODE: "live",
+  TURNSTILE_ALLOWED_HOSTNAMES: "test.screenpilot.invalid",
+  TURNSTILE_SECRET_KEY: "not-a-real-turnstile-secret",
+  TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
+});
 
 describe("provider adapter composition", () => {
   it("exercises every fake with stable, content-safe results", async () => {
     const adapters = createProviderAdapters(fakeConfig);
     const privateCandidateText = "PRIVATE CANDIDATE FIXTURE CONTENT";
+    const frontendCvText = `${"Synthetic candidate context. ".repeat(25)}\n\nJunior interface developer\nTwo years of fictional experience in customer-facing product UI.`;
+    const backendCvText = `${"Synthetic candidate context. ".repeat(25)}\n\nBackend-oriented product developer\nFive years of fictional experience in server-side product services.`;
 
     const firstCvResult = await adapters.cvAnalyzer.analyzeCv({
-      cvText: privateCandidateText,
+      cvText: frontendCvText,
       vacancyCatalogKey: "demo-engineering",
     });
     const secondCvResult = await adapters.cvAnalyzer.analyzeCv({
-      cvText: "different input",
+      cvText: backendCvText,
       vacancyCatalogKey: "demo-engineering",
     });
     const summaryResult = await adapters.interviewSummarizer.summarizeInterview(
@@ -39,10 +58,21 @@ describe("provider adapter composition", () => {
       token: FAKE_TURNSTILE_PASS_TOKEN,
     });
 
-    expect(secondCvResult).toEqual(firstCvResult);
-    expect(JSON.stringify(firstCvResult)).not.toContain(privateCandidateText);
+    expect(secondCvResult).not.toEqual(firstCvResult);
+    expect(firstCvResult.screeningPlan.entryMode).toBe("cv_assisted");
+    expect(firstCvResult.screeningPlan.vacancyClarification).toMatchObject({
+      confirmedVacancyKeys: [],
+      suggestedVacancyKey: "frontend-developer",
+    });
+    expect(secondCvResult.screeningPlan.vacancyClarification).toMatchObject({
+      confirmedVacancyKeys: [],
+      suggestedVacancyKey: "backend-developer",
+    });
     expect(JSON.stringify(summaryResult)).not.toContain(privateCandidateText);
-    expect(firstCvResult.usage).toEqual({ inputTokens: 0, outputTokens: 0 });
+    expect(firstCvResult.usage).toMatchObject({
+      cachedInputTokens: 0,
+      outputTokens: 700,
+    });
     expect(voiceResult).toEqual({
       conversationToken: "screenpilot-fake-conversation-token",
     });
@@ -106,17 +136,26 @@ describe("provider adapter composition", () => {
     }
   });
 
-  it("never falls back to fakes in live mode", () => {
-    expect(() => createProviderAdapters({ providerMode: "live" })).toThrow(
-      MissingLiveProviderAdaptersError,
+  it("composes only implemented real adapters in live mode", async () => {
+    const adapters = createProviderAdapters(liveConfig);
+
+    expect(adapters.cvAnalyzer).toBeInstanceOf(OpenAiCvAnalyzer);
+    expect(adapters.challengeVerifier).toBeInstanceOf(
+      CloudflareTurnstileVerifier,
     );
+    await expect(
+      adapters.interviewSummarizer.summarizeInterview({}),
+    ).rejects.toBeInstanceOf(MissingLiveProviderAdaptersError);
+    await expect(
+      adapters.voiceTokenProvider.createVoiceToken({ requestId: "test" }),
+    ).rejects.toBeInstanceOf(MissingLiveProviderAdaptersError);
   });
 
   it("uses explicitly injected adapters in live mode", () => {
     const injectedAdapters = createProviderAdapters(fakeConfig);
 
-    expect(
-      createProviderAdapters({ providerMode: "live" }, injectedAdapters),
-    ).toBe(injectedAdapters);
+    expect(createProviderAdapters(liveConfig, injectedAdapters)).toBe(
+      injectedAdapters,
+    );
   });
 });

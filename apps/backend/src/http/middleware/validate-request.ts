@@ -7,14 +7,27 @@ import {
 } from "../../security/anonymous-session-cookie.js";
 
 export class RequestValidationError extends Error {
-  readonly code: "INVALID_ENTRY_MODE" | "INVALID_REQUEST";
+  readonly code:
+    | "INVALID_CV_TEXT"
+    | "INVALID_ENTRY_MODE"
+    | "INVALID_REQUEST"
+    | "TURNSTILE_REQUIRED";
 
-  constructor(code: "INVALID_ENTRY_MODE" | "INVALID_REQUEST") {
-    super(
-      code === "INVALID_ENTRY_MODE"
-        ? "Only conversation-first preparation is accepted here."
-        : "The request body is invalid.",
-    );
+  constructor(
+    code:
+      | "INVALID_CV_TEXT"
+      | "INVALID_ENTRY_MODE"
+      | "INVALID_REQUEST"
+      | "TURNSTILE_REQUIRED",
+  ) {
+    const messages = {
+      INVALID_CV_TEXT: "The extracted CV text is invalid.",
+      INVALID_ENTRY_MODE:
+        "Only conversation-first preparation is accepted here.",
+      INVALID_REQUEST: "The request body is invalid.",
+      TURNSTILE_REQUIRED: "Complete the anti-abuse check and try again.",
+    } as const;
+    super(messages[code]);
     this.name = "RequestValidationError";
     this.code = code;
   }
@@ -67,12 +80,17 @@ export function validateJsonBody<T>(
   return async (request, response) => {
     const result = schema.safeParse(request.body);
     if (!result.success) {
-      const invalidEntryMode = result.error.issues.some(
-        (issue) => issue.path[0] === "entryMode",
+      const invalidFields = new Set(
+        result.error.issues.map((issue) => issue.path[0]),
       );
-      throw new RequestValidationError(
-        invalidEntryMode ? "INVALID_ENTRY_MODE" : "INVALID_REQUEST",
-      );
+      const code = invalidFields.has("entryMode")
+        ? "INVALID_ENTRY_MODE"
+        : invalidFields.has("cvText")
+          ? "INVALID_CV_TEXT"
+          : invalidFields.has("turnstileToken")
+            ? "TURNSTILE_REQUIRED"
+            : "INVALID_REQUEST";
+      throw new RequestValidationError(code);
     }
     await handler(request, response, result.data);
   };

@@ -10,6 +10,7 @@ export type CvAnalyzerResult<
   normalizedCv: TNormalizedCv;
   screeningPlan: TScreeningPlan;
   usage: Readonly<{
+    cachedInputTokens: number;
     inputTokens: number;
     outputTokens: number;
   }>;

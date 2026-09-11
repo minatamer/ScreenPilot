@@ -12,11 +12,22 @@ export const analyzeCvRequestSchema = z.strictObject({
   turnstileToken: z.string().trim().min(1).max(4_096),
 });
 
-export const providerUsageSchema = z.strictObject({
-  inputTokens: z.number().int().nonnegative(),
-  outputTokens: z.number().int().nonnegative(),
-  estimatedCostUsd: z.number().nonnegative(),
-});
+export const providerUsageSchema = z
+  .strictObject({
+    cachedInputTokens: z.number().int().nonnegative(),
+    inputTokens: z.number().int().nonnegative(),
+    outputTokens: z.number().int().nonnegative(),
+    estimatedCostUsd: z.number().nonnegative(),
+  })
+  .superRefine((usage, context) => {
+    if (usage.cachedInputTokens > usage.inputTokens) {
+      context.addIssue({
+        code: "custom",
+        message: "Cached input tokens cannot exceed total input tokens.",
+        path: ["cachedInputTokens"],
+      });
+    }
+  });
 
 export const analyzeCvResponseSchema = z
   .strictObject({

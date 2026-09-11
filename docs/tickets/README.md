@@ -1,7 +1,7 @@
 # ScreenPilot standalone ticket index
 
 Status: execution-packet index  
-Last synchronized: 2026-09-09<br>
+Last synchronized: 2026-09-11<br>
 Parent source of truth: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
 
 ---
@@ -69,7 +69,7 @@ If a dependency is missing or materially different, stop at that boundary and re
 
 ## Ordered ticket index
 
-Current implementation progress, reconciled against code and Git history on 2026-09-09:
+Current implementation progress, reconciled against code and Git history on 2026-09-11:
 
 - SP-001 through SP-005 are completed, reviewed, revised, and represented by their documented implementation commits.
 - SP-004's earlier direction is represented by `6f94d0a`; the approved Deep Ink + Warm Coral revision supersedes it for implementation.
@@ -77,7 +77,8 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-006 is completed, revised, and represented by implementation commit `c8bbaf2`, including interrupted CV/summary recovery and hardened restored-state validation.
 - SP-007 is completed, revised, and represented by implementation commit `f890bfb`; its previously blocked PDF-library verification is now closed by SP-008.
 - SP-008 is completed, verified, and represented by implementation commit `0b6819f`.
-- SP-009 is completed, verified, and represented by its documented implementation commit. SP-010 is the next eligible unfinished ticket.
+- SP-009 is completed, verified, and represented by its documented implementation commit.
+- SP-010 is completed, verified, and represented by its documented implementation commit, including evidence-linked vacancy/experience semantics and declarative plan text rather than literal questions. Its admission-denial seam is tested, while the real bounded rate/capacity implementation remains explicitly owned by SP-022. The controlled paid-provider response remains blocked on the grouped live-mode credentials and explicit paid-call permission. SP-011 is the next eligible unfinished ticket.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

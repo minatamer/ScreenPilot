@@ -1,13 +1,24 @@
-export type UseCaseErrorCode = "PREPARATION_FAILED";
+export type UseCaseErrorCode =
+  | "CAPACITY_REACHED"
+  | "INVALID_CV_TEXT"
+  | "PREPARATION_FAILED"
+  | "PROVIDER_UNAVAILABLE"
+  | "RATE_LIMITED"
+  | "TURNSTILE_REJECTED";
 
 export class UseCaseError extends Error {
   readonly code: UseCaseErrorCode;
   readonly retryable: boolean;
+  readonly retryAfterSeconds: number | undefined;
 
   constructor(
     code: UseCaseErrorCode,
     message: string,
-    options: Readonly<{ cause?: unknown; retryable?: boolean }> = {},
+    options: Readonly<{
+      cause?: unknown;
+      retryable?: boolean;
+      retryAfterSeconds?: number;
+    }> = {},
   ) {
     super(
       message,
@@ -16,5 +27,6 @@ export class UseCaseError extends Error {
     this.name = "UseCaseError";
     this.code = code;
     this.retryable = options.retryable ?? false;
+    this.retryAfterSeconds = options.retryAfterSeconds;
   }
 }

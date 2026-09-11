@@ -1,14 +1,17 @@
 import { Router } from "express";
 
 import type { AnonymousSessionCookieOptions } from "../security/anonymous-session-cookie.js";
+import type { AnalyzeCv } from "../use-cases/analyze-cv.js";
 import type { PrepareConversationFirst } from "../use-cases/prepare-conversation-first.js";
 import { createBootstrapRoutes } from "./routes/bootstrap.routes.js";
+import { createCvAnalyzeRoutes } from "./routes/cv-analyze.routes.js";
 import { createHealthRoutes } from "./routes/health.routes.js";
 import { createInterviewPrepareRoutes } from "./routes/interview-prepare.routes.js";
 import type { BootstrapResponse } from "@screenpilot/contracts/api/bootstrap";
 
 export function createApiRouter(input: {
   allowedOrigins: readonly string[];
+  analyzeCv: AnalyzeCv;
   cookieOptions: AnonymousSessionCookieOptions;
   getDemoBootstrap: () => BootstrapResponse;
   idGenerator: () => string;
@@ -24,6 +27,13 @@ export function createApiRouter(input: {
       cookieOptions: input.cookieOptions,
       getDemoBootstrap: input.getDemoBootstrap,
       idGenerator: input.idGenerator,
+    }),
+  );
+  router.use(
+    "/v1/cv/analyze",
+    createCvAnalyzeRoutes({
+      allowedOrigins: input.allowedOrigins,
+      analyzeCv: input.analyzeCv,
     }),
   );
   router.use(

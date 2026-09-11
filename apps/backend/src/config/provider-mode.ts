@@ -4,6 +4,8 @@ export type AppEnvironment = (typeof APP_ENVIRONMENTS)[number];
 export const PROVIDER_MODES = ["fake", "live"] as const;
 export type ProviderMode = (typeof PROVIDER_MODES)[number];
 
+export const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";
+
 export const LOCKED_PROVIDER_SETTINGS = Object.freeze({
   elevenLabsAgentPlatform: "elevenagents",
   elevenLabsSttModel: "scribe_v2_realtime",

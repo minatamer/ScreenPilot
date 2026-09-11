@@ -21,6 +21,10 @@ import type { ProviderAdapters } from "./providers/provider-adapters.js";
 import { createAnonymousSessionCookieOptions } from "./security/anonymous-session-cookie.js";
 import { createInterviewGrantService } from "./security/interview-grant.js";
 import { createGetDemoBootstrap } from "./use-cases/get-demo-bootstrap.js";
+import {
+  createAnalyzeCv,
+  type CvAnalysisAdmission,
+} from "./use-cases/analyze-cv.js";
 import { createPrepareConversationFirst } from "./use-cases/prepare-conversation-first.js";
 
 export type AppSecuritySecrets = Readonly<{
@@ -32,6 +36,7 @@ export type CreateAppOptions = Readonly<{
   clock?: () => Date;
   clockMilliseconds?: () => number;
   config: BackendConfig;
+  cvAnalysisAdmission?: CvAnalysisAdmission;
   idGenerator?: () => string;
   logger?: Logger;
   providerAdapters: ProviderAdapters;
@@ -95,6 +100,16 @@ export function createApp(options: CreateAppOptions): Express {
     grantTtlSeconds: parsedConfig.limits.interviewGrantTtlSeconds,
     idGenerator,
   });
+  const analyzeCv = createAnalyzeCv({
+    admission: options.cvAnalysisAdmission ?? (() => "allowed"),
+    analyzer: options.providerAdapters.cvAnalyzer,
+    enabled:
+      parsedConfig.providerMode === "fake" || parsedConfig.paidDemoEnabled,
+    grantService,
+    grantTtlSeconds: parsedConfig.limits.interviewGrantTtlSeconds,
+    idGenerator,
+    verifier: options.providerAdapters.challengeVerifier,
+  });
   const app = express();
 
   app.disable("x-powered-by");
@@ -123,6 +138,7 @@ export function createApp(options: CreateAppOptions): Express {
   app.use(
     createApiRouter({
       allowedOrigins: parsedConfig.origins.allowed,
+      analyzeCv,
       cookieOptions: createAnonymousSessionCookieOptions({
         appEnvironment: parsedConfig.appEnvironment,
         ttlSeconds: parsedConfig.limits.anonymousCookieTtlSeconds,

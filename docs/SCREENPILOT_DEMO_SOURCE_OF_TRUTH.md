@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-09-08<br>
+Last revised: 2026-09-11<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -1763,7 +1763,7 @@ Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIR
 | SP-001 | None | Creates and verifies `.gitignore` before local secrets exist. |
 | SP-003 | All blank templates; no values requested yet | Defines fake mode and grouped live validation. |
 | SP-009 | Signing/cookie secrets; Turnstile secret only for live adapter check | Deterministic signers and fake Siteverify cover implementation. |
-| SP-010 / SP-012 | OpenAI key plus Turnstile pair/hostname for the real CV path | Fake OpenAI and Turnstile complete automated work. |
+| SP-010 / SP-012 | OpenAI key plus Turnstile pair/hostname for the real CV path. Until capability-specific live configuration is introduced, the SP-003 grouped live mode also requires its signing/cookie secrets and ElevenLabs key/agent/voice fields. | Fake OpenAI and Turnstile complete automated work; live summary/voice operations remain fail-closed until their owning tickets. |
 | SP-013 / SP-014 | Turnstile pair plus ElevenLabs key/agent/voice for real voice start | Fake challenge/token/session paths remain the default. |
 | SP-015 / SP-016 | The published SP-014 agent/session for live callbacks and client tools; no new key | Fake event traces and tool calls complete local work. |
 | SP-017 / SP-018 | Published ElevenLabs agent/account access for sync and controlled live evaluation | Source prompt, fixtures, and deterministic timing logic remain testable; live tuning stays unchecked. |
@@ -3199,15 +3199,17 @@ Every provider-facing ticket packet contains a **Manual credential gate** (or au
 
 **Checklist:**
 
-- [ ] Implement `POST /v1/cv/analyze` using the shared backend foundation, validation, limits, and error envelope.
-- [ ] Require and consume a fresh Turnstile token with the `cv_analyze` action before invoking OpenAI; challenge failure must preserve safe retry behavior and prove the OpenAI adapter was not called.
-- [ ] Delimit CV text as untrusted evidence and forbid following instructions found inside it.
-- [ ] Use GPT-5.4 mini structured output, reasoning none, and `store: false`.
-- [ ] Validate name evidence, facts, excerpts, non-binding vacancy alignment, topic links, and one bounded malformed-output repair.
-- [ ] Produce prioritized HR-screening intent/coverage fields only; reject generated implementation, architecture, API, debugging, testing, framework-depth, or technical-evaluation topics.
-- [ ] Ensure analysis can suggest but never select or claim an applied vacancy.
-- [ ] Issue the shared short-lived `interviewGrant` bound to `cv_assisted` and the validated analysis/plan hashes.
-- [ ] Add fake-provider success, timeout, malformed-output, injection, expiry, no-persistence, and Turnstile failure/replay/wrong-action tests.
+- [x] Implement `POST /v1/cv/analyze` using the shared backend foundation, validation, limits, and error envelope.
+- [x] Require and consume a fresh Turnstile token with the `cv_analyze` action before invoking OpenAI; challenge failure must preserve safe retry behavior and prove the OpenAI adapter was not called.
+- [x] Delimit CV text as untrusted evidence and forbid following instructions found inside it.
+- [x] Use GPT-5.4 mini structured output, reasoning none, and `store: false`.
+- [x] Validate name evidence, facts, excerpts, evidence-supported experience classifications, fact-linked non-binding vacancy alignment, topic links, and one bounded malformed-output repair.
+- [x] Produce prioritized declarative HR-screening intent/coverage fields only; reject literal questions plus generated implementation, architecture, API, debugging, testing, framework-depth, or technical-evaluation topics.
+- [x] Ensure analysis can suggest but never select or claim an applied vacancy.
+- [x] Issue the shared short-lived `interviewGrant` bound to `cv_assisted` and the validated analysis/plan hashes.
+- [x] Add fake-provider success, timeout, malformed-output, injection, expiry, no-persistence, and Turnstile failure/replay/wrong-action tests.
+
+SP-010 provides an injected fail-closed admission boundary and proves denials occur before Turnstile/OpenAI. The actual bounded TTL rate limiter, capacity/spend policy, and runtime wiring remain owned by SP-022; the SP-010 server default does not claim to enforce them yet.
 
 #### [SP-011 — Build the conversation-first frontend entry path](tickets/SP-011-build-conversation-first-frontend-path.md)
 
