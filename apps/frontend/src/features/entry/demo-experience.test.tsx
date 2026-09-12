@@ -178,7 +178,7 @@ describe("DemoExperience preparation paths", () => {
     ).toBeVisible();
     expect(screen.getByText("Conversation-first")).toBeVisible();
     expect(
-      screen.getByText(/Notes grounded only in what you say/),
+      screen.getByText(/build the conversation only from what you say/),
     ).toBeVisible();
     expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
       "aria-current",

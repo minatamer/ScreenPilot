@@ -256,25 +256,28 @@ describe("demoSessionReducer", () => {
     expect(restartedState.interviewGrant).toBeUndefined();
   });
 
-  it("returns from shared preflight by mode and refreshes an expired conversation grant", () => {
+  it("returns from shared preflight by mode and tracks readiness loss", () => {
     const conversationState = conversationPreflightState();
-    const refreshedState = demoSessionReducer(conversationState, {
-      type: "CONVERSATION_GRANT_EXPIRED",
+    const readyState = demoSessionReducer(conversationState, {
+      type: "PREFLIGHT_READY",
+    });
+    const noLongerReady = demoSessionReducer(readyState, {
+      type: "PREFLIGHT_NOT_READY",
     });
 
-    expect(refreshedState).toMatchObject({
-      stage: "preparing_conversation",
-      entryMode: "conversation_first",
-      restoreNotice: "interview_grant_expired",
-    });
-    expect(refreshedState.screeningPlan).toBeUndefined();
-    expect(refreshedState.interviewGrant).toBeUndefined();
-    expect(refreshedState.interviewGrantExpiresAt).toBeUndefined();
+    expect(readyState.stage).toBe("ready");
+    expect(noLongerReady.stage).toBe("preflight");
 
     const backToChoices = demoSessionReducer(conversationState, {
       type: "BACK_FROM_PREFLIGHT",
     });
     expect(backToChoices).toMatchObject({
+      stage: "choosing_entry_mode",
+      entryMode: null,
+    });
+    expect(
+      demoSessionReducer(readyState, { type: "BACK_FROM_PREFLIGHT" }),
+    ).toMatchObject({
       stage: "choosing_entry_mode",
       entryMode: null,
     });
@@ -287,6 +290,45 @@ describe("demoSessionReducer", () => {
     expect(backToPlan.stage).toBe("plan_ready");
     expect(backToPlan.entryMode).toBe("cv_assisted");
   });
+
+  it.each([
+    ["conversation_first", "preflight", "preparing_conversation"],
+    ["conversation_first", "ready", "preparing_conversation"],
+    ["cv_assisted", "preflight", "awaiting_cv"],
+    ["cv_assisted", "ready", "awaiting_cv"],
+  ] as const)(
+    "recovers %s from an expired grant in %s",
+    (entryMode, expiringStage, expectedStage) => {
+      let expiringState =
+        entryMode === "conversation_first"
+          ? conversationPreflightState()
+          : demoSessionReducer(cvPreparationState("plan_ready"), {
+              type: "CONTINUE_TO_PREFLIGHT",
+            });
+      if (expiringStage === "ready") {
+        expiringState = demoSessionReducer(expiringState, {
+          type: "PREFLIGHT_READY",
+        });
+      }
+
+      const recoveredState = demoSessionReducer(
+        expiringState,
+        entryMode === "conversation_first"
+          ? { type: "CONVERSATION_GRANT_EXPIRED" }
+          : { type: "CV_GRANT_EXPIRED" },
+      );
+
+      expect(recoveredState).toMatchObject({
+        stage: expectedStage,
+        entryMode,
+        restoreNotice: "interview_grant_expired",
+      });
+      expect(recoveredState.screeningPlan).toBeUndefined();
+      expect(recoveredState.interviewGrant).toBeUndefined();
+      expect(recoveredState.interviewGrantExpiresAt).toBeUndefined();
+      expect(recoveredState.cv).toBeUndefined();
+    },
+  );
 
   it("starts a fresh browser-session window after clear", () => {
     const cleared = demoSessionReducer(conversationPreflightState(), {
@@ -547,6 +589,26 @@ describe("demoSessionReducer", () => {
       endReason: "Voice session was interrupted by a page refresh.",
     });
     expect(restoredState.transcript).toEqual([finalCandidateTurn]);
+  });
+
+  it("restores ready state to preflight because consent and device readiness are local", () => {
+    const readyState = demoSessionReducer(conversationPreflightState(), {
+      type: "PREFLIGHT_READY",
+    });
+    const persisted = projectPersistedDemoSession(readyState);
+    expect(persisted).not.toBeNull();
+    if (!persisted) {
+      throw new Error("Expected ready state to remain persistable.");
+    }
+
+    const restoredState = demoSessionReducer(createInitialDemoSessionState(), {
+      type: "RESTORE_SESSION",
+      session: persisted,
+      now: NOW,
+    });
+
+    expect(restoredState.stage).toBe("preflight");
+    expect(restoredState.interviewGrant).toBe(INTERVIEW_GRANT);
   });
 
   it("restores interrupted summary generation as an honest retryable failure", () => {

@@ -1,8 +1,9 @@
 # SP-013 — Build disclosure, consent, and microphone preflight
 
 Status: Required  
+Implementation state: Completed in deterministic fake mode; user-owned microphone and credential-gated live verification remain pending<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-12<br>
 Depends on: SP-006, SP-011, SP-011A, SP-012  
 Suggested commit: `SP-013: add voice disclosure and preflight`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -41,37 +42,63 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 
 ## Implementation checklist
 
-- [ ] Build preflight inside the shared centralized dark workspace with mode badge, inert stage status, **Clear & exit**, and reducer-valid Back behavior; do not add white panels or a second shell.
-- [ ] Present concise disclosure and privacy/provider roles before consent.
-- [ ] State that the candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview will remain role-neutral when undecided; do not show employer facts or a supported-role list.
-- [ ] Implement an unchecked consent control and deliberate continuation.
-- [ ] Request microphone permission only from user action; show selected input and a non-recording level meter.
-- [ ] Handle denied, unavailable, in-use, removed, and permission-retry states with browser-appropriate guidance.
-- [ ] Reuse the managed Turnstile gate for `voice_token`, placing rare interaction inline beside Start with responsive/keyboard support.
-- [ ] Enable Start only when consent, microphone, grant, and Turnstile client readiness are valid.
-- [ ] Make Start idempotent and expose a connecting/cancel state for SP-014.
-- [ ] Preserve prepared mode state on microphone/challenge failure and reset only the failed prerequisite.
-- [ ] Test that every blocked state makes zero `POST /v1/voice/token` requests.
+- [x] Build preflight inside the shared centralized dark workspace with mode badge, inert stage status, **Clear & exit**, and reducer-valid Back behavior; do not add white panels or a second shell.
+- [x] Present concise disclosure and privacy/provider roles before consent.
+- [x] State that the candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview will remain role-neutral when undecided; do not show employer facts or a supported-role list.
+- [x] Implement an unchecked consent control and deliberate continuation.
+- [x] Request microphone permission only from user action; show selected input and a non-recording level meter.
+- [x] Handle denied, unavailable, in-use, removed, and permission-retry states with browser-appropriate guidance.
+- [x] Reuse the managed Turnstile gate for `voice_token`, placing rare interaction inline beside Start with responsive/keyboard support.
+- [x] Enable Start only when consent, microphone, grant, and Turnstile client readiness are valid.
+- [x] Make Start idempotent and expose a connecting/cancel state for SP-014.
+- [x] Preserve prepared mode state on microphone/challenge failure and reset only the failed prerequisite.
+- [x] Test that every blocked state makes zero `POST /v1/voice/token` requests.
 
 ## Acceptance criteria
 
-- [ ] Neither entry mode can request a voice token before informed consent and working microphone readiness.
-- [ ] Turnstile executes only from the final deliberate Start action and a legitimate visitor normally sees no puzzle.
-- [ ] Denied microphone or challenge failure preserves the prepared plan and offers recovery.
-- [ ] Back returns to plan preview for CV-assisted and to the mode chooser for conversation-first according to the state contract.
-- [ ] The complete preflight is keyboard-operable and responsive at 320 px through large monitors.
+- [x] Neither entry mode can request a voice token before informed consent and working microphone readiness.
+- [x] Turnstile executes only from the final deliberate Start action and a legitimate visitor normally sees no puzzle.
+- [x] Denied microphone or challenge failure preserves the prepared plan and offers recovery.
+- [x] Back returns to plan preview for CV-assisted and to the mode chooser for conversation-first according to the state contract.
+- [x] The complete preflight is keyboard-operable and responsive at 320 px through large monitors.
 
 ## Focused verification
 
-- [ ] Run targeted component/state tests for every gate and idempotent Start.
+- [x] Run targeted component/state tests for every gate and idempotent Start.
 - [ ] Use browser permission controls to exercise allow, deny, revoke, missing device, and device removal.
-- [ ] Exercise Turnstile success, interaction, expiry, error, and reset through test/fake configuration.
-- [ ] Inspect the network to prove no ElevenLabs or voice-token request occurs before all gates pass.
-- [ ] Manually check keyboard, screen-reader labels/live status, mobile virtual keyboard, and safe-area layout.
+- [x] Exercise Turnstile success, interaction, expiry, error, and reset through test/fake configuration.
+- [x] Inspect the network to prove no ElevenLabs or voice-token request occurs before all gates pass.
+- [x] Manually check keyboard, screen-reader labels/live status, mobile virtual keyboard, and safe-area layout. Preflight has no text-entry control that can summon a virtual keyboard.
+
+## Implemented result
+
+- One shared preflight now presents provider, privacy, synthetic-data, session, duration, and human-decision boundaries before an unchecked consent control in both entry modes. Candidate-stated role labels remain untrusted, synthetic, and session-scoped; an undecided session stays role-neutral.
+- Browser microphone access lives behind a deliberate action and a dedicated hook/service boundary. It reports the selected track, computes an RMS level locally through Web Audio, maps browser failures to recovery guidance, distinguishes observable permission revocation from track/device removal through the Permissions API with a conservative fallback, and releases media tracks, graph nodes, animation frames, listeners, pending requests, and the audio context on retry, cancellation, expiry, or unmount.
+- Consent, microphone readiness, grant validity, and browser challenge capability jointly drive the reducer's `preflight`/`ready` boundary. While preflight is mounted, its local expiry path releases microphone/readiness resources before dispatching the mode-specific `CONVERSATION_GRANT_EXPIRED` or `CV_GRANT_EXPIRED` recovery event; CV plan preview retains the provider-level timer. Persisted `ready` state restores as preflight because consent and device readiness are deliberately non-persistent.
+- The final Start action alone mounts the reusable managed Turnstile gate with action `voice_token`. The response token is handed off synchronously in memory, repeated Start actions are ignored, challenge-only retry preserves preparation and microphone state, and the connecting/cancel seam is ready for SP-014 without adding a voice-token request or ElevenLabs client early.
+
+## Verification evidence
+
+- Passed 54 focused preflight/microphone/reducer/provider/entry tests after the validation fixes. The focused coverage exercises expiry from `preflight` and `ready` for both modes, mode-specific grant cleanup, observable permission revocation versus removal fallback, every Start prerequisite, idempotent Start, memory-only Turnstile tokens, challenge retry/reset, and low-level media/Web Audio cleanup.
+- Passed the complete frontend gate using the pinned toolchain: targeted formatting verification, zero-warning frontend ESLint, frontend typecheck, all 114 frontend unit tests, and the optimized production build. `git diff --check` also passed.
+- Browser-checked the conversation-first path, unchecked disclosure, keyboard-only consent, disabled gate states, mode-aware Back, accessibility names/live regions, and the shared dark composition at 320 px, 768 px, 913 px, 1280 px, 1440 px, and 1920 px. Every checked width had no horizontal overflow; the 320 px progress labels were tightened after visual inspection.
+- The fake backend log contained only `GET /v1/demo/bootstrap` and `POST /v1/interview/prepare` through preflight. No voice-token or ElevenLabs operation was made.
+
+## Unchecked gates
+
+- All real microphone and browser-permission checks remain user-owned, per the user's request. They are blocked for automated verification because they depend on the user's hardware, browser permission UI, OS routing, and physical device changes. Deterministic component and service tests cover the corresponding state transitions and cleanup without accessing hardware:
+  - [ ] Allow microphone access and confirm the selected device label.
+  - [ ] Speak into the selected device and confirm the live input meter responds without creating a recording or upload.
+  - [ ] Deny access and confirm permission-specific recovery and retry.
+  - [ ] Revoke previously granted access and confirm permission-specific recovery where the browser exposes that state.
+  - [ ] Test a missing device and a physically removed device.
+  - [ ] Test a device already in use by another application.
+  - [ ] Repeat permission recovery in every supported browser.
+- A real-host Turnstile success/interaction/replay walkthrough remains unchecked because the public site key, secret, and hostname group are blank. The fake path and injected client tests cover success, interaction, expiry, error, cancellation, retry, and token lifetime without provider spend.
 
 ## Commit boundary
 
-Keep SP-013 reviewable as one logical change represented by `feat(frontend): add voice disclosure and preflight`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
+Keep SP-013 reviewable as one logical change represented by `SP-013: add voice disclosure and preflight`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
 
 ## Precision references
 

@@ -162,24 +162,18 @@ export function DemoSessionProvider({
   }, [state.expiresAt, state.hydrationStatus, state.stage]);
 
   useEffect(() => {
-    if (!state.entryMode || !state.interviewGrantExpiresAt) {
-      return;
-    }
-    const eligibleStages =
-      state.entryMode === "conversation_first"
-        ? ["preflight", "ready"]
-        : ["plan_ready", "preflight", "ready"];
-    if (!eligibleStages.includes(state.stage)) {
+    // The mounted preflight owns grant expiry there so it can release
+    // microphone resources before the mode-specific recovery transition.
+    if (
+      state.entryMode !== "cv_assisted" ||
+      state.stage !== "plan_ready" ||
+      !state.interviewGrantExpiresAt
+    ) {
       return;
     }
 
     const expireGrant = () => {
-      dispatch({
-        type:
-          state.entryMode === "conversation_first"
-            ? "CONVERSATION_GRANT_EXPIRED"
-            : "CV_GRANT_EXPIRED",
-      });
+      dispatch({ type: "CV_GRANT_EXPIRED" });
     };
     const remainingGrantLifetimeMs =
       Date.parse(state.interviewGrantExpiresAt) - Date.now();

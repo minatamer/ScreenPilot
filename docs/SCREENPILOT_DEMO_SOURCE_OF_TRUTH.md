@@ -284,8 +284,9 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Input state:** an unexpired `interviewGrant` from either entry path.
 - **Visible behavior:** explain AI voice, live transcription, OpenAI/ElevenLabs processing, Cloudflare Turnstile anti-abuse verification, no ScreenPilot recording, session-only review, eight-minute limit, and synthetic-data expectation.
 - **Consent:** unchecked box plus deliberate **I understand and continue** action.
-- **Microphone:** permission request, input-level meter, selected device label, and retry guidance.
+- **Microphone:** permission request, input-level meter, selected device label, and retry guidance. When the browser exposes microphone permission state, distinguish permission revocation from physical track/device removal; otherwise use conservative device-unavailable recovery copy and require a fresh check.
 - **Mutation:** consent and device status remain local; the Turnstile client may preload but does not store a verification token, and ElevenLabs is not contacted yet.
+- **Grant expiry ownership:** while preflight is mounted, its local boundary releases the microphone monitor and readiness state before dispatching `CONVERSATION_GRANT_EXPIRED` or `CV_GRANT_EXPIRED`; the global session provider retains the earlier CV plan-preview expiry timer only. Both paths clear the expired grant and rerun only the selected preparation path.
 - **Output state:** `ready_to_start`.
 - **Failure:** denied/unavailable microphone shows browser-specific help and preserves the current mode's preparation state; Back returns to plan preview for CV-assisted or the mode chooser for conversation-first.
 
@@ -3372,14 +3373,17 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Checklist:**
 
-- [ ] Explain OpenAI/ElevenLabs transient AI/voice processing, Cloudflare Turnstile anti-abuse verification, no ScreenPilot recording, and session-only review without implying that Turnstile receives CV/interview content.
-- [ ] Disclose that a candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview remains role-neutral when undecided; show no role allow-list or employer facts.
-- [ ] Explain the selected context accurately: CV-derived facts for CV-assisted or answers-only discovery for conversation-first.
-- [ ] Implement unchecked consent and deliberate continuation.
-- [ ] Implement microphone permission, device label, and input meter.
-- [ ] Add denied/unavailable/in-use recovery copy.
-- [ ] Reuse the managed Turnstile client boundary with action `voice_token`; gate Start on consent, microphone, grant, and Turnstile readiness, then execute verification only from the deliberate Start action.
-- [ ] Test that blocked states never request a voice token.
+- [x] Explain OpenAI/ElevenLabs transient AI/voice processing, Cloudflare Turnstile anti-abuse verification, no ScreenPilot recording, and session-only review without implying that Turnstile receives CV/interview content.
+- [x] Disclose that a candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview remains role-neutral when undecided; show no role allow-list or employer facts.
+- [x] Explain the selected context accurately: CV-derived facts for CV-assisted or answers-only discovery for conversation-first.
+- [x] Implement unchecked consent and deliberate continuation.
+- [x] Implement microphone permission, device label, and input meter.
+- [x] Add denied/unavailable/in-use recovery copy, distinguish observable permission revocation from physical removal with a conservative fallback, and release every microphone/Web Audio resource on invalidation or exit.
+- [x] Reuse the managed Turnstile client boundary with action `voice_token`; gate Start on consent, microphone, grant, and Turnstile readiness, then execute verification only from the deliberate Start action.
+- [x] Recover grant expiry from both `preflight` and `ready` through the selected mode's existing expiry event after releasing local readiness resources; retain the provider-level timer only for CV plan preview.
+- [x] Test that blocked states never request a voice token.
+
+**Implementation evidence (2026-09-12):** 54 focused preflight/microphone/reducer/provider/entry tests and all 114 frontend tests passed with zero-warning frontend lint, frontend typecheck, formatting/diff checks, and the optimized production build. Responsive/keyboard checks covered the non-hardware boundary from 320 px through 1920 px. Real microphone permission/device/input-meter and cross-browser recovery checks remain explicitly user-owned; fake tests do not count as manual hardware verification.
 
 #### [SP-014 — Configure ElevenLabs agent and private token flow](tickets/SP-014-configure-elevenlabs-agent-and-token-flow.md)
 

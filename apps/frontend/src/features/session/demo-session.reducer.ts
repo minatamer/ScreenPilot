@@ -74,6 +74,7 @@ export type DemoSessionEvent =
   | Readonly<{ type: "CV_GRANT_EXPIRED" }>
   | Readonly<{ type: "CHOOSE_ANOTHER_CV" }>
   | Readonly<{ type: "PREFLIGHT_READY" }>
+  | Readonly<{ type: "PREFLIGHT_NOT_READY" }>
   | Readonly<{ type: "VOICE_CONNECTING" }>
   | Readonly<{ type: "VOICE_CONNECTED"; voice: VoiceMetadata }>
   | Readonly<{ type: "VOICE_ENDING" }>
@@ -233,6 +234,14 @@ export function restoreDemoSession(
 
   if (["connecting", "live", "ending"].includes(session.stage)) {
     return interruptedSession(session, now);
+  }
+
+  if (session.stage === "ready") {
+    return {
+      ...session,
+      hydrationStatus: "ready",
+      stage: "preflight",
+    };
   }
 
   return {
@@ -411,7 +420,7 @@ export function demoSessionReducer(
       assertStage(state, event.type, ["plan_ready"]);
       return { ...state, stage: "preflight", failure: undefined };
     case "BACK_FROM_PREFLIGHT":
-      assertStage(state, event.type, ["preflight"]);
+      assertStage(state, event.type, ["preflight", "ready"]);
       if (state.entryMode === "conversation_first") {
         return clearModeSpecificState(state);
       }
@@ -458,6 +467,9 @@ export function demoSessionReducer(
     case "PREFLIGHT_READY":
       assertStage(state, event.type, ["preflight"]);
       return { ...state, stage: "ready", failure: undefined };
+    case "PREFLIGHT_NOT_READY":
+      assertStage(state, event.type, ["ready"]);
+      return { ...state, stage: "preflight", failure: undefined };
     case "VOICE_CONNECTING":
       assertStage(state, event.type, ["ready"]);
       return { ...state, stage: "connecting", voice: { status: "connecting" } };
@@ -611,6 +623,7 @@ export function demoSessionReducer(
         "plan_ready",
         "preparing_conversation",
         "preflight",
+        "ready",
       ]);
       return clearModeSpecificState(state);
     case "BEGIN_NEW_SESSION":

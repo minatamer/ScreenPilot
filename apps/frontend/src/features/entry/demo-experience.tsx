@@ -196,13 +196,40 @@ export function DemoExperience() {
         }}
       />
     );
-  } else if (state.stage === "preflight" && state.entryMode) {
+  } else if (
+    (state.stage === "preflight" || state.stage === "ready") &&
+    state.entryMode &&
+    state.interviewGrant &&
+    state.interviewGrantExpiresAt &&
+    state.runtimeConfig
+  ) {
     stageContent = (
       <PreflightHandoff
         entryMode={state.entryMode}
+        interviewGrant={state.interviewGrant}
+        interviewGrantExpiresAt={state.interviewGrantExpiresAt}
         onBack={() => {
           dispatch({ type: "BACK_FROM_PREFLIGHT" });
         }}
+        onGrantExpired={() => {
+          dispatch({
+            type:
+              state.entryMode === "conversation_first"
+                ? "CONVERSATION_GRANT_EXPIRED"
+                : "CV_GRANT_EXPIRED",
+          });
+        }}
+        onNotReady={() => {
+          dispatch({ type: "PREFLIGHT_NOT_READY" });
+        }}
+        onReady={() => {
+          dispatch({ type: "PREFLIGHT_READY" });
+        }}
+        {...(state.rolePreference
+          ? { rolePreference: state.rolePreference }
+          : {})}
+        siteKey={state.runtimeConfig.abuseProtection.siteKey}
+        stage={state.stage}
       />
     );
   } else {

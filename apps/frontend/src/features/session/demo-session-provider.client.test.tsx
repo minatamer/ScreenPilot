@@ -1,9 +1,5 @@
 import { act, render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
-import {
-  FIXED_TOPIC_KEYS,
-  UNIVERSAL_TOPIC_KEYS,
-} from "@screenpilot/contracts/interview/screening-plan";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -90,74 +86,6 @@ describe("DemoSessionProvider client lifecycle", () => {
     expect(
       screen.getByText("ready:cleared:expired_session_cleared"),
     ).toBeInTheDocument();
-  });
-
-  it("returns an expired conversation-first grant to deterministic preparation", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-09T09:00:00.000Z"));
-    window.sessionStorage.setItem(
-      SESSION_STORAGE_KEY,
-      JSON.stringify(
-        persistedDemoSessionSchema.parse({
-          schemaVersion: 3,
-          stage: "preflight",
-          entryMode: "conversation_first",
-          createdAt: "2026-09-09T09:00:00.000Z",
-          expiresAt: "2026-09-09T11:00:00.000Z",
-          runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
-          demoContext: {
-            kind: "role_agnostic_first_stage_hr_screen",
-            roleAvailability: "candidate_selected_synthetic_session_vacancy",
-            employerFactsAvailable: false,
-          },
-          screeningPlan: {
-            entryMode: "conversation_first",
-            openingIntent: "Begin with the candidate's preferred name.",
-            branch: "discovery",
-            roleClarification: {
-              suggestedRole: null,
-              reason: "Ask the candidate openly which role to use.",
-              cvFactIds: [],
-              requiresCandidateConfirmation: true,
-            },
-            topics: UNIVERSAL_TOPIC_KEYS.map((key) => ({
-              key,
-              title: key,
-              reason: "Learn one universal HR field.",
-              cvFactIds: [],
-              intent: "Learn this field without professional assessment.",
-              coverageCriteria: ["Candidate evidence covers the field."],
-              followupDirections: [],
-              required: key !== "clarifications_and_followups",
-            })),
-            fixedTopics: [...FIXED_TOPIC_KEYS],
-          },
-          interviewGrant: "signed-test-grant",
-          interviewGrantExpiresAt: "2026-09-09T09:05:00.000Z",
-          transcript: [],
-          insights: [],
-          topicProgress: [],
-        }),
-      ),
-    );
-
-    render(
-      <DemoSessionProvider>
-        <SessionProbe />
-      </DemoSessionProvider>,
-    );
-    await act(() => Promise.resolve());
-    expect(screen.getByText("ready:preflight:none")).toBeInTheDocument();
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(5 * 60 * 1_000);
-    });
-    expect(
-      screen.getByText("ready:preparing_conversation:interview_grant_expired"),
-    ).toBeInTheDocument();
-    expect(window.sessionStorage.getItem(SESSION_STORAGE_KEY)).not.toContain(
-      "signed-test-grant",
-    );
   });
 
   it("releases prepared CV data when its grant expires", async () => {
