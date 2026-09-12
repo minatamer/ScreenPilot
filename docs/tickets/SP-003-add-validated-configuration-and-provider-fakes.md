@@ -102,7 +102,8 @@ Keep SP-003 reviewable as one logical change represented by `feat(config): valid
 - [REST API specification](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#12-rest-api-specification)
 - [Provider division, costs, and data settings](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#13-elevenlabs--openai-research-and-cost-plan)
 - [Filename-level scaffold and target repository](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#filename-level-filesystem-blueprint)
-- [Credential acquisition, blank templates, and ignore rules](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup)
+- [Credential contract, blank templates, and ignore rules](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup)
+- [Owner live-provider setup runbook](../operations/live-provider-setup.md)
 - [Security and abuse controls](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#16-security-privacy-and-public-demo-controls)
 
 ## Completion handoff

@@ -29,11 +29,11 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 ## Manual credential gate
 
 - A real connection needs user-supplied `ELEVENLABS_API_KEY=`, `ELEVENLABS_AGENT_ID=`, `ELEVENLABS_VOICE_ID=`, `TURNSTILE_SITE_KEY=`, `TURNSTILE_SECRET_KEY=`, and `TURNSTILE_ALLOWED_HOSTNAMES=` in the ignored backend local file. The committed template keeps every value blank.
-- Create a restricted ElevenLabs key under **Developers → API Keys**, set only required scopes plus an expiry/credit quota where available, create/publish the private agent, then copy its agent ID and selected voice ID. Follow the official links in the parent [credential guide](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup).
+- Create a restricted ElevenLabs key, set only required scopes plus an expiry/credit quota where available, create the private agent, then copy its agent ID and selected voice ID. Follow the current first-party paths in the [SP-014A live-provider runbook](../operations/live-provider-setup.md#elevenlabs-elevenagents).
 - Do not copy `OPENAI_API_KEY` into ElevenLabs. The locked native GPT-5.4 mini selection uses ElevenLabs' integrated model path; Custom LLM/BYOK is out of scope. The app's OpenAI key remains reserved for direct backend CV/summary calls.
 - The backend alone uses the ElevenLabs API key to request the shortest-lived private WebRTC conversation token. The browser receives only that token and required public identifiers.
 - Fake route/SDK tests complete while fields are blank. Dashboard creation, revision sync, and one paid live connection remain unchecked until the user supplies values and permission. Verify `apps/backend/.env.local` is ignored before filling it.
-- The exact dashboard target, deliberately blank revision record, SP-025 cost fields, and owner-only microphone/live checklist are recorded in [`../operations/elevenlabs-agent-setup.md`](../operations/elevenlabs-agent-setup.md). No microphone or live-provider test was performed during SP-014 implementation at the user's request.
+- The exact dashboard target, deliberately blank revision record, SP-025 cost fields, and owner-only microphone/live checklist are recorded in the [SP-014A live-provider runbook](../operations/live-provider-setup.md#elevenlabs-elevenagents). The former ElevenLabs-only path remains a short pointer for compatibility. No microphone or live-provider test was performed during SP-014 implementation at the user's request.
 
 ## Scope boundaries
 

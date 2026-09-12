@@ -1645,7 +1645,7 @@ apps/backend  ──┘
 
 ### Credentials, blank values, and manual setup
 
-This is the authoritative credential contract for every implementation ticket. Ticket packets repeat the subset they need so a fresh implementation chat does not have to infer secret handling.
+This is the authoritative credential contract for every implementation ticket. Ticket packets repeat the subset they need so a fresh implementation chat does not have to infer secret handling. The owner-facing, non-deployment setup procedure is the [SP-014A live-provider runbook](operations/live-provider-setup.md); keep procedural dashboard guidance there so it has one maintained authority.
 
 #### Locked handling rules
 
@@ -1748,7 +1748,7 @@ Both `.env.local` paths must be reported by `git check-ignore` and absent from `
 
 | Value | Where to obtain it | Used by | If still blank |
 | --- | --- | --- | --- |
-| `OPENAI_API_KEY` | In the [OpenAI API quickstart](https://platform.openai.com/docs/quickstart/make-your-first-api-request), sign in to the intended API project, create a secret key in the dashboard, copy it once, and keep it server-side as required by the [OpenAI authentication guidance](https://developers.openai.com/api/reference/overview). Select the intended project/billing controls before creating it. | Direct backend Responses calls in SP-010 and SP-020. | Fake CV/summary adapters work; live OpenAI checks stay blocked. |
+| `OPENAI_API_KEY` | In the [OpenAI API quickstart](https://developers.openai.com/api/docs/quickstart), sign in to the intended API project, create a secret key in the dashboard, copy it once, and keep it server-side as required by the [OpenAI authentication guidance](https://developers.openai.com/api/reference/overview). Select the intended project/billing controls before creating it. | Direct backend Responses calls in SP-010 and SP-020. | Fake CV/summary adapters work; live OpenAI checks stay blocked. |
 | `ELEVENLABS_API_KEY` | Sign in to ElevenLabs, open **Developers → API Keys**, create a restricted key, select only required scopes, and set an expiry/credit quota where available. The [key-creation guide](https://elevenlabs.io/docs/help-center/technical/how-do-i-authorize-myself-using-an-api-key), [authentication guide](https://elevenlabs.io/docs/api-reference/authentication), and [API-key security guide](https://elevenlabs.io/docs/overview/administration/workspaces/api-keys) are authoritative. Copy the full key when it is shown and place it only on the backend. | Server request for the private SP-014 WebRTC conversation token and optional agent synchronization. | Fake voice-token tests work; live voice/tuning stays blocked. |
 | `ELEVENLABS_AGENT_ID` | Create the private agent from the [ElevenAgents quickstart](https://elevenlabs.io/docs/eleven-agents/quickstart), publish it, then copy the agent ID from its dashboard/API details. | Server token request and agent-revision verification. | Fake agent ID only inside tests; no live connection. |
 | `ELEVENLABS_VOICE_ID` | Select the approved voice in the same agent's TTS settings and copy/record its voice ID from the ElevenLabs dashboard. | Typed configuration and deployed-agent drift checks. | Agent setup/live voice acceptance remains unchecked. |
@@ -1775,6 +1775,7 @@ Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIR
 | SP-009 | Signing/cookie secrets; Turnstile secret only for live adapter check | Deterministic signers and fake Siteverify cover implementation. |
 | SP-010 / SP-012 | OpenAI key plus Turnstile pair/hostname for the real CV path. Until capability-specific live configuration is introduced, the SP-003 grouped live mode also requires its signing/cookie secrets and ElevenLabs key/agent/voice fields. | Fake OpenAI and Turnstile complete automated work; live summary/voice operations remain fail-closed until their owning tickets. |
 | SP-013 / SP-014 | Turnstile pair plus ElevenLabs key/agent/voice for real voice start | Fake challenge/token/session paths remain the default. |
+| SP-014A | Current first-party OpenAI, ElevenLabs, and Turnstile documentation only; no dashboard login, account mutation, or credential | Consolidates all non-deployment provider, key, local-secret, spend, rotation, and verification guidance while values stay blank. |
 | SP-015 / SP-016 | The published SP-014 agent/session for live callbacks and client tools; no new key | Fake event traces and tool calls complete local work. |
 | SP-017 / SP-018 | Published ElevenLabs agent/account access for sync and controlled live evaluation | Source prompt, fixtures, and deterministic timing logic remain testable; live tuning stays unchecked. |
 | SP-020 / SP-021 | OpenAI key plus Turnstile pair for real summary/retry | Fake summary and challenge paths complete automated work. |
@@ -2352,7 +2353,7 @@ Cloudflare Turnstile therefore adds **$0** to the planned demo cost. It is indep
 - [OpenAI Realtime Agents reference implementation](https://github.com/openai/openai-realtime-agents)
 - [OpenAI Agents SDK realtime quickstart](https://github.com/openai/openai-agents-python/blob/main/docs/realtime/quickstart.md)
 - [OpenAI Responses API](https://developers.openai.com/api/reference/cli/resources/responses/methods/create)
-- [OpenAI API quickstart and secret-key setup](https://platform.openai.com/docs/quickstart/make-your-first-api-request)
+- [OpenAI API quickstart and secret-key setup](https://developers.openai.com/api/docs/quickstart)
 - [OpenAI API authentication and server-side key handling](https://developers.openai.com/api/reference/overview)
 - [Cloudflare Turnstile plans](https://developers.cloudflare.com/turnstile/plans/)
 - [Cloudflare Turnstile implementation and server-side validation](https://developers.cloudflare.com/turnstile/get-started/)
@@ -3411,7 +3412,25 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [x] Start one WebRTC session using the React SDK and browser-supplied bounded dynamic context while keeping the agent/voice identifiers backend-only.
 - [x] Keep fake/default development on a browser-local deterministic bridge; lazy-load the real ElevenLabs session only when the server exposes paid live voice.
 - [x] Handle grant expiry, Turnstile/provider rejection, connect cancel, interruption, and kill switch without a fallback provider; terminal SDK failures end once and unmount immediately.
-- [x] Document the owner-only dashboard, microphone, privacy, responsive, and SP-025 cost verification in `docs/operations/elevenlabs-agent-setup.md`.
+- [x] Document the owner-only dashboard, microphone, privacy, responsive, and SP-025 cost verification in the authoritative `docs/operations/live-provider-setup.md` runbook; keep `elevenlabs-agent-setup.md` as a compatibility pointer.
+
+#### [SP-014A — Document complete live-provider and credential setup](tickets/SP-014A-document-live-provider-and-credential-setup.md)
+
+**Outcome:** One authoritative non-deployment runbook explains every OpenAI, ElevenLabs, Turnstile, and local-signing-secret setup step without exposing a credential or making a paid call.
+
+**Depends on:** SP-003, SP-009, SP-010, SP-012, SP-014.
+
+**Suggested commit:** `SP-014A: document live provider and credential setup`
+
+**Checklist:**
+
+- [x] Audit active code, environment examples, and tickets to prove the complete non-deployment credentialed-service inventory.
+- [x] Consolidate the OpenAI API Platform, ElevenLabs ElevenAgents, Cloudflare Turnstile, local-secret, fake-to-live, spend, rotation, and owner-verification guides under `docs/operations/`.
+- [x] Audit every ElevenLabs dashboard and advanced setting against the source-controlled agent target; mark each configured, disabled, deferred, account-dependent, or not applicable.
+- [x] Distinguish direct backend GPT access from ElevenLabs' native GPT integration and keep the ScreenPilot OpenAI key out of ElevenLabs and the browser.
+- [x] Document one restricted local Turnstile Managed widget, exact hostname/action/Siteverify ownership, and why Cloudflare hosting, proxying, DNS, WAF, and an API token are unnecessary here.
+- [x] Keep every user-owned value blank, every account/dashboard/local-secret action owner-only, and every paid/microphone check explicitly unverified.
+- [x] Exclude Google Cloud, Firebase, domains, DNS, GitHub deployment identity, and all other SP-026 deployment work.
 
 #### [SP-015 — Normalize live events, captions, and controls](tickets/SP-015-normalize-live-events-captions-and-controls.md)
 

@@ -1,7 +1,7 @@
 # ScreenPilot standalone ticket index
 
 Status: execution-packet index  
-Last synchronized: 2026-09-11<br>
+Last synchronized: 2026-09-12<br>
 Parent source of truth: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
 
 ---
@@ -76,7 +76,7 @@ If a dependency is missing or materially different, stop at that boundary and re
 
 ## Ordered ticket index
 
-Current implementation progress, reconciled against code and Git history on 2026-09-11:
+Current implementation progress, reconciled against code and Git history on 2026-09-12:
 
 - SP-001 through SP-005 are completed, reviewed, revised, and represented by their documented implementation commits.
 - SP-004's earlier direction is represented by `6f94d0a`; the approved Deep Ink + Warm Coral revision supersedes it for implementation.
@@ -89,6 +89,11 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-010A is completed, verified, and represented by implementation commit `6febf01`; its role-neutral contract/domain migration supersedes the earlier fixed-role direction without making a paid provider call.
 - SP-011 is completed and verified on 2026-09-11, including its focused corrective validation pass and commit `a04e04a`.
 - SP-011A was reopened after user visual review on 2026-09-11. Its accepted corrected direction centers the live interview, simplifies the language, adds an automatically playing six-example/two-board note-taking sequence with no visible playback/topic controls, and uses a meaningful scroll story without a detached privacy/footer treatment. A later correction extends the same Deep Ink/plum/coral language into one centralized `/demo` workspace with a compact context band, inert progress status, predictable home/Back/exit behavior, and no white setup/review surfaces. The privacy, role-neutral, and canonical session-state contracts are unchanged. User visual/manual approval is recorded, so SP-012 is no longer blocked on this design gate; SP-011A still awaits its deferred broad automated verification before completion.
+- SP-012 is completed, verified with deterministic provider coverage, and represented by implementation commit `6be106a`; live OpenAI and Turnstile verification remains credential-gated.
+- SP-013 is completed, verified for its non-hardware boundary, and represented by implementation commit `d5338cb`; real microphone/device checks remain owner-only.
+- SP-014 is completed, validated after its fake-mode and terminal-session cleanup corrections, and represented by implementation commit `9075c7d`; real ElevenLabs, Turnstile, retention-dashboard, and microphone verification remains credential-gated.
+- SP-014A is completed as documentation-only work. Its consolidated runbook covers every non-deployment OpenAI, ElevenLabs, Turnstile, local-secret, spend, rotation, and manual-verification step without requesting credentials or making a paid call; owner account setup and live/microphone checks remain explicitly pending.
+- SP-015 is the next eligible implementation ticket.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
@@ -110,6 +115,7 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-012 | [Build CV-assisted frontend path](SP-012-build-cv-assisted-frontend-path.md) | SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011, SP-011A | Required |
 | SP-013 | [Build disclosure, consent, and microphone preflight](SP-013-build-disclosure-consent-and-microphone-preflight.md) | SP-006, SP-011, SP-012 | Required |
 | SP-014 | [Configure ElevenLabs agent and private token flow](SP-014-configure-elevenlabs-agent-and-token-flow.md) | SP-003, SP-009, SP-010, SP-010A, SP-013 | Required |
+| SP-014A | [Document complete live-provider and credential setup](SP-014A-document-live-provider-and-credential-setup.md) | SP-003, SP-009, SP-010, SP-012, SP-014 | Required |
 | SP-015 | [Normalize live events, captions, and controls](SP-015-normalize-live-events-captions-and-controls.md) | SP-006, SP-014 | Required |
 | SP-016 | [Build client tools and Insight Board](SP-016-build-client-tools-and-insight-board.md) | SP-005, SP-006, SP-010A, SP-015 | Required |
 | SP-017 | [Write and evaluate adaptive interview policy](SP-017-write-and-evaluate-adaptive-interview-policy.md) | SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016 | Required |
@@ -129,7 +135,7 @@ Execute in order unless the dependency column proves a later packet can safely p
 
 - Milestone 0: SP-001 through SP-005 — repository, quality, configuration, and visual foundations.
 - Milestone 1: SP-006 through SP-012, including SP-010A and SP-011A — disposable state, the role-neutral migration, the modern entry shell, and both preparation paths.
-- Milestone 2: SP-013 through SP-018 — shared preflight, real-time voice, insights, policy, and latency.
+- Milestone 2: SP-013 through SP-018, including SP-014A — shared preflight, provider setup, real-time voice, insights, policy, and latency.
 - Milestone 3: SP-019 through SP-021 — transcript evidence, summary, and local review.
 - Milestone 4: SP-022 through SP-025 — public-demo hardening and focused release approval.
 - Milestone 5: SP-026 — deployment.
