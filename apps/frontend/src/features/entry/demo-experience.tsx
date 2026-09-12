@@ -4,9 +4,11 @@ import { useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import type { PrepareInterviewResponse } from "@screenpilot/contracts/api/interview-preparation";
+import type { AnalyzeCvResponse } from "@screenpilot/contracts/api/cv-analysis";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
 import { CvStage } from "@/features/cv/cv-stage";
+import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
 import type {
   DemoStage,
@@ -74,6 +76,19 @@ export function DemoExperience() {
     },
     [dispatch],
   );
+  const handleCvPrepared = useCallback(
+    (response: AnalyzeCvResponse) => {
+      dispatch({
+        type: "CV_PREPARATION_SUCCEEDED",
+        cv: response.cv,
+        plan: response.plan,
+        interviewGrant: response.interviewGrant,
+        interviewGrantExpiresAt: response.expiresAt,
+        usage: response.usage,
+      });
+    },
+    [dispatch],
+  );
   const handlePreparationFailure = useCallback(
     (failure: SessionFailure) => {
       dispatch({ type: "SESSION_FAILED", failure });
@@ -119,11 +134,52 @@ export function DemoExperience() {
         <EntryModeChooser onSelect={selectEntryMode} />
       </div>
     );
-  } else if (state.stage === "awaiting_cv") {
+  } else if (
+    (state.stage === "awaiting_cv" ||
+      state.stage === "extracting_cv" ||
+      state.stage === "analyzing_cv") &&
+    state.runtimeConfig
+  ) {
     stageContent = (
       <div className="sp-demo-stage">
-        <CvStage onReturnToChoices={startOver} />
+        <CvStage
+          failure={state.failure}
+          onChooseAnotherCv={() => {
+            dispatch({ type: "CHOOSE_ANOTHER_CV" });
+          }}
+          onExtractionStarted={() => {
+            dispatch({ type: "CV_EXTRACTION_STARTED" });
+          }}
+          onExtractionSucceeded={() => {
+            dispatch({ type: "CV_EXTRACTION_SUCCEEDED" });
+          }}
+          onFailure={handlePreparationFailure}
+          onPrepared={handleCvPrepared}
+          onRetry={() => {
+            dispatch({ type: "RETRY" });
+          }}
+          onReturnToChoices={startOver}
+          restoreNotice={state.restoreNotice}
+          runtimeConfig={state.runtimeConfig}
+          stage={state.stage}
+        />
       </div>
+    );
+  } else if (
+    state.stage === "plan_ready" &&
+    state.cv &&
+    state.screeningPlan &&
+    state.cvAnalysisUsage
+  ) {
+    stageContent = (
+      <CvPlanPreview
+        cv={state.cv}
+        onContinue={() => {
+          dispatch({ type: "CONTINUE_TO_PREFLIGHT" });
+        }}
+        onStartOver={startOver}
+        plan={state.screeningPlan}
+      />
     );
   } else if (state.stage === "preparing_conversation") {
     stageContent = (
@@ -140,12 +196,10 @@ export function DemoExperience() {
         }}
       />
     );
-  } else if (
-    state.stage === "preflight" &&
-    state.entryMode === "conversation_first"
-  ) {
+  } else if (state.stage === "preflight" && state.entryMode) {
     stageContent = (
       <PreflightHandoff
+        entryMode={state.entryMode}
         onBack={() => {
           dispatch({ type: "BACK_FROM_PREFLIGHT" });
         }}

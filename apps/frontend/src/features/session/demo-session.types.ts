@@ -1,4 +1,6 @@
 import type { InterviewGrant } from "@screenpilot/contracts/api/interview-preparation";
+import type { ProviderUsage } from "@screenpilot/contracts/api/cv-analysis";
+import type { PublicRuntimeConfig } from "@screenpilot/contracts/api/public-runtime-config";
 import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
 import type {
   PublicRoleNeutralDemoContext,
@@ -72,12 +74,13 @@ export type SessionRestoreNotice =
   | "interview_grant_expired";
 
 export type DemoSessionState = Readonly<{
-  schemaVersion: 2;
+  schemaVersion: 3;
   hydrationStatus: "pending" | "ready";
   stage: DemoStage;
   entryMode: EntryMode | null;
   createdAt: string | null;
   expiresAt: string | null;
+  runtimeConfig: PublicRuntimeConfig | null;
   demoContext: PublicRoleNeutralDemoContext | null;
   preferredName?: PreferredName | undefined;
   rolePreference?: RolePreference | undefined;
@@ -85,6 +88,7 @@ export type DemoSessionState = Readonly<{
   screeningPlan?: ScreeningPlan | undefined;
   interviewGrant?: InterviewGrant | undefined;
   interviewGrantExpiresAt?: string | undefined;
+  cvAnalysisUsage?: ProviderUsage | undefined;
   voice?: VoiceMetadata | undefined;
   transcript: readonly TranscriptTurn[];
   insights: readonly InsightCard[];

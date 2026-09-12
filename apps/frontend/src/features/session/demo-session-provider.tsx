@@ -31,6 +31,8 @@ import {
   type SessionStorageLike,
 } from "./session-storage";
 
+const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
+
 export type DemoSessionContextValue = Readonly<{
   state: DemoSessionState;
   dispatch: Dispatch<DemoSessionEvent>;
@@ -160,16 +162,24 @@ export function DemoSessionProvider({
   }, [state.expiresAt, state.hydrationStatus, state.stage]);
 
   useEffect(() => {
-    if (
-      state.entryMode !== "conversation_first" ||
-      (state.stage !== "preflight" && state.stage !== "ready") ||
-      !state.interviewGrantExpiresAt
-    ) {
+    if (!state.entryMode || !state.interviewGrantExpiresAt) {
+      return;
+    }
+    const eligibleStages =
+      state.entryMode === "conversation_first"
+        ? ["preflight", "ready"]
+        : ["plan_ready", "preflight", "ready"];
+    if (!eligibleStages.includes(state.stage)) {
       return;
     }
 
     const expireGrant = () => {
-      dispatch({ type: "CONVERSATION_GRANT_EXPIRED" });
+      dispatch({
+        type:
+          state.entryMode === "conversation_first"
+            ? "CONVERSATION_GRANT_EXPIRED"
+            : "CV_GRANT_EXPIRED",
+      });
     };
     const remainingGrantLifetimeMs =
       Date.parse(state.interviewGrantExpiresAt) - Date.now();
@@ -180,7 +190,7 @@ export function DemoSessionProvider({
 
     const grantExpiryTimer = window.setTimeout(
       expireGrant,
-      remainingGrantLifetimeMs,
+      Math.min(remainingGrantLifetimeMs, MAX_BROWSER_TIMEOUT_MS),
     );
     return () => {
       window.clearTimeout(grantExpiryTimer);

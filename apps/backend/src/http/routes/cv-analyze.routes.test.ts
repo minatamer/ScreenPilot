@@ -210,9 +210,10 @@ describe("POST /v1/cv/analyze", () => {
       .send(await validRequest())
       .expect(403);
 
-    expect(apiErrorSchema.parse(result.body).error.code).toBe(
-      "TURNSTILE_REJECTED",
-    );
+    expect(apiErrorSchema.parse(result.body).error).toMatchObject({
+      code: "TURNSTILE_REJECTED",
+      retryable: true,
+    });
     expect(providers.verifyChallenge).toHaveBeenCalledOnce();
     expect(providers.analyzeCv).not.toHaveBeenCalled();
   });

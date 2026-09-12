@@ -4,7 +4,7 @@ Status: Required
 Implementation state: Completed, revised, and committed in `c8bbaf2`
 
 Milestone: Milestone 1 — interview preparation paths  
-Last synchronized: 2026-09-09<br>
+Last synchronized: 2026-09-12<br>
 Depends on: SP-001, SP-003  
 Suggested commit: `SP-006: add disposable demo session state`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -13,6 +13,8 @@ Ticket index: [`README.md`](README.md)
 ---
 
 > **Superseded role model — SP-010A:** This packet remains the historical record of the committed v1 session contracts. Its persisted requirement for exactly one Frontend and one Backend vacancy, fixed catalogue keys, `screeningVacancyKeys`, and unavailable-role status is no longer the target product behavior. SP-010A completed the migration to one bounded candidate-selected synthetic role label (or an undecided role-neutral state), with corrections and multiple-role wording represented without an allow-list or unavailable branch. Do not extend the old fixed-vacancy shape in later tickets.
+
+> **SP-012 persistence extension:** The current envelope is v3. It adds only validated public bootstrap configuration plus bounded CV-analysis usage metadata, and requires that usage metadata to accompany normalized CV data in a prepared CV-assisted stage. Unsupported v2 payloads clear through the existing versioned restore path. Raw PDF data, extracted text, Turnstile tokens, and private provider configuration remain outside persistence.
 
 ## Objective
 

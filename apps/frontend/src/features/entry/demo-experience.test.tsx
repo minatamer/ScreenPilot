@@ -5,11 +5,17 @@ import {
   waitFor,
   within,
 } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { FAKE_TURNSTILE_TOKEN } from "@/features/abuse-protection/turnstile-client";
+import {
+  extractPdfText,
+  type ExtractedPdfText,
+} from "@/features/cv/extract-pdf-text";
 import { DemoSessionProvider } from "@/features/session/demo-session-provider";
 import { SESSION_STORAGE_KEY } from "@/features/session/session-storage";
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
+import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
 
 import { DemoExperience } from "./demo-experience";
 
@@ -21,6 +27,26 @@ const router = vi.hoisted(() => ({
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
 }));
+
+vi.mock("@/features/cv/extract-pdf-text", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/features/cv/extract-pdf-text")>();
+  return { ...actual, extractPdfText: vi.fn() };
+});
+
+const uploadedCvText = [
+  "Morgan Lee",
+  "Led product discovery and delivery for a subscription onboarding product.",
+  "Worked with design, engineering, support, and commercial partners.",
+]
+  .join("\n")
+  .repeat(5);
+
+const uploadedCvExtraction: ExtractedPdfText = {
+  text: uploadedCvText,
+  pageCount: 2,
+  characterCount: uploadedCvText.length,
+};
 
 function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -76,7 +102,11 @@ function preparedResponse() {
   };
 }
 
-describe("DemoExperience conversation-first path", () => {
+describe("DemoExperience preparation paths", () => {
+  beforeEach(() => {
+    vi.mocked(extractPdfText).mockReset();
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
@@ -349,5 +379,125 @@ describe("DemoExperience conversation-first path", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Clear & exit" }));
     expect(router.replace).toHaveBeenCalledWith("/");
+  });
+
+  it("converges an uploaded CV through protected analysis and plan preview on shared preflight", async () => {
+    const analysisResponse = createCvAnalysisResponseFixture();
+    vi.mocked(extractPdfText).mockResolvedValue(uploadedCvExtraction);
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      if (url === "/v1/demo/bootstrap") {
+        return Promise.resolve(jsonResponse(bootstrapResponse()));
+      }
+      if (url === "/v1/cv/analyze") {
+        return Promise.resolve(jsonResponse(analysisResponse));
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole("button", { name: "Use a CV" }));
+    fireEvent.change(screen.getByLabelText("Choose PDF file"), {
+      target: {
+        files: [
+          new File(["%PDF-1.7 synthetic"], "uploaded-product-cv.pdf", {
+            type: "application/pdf",
+          }),
+        ],
+      },
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "What the CV says" }),
+    ).toBeVisible();
+    expect(
+      screen.getByText("Suggested from CV — confirm during the call"),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Product Manager" }),
+    ).toBeVisible();
+    expect(screen.getByText("Prepare").closest("li")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+
+    const analyzeOptions = browserFetch.mock.calls.find(
+      ([input]) => requestUrl(input) === "/v1/cv/analyze",
+    )?.[1];
+    const analyzeRequest = requestJsonBody(analyzeOptions);
+    expect(typeof analyzeRequest["clientRequestId"]).toBe("string");
+    expect(analyzeRequest["clientRequestId"]).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu,
+    );
+    expect(analyzeRequest).toEqual({
+      clientRequestId: analyzeRequest["clientRequestId"],
+      cvText: uploadedCvText,
+      turnstileToken: FAKE_TURNSTILE_TOKEN,
+    });
+
+    await waitFor(() => {
+      expect(window.sessionStorage.getItem(SESSION_STORAGE_KEY)).toContain(
+        analysisResponse.interviewGrant,
+      );
+    });
+    const storedJson = window.sessionStorage.getItem(SESSION_STORAGE_KEY) ?? "";
+    const storedSession = JSON.parse(storedJson) as Record<string, unknown>;
+    expect(storedJson).not.toContain(uploadedCvText);
+    expect(storedJson).not.toContain(FAKE_TURNSTILE_TOKEN);
+    expect(storedJson).not.toContain("uploaded-product-cv.pdf");
+    expect(storedJson).not.toContain("screenpilot-sample-cv.pdf");
+    expect(storedSession).toMatchObject({
+      stage: "plan_ready",
+      entryMode: "cv_assisted",
+      cv: analysisResponse.cv,
+      screeningPlan: analysisResponse.plan,
+      interviewGrant: analysisResponse.interviewGrant,
+      interviewGrantExpiresAt: analysisResponse.expiresAt,
+      cvAnalysisUsage: analysisResponse.usage,
+    });
+    expect(storedSession).not.toHaveProperty("rolePreference");
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Your first interview is prepared.",
+      }),
+    ).toBeVisible();
+    expect(screen.getByText("CV-assisted")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Back to interview plan" }),
+    ).toBeEnabled();
+    expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
+      "aria-current",
+      "step",
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Back to interview plan" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "What the CV says" }),
+    ).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Start over" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Bring a CV, or start with a conversation.",
+      }),
+    ).toBeVisible();
+    await waitFor(() => {
+      const restartedJson =
+        window.sessionStorage.getItem(SESSION_STORAGE_KEY) ?? "";
+      expect(restartedJson).not.toContain(analysisResponse.interviewGrant);
+      expect(restartedJson).not.toContain(
+        analysisResponse.cv.facts[0]?.evidenceExcerpt,
+      );
+    });
   });
 });

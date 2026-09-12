@@ -1,3 +1,10 @@
+import {
+  TURNSTILE_ACTIONS,
+  type TurnstileAction,
+} from "@screenpilot/contracts/abuse-protection/turnstile-action";
+
+export { TURNSTILE_ACTIONS, type TurnstileAction };
+
 export const APP_ENVIRONMENTS = ["local", "test", "production"] as const;
 export type AppEnvironment = (typeof APP_ENVIRONMENTS)[number];
 
@@ -18,12 +25,3 @@ export const LOCKED_PROVIDER_SETTINGS = Object.freeze({
   turnstileVerificationUrl:
     "https://challenges.cloudflare.com/turnstile/v0/siteverify",
 } as const);
-
-export const TURNSTILE_ACTIONS = Object.freeze({
-  cvAnalyze: "cv_analyze",
-  interviewSummary: "interview_summary",
-  voiceToken: "voice_token",
-} as const);
-
-export type TurnstileAction =
-  (typeof TURNSTILE_ACTIONS)[keyof typeof TURNSTILE_ACTIONS];

@@ -115,12 +115,14 @@ describe("HomePage", () => {
       "href",
       "https://www.gartner.com/en/newsroom/press-releases/2025-07-31-gartner-survey-shows-just-26-percent-of-job-applicants-trust-ai-will-fairly-evaluate-them",
     );
-    const cvButton = screen.getByRole("button", { name: "Use a CV" });
+    const cvButton = await screen.findByRole("button", { name: "Use a CV" });
     const conversationButton = screen.getByRole("button", {
       name: "Start without a CV",
     });
-    expect(cvButton).toBeEnabled();
-    expect(conversationButton).toBeEnabled();
+    await waitFor(() => {
+      expect(cvButton).toBeEnabled();
+      expect(conversationButton).toBeEnabled();
+    });
     expect(cvButton).toHaveClass("sp-button--primary");
     expect(conversationButton).toHaveClass("sp-button--primary");
     expect(

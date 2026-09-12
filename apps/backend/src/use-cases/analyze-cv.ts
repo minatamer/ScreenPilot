@@ -184,6 +184,7 @@ export function createAnalyzeCv(input: {
       throw new UseCaseError(
         "TURNSTILE_REJECTED",
         "The anti-abuse check expired or was rejected. Try it again.",
+        { retryable: true },
       );
     }
 

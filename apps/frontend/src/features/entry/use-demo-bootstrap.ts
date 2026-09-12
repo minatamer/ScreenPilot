@@ -61,9 +61,11 @@ export function useDemoBootstrap(restartClearedSession = false) {
     const startTimer = window.setTimeout(() => {
       void fetchDemoBootstrap(controller.signal)
         .then((response) => {
+          const { demoContext, ...runtimeConfig } = response;
           dispatch({
             type: "BOOTSTRAP_SUCCEEDED",
-            demoContext: response.demoContext,
+            demoContext,
+            runtimeConfig,
           });
         })
         .catch((error: unknown) => {

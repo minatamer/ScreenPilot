@@ -263,7 +263,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 5A — plan preview
 
 - **Input state:** validated CV facts and screening plan.
-- **Visible behavior:** two-column view with **What the CV says** and **What ScreenPilot will explore**; every CV-derived topic links to a short source excerpt. Any role-alignment hint is labelled **Suggested from CV — we will confirm during the call**, never **Applied role**.
+- **Visible behavior:** two-column view with **What the CV says** and **What ScreenPilot will explore**; every CV-derived topic links to a short source excerpt. Any role-alignment hint is labelled **Suggested from CV — confirm during the call**, never **Applied role**.
 - **Allowed action:** continue or start over. No plan editor, regeneration control, job editor, or recruiter approval workflow.
 - **Output state:** `preflight`.
 - **Failure:** if browser validation detects an incomplete plan, return to analysis error instead of continuing.
@@ -331,11 +331,12 @@ The frontend stores only the following versioned JSON in `sessionStorage`:
 
 ```ts
 type DemoSession = {
-  schemaVersion: 2; // SP-010A role-neutral migration
+  schemaVersion: 3; // SP-012 public runtime configuration and CV analysis metadata
   stage: DemoStage;
   entryMode: "cv_assisted" | "conversation_first" | null;
   createdAt: string;
   expiresAt: string;
+  runtimeConfig: PublicRuntimeConfig;
   demoContext: PublicRoleNeutralDemoContext;
   preferredName?: PreferredName;
   rolePreference?: RolePreference;
@@ -343,6 +344,7 @@ type DemoSession = {
   screeningPlan?: ScreeningPlan;
   interviewGrant?: string;
   interviewGrantExpiresAt?: string;
+  cvAnalysisUsage?: ProviderUsage;
   voice?: {
     conversationId?: string;
     status: "idle" | "connecting" | "connected" | "ended" | "failed";
@@ -371,7 +373,9 @@ Rules:
 - Expire a session after two hours even if the tab stays open.
 - Clear malformed or oversized session data safely.
 - Validate one bounded candidate-stated role label or an undecided state under the SP-010A session schema, and reject impossible workflow-stage/entry-mode combinations during restore.
+- Persist only validated public bootstrap configuration; private provider configuration and all secrets remain backend-only.
 - Persist `interviewGrant` and `interviewGrantExpiresAt` together, clear both when preparation is invalidated, and rerun only the selected mode's preparation step when the grant expires.
+- Persist bounded CV-analysis usage metadata only alongside normalized CV data in a prepared CV-assisted stage.
 - The browser is authoritative only for this visitor's disposable demo; its content is untrusted when sent back to the backend.
 - `cv` must remain absent in conversation-first mode, and conversation-first insights may never acquire a `CV` source label.
 
@@ -3345,16 +3349,16 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Checklist:**
 
-- [ ] Connect the landing CV card to upload/sample selection and the SP-008 extraction service.
-- [ ] Implement truthful extraction and AI-analysis progress states.
-- [ ] Build the reusable managed Turnstile client boundary and execute it with action `cv_analyze` immediately before uploaded/sample CV analysis; keep the response token in memory only, show interaction only when required, and reset it after every attempt.
-- [ ] Call `POST /v1/cv/analyze` with the one-time token, then clear raw text after a validated response.
-- [ ] Build CV fact cards with evidence excerpts and linked CV-derived/fixed screening-topic cards.
-- [ ] Label an evidence-linked role hint as **Suggested from CV — confirm during the call**; allow any bounded profession label and add no pre-call role picker.
-- [ ] Add Continue and Start over only; no plan editor or regeneration workflow.
-- [ ] Enter the same shared preflight state with the tailored plan, `interviewGrant`, and CV-assisted badge data.
-- [ ] Handle local extraction, analysis, invalid schema, grant expiry, retry, and mode-aware Back behavior.
-- [ ] Verify two CV fixtures create visibly different plans and that desktop/mobile quality matches conversation-first.
+- [x] Connect the landing CV card to upload/sample selection and the SP-008 extraction service.
+- [x] Implement truthful extraction and AI-analysis progress states.
+- [x] Build the reusable managed Turnstile client boundary with one browser-safe shared action contract for `cv_analyze`, `voice_token`, and `interview_summary`, then execute only `cv_analyze` in this ticket immediately before uploaded/sample CV analysis; bound and cancel script loading with full listener/timer cleanup, keep the response token in memory only, show interaction only when required, and reset it after every attempt.
+- [x] Call `POST /v1/cv/analyze` with the one-time token, then clear raw text after a validated response.
+- [x] Build CV fact cards with evidence excerpts and linked CV-derived/fixed screening-topic cards.
+- [x] Label an evidence-linked role hint as **Suggested from CV — confirm during the call**; allow any bounded profession label and add no pre-call role picker.
+- [x] Add Continue and Start over only; no plan editor or regeneration workflow.
+- [x] Enter the same shared preflight state with the tailored plan, `interviewGrant`, and CV-assisted badge data.
+- [x] Handle local extraction, analysis, invalid schema, grant expiry, retry, and mode-aware Back behavior.
+- [x] Verify two CV fixtures create visibly different plans and that desktop/mobile quality matches conversation-first.
 
 ### Milestone 2 — browser voice experience
 

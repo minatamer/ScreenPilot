@@ -1,4 +1,9 @@
 import type { InterviewGrant } from "@screenpilot/contracts/api/interview-preparation";
+import type { ProviderUsage } from "@screenpilot/contracts/api/cv-analysis";
+import {
+  publicRuntimeConfigSchema,
+  type PublicRuntimeConfig,
+} from "@screenpilot/contracts/api/public-runtime-config";
 import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
 import {
   publicRoleNeutralDemoContextSchema,
@@ -44,6 +49,7 @@ export type DemoSessionEvent =
   | Readonly<{
       type: "BOOTSTRAP_SUCCEEDED";
       demoContext: PublicRoleNeutralDemoContext;
+      runtimeConfig: PublicRuntimeConfig;
     }>
   | Readonly<{ type: "SELECT_ENTRY_MODE"; entryMode: EntryMode }>
   | Readonly<{ type: "CV_EXTRACTION_STARTED" }>
@@ -53,6 +59,8 @@ export type DemoSessionEvent =
       cv: NormalizedCv;
       plan: ScreeningPlan;
       interviewGrant: InterviewGrant;
+      interviewGrantExpiresAt: string;
+      usage: ProviderUsage;
     }>
   | Readonly<{
       type: "CONVERSATION_PREPARATION_SUCCEEDED";
@@ -63,6 +71,8 @@ export type DemoSessionEvent =
   | Readonly<{ type: "CONTINUE_TO_PREFLIGHT" }>
   | Readonly<{ type: "BACK_FROM_PREFLIGHT" }>
   | Readonly<{ type: "CONVERSATION_GRANT_EXPIRED" }>
+  | Readonly<{ type: "CV_GRANT_EXPIRED" }>
+  | Readonly<{ type: "CHOOSE_ANOTHER_CV" }>
   | Readonly<{ type: "PREFLIGHT_READY" }>
   | Readonly<{ type: "VOICE_CONNECTING" }>
   | Readonly<{ type: "VOICE_CONNECTED"; voice: VoiceMetadata }>
@@ -91,12 +101,13 @@ export class InvalidSessionTransitionError extends Error {
 
 export function createInitialDemoSessionState(): DemoSessionState {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     hydrationStatus: "pending",
     stage: "empty",
     entryMode: null,
     createdAt: null,
     expiresAt: null,
+    runtimeConfig: null,
     demoContext: null,
     transcript: [],
     insights: [],
@@ -146,6 +157,7 @@ function clearModeSpecificState(state: DemoSessionState): DemoSessionState {
     entryMode: null,
     createdAt: state.createdAt,
     expiresAt: state.expiresAt,
+    runtimeConfig: state.runtimeConfig,
     demoContext: state.demoContext,
     transcript: [],
     insights: [],
@@ -321,13 +333,20 @@ export function demoSessionReducer(
         const parsedDemoContext = publicRoleNeutralDemoContextSchema.safeParse(
           event.demoContext,
         );
+        const parsedRuntimeConfig = publicRuntimeConfigSchema.safeParse(
+          event.runtimeConfig,
+        );
         if (!parsedDemoContext.success) {
           throw new TypeError("The role-neutral demo disclosure is invalid.");
+        }
+        if (!parsedRuntimeConfig.success) {
+          throw new TypeError("The public demo configuration is invalid.");
         }
         return {
           ...state,
           stage: "choosing_entry_mode",
           demoContext: parsedDemoContext.data,
+          runtimeConfig: parsedRuntimeConfig.data,
           failure: undefined,
         };
       }
@@ -345,7 +364,12 @@ export function demoSessionReducer(
     case "CV_EXTRACTION_STARTED":
       assertMode(state, event.type, "cv_assisted");
       assertStage(state, event.type, ["awaiting_cv"]);
-      return { ...state, stage: "extracting_cv", failure: undefined };
+      return {
+        ...state,
+        stage: "extracting_cv",
+        failure: undefined,
+        restoreNotice: undefined,
+      };
     case "CV_EXTRACTION_SUCCEEDED":
       assertMode(state, event.type, "cv_assisted");
       assertStage(state, event.type, ["extracting_cv"]);
@@ -362,7 +386,10 @@ export function demoSessionReducer(
         cv: event.cv,
         screeningPlan: event.plan,
         interviewGrant: event.interviewGrant,
+        interviewGrantExpiresAt: event.interviewGrantExpiresAt,
+        cvAnalysisUsage: event.usage,
         failure: undefined,
+        restoreNotice: undefined,
       };
     case "CONVERSATION_PREPARATION_SUCCEEDED":
       assertMode(state, event.type, "conversation_first");
@@ -401,6 +428,32 @@ export function demoSessionReducer(
         interviewGrantExpiresAt: undefined,
         failure: undefined,
         restoreNotice: "interview_grant_expired",
+      };
+    case "CV_GRANT_EXPIRED":
+      assertMode(state, event.type, "cv_assisted");
+      assertStage(state, event.type, ["plan_ready", "preflight", "ready"]);
+      return {
+        schemaVersion: state.schemaVersion,
+        hydrationStatus: state.hydrationStatus,
+        stage: "awaiting_cv",
+        entryMode: "cv_assisted",
+        createdAt: state.createdAt,
+        expiresAt: state.expiresAt,
+        runtimeConfig: state.runtimeConfig,
+        demoContext: state.demoContext,
+        transcript: [],
+        insights: [],
+        topicProgress: [],
+        restoreNotice: "interview_grant_expired",
+      };
+    case "CHOOSE_ANOTHER_CV":
+      assertMode(state, event.type, "cv_assisted");
+      assertStage(state, event.type, ["extracting_cv", "analyzing_cv"]);
+      return {
+        ...state,
+        stage: "awaiting_cv",
+        failure: undefined,
+        restoreNotice: undefined,
       };
     case "PREFLIGHT_READY":
       assertStage(state, event.type, ["preflight"]);

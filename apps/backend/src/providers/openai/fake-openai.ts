@@ -64,16 +64,23 @@ function trustedFixtureText(cvText: string): string {
 }
 
 function paragraphContaining(cvText: string, pattern: RegExp): string | null {
+  const isMatchingEvidence = (candidate: string) =>
+    candidate.length >= 20 &&
+    candidate.length <= 500 &&
+    pattern.test(candidate);
+  const paragraph = cvText
+    .split(/\n\s*\n/u)
+    .map((candidate) => candidate.trim())
+    .find(isMatchingEvidence);
+  if (paragraph) {
+    return paragraph;
+  }
+
   return (
     cvText
-      .split(/\n\s*\n/u)
-      .map((paragraph) => paragraph.trim())
-      .find(
-        (paragraph) =>
-          paragraph.length >= 20 &&
-          paragraph.length <= 500 &&
-          pattern.test(paragraph),
-      ) ?? null
+      .split("\n")
+      .map((line) => line.trim())
+      .find(isMatchingEvidence) ?? null
   );
 }
 

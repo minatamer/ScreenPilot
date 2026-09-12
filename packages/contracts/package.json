@@ -4,6 +4,11 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./abuse-protection/turnstile-action": {
+      "types": "./src/abuse-protection/turnstile-action.ts",
+      "development": "./src/abuse-protection/turnstile-action.ts",
+      "default": "./dist/abuse-protection/turnstile-action.js"
+    },
     "./ai/cv-analysis-output": {
       "types": "./src/ai/cv-analysis-output.ts",
       "development": "./src/ai/cv-analysis-output.ts",

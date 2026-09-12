@@ -1,4 +1,6 @@
+import { providerUsageSchema } from "@screenpilot/contracts/api/cv-analysis";
 import { interviewGrantSchema } from "@screenpilot/contracts/api/interview-preparation";
+import { publicRuntimeConfigSchema } from "@screenpilot/contracts/api/public-runtime-config";
 import { voiceMetadataSchema } from "@screenpilot/contracts/api/voice-token";
 import {
   publicRoleNeutralDemoContextSchema,
@@ -19,7 +21,7 @@ import {
   type DemoStage,
 } from "./demo-session.types";
 
-export const PERSISTED_SESSION_SCHEMA_VERSION = 2 as const;
+export const PERSISTED_SESSION_SCHEMA_VERSION = 3 as const;
 export const SESSION_LIFETIME_MS = 2 * 60 * 60 * 1_000;
 export const MAX_PERSISTED_SESSION_BYTES = 512 * 1_024;
 
@@ -82,6 +84,7 @@ export const persistedDemoSessionSchema = z
     entryMode: entryModeSchema.nullable(),
     createdAt: z.iso.datetime({ offset: true }),
     expiresAt: z.iso.datetime({ offset: true }),
+    runtimeConfig: publicRuntimeConfigSchema,
     demoContext: publicRoleNeutralDemoContextSchema,
     preferredName: preferredNameSchema.optional(),
     rolePreference: rolePreferenceSchema.optional(),
@@ -89,6 +92,7 @@ export const persistedDemoSessionSchema = z
     screeningPlan: screeningPlanSchema.optional(),
     interviewGrant: interviewGrantSchema.optional(),
     interviewGrantExpiresAt: z.iso.datetime({ offset: true }).optional(),
+    cvAnalysisUsage: providerUsageSchema.optional(),
     voice: voiceMetadataSchema.optional(),
     transcript: z.array(transcriptTurnSchema).max(160),
     insights: z.array(insightCardSchema).max(24),
@@ -158,12 +162,21 @@ export const persistedDemoSessionSchema = z
     if (
       PREPARED_CONTEXT_STAGES.has(session.stage) &&
       session.entryMode === "cv_assisted" &&
-      !session.cv
+      (!session.cv || !session.cvAnalysisUsage)
     ) {
       context.addIssue({
         code: "custom",
-        message: "Prepared CV-assisted stages require normalized CV data.",
+        message:
+          "Prepared CV-assisted stages require normalized CV data and bounded analysis metadata.",
         path: ["cv"],
+      });
+    }
+
+    if (session.cvAnalysisUsage && !session.cv) {
+      context.addIssue({
+        code: "custom",
+        message: "CV analysis metadata requires normalized CV data.",
+        path: ["cvAnalysisUsage"],
       });
     }
 
@@ -172,6 +185,7 @@ export const persistedDemoSessionSchema = z
       (session.cv ||
         session.screeningPlan ||
         session.interviewGrant ||
+        session.cvAnalysisUsage ||
         session.voice ||
         session.transcript.length > 0 ||
         session.insights.length > 0 ||
@@ -228,7 +242,10 @@ export const persistedDemoSessionSchema = z
 
     if (
       session.entryMode === null &&
-      (session.cv || session.screeningPlan || session.interviewGrant)
+      (session.cv ||
+        session.screeningPlan ||
+        session.interviewGrant ||
+        session.cvAnalysisUsage)
     ) {
       context.addIssue({
         code: "custom",
@@ -344,6 +361,7 @@ export function projectPersistedDemoSession(
     state.stage === "cleared" ||
     state.createdAt === null ||
     state.expiresAt === null ||
+    state.runtimeConfig === null ||
     state.demoContext === null
   ) {
     return null;
@@ -355,6 +373,7 @@ export function projectPersistedDemoSession(
     entryMode: state.entryMode,
     createdAt: state.createdAt,
     expiresAt: state.expiresAt,
+    runtimeConfig: state.runtimeConfig,
     demoContext: state.demoContext,
     ...(state.preferredName ? { preferredName: state.preferredName } : {}),
     ...(state.rolePreference ? { rolePreference: state.rolePreference } : {}),
@@ -363,6 +382,9 @@ export function projectPersistedDemoSession(
     ...(state.interviewGrant ? { interviewGrant: state.interviewGrant } : {}),
     ...(state.interviewGrantExpiresAt
       ? { interviewGrantExpiresAt: state.interviewGrantExpiresAt }
+      : {}),
+    ...(state.cvAnalysisUsage
+      ? { cvAnalysisUsage: state.cvAnalysisUsage }
       : {}),
     ...(state.voice ? { voice: state.voice } : {}),
     transcript: [...state.transcript],

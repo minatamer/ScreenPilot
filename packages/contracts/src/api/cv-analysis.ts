@@ -43,6 +43,55 @@ export const analyzeCvResponseSchema = z
         path: ["plan", "entryMode"],
       });
     }
+
+    const returnedCvFactIds = response.cv.facts.map((fact) => fact.id);
+    const cvFactIds = new Set(returnedCvFactIds);
+    if (cvFactIds.size !== returnedCvFactIds.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Returned CV fact IDs must be unique.",
+        path: ["cv", "facts"],
+      });
+    }
+    response.plan.topics.forEach((topic, topicIndex) => {
+      topic.cvFactIds.forEach((cvFactId, factIndex) => {
+        if (!cvFactIds.has(cvFactId)) {
+          context.addIssue({
+            code: "custom",
+            message: "Plan topics must reference only returned CV facts.",
+            path: ["plan", "topics", topicIndex, "cvFactIds", factIndex],
+          });
+        }
+      });
+    });
+    response.plan.roleClarification.cvFactIds.forEach((cvFactId, factIndex) => {
+      if (!cvFactIds.has(cvFactId)) {
+        context.addIssue({
+          code: "custom",
+          message: "Role clarification must reference only returned CV facts.",
+          path: ["plan", "roleClarification", "cvFactIds", factIndex],
+        });
+      }
+    });
+
+    const normalizedSuggestion = response.cv.suggestedRole;
+    const planSuggestion = response.plan.roleClarification;
+    const normalizedSuggestionFactIds =
+      normalizedSuggestion === null ? [] : normalizedSuggestion.cvFactIds;
+    if (
+      (normalizedSuggestion?.label ?? null) !== planSuggestion.suggestedRole ||
+      normalizedSuggestionFactIds.length !== planSuggestion.cvFactIds.length ||
+      normalizedSuggestionFactIds.some(
+        (factId) => !planSuggestion.cvFactIds.includes(factId),
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "The normalized CV and screening plan must expose the same grounded role suggestion.",
+        path: ["plan", "roleClarification"],
+      });
+    }
   });
 
 export type AnalyzeCvRequest = z.infer<typeof analyzeCvRequestSchema>;

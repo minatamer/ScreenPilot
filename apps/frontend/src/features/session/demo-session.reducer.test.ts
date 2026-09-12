@@ -1,4 +1,5 @@
 import type { PublicRoleNeutralDemoContext } from "@screenpilot/contracts/interview/demo-context";
+import type { PublicRuntimeConfig } from "@screenpilot/contracts/api/public-runtime-config";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
 import {
   FIXED_TOPIC_KEYS,
@@ -20,6 +21,22 @@ const NOW = "2026-09-09T09:00:00.000Z";
 const LATER = "2026-09-09T09:20:00.000Z";
 const INTERVIEW_GRANT = "signed-test-grant";
 const INTERVIEW_GRANT_EXPIRES_AT = "2026-09-09T09:15:00.000Z";
+
+const runtimeConfig: PublicRuntimeConfig = {
+  abuseProtection: {
+    appearance: "interaction-only",
+    provider: "cloudflare_turnstile",
+    siteKey: "",
+  },
+  limits: {
+    callSeconds: 480,
+    cvCharacters: 40_000,
+    pdfBytes: 5_242_880,
+    pdfPages: 8,
+  },
+  paidVoiceEnabled: false,
+  privacyNoticeVersion: "2026-09-11",
+};
 
 const demoContext: PublicRoleNeutralDemoContext = {
   kind: "role_agnostic_first_stage_hr_screen",
@@ -92,6 +109,7 @@ function bootstrappedState(): DemoSessionState {
   return demoSessionReducer(state, {
     type: "BOOTSTRAP_SUCCEEDED",
     demoContext,
+    runtimeConfig,
   });
 }
 
@@ -134,6 +152,13 @@ function cvPreparationState(
     cv: normalizedCv,
     plan: plan("cv_assisted"),
     interviewGrant: INTERVIEW_GRANT,
+    interviewGrantExpiresAt: INTERVIEW_GRANT_EXPIRES_AT,
+    usage: {
+      cachedInputTokens: 0,
+      estimatedCostUsd: 0.003,
+      inputTokens: 700,
+      outputTokens: 500,
+    },
   });
 }
 
@@ -599,12 +624,13 @@ describe("demoSessionReducer", () => {
     });
 
     expect(cleared).toEqual({
-      schemaVersion: 2,
+      schemaVersion: 3,
       hydrationStatus: "ready",
       stage: "cleared",
       entryMode: null,
       createdAt: null,
       expiresAt: null,
+      runtimeConfig: null,
       demoContext: null,
       transcript: [],
       insights: [],

@@ -8,6 +8,8 @@ import {
 } from "@screenpilot/contracts/interview/screening-plan";
 import { describe, expect, it } from "vitest";
 
+import { TEST_PUBLIC_RUNTIME_CONFIG } from "@/test/cv-analysis.fixture";
+
 import type { DemoSessionState } from "./demo-session.types";
 import {
   MAX_PERSISTED_SESSION_BYTES,
@@ -84,11 +86,12 @@ function persistedSession(
   overrides: Partial<PersistedDemoSession> = {},
 ): PersistedDemoSession {
   return persistedDemoSessionSchema.parse({
-    schemaVersion: 2,
+    schemaVersion: 3,
     stage: "preflight",
     entryMode: "conversation_first",
     createdAt: CREATED_AT,
     expiresAt: EXPIRES_AT,
+    runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
     demoContext,
     screeningPlan: conversationPlan,
     interviewGrant: "signed-test-grant",

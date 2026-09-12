@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
+import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
 
 import {
+  analyzeCv,
   fetchDemoBootstrap,
   prepareConversationFirst,
   ScreenPilotApiError,
@@ -88,6 +90,91 @@ describe("ScreenPilot browser API", () => {
       entryMode: "conversation_first",
     });
     expect(options?.method).toBe("POST");
+  });
+
+  it("sends only bounded CV text, request ID, and a one-time challenge token", async () => {
+    const responseBody = createCvAnalysisResponseFixture();
+    const browserFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse(responseBody));
+    const controller = new AbortController();
+    const cvText = "Grounded synthetic CV content. ".repeat(30);
+
+    await expect(
+      analyzeCv(
+        {
+          clientRequestId: "00000000-0000-4000-8000-000000000013",
+          cvText,
+          turnstileToken: "single-use-token",
+        },
+        controller.signal,
+        browserFetch,
+        () => Date.parse("2026-09-12T10:00:00.000Z"),
+      ),
+    ).resolves.toEqual(responseBody);
+
+    const options = browserFetch.mock.calls[0]?.[1];
+    expect(browserFetch.mock.calls[0]?.[0]).toBe("/v1/cv/analyze");
+    expect(requestJsonBody(options)).toEqual({
+      clientRequestId: "00000000-0000-4000-8000-000000000013",
+      cvText: cvText.trim(),
+      turnstileToken: "single-use-token",
+    });
+    expect(options).toMatchObject({
+      cache: "no-store",
+      credentials: "same-origin",
+      method: "POST",
+      signal: controller.signal,
+    });
+  });
+
+  it("rejects incomplete, internally inconsistent, and expired analysis", async () => {
+    const invalidFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ plan: { entryMode: "cv_assisted" } }));
+    const cvText = "Grounded synthetic CV content. ".repeat(30);
+    const request = {
+      clientRequestId: "00000000-0000-4000-8000-000000000014",
+      cvText,
+      turnstileToken: "single-use-token",
+    } as const;
+
+    await expect(
+      analyzeCv(request, new AbortController().signal, invalidFetch),
+    ).rejects.toMatchObject({ code: "INVALID_CV_ANALYSIS_RESPONSE" });
+
+    const inconsistentResponse = createCvAnalysisResponseFixture();
+    const inconsistentFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse({
+        ...inconsistentResponse,
+        plan: {
+          ...inconsistentResponse.plan,
+          roleClarification: {
+            ...inconsistentResponse.plan.roleClarification,
+            suggestedRole: "Graphic Designer",
+          },
+        },
+      }),
+    );
+    await expect(
+      analyzeCv(request, new AbortController().signal, inconsistentFetch),
+    ).rejects.toMatchObject({ code: "INVALID_CV_ANALYSIS_RESPONSE" });
+
+    const expiredFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse(
+        createCvAnalysisResponseFixture({
+          expiresAt: "2026-09-12T09:59:59.000Z",
+        }),
+      ),
+    );
+    await expect(
+      analyzeCv(request, new AbortController().signal, expiredFetch, () =>
+        Date.parse("2026-09-12T10:00:00.000Z"),
+      ),
+    ).rejects.toMatchObject({
+      code: "INTERVIEW_GRANT_EXPIRED",
+      retryable: true,
+    });
   });
 
   it("surfaces a validated typed error without trusting an arbitrary body", async () => {

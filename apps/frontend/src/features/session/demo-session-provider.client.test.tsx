@@ -6,6 +6,11 @@ import {
 } from "@screenpilot/contracts/interview/screening-plan";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import {
+  createCvAnalysisResponseFixture,
+  TEST_PUBLIC_RUNTIME_CONFIG,
+} from "@/test/cv-analysis.fixture";
+
 import { DemoSessionProvider } from "./demo-session-provider";
 import { persistedDemoSessionSchema } from "./persisted-session.schema";
 import { SESSION_STORAGE_KEY } from "./session-storage";
@@ -33,11 +38,12 @@ describe("DemoSessionProvider client lifecycle", () => {
       SESSION_STORAGE_KEY,
       JSON.stringify(
         persistedDemoSessionSchema.parse({
-          schemaVersion: 2,
+          schemaVersion: 3,
           stage: "choosing_entry_mode",
           entryMode: null,
           createdAt: "2026-09-09T09:00:00.000Z",
           expiresAt: "2026-09-09T11:00:00.000Z",
+          runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
           demoContext: {
             kind: "role_agnostic_first_stage_hr_screen",
             roleAvailability: "candidate_selected_synthetic_session_vacancy",
@@ -93,11 +99,12 @@ describe("DemoSessionProvider client lifecycle", () => {
       SESSION_STORAGE_KEY,
       JSON.stringify(
         persistedDemoSessionSchema.parse({
-          schemaVersion: 2,
+          schemaVersion: 3,
           stage: "preflight",
           entryMode: "conversation_first",
           createdAt: "2026-09-09T09:00:00.000Z",
           expiresAt: "2026-09-09T11:00:00.000Z",
+          runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
           demoContext: {
             kind: "role_agnostic_first_stage_hr_screen",
             roleAvailability: "candidate_selected_synthetic_session_vacancy",
@@ -151,5 +158,57 @@ describe("DemoSessionProvider client lifecycle", () => {
     expect(window.sessionStorage.getItem(SESSION_STORAGE_KEY)).not.toContain(
       "signed-test-grant",
     );
+  });
+
+  it("releases prepared CV data when its grant expires", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-09T09:00:00.000Z"));
+    const analysis = createCvAnalysisResponseFixture({
+      expiresAt: "2026-09-09T09:05:00.000Z",
+    });
+    window.sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify(
+        persistedDemoSessionSchema.parse({
+          schemaVersion: 3,
+          stage: "plan_ready",
+          entryMode: "cv_assisted",
+          createdAt: "2026-09-09T09:00:00.000Z",
+          expiresAt: "2026-09-09T11:00:00.000Z",
+          runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
+          demoContext: {
+            kind: "role_agnostic_first_stage_hr_screen",
+            roleAvailability: "candidate_selected_synthetic_session_vacancy",
+            employerFactsAvailable: false,
+          },
+          cv: analysis.cv,
+          screeningPlan: analysis.plan,
+          interviewGrant: analysis.interviewGrant,
+          interviewGrantExpiresAt: analysis.expiresAt,
+          cvAnalysisUsage: analysis.usage,
+          transcript: [],
+          insights: [],
+          topicProgress: [],
+        }),
+      ),
+    );
+
+    render(
+      <DemoSessionProvider>
+        <SessionProbe />
+      </DemoSessionProvider>,
+    );
+    await act(() => Promise.resolve());
+    expect(screen.getByText("ready:plan_ready:none")).toBeInTheDocument();
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(5 * 60 * 1_000);
+    });
+    expect(
+      screen.getByText("ready:awaiting_cv:interview_grant_expired"),
+    ).toBeInTheDocument();
+    const stored = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+    expect(stored).not.toContain(analysis.interviewGrant);
+    expect(stored).not.toContain(analysis.cv.facts[0]?.evidenceExcerpt);
   });
 });

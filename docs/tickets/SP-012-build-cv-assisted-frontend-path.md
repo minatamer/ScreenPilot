@@ -1,8 +1,9 @@
 # SP-012 — Build the CV-assisted frontend preparation path
 
 Status: Required  
+Implementation state: Completed in deterministic fake mode; credential-gated live verification remains pending<br>
 Milestone: Milestone 1 — interview preparation paths  
-Last synchronized: 2026-09-11<br>
+Last synchronized: 2026-09-12<br>
 Depends on: SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011, SP-011A<br>
 Suggested commit: `SP-012: add CV-assisted preparation`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -21,7 +22,7 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - Immediately before paid analysis, execute the reusable managed Turnstile gate with action `cv_analyze`; its token is memory-only and single-use.
 - After a validated response, clear raw extracted text and store only normalized facts, the plan, grant, and bounded public metadata in `sessionStorage`.
 - Plan preview has **What the CV says** and **What ScreenPilot will explore**. Every CV-derived topic links to evidence; fixed topics are marked as standard screening.
-- An evidence-linked role suggestion is labelled **Suggested from CV — we will confirm during the call**. The visitor does not select or confirm a role before the call.
+- An evidence-linked role suggestion is labelled **Suggested from CV — confirm during the call**. The visitor does not select or confirm a role before the call.
 - This branch converges into the exact shared preflight used by conversation-first.
 - Render every CV preparation stage inside SP-011A's centralized Deep Ink/plum/coral `/demo` workspace. Preserve its header-owned inert progress status, **Clear & exit**, and compact session/privacy/human-decision context band; do not reintroduce a marketing navbar, white/Warm White page/card/form surfaces, or a stage-local shell.
 - Role-neutral synthetic-demo disclosure comes from bootstrap and API payloads use SP-010A's declared role-label contracts through the shared relative `/v1` client; the feature does not mirror server values, create a role allow-list, or create a second HTTP stack.
@@ -42,40 +43,60 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 
 ## Implementation checklist
 
-- [ ] Connect the landing CV card to upload/sample selection and the SP-008 extractor.
-- [ ] Implement truthful extraction and analysis progress labels without fake percentages or premature facts.
-- [ ] Build/reuse the managed interaction-only Turnstile gate for `cv_analyze`, with stable accessible fallback layout and token reset.
-- [ ] Call the SP-010A-migrated `POST /v1/cv/analyze` with bounded text, client request ID, and one-time token; do not send a fixed catalogue key.
-- [ ] Clear raw text only after a validated successful response; preserve it in component memory for a safe manual retry.
-- [ ] Validate and store normalized CV, plan, grant, expiry, and coarse metadata.
-- [ ] Render evidence-linked CV fact cards and planned topic cards with fixed-topic badges.
-- [ ] Display any evidence-linked bounded role suggestion as **Suggested from CV — confirm during the call** and provide no pre-call role selector or supported-role list.
-- [ ] Offer only Continue and Start over; implement typed analysis/Turnstile/schema/grant-expiry errors and mode-aware Back behavior.
-- [ ] Converge on the same shared preflight state/components.
-- [ ] Preserve the SP-011A shared dark workspace, compact context band, navigation language, and viewport-aware natural-scroll fallback across extraction, analysis, plan preview, and shared preflight.
-- [ ] Test two distinct fixtures, no-placeholder leakage, retry/reset, evidence links, and responsive parity.
+- [x] Connect the landing CV card to upload/sample selection and the SP-008 extractor.
+- [x] Implement truthful extraction and analysis progress labels without fake percentages or premature facts.
+- [x] Build/reuse the managed interaction-only Turnstile gate for `cv_analyze`, with a bounded/cancellable script loader, stable accessible fallback layout, and token reset.
+- [x] Call the SP-010A-migrated `POST /v1/cv/analyze` with bounded text, client request ID, and one-time token; do not send a fixed catalogue key.
+- [x] Clear raw text only after a validated successful response; preserve it in component memory for a safe manual retry.
+- [x] Validate and store normalized CV, plan, grant, expiry, and coarse metadata.
+- [x] Render evidence-linked CV fact cards and planned topic cards with fixed-topic badges.
+- [x] Display any evidence-linked bounded role suggestion as **Suggested from CV — confirm during the call** and provide no pre-call role selector or supported-role list.
+- [x] Offer only Continue and Start over; implement typed analysis/Turnstile/schema/grant-expiry errors and mode-aware Back behavior.
+- [x] Converge on the same shared preflight state/components.
+- [x] Preserve the SP-011A shared dark workspace, compact context band, navigation language, and viewport-aware natural-scroll fallback across extraction, analysis, plan preview, and shared preflight.
+- [x] Test two distinct fixtures, no-placeholder leakage, retry/reset, evidence links, and responsive parity.
 
 ## Acceptance criteria
 
-- [ ] Both sample and uploaded valid PDFs reach an evidence-grounded plan preview through identical code paths.
-- [ ] Two distinct fixtures visibly change at least two facts and two topic intents/directions.
-- [ ] Turnstile must pass before OpenAI analysis and its token never reaches persistence.
-- [ ] Raw PDF/text is absent after success; only bounded structured state remains.
-- [ ] No text claims an applied/real vacancy or candidate-confirmed role before candidate speech; all role availability is disclosed as synthetic and session-scoped.
-- [ ] A CV may suggest any bounded role label only through validated fact IDs; Product Manager and other non-software suggestions render identically and remain replaceable by candidate speech.
-- [ ] Continue reaches the same preflight implementation as conversation-first.
+- [x] Both sample and uploaded valid PDFs reach an evidence-grounded plan preview through identical code paths.
+- [x] Two distinct fixtures visibly change at least two facts and two topic intents/directions.
+- [x] Turnstile must pass before OpenAI analysis and its token never reaches persistence.
+- [x] Raw PDF/text is absent after success; only bounded structured state remains.
+- [x] No text claims an applied/real vacancy or candidate-confirmed role before candidate speech; all role availability is disclosed as synthetic and session-scoped.
+- [x] A CV may suggest any bounded role label only through validated fact IDs; Product Manager and other non-software suggestions render identically and remain replaceable by candidate speech.
+- [x] Continue reaches the same preflight implementation as conversation-first.
 
 ## Focused verification
 
-- [ ] Run targeted frontend integration/component/reducer tests with fake extraction, Turnstile, and backend responses.
-- [ ] Inspect browser network/storage for PDF, raw CV text, Turnstile token, or sample-value leakage.
+- [x] Run targeted frontend integration/component/reducer tests with fake extraction, Turnstile, and backend responses.
+- [x] Inspect browser network/storage for PDF, raw CV text, Turnstile token, or sample-value leakage.
 - [ ] Manually exercise sample/upload, two different CVs, challenge interaction/failure, analysis timeout/schema error, retry, Start over, and Back.
-- [ ] Exercise a Product Manager suggestion, no suggestion, and injected role-like CV text; verify each suggestion remains explicitly unconfirmed and replaceable by later candidate speech, and no employer fact or supported-role list appears. Candidate confirmation/correction behavior is owned by SP-016, SP-017, and SP-025.
-- [ ] Check plan preview at mobile, tablet, desktop, large-monitor, and one intermediate width.
+- [x] Exercise a Product Manager suggestion, no suggestion, and injected role-like CV text; verify each suggestion remains explicitly unconfirmed and replaceable by later candidate speech, and no employer fact or supported-role list appears. Candidate confirmation/correction behavior is owned by SP-016, SP-017, and SP-025.
+- [x] Check plan preview at mobile, tablet, desktop, large-monitor, and one intermediate width.
+
+## Implemented result
+
+- Uploaded and bundled sample PDFs now share one local extraction pipeline, one memory-only managed Turnstile boundary, and the relative `POST /v1/cv/analyze` client. The fake bootstrap's blank public site key returns the deterministic fake token without loading Cloudflare or spending provider credits.
+- `useCvPreparation` owns the CV path's ephemeral PDF/text lifecycle, abort controllers, progress timers, protected analysis call, retry behavior, and reducer-event bridge. `CvStage` is limited to composing the visible intake, progress, challenge, and error states.
+- One browser-safe shared contract now defines the three documented metered boundaries (`cv_analyze`, `voice_token`, and `interview_summary`) for both applications without wiring either later-ticket route. The client's shared script load has a 10-second ceiling; the last cancelled waiter removes the script, listeners, and timer, while cancellation by one of several waiters leaves the shared load available to the others.
+- Raw file/text references remain inside the mounted CV feature across safe retries and are released after validated success. Persistence schema v3 stores only public runtime configuration, normalized CV facts, the universal HR plan, grant/expiry, and bounded usage metadata.
+- The plan preview renders provisional evidence, evidence-linked topic intents, standard-screen badges, an explicitly unconfirmed fact-linked role suggestion, and only Continue/Start over before converging on the existing shared preflight.
+- The deterministic fake analyzer now accepts the compact single-line-break layout produced by the bundled sample PDF while preserving its bounded evidence requirements.
+
+## Verification evidence
+
+- Passed repository formatting, zero-warning ESLint, all workspace typechecks, all 252 unit tests (48 contracts, 120 backend, 84 frontend), and the complete production build using the repository-pinned Node 24 and pnpm 11.24 toolchain. The validation follow-up specifically reran 15 Turnstile/CV tests, all 84 frontend tests, the frontend typecheck/lint, and the frontend production build.
+- Browser-tested the bundled sample through extraction, fake protected analysis, evidence-link keyboard focus, plan restore after refresh, Continue, CV-aware Back, Start over, and conversation-first convergence on the same preflight.
+- Visually checked 375 px phone, 768 px tablet, 980 px intermediate, 1280 px laptop/desktop, and 1920 px large-monitor layouts. Every checked width had natural vertical scrolling and `scrollWidth === clientWidth`; browser logs contained no warnings or errors.
+
+## Unchecked gates
+
+- The in-app browser's file-chooser bridge timed out twice, so an uploaded PDF was not manually selected in the real browser. Component/integration coverage verifies the upload path, exact analysis request, no sample-value leakage, and structured-only persistence.
+- Real production-hostname Turnstile interaction/replay behavior and the live OpenAI response remain unchecked because the required ignored credentials are blank and the user did not authorize a paid request. Deterministic tests cover challenge interaction, expiry/removal, fresh-token retry, timeout/error mapping, and request ordering.
 
 ## Commit boundary
 
-Keep SP-012 reviewable as one logical change represented by `feat(frontend): add CV-assisted preparation`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
+Keep SP-012 reviewable as one logical change represented by `SP-012: add CV-assisted preparation`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
 
 ## Precision references
 

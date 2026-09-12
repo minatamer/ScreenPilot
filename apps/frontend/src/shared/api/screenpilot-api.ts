@@ -2,6 +2,12 @@ import {
   bootstrapResponseSchema,
   type BootstrapResponse,
 } from "@screenpilot/contracts/api/bootstrap";
+import {
+  analyzeCvRequestSchema,
+  analyzeCvResponseSchema,
+  type AnalyzeCvRequest,
+  type AnalyzeCvResponse,
+} from "@screenpilot/contracts/api/cv-analysis";
 import { apiErrorSchema } from "@screenpilot/contracts/api/error-envelope";
 import {
   prepareInterviewRequestSchema,
@@ -124,6 +130,45 @@ export async function prepareConversationFirst(
     throw new ScreenPilotApiError({
       code: "INVALID_PREPARATION_RESPONSE",
       message: "ScreenPilot received an incomplete interview preparation.",
+      retryable: true,
+    });
+  }
+  return parsed.data;
+}
+
+export async function analyzeCv(
+  input: AnalyzeCvRequest,
+  signal: AbortSignal,
+  browserFetch: BrowserFetch = fetch,
+  now: () => number = Date.now,
+): Promise<AnalyzeCvResponse> {
+  const request = analyzeCvRequestSchema.parse(input);
+  const response = await browserFetch("/v1/cv/analyze", {
+    body: JSON.stringify(request),
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    method: "POST",
+    signal,
+  });
+  const parsed = analyzeCvResponseSchema.safeParse(
+    await requireSuccessfulBody(response),
+  );
+  if (!parsed.success) {
+    throw new ScreenPilotApiError({
+      code: "INVALID_CV_ANALYSIS_RESPONSE",
+      message: "ScreenPilot received an incomplete CV analysis. Try again.",
+      retryable: true,
+    });
+  }
+  if (Date.parse(parsed.data.expiresAt) <= now()) {
+    throw new ScreenPilotApiError({
+      code: "INTERVIEW_GRANT_EXPIRED",
+      message:
+        "The prepared interview expired before it could be opened. Try again.",
       retryable: true,
     });
   }

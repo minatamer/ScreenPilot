@@ -204,6 +204,30 @@ describe("analyzeCv", () => {
     }
   });
 
+  it("analyzes compact PDF text that uses line breaks without blank paragraphs", async () => {
+    const cvText = [
+      "Riley Vale",
+      "Junior product contributor with experience supporting accessible workflow screens.",
+      ...Array.from(
+        { length: 10 },
+        () =>
+          "Collaborated with design and engineering partners on fictional delivery work and concise project notes.",
+      ),
+    ].join("\n");
+
+    const response = await createUseCase()(
+      requestFor(cvText),
+      ANONYMOUS_SESSION_ID,
+    );
+
+    expect(response.cv.experienceLevel).toBe("junior");
+    expect(response.cv.facts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ category: "experience" }),
+      ]),
+    );
+  });
+
   it("checks admission and Turnstile before the analyzer", async () => {
     const cvText = await fixture("graduate.txt");
     const order: string[] = [];
