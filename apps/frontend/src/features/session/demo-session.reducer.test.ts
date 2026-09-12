@@ -294,8 +294,10 @@ describe("demoSessionReducer", () => {
   it.each([
     ["conversation_first", "preflight", "preparing_conversation"],
     ["conversation_first", "ready", "preparing_conversation"],
+    ["conversation_first", "connecting", "preparing_conversation"],
     ["cv_assisted", "preflight", "awaiting_cv"],
     ["cv_assisted", "ready", "awaiting_cv"],
+    ["cv_assisted", "connecting", "awaiting_cv"],
   ] as const)(
     "recovers %s from an expired grant in %s",
     (entryMode, expiringStage, expectedStage) => {
@@ -305,9 +307,14 @@ describe("demoSessionReducer", () => {
           : demoSessionReducer(cvPreparationState("plan_ready"), {
               type: "CONTINUE_TO_PREFLIGHT",
             });
-      if (expiringStage === "ready") {
+      if (expiringStage === "ready" || expiringStage === "connecting") {
         expiringState = demoSessionReducer(expiringState, {
           type: "PREFLIGHT_READY",
+        });
+      }
+      if (expiringStage === "connecting") {
+        expiringState = demoSessionReducer(expiringState, {
+          type: "VOICE_CONNECTING",
         });
       }
 
@@ -329,6 +336,32 @@ describe("demoSessionReducer", () => {
       expect(recoveredState.cv).toBeUndefined();
     },
   );
+
+  it("returns cancellation and connection retries to fresh preflight", () => {
+    let connecting = demoSessionReducer(conversationPreflightState(), {
+      type: "PREFLIGHT_READY",
+    });
+    connecting = demoSessionReducer(connecting, { type: "VOICE_CONNECTING" });
+
+    const cancelled = demoSessionReducer(connecting, {
+      type: "VOICE_CONNECT_CANCELLED",
+    });
+    expect(cancelled).toMatchObject({ stage: "preflight" });
+    expect(cancelled.voice).toBeUndefined();
+
+    const failed = demoSessionReducer(connecting, {
+      type: "SESSION_FAILED",
+      failure: {
+        stage: "connecting",
+        code: "PROVIDER_UNAVAILABLE",
+        message: "Voice is temporarily unavailable.",
+        retryable: true,
+      },
+    });
+    const retry = demoSessionReducer(failed, { type: "RETRY" });
+    expect(retry).toMatchObject({ stage: "preflight" });
+    expect(retry.failure).toBeUndefined();
+  });
 
   it("starts a fresh browser-session window after clear", () => {
     const cleared = demoSessionReducer(conversationPreflightState(), {

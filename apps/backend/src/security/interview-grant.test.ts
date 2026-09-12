@@ -108,6 +108,27 @@ describe("interview grants", () => {
     ).toThrow(expect.objectContaining({ code: "INTERVIEW_GRANT_INVALID" }));
   });
 
+  it("can verify signed claims for the correlated voice-token session", () => {
+    const fixture = createFixture();
+    const grant = fixture.issue();
+
+    expect(
+      fixture.service.verifyForAnonymousSession(
+        grant.token,
+        ANONYMOUS_SESSION_ID,
+      ),
+    ).toMatchObject({
+      anonymousSessionId: ANONYMOUS_SESSION_ID,
+      entryMode: "conversation_first",
+    });
+    expect(() =>
+      fixture.service.verifyForAnonymousSession(
+        grant.token,
+        "00000000-0000-4000-8000-000000000099",
+      ),
+    ).toThrow(expect.objectContaining({ code: "INTERVIEW_GRANT_INVALID" }));
+  });
+
   it("binds CV-assisted grants to the exact CV analysis hash", () => {
     const service = createInterviewGrantService({
       clock: () => new Date("2026-09-09T12:00:00.000Z"),

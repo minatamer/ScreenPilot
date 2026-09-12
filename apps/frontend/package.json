@@ -12,6 +12,7 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
+    "@elevenlabs/react": "1.12.3",
     "@screenpilot/contracts": "workspace:*",
     "next": "^16.0.0",
     "pdfjs-dist": "^6.3.289",

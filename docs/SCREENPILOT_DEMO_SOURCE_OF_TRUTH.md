@@ -296,8 +296,9 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Visible behavior:** one **Start AI interview** button. Clicking it executes Turnstile in managed, interaction-only mode; a legitimate visitor normally moves directly into the connecting animation, while any required interaction appears inline without leaving preflight.
 - **API:** `POST /v1/voice/token` verifies the signed grant and one memory-only `turnstileToken`, applies backend/provider capacity gates, and returns a short-lived private conversation token.
 - **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, role-neutral synthetic-demo disclosure, the universal screening plan, optional normalized CV/fact-linked role suggestion, candidate-stated role or undecided state, and registered client tools. All candidate content is bounded and delimited as untrusted data.
+- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. The real SDK bridge is lazy-loaded only when backend bootstrap exposes `paidVoiceEnabled: true`; a fake token can never reach ElevenLabs WebRTC.
 - **Output state:** `interviewing` only after the SDK reports connected.
-- **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider.
+- **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider. A terminal SDK error, rejected conversation identifier, or unrecoverable interruption ends the provider session once and unmounts the session bridge before recovery UI remains available.
 
 #### Stage 8 — live interview
 
@@ -1392,8 +1393,12 @@ screen-pilot/
 │  │     │  │  ├─ disclosure-and-consent.tsx     # SP-013
 │  │     │  │  ├─ microphone-check.tsx           # SP-013
 │  │     │  │  ├─ use-microphone-preflight.ts    # SP-013
-│  │     │  │  └─ request-voice-token.ts         # SP-014
 │  │     │  ├─ interview/
+│  │     │  │  ├─ voice-connection-stage.tsx     # SP-014
+│  │     │  │  ├─ elevenlabs-voice-session.tsx   # SP-014
+│  │     │  │  ├─ fake-voice-session.tsx         # SP-014
+│  │     │  │  ├─ voice-session-bridge.ts        # SP-014
+│  │     │  │  ├─ voice-session-context.ts       # SP-014
 │  │     │  │  ├─ interview-stage.tsx            # SP-015
 │  │     │  │  ├─ voice-signal.tsx               # SP-015
 │  │     │  │  ├─ live-captions.tsx              # SP-015
@@ -1501,6 +1506,7 @@ screen-pilot/
 │        │  │  └─ fake-openai.ts                 # SP-003
 │        │  ├─ elevenlabs/
 │        │  │  ├─ elevenlabs-client.ts           # SP-003
+│        │  │  ├─ elevenlabs-agent-config.ts     # SP-014
 │        │  │  ├─ elevenlabs-token-provider.ts   # SP-014
 │        │  │  └─ fake-elevenlabs.ts             # SP-003
 │        │  └─ turnstile/
@@ -2157,7 +2163,7 @@ Controls:
 - Verify origin, cookie, grant signature/expiry, Turnstile `voice_token` action/hostname, paid-demo flag, backend route/source limit, and configured provider/concurrency conditions.
 - Never accept an agent ID, model ID, voice ID, prompt, or tool definition from the browser.
 
-Response contains a short-lived conversation token and public agent configuration identifiers required by the SDK. The provider adapter may normalize ElevenLabs' returned conversation identifier for transient request handling, but ScreenPilot does not invent an expiry timestamp that the provider response does not supply. The response is `Cache-Control: no-store`.
+Response contains only the short-lived `conversationToken` and provider `conversationId` required to start and correlate the current private session. The configured agent and voice identifiers remain backend/provider configuration because the private-token React WebRTC path does not require them in the browser. ScreenPilot does not invent an expiry timestamp that the provider response does not supply. The response is `Cache-Control: no-store`.
 
 ### `POST /v1/interview/summary`
 
@@ -3395,14 +3401,17 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Checklist:**
 
-- [ ] Configure Scribe v2 Realtime, GPT-5.4 mini reasoning none, and Flash v2.5.
-- [ ] Configure entry mode, synthetic/session-only disclosure, bounded untrusted role context, bounded optional CV plus universal plan context, tool schemas, voice, turn-taking, interruption, timeout, and 8-minute duration; use dynamic variables rather than browser prompt replacement.
-- [ ] Configure the single short ElevenLabs first message and verify that every later interviewer question is model-generated from topic intent/state rather than frontend, backend, or provider question strings.
-- [ ] Configure and record the provider agent revision/model identifier, keep live reasoning/thinking disabled, and expose a conservative output-token ceiling for SP-017/SP-018 calibration without cutting tool calls.
-- [ ] Disable audio saving and set transcript retention to the shortest locked setting.
-- [ ] Implement `POST /v1/voice/token` with grant/origin validation and mandatory server-side Turnstile `voice_token` action/hostname validation before contacting ElevenLabs.
-- [ ] Start WebRTC using the React SDK and browser-supplied bounded dynamic context.
-- [ ] Handle token expiry, provider rejection, connect cancel, and kill switch.
+- [x] Lock the source-controlled Scribe v2 Realtime, GPT-5.4 mini reasoning-none, and Flash v2.5 target configuration.
+- [x] Define entry mode, synthetic/session-only disclosure, bounded untrusted role context, bounded optional CV plus universal plan context, the five universal tool names, selected-voice environment ownership, turn-taking, interruption, timeout, and 8-minute duration through dynamic variables rather than browser prompt replacement.
+- [x] Lock the single short ElevenLabs first message; SP-017 still owns and must verify every later model-generated question from topic intent/state.
+- [x] Record the model identifiers, reasoning setting, configuration version, and conservative 160-token live output ceiling for SP-017/SP-018 calibration.
+- [ ] Create/publish the real provider agent, apply the recorded configuration, select the user-owned voice, and replace the deliberately blank agent-revision record; blocked on account access and credentials.
+- [x] Lock audio saving off and transcript retention to zero/the shortest provider setting in source; live dashboard verification remains blocked on account access.
+- [x] Implement `POST /v1/voice/token` with strict body, origin/cookie/grant validation, paid-demo/admission gates, mandatory server-side Turnstile `voice_token` validation, and no-store response before contacting ElevenLabs.
+- [x] Start one WebRTC session using the React SDK and browser-supplied bounded dynamic context while keeping the agent/voice identifiers backend-only.
+- [x] Keep fake/default development on a browser-local deterministic bridge; lazy-load the real ElevenLabs session only when the server exposes paid live voice.
+- [x] Handle grant expiry, Turnstile/provider rejection, connect cancel, interruption, and kill switch without a fallback provider; terminal SDK failures end once and unmount immediately.
+- [x] Document the owner-only dashboard, microphone, privacy, responsive, and SP-025 cost verification in `docs/operations/elevenlabs-agent-setup.md`.
 
 #### [SP-015 — Normalize live events, captions, and controls](tickets/SP-015-normalize-live-events-captions-and-controls.md)
 

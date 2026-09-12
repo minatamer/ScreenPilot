@@ -1,8 +1,8 @@
 # SP-014 — Configure ElevenLabs agent and private token flow
 
-Status: Required  
+Status: Implementation complete; live provider verification blocked on user credentials<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-11<br>
+Last synchronized: 2026-09-12<br>
 Depends on: SP-003, SP-009, SP-010, SP-010A, SP-013<br>
 Suggested commit: `SP-014: connect the private ElevenLabs WebRTC session`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -33,6 +33,7 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 - Do not copy `OPENAI_API_KEY` into ElevenLabs. The locked native GPT-5.4 mini selection uses ElevenLabs' integrated model path; Custom LLM/BYOK is out of scope. The app's OpenAI key remains reserved for direct backend CV/summary calls.
 - The backend alone uses the ElevenLabs API key to request the shortest-lived private WebRTC conversation token. The browser receives only that token and required public identifiers.
 - Fake route/SDK tests complete while fields are blank. Dashboard creation, revision sync, and one paid live connection remain unchecked until the user supplies values and permission. Verify `apps/backend/.env.local` is ignored before filling it.
+- The exact dashboard target, deliberately blank revision record, SP-025 cost fields, and owner-only microphone/live checklist are recorded in [`../operations/elevenlabs-agent-setup.md`](../operations/elevenlabs-agent-setup.md). No microphone or live-provider test was performed during SP-014 implementation at the user's request.
 
 ## Scope boundaries
 
@@ -45,40 +46,44 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 
 ## Implementation checklist
 
-- [ ] Create/configure the ElevenLabs agent with Scribe v2 Realtime, GPT-5.4 mini reasoning none, Flash v2.5, the selected voice, and the approved WebRTC transport.
-- [ ] Configure bounded dynamic variables, client-tool schemas, turn-taking, interruption, timeout, eight-minute duration, and one concise first message.
-- [ ] Record the agent revision/model identifiers and expose a conservative live output-token ceiling for later calibration.
-- [ ] Record where SP-025 will read connected duration, standard-versus-burst status, included-minute use, credit deduction, and native-model **Detailed costs**; do not infer the final live-model charge from token estimates once dashboard data exists.
-- [ ] Disable ElevenLabs audio saving and set transcript retention to the shortest locked setting.
-- [ ] Implement `POST /v1/voice/token` with strict schema, origin/cookie/grant validation, Turnstile Siteverify before ElevenLabs, paid-demo/capacity gates, and `Cache-Control: no-store`.
-- [ ] Return only the short-lived token and public SDK identifiers actually required.
-- [ ] Use the ElevenLabs React SDK to start WebRTC with bounded validated context and registered client-tool declarations.
-- [ ] Keep credentials and Turnstile tokens in memory only; clear them after use/failure.
-- [ ] Handle grant/token expiry, Turnstile/provider rejection, connect cancellation, disabled paid demo, and capacity errors without a fallback provider.
-- [ ] Add fake-provider route/client tests proving validation ordering and no premature provider calls.
+- [x] Define the source-controlled target for Scribe v2 Realtime, GPT-5.4 mini reasoning none, Flash v2.5, user-selected voice, and private WebRTC transport.
+- [ ] Create/publish the real ElevenLabs agent and apply the target; blocked on the blank user-owned account values.
+- [x] Configure bounded dynamic variables, the five universal client-tool names with safe deferred handlers, initial turn-taking/interruption/timeout settings, eight-minute duration, and one concise first message. SP-016 owns strict tool argument schemas and the mutating dispatcher.
+- [x] Record configuration/model identifiers and a conservative 160-token live output ceiling; the provider revision remains deliberately `null` until publication.
+- [x] Record where SP-025 will read connected duration, standard-versus-burst status, included-minute use, credit deduction, and native-model **Detailed costs**; do not infer the final live-model charge from token estimates once dashboard data exists.
+- [x] Lock ElevenLabs audio saving off and transcript retention to zero/the shortest setting in source.
+- [x] Implement `POST /v1/voice/token` with strict schema, origin/cookie/grant validation, paid-demo/admission gates, Turnstile Siteverify before ElevenLabs, and `Cache-Control: no-store`.
+- [x] Return only the short-lived token and provider conversation identifier required by the current private-token SDK flow; keep agent and voice IDs backend-only.
+- [x] Use the ElevenLabs React SDK to start WebRTC with bounded validated context and registered client-tool declarations.
+- [x] Use a deterministic browser-local bridge in fake/default development and lazy-load the real SDK session only when bootstrap enables paid live voice.
+- [x] Keep conversation credentials and Turnstile tokens in memory only; clear them after use/failure.
+- [x] Handle grant expiry, Turnstile/provider rejection, connect cancellation, disabled paid demo, capacity errors, and interruption without a fallback provider; terminal SDK failures end the provider session once and unmount the bridge immediately.
+- [x] Add fake-provider route/client tests proving validation ordering and no premature provider calls.
 
 ## Acceptance criteria
 
-- [ ] A valid preflight starts exactly one browser WebRTC conversation with the locked private agent.
-- [ ] Repeated Start clicks cannot create concurrent sessions.
-- [ ] Every validation/challenge/capacity failure occurs before ElevenLabs token issuance.
-- [ ] No secret or conversation credential appears in frontend build output, storage, logs, URLs, or analytics.
-- [ ] No recording/playback artifact or second voice architecture exists.
-- [ ] Provider retention settings and public disclosure agree.
-- [ ] One agent configuration accepts any bounded role label or undecided state as inert dynamic context and exposes only universal HR intents; profession cannot alter tools, policy, or interview type.
+- [ ] A valid preflight starts exactly one browser WebRTC conversation with the locked private agent; deterministic SDK coverage passes, but the live connection requires user credentials and microphone verification.
+- [x] Strict Mode and repeated-render coverage prove one start request cannot create concurrent sessions.
+- [x] Fake/default browser coverage proves the ElevenLabs session bridge is not mounted, while paid-live selection and terminal teardown have focused regressions.
+- [x] Every validation/challenge/capacity failure occurs before ElevenLabs token issuance in deterministic route/use-case coverage.
+- [x] Source, storage, route, and logging coverage keep secrets and conversation credentials out of persistence, logs, URLs, and extra response fields; live browser inspection remains owner-only.
+- [x] No recording/playback artifact or second voice architecture exists.
+- [ ] Provider retention settings and public disclosure agree in source; live dashboard verification requires account access.
+- [x] One agent configuration accepts any bounded role label or undecided state as inert dynamic context and exposes identical policy/tool configuration; profession cannot alter tools, policy, or interview type.
 
 ## Focused verification
 
-- [ ] Run focused backend Supertest and frontend voice-connection tests with fakes.
-- [ ] Inspect request ordering/call counts for invalid origin, cookie, grant, Turnstile, kill switch, and capacity.
-- [ ] Perform one controlled live connection only when the user/environment explicitly permits paid testing.
-- [ ] Inspect browser storage/network/logs for leaked credentials and confirm cancellation/expiry recovery.
-- [ ] Verify the agent dashboard/revision matches the source-controlled identifiers and retention settings.
-- [ ] With fakes, pass Graphic Designer, Backend Developer, Full Stack Developer, compound wording, undecided, and instruction-like role labels; assert identical policy/tool configuration and zero role-specific agents.
+- [x] Run focused backend Supertest and frontend voice-connection tests with fakes.
+- [x] Run focused fake-versus-live bridge-selection and terminal SDK teardown tests without a microphone or provider request.
+- [x] Inspect request ordering/call counts for invalid origin, cookie, grant, Turnstile, kill switch, and capacity.
+- [ ] Perform one controlled live connection only when the user/environment explicitly permits paid testing; blocked on credentials and intentionally not attempted.
+- [x] Inspect deterministic storage/logging behavior and confirm cancellation/expiry recovery; live browser network/console inspection remains owner-only.
+- [ ] Verify the agent dashboard/revision matches the source-controlled identifiers and retention settings; blocked on account access.
+- [x] With fakes, pass Graphic Designer, Backend Developer, Full Stack Developer, compound wording, undecided, and instruction-like role labels; assert identical policy/tool configuration and zero role-specific agents.
 
 ## Commit boundary
 
-Keep SP-014 reviewable as one logical change represented by `feat(voice): connect private ElevenLabs WebRTC session`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
+Keep SP-014 reviewable as one logical change represented by `SP-014: connect the private ElevenLabs WebRTC session`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
 
 ## Precision references
 

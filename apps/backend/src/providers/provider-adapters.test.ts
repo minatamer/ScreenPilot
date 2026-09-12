@@ -8,6 +8,7 @@ import {
 import { OpenAiCvAnalyzer } from "./openai/openai-cv-analyzer.js";
 import { CloudflareTurnstileVerifier } from "./turnstile/cloudflare-turnstile-verifier.js";
 import { FAKE_TURNSTILE_PASS_TOKEN } from "./turnstile/fake-turnstile-verifier.js";
+import { ElevenLabsVoiceTokenProvider } from "./elevenlabs/elevenlabs-token-provider.js";
 
 const fakeConfig = loadBackendConfig({
   APP_ENV: "test",
@@ -70,6 +71,7 @@ describe("provider adapter composition", () => {
       outputTokens: 700,
     });
     expect(voiceResult).toEqual({
+      conversationId: "screenpilot-fake-conversation",
       conversationToken: "screenpilot-fake-conversation-token",
     });
     expect(challengeResult).toEqual({
@@ -139,11 +141,11 @@ describe("provider adapter composition", () => {
     expect(adapters.challengeVerifier).toBeInstanceOf(
       CloudflareTurnstileVerifier,
     );
+    expect(adapters.voiceTokenProvider).toBeInstanceOf(
+      ElevenLabsVoiceTokenProvider,
+    );
     await expect(
       adapters.interviewSummarizer.summarizeInterview({}),
-    ).rejects.toBeInstanceOf(MissingLiveProviderAdaptersError);
-    await expect(
-      adapters.voiceTokenProvider.createVoiceToken({ requestId: "test" }),
     ).rejects.toBeInstanceOf(MissingLiveProviderAdaptersError);
   });
 

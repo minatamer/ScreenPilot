@@ -1385,6 +1385,39 @@ h3 {
   padding-top: var(--sp-space-1);
 }
 
+.sp-voice-connection-stage {
+  width: min(100%, 52rem);
+}
+
+.sp-voice-connection-card {
+  display: grid;
+  gap: var(--sp-space-5);
+}
+
+.sp-voice-connection-status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-3);
+  padding: var(--sp-space-3);
+  border: 1px solid rgb(242 107 91 / 28%);
+  border-radius: var(--sp-radius-control);
+  background: rgb(242 107 91 / 7%);
+}
+
+.sp-voice-connection-status > div {
+  display: grid;
+  gap: var(--sp-space-1);
+}
+
+.sp-voice-connection-status strong {
+  color: var(--sp-color-dark-text);
+}
+
+.sp-voice-connection-status span:last-child {
+  color: var(--sp-color-dark-muted);
+  font-size: var(--sp-text-meta-size);
+}
+
 .sp-visually-hidden {
   position: absolute;
   width: 1px;

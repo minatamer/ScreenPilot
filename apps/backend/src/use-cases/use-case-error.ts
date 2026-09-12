@@ -4,7 +4,8 @@ export type UseCaseErrorCode =
   | "PREPARATION_FAILED"
   | "PROVIDER_UNAVAILABLE"
   | "RATE_LIMITED"
-  | "TURNSTILE_REJECTED";
+  | "TURNSTILE_REJECTED"
+  | "VOICE_DISABLED";
 
 export class UseCaseError extends Error {
   readonly code: UseCaseErrorCode;

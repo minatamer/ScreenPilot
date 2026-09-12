@@ -26,6 +26,10 @@ import {
   type CvAnalysisAdmission,
 } from "./use-cases/analyze-cv.js";
 import { createPrepareConversationFirst } from "./use-cases/prepare-conversation-first.js";
+import {
+  createVoiceToken,
+  type VoiceTokenAdmission,
+} from "./use-cases/create-voice-token.js";
 
 export type AppSecuritySecrets = Readonly<{
   anonymousCookieSecret: string;
@@ -41,6 +45,7 @@ export type CreateAppOptions = Readonly<{
   logger?: Logger;
   providerAdapters: ProviderAdapters;
   securitySecrets?: AppSecuritySecrets;
+  voiceTokenAdmission?: VoiceTokenAdmission;
 }>;
 
 function createEphemeralSecret(): string {
@@ -110,6 +115,14 @@ export function createApp(options: CreateAppOptions): Express {
     idGenerator,
     verifier: options.providerAdapters.challengeVerifier,
   });
+  const issueVoiceToken = createVoiceToken({
+    admission: options.voiceTokenAdmission ?? (() => "allowed"),
+    enabled:
+      parsedConfig.providerMode === "fake" || parsedConfig.paidDemoEnabled,
+    grantService,
+    provider: options.providerAdapters.voiceTokenProvider,
+    verifier: options.providerAdapters.challengeVerifier,
+  });
   const app = express();
 
   app.disable("x-powered-by");
@@ -145,6 +158,7 @@ export function createApp(options: CreateAppOptions): Express {
       }),
       getDemoBootstrap,
       idGenerator,
+      issueVoiceToken,
       isReady: () =>
         backendConfigSchema.safeParse(parsedConfig).success &&
         providerAdaptersAreReady(options.providerAdapters),

@@ -5,6 +5,7 @@ import type {
 } from "../../use-cases/ports/voice-token-provider.js";
 
 const fakeVoiceToken: VoiceTokenProviderResult = Object.freeze({
+  conversationId: "screenpilot-fake-conversation",
   conversationToken: "screenpilot-fake-conversation-token",
 });
 

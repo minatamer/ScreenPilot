@@ -1,0 +1,60 @@
+import {
+  voiceTokenRequestSchema,
+  type VoiceTokenResponse,
+} from "@screenpilot/contracts/api/voice-token";
+import { Router } from "express";
+
+import type { CreateVoiceToken } from "../../use-cases/create-voice-token.js";
+import { requireAllowedOrigin } from "../middleware/allowed-origin.js";
+import { getRequestId } from "../middleware/request-id.js";
+import { markRoute } from "../middleware/request-logging.js";
+import {
+  getAnonymousSessionId,
+  requireAnonymousSession,
+  validateJsonBody,
+} from "../middleware/validate-request.js";
+
+export function createVoiceTokenRoutes(input: {
+  allowedOrigins: readonly string[];
+  createVoiceToken: CreateVoiceToken;
+}): Router {
+  const router = Router();
+
+  router.post(
+    "/",
+    markRoute("voice_token"),
+    requireAllowedOrigin(input.allowedOrigins),
+    requireAnonymousSession(),
+    validateJsonBody(
+      voiceTokenRequestSchema,
+      async (request, response, validatedBody) => {
+        const abortController = new AbortController();
+        const abortRequest = () => {
+          abortController.abort();
+        };
+        const abortIncompleteResponse = () => {
+          if (!response.writableEnded) {
+            abortController.abort();
+          }
+        };
+        request.once("aborted", abortRequest);
+        response.once("close", abortIncompleteResponse);
+        try {
+          const result: VoiceTokenResponse = await input.createVoiceToken(
+            validatedBody,
+            getAnonymousSessionId(response),
+            getRequestId(response),
+            abortController.signal,
+          );
+          response.setHeader("cache-control", "no-store");
+          response.status(200).json(result);
+        } finally {
+          request.off("aborted", abortRequest);
+          response.off("close", abortIncompleteResponse);
+        }
+      },
+    ),
+  );
+
+  return router;
+}

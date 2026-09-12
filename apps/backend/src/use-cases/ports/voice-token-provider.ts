@@ -3,6 +3,7 @@ export type VoiceTokenProviderInput = Readonly<{
 }>;
 
 export type VoiceTokenProviderResult = Readonly<{
+  conversationId: string;
   conversationToken: string;
 }>;
 

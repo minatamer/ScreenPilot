@@ -10,6 +10,25 @@ export const VOICE_CONNECTION_STATUSES = [
   "failed",
 ] as const;
 
+export const VOICE_DYNAMIC_VARIABLE_KEYS = [
+  "screenpilot_policy_version",
+  "screenpilot_entry_mode",
+  "screenpilot_demo_disclosure",
+  "screenpilot_screening_plan",
+  "screenpilot_role_context",
+  "screenpilot_cv_context",
+] as const;
+
+export const VOICE_CLIENT_TOOL_NAMES = [
+  "recordInsight",
+  "correctInsight",
+  "markTopic",
+  "recordCandidateQuestion",
+  "requestFollowup",
+] as const;
+
+export const VOICE_AGENT_POLICY_VERSION = "sp014-connection-v1" as const;
+
 export const voiceMetadataSchema = z.strictObject({
   conversationId: z.string().trim().min(1).max(256).optional(),
   status: z.enum(VOICE_CONNECTION_STATUSES),
@@ -25,10 +44,12 @@ export const voiceTokenRequestSchema = z.strictObject({
 
 export const voiceTokenResponseSchema = z.strictObject({
   conversationToken: z.string().trim().min(1).max(8_192),
-  agentId: z.string().trim().min(1).max(256),
-  conversationId: z.string().trim().min(1).max(256).optional(),
+  conversationId: z.string().trim().min(1).max(256),
 });
 
 export type VoiceMetadata = z.infer<typeof voiceMetadataSchema>;
+export type VoiceClientToolName = (typeof VOICE_CLIENT_TOOL_NAMES)[number];
+export type VoiceDynamicVariableKey =
+  (typeof VOICE_DYNAMIC_VARIABLE_KEYS)[number];
 export type VoiceTokenRequest = z.infer<typeof voiceTokenRequestSchema>;
 export type VoiceTokenResponse = z.infer<typeof voiceTokenResponseSchema>;

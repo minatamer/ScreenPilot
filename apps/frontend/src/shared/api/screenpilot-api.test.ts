@@ -7,6 +7,7 @@ import {
   analyzeCv,
   fetchDemoBootstrap,
   prepareConversationFirst,
+  requestVoiceToken,
   ScreenPilotApiError,
 } from "./screenpilot-api";
 
@@ -125,6 +126,61 @@ describe("ScreenPilot browser API", () => {
       credentials: "same-origin",
       method: "POST",
       signal: controller.signal,
+    });
+  });
+
+  it("requests one private voice authorization through the relative API", async () => {
+    const responseBody = {
+      conversationId: "conversation-014",
+      conversationToken: "short-lived-conversation-token",
+    };
+    const browserFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse(responseBody));
+    const controller = new AbortController();
+
+    await expect(
+      requestVoiceToken(
+        {
+          interviewGrant: "signed-interview-grant",
+          turnstileToken: "single-use-turnstile-token",
+        },
+        controller.signal,
+        browserFetch,
+      ),
+    ).resolves.toEqual(responseBody);
+
+    const options = browserFetch.mock.calls[0]?.[1];
+    expect(browserFetch.mock.calls[0]?.[0]).toBe("/v1/voice/token");
+    expect(requestJsonBody(options)).toEqual({
+      interviewGrant: "signed-interview-grant",
+      turnstileToken: "single-use-turnstile-token",
+    });
+    expect(options).toMatchObject({
+      cache: "no-store",
+      credentials: "same-origin",
+      method: "POST",
+      signal: controller.signal,
+    });
+  });
+
+  it("rejects incomplete voice authorization responses", async () => {
+    const browserFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse({ conversationId: "id-only" }));
+
+    await expect(
+      requestVoiceToken(
+        {
+          interviewGrant: "signed-interview-grant",
+          turnstileToken: "single-use-turnstile-token",
+        },
+        new AbortController().signal,
+        browserFetch,
+      ),
+    ).rejects.toMatchObject({
+      code: "INVALID_VOICE_TOKEN_RESPONSE",
+      retryable: true,
     });
   });
 

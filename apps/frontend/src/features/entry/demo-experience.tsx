@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 
 import type { PrepareInterviewResponse } from "@screenpilot/contracts/api/interview-preparation";
 import type { AnalyzeCvResponse } from "@screenpilot/contracts/api/cv-analysis";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
 import { CvStage } from "@/features/cv/cv-stage";
+import type { VoiceStartRequest } from "@/features/interview/voice-connection-stage";
 import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
 import type {
@@ -35,6 +37,22 @@ const DEMO_PROGRESS_STAGES = [
   "Review",
 ] as const;
 
+const VoiceConnectionStage = dynamic(
+  () =>
+    import("@/features/interview/voice-connection-stage").then(
+      (module) => module.VoiceConnectionStage,
+    ),
+  {
+    loading: () => (
+      <div className="sp-demo-stage" role="status">
+        <p className="sp-eyebrow">Secure connection</p>
+        <h1>Loading the private voice client.</h1>
+      </div>
+    ),
+    ssr: false,
+  },
+);
+
 const DEMO_STAGE_PROGRESS: Readonly<Record<DemoStage, number>> = {
   empty: 0,
   bootstrapping: 0,
@@ -57,6 +75,8 @@ const DEMO_STAGE_PROGRESS: Readonly<Record<DemoStage, number>> = {
 export function DemoExperience() {
   const router = useRouter();
   const { clearSession, dispatch, startOver, state } = useDemoSession();
+  const [voiceStartRequest, setVoiceStartRequest] =
+    useState<VoiceStartRequest | null>(null);
   useDemoBootstrap();
 
   useEffect(() => {
@@ -203,10 +223,11 @@ export function DemoExperience() {
     state.interviewGrantExpiresAt &&
     state.runtimeConfig
   ) {
+    const interviewGrant = state.interviewGrant;
     stageContent = (
       <PreflightHandoff
         entryMode={state.entryMode}
-        interviewGrant={state.interviewGrant}
+        interviewGrant={interviewGrant}
         interviewGrantExpiresAt={state.interviewGrantExpiresAt}
         onBack={() => {
           dispatch({ type: "BACK_FROM_PREFLIGHT" });
@@ -225,11 +246,84 @@ export function DemoExperience() {
         onReady={() => {
           dispatch({ type: "PREFLIGHT_READY" });
         }}
+        onStartAuthorized={(turnstileToken) => {
+          setVoiceStartRequest({
+            interviewGrant,
+            turnstileToken,
+          });
+          dispatch({ type: "VOICE_CONNECTING" });
+        }}
         {...(state.rolePreference
           ? { rolePreference: state.rolePreference }
           : {})}
         siteKey={state.runtimeConfig.abuseProtection.siteKey}
         stage={state.stage}
+      />
+    );
+  } else if (
+    (state.stage === "connecting" || state.stage === "live") &&
+    state.entryMode &&
+    state.demoContext &&
+    state.screeningPlan &&
+    state.runtimeConfig
+  ) {
+    const recoverExpiredGrant = () => {
+      setVoiceStartRequest(null);
+      dispatch({
+        type:
+          state.entryMode === "conversation_first"
+            ? "CONVERSATION_GRANT_EXPIRED"
+            : "CV_GRANT_EXPIRED",
+      });
+    };
+    stageContent = (
+      <VoiceConnectionStage
+        {...(state.cv ? { cv: state.cv } : {})}
+        demoContext={state.demoContext}
+        entryMode={state.entryMode}
+        {...(state.failure?.stage === "connecting"
+          ? { failure: state.failure }
+          : {})}
+        onCancel={() => {
+          setVoiceStartRequest(null);
+          dispatch({ type: "VOICE_CONNECT_CANCELLED" });
+        }}
+        onConnected={(conversationId) => {
+          dispatch({
+            type: "VOICE_CONNECTED",
+            voice: {
+              conversationId,
+              status: "connected",
+              startedAt: new Date().toISOString(),
+            },
+          });
+        }}
+        onFailure={(failure) => {
+          setVoiceStartRequest(null);
+          dispatch({ type: "SESSION_FAILED", failure });
+        }}
+        onGrantRejected={recoverExpiredGrant}
+        onInterrupted={() => {
+          setVoiceStartRequest(null);
+          dispatch({
+            type: "VOICE_INTERRUPTED",
+            now: new Date().toISOString(),
+          });
+        }}
+        onRetry={() => {
+          setVoiceStartRequest(null);
+          dispatch({ type: "RETRY" });
+        }}
+        onSensitiveValuesCleared={() => {
+          setVoiceStartRequest(null);
+        }}
+        liveVoiceEnabled={state.runtimeConfig.paidVoiceEnabled}
+        plan={state.screeningPlan}
+        {...(state.rolePreference
+          ? { rolePreference: state.rolePreference }
+          : {})}
+        stage={state.stage}
+        startRequest={voiceStartRequest}
       />
     );
   } else {

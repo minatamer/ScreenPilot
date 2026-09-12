@@ -76,6 +76,7 @@ export type DemoSessionEvent =
   | Readonly<{ type: "PREFLIGHT_READY" }>
   | Readonly<{ type: "PREFLIGHT_NOT_READY" }>
   | Readonly<{ type: "VOICE_CONNECTING" }>
+  | Readonly<{ type: "VOICE_CONNECT_CANCELLED" }>
   | Readonly<{ type: "VOICE_CONNECTED"; voice: VoiceMetadata }>
   | Readonly<{ type: "VOICE_ENDING" }>
   | Readonly<{ type: "VOICE_ENDED"; voice: VoiceMetadata }>
@@ -278,7 +279,7 @@ function retryStage(failureStage: FailureStage): DemoSessionState["stage"] {
     return "awaiting_cv";
   }
   if (failureStage === "connecting" || failureStage === "live") {
-    return "ready";
+    return "preflight";
   }
   return failureStage;
 }
@@ -428,7 +429,7 @@ export function demoSessionReducer(
       return { ...state, stage: "plan_ready", failure: undefined };
     case "CONVERSATION_GRANT_EXPIRED":
       assertMode(state, event.type, "conversation_first");
-      assertStage(state, event.type, ["preflight", "ready"]);
+      assertStage(state, event.type, ["preflight", "ready", "connecting"]);
       return {
         ...state,
         stage: "preparing_conversation",
@@ -440,7 +441,12 @@ export function demoSessionReducer(
       };
     case "CV_GRANT_EXPIRED":
       assertMode(state, event.type, "cv_assisted");
-      assertStage(state, event.type, ["plan_ready", "preflight", "ready"]);
+      assertStage(state, event.type, [
+        "plan_ready",
+        "preflight",
+        "ready",
+        "connecting",
+      ]);
       return {
         schemaVersion: state.schemaVersion,
         hydrationStatus: state.hydrationStatus,
@@ -473,6 +479,14 @@ export function demoSessionReducer(
     case "VOICE_CONNECTING":
       assertStage(state, event.type, ["ready"]);
       return { ...state, stage: "connecting", voice: { status: "connecting" } };
+    case "VOICE_CONNECT_CANCELLED":
+      assertStage(state, event.type, ["connecting"]);
+      return {
+        ...state,
+        stage: "preflight",
+        voice: undefined,
+        failure: undefined,
+      };
     case "VOICE_CONNECTED":
       assertStage(state, event.type, ["connecting"]);
       if (event.voice.status !== "connected") {

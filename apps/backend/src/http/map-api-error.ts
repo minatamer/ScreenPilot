@@ -95,6 +95,7 @@ function mapApiError(error: unknown, requestId: string): MappedApiError {
       PROVIDER_UNAVAILABLE: 503,
       RATE_LIMITED: 429,
       TURNSTILE_REJECTED: 403,
+      VOICE_DISABLED: 503,
     } as const;
     const mapped = createMappedError(requestId, {
       code: error.code,

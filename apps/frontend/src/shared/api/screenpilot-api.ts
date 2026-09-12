@@ -14,6 +14,12 @@ import {
   prepareInterviewResponseSchema,
   type PrepareInterviewResponse,
 } from "@screenpilot/contracts/api/interview-preparation";
+import {
+  voiceTokenRequestSchema,
+  voiceTokenResponseSchema,
+  type VoiceTokenRequest,
+  type VoiceTokenResponse,
+} from "@screenpilot/contracts/api/voice-token";
 
 type BrowserFetch = typeof fetch;
 
@@ -169,6 +175,36 @@ export async function analyzeCv(
       code: "INTERVIEW_GRANT_EXPIRED",
       message:
         "The prepared interview expired before it could be opened. Try again.",
+      retryable: true,
+    });
+  }
+  return parsed.data;
+}
+
+export async function requestVoiceToken(
+  input: VoiceTokenRequest,
+  signal: AbortSignal,
+  browserFetch: BrowserFetch = fetch,
+): Promise<VoiceTokenResponse> {
+  const request = voiceTokenRequestSchema.parse(input);
+  const response = await browserFetch("/v1/voice/token", {
+    body: JSON.stringify(request),
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    method: "POST",
+    signal,
+  });
+  const parsed = voiceTokenResponseSchema.safeParse(
+    await requireSuccessfulBody(response),
+  );
+  if (!parsed.success) {
+    throw new ScreenPilotApiError({
+      code: "INVALID_VOICE_TOKEN_RESPONSE",
+      message: "ScreenPilot received an incomplete voice authorization.",
       retryable: true,
     });
   }

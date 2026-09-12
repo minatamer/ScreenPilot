@@ -6,6 +6,8 @@ import type { ChallengeVerifier } from "../use-cases/ports/challenge-verifier.js
 import type { CvAnalyzer } from "../use-cases/ports/cv-analyzer.js";
 import type { InterviewSummarizer } from "../use-cases/ports/interview-summarizer.js";
 import type { VoiceTokenProvider } from "../use-cases/ports/voice-token-provider.js";
+import { ElevenLabsHttpClient } from "./elevenlabs/elevenlabs-client.js";
+import { ElevenLabsVoiceTokenProvider } from "./elevenlabs/elevenlabs-token-provider.js";
 import { FakeElevenLabs } from "./elevenlabs/fake-elevenlabs.js";
 import { FakeOpenAi } from "./openai/fake-openai.js";
 import { OpenAiHttpClient } from "./openai/openai-client.js";
@@ -54,12 +56,6 @@ const createUnavailableLiveAdapters = () => ({
     summarizeInterview: () =>
       Promise.reject(new MissingLiveProviderAdaptersError("OpenAI summary")),
   },
-  voiceTokenProvider: {
-    createVoiceToken: () =>
-      Promise.reject(
-        new MissingLiveProviderAdaptersError("ElevenLabs voice token"),
-      ),
-  },
 });
 
 const createLiveProviderAdapters = (
@@ -72,6 +68,14 @@ const createLiveProviderAdapters = (
     store: config.providers.openAi.store,
     timeoutMs: config.limits.providerRequestTimeoutMs,
   });
+  const elevenLabsAgentId = requireLiveValue(
+    config.providers.elevenLabs.agentId,
+  );
+  const elevenLabsClient = new ElevenLabsHttpClient({
+    agentId: elevenLabsAgentId,
+    apiKey: requireLiveValue(config.providers.elevenLabs.apiKey),
+    timeoutMs: config.limits.providerRequestTimeoutMs,
+  });
   return Object.freeze({
     challengeVerifier: new CloudflareTurnstileVerifier({
       allowedHostnames: config.providers.turnstile.allowedHostnames,
@@ -81,6 +85,10 @@ const createLiveProviderAdapters = (
     }),
     cvAnalyzer: new OpenAiCvAnalyzer(openAiClient),
     ...createUnavailableLiveAdapters(),
+    voiceTokenProvider: new ElevenLabsVoiceTokenProvider({
+      agentId: elevenLabsAgentId,
+      client: elevenLabsClient,
+    }),
   });
 };
 

@@ -182,10 +182,7 @@ export function createInterviewGrantService(input: {
     });
   };
 
-  const verify = (
-    token: string,
-    expected: ExpectedInterviewGrantBinding,
-  ): InterviewGrantClaims => {
+  const verifySignedClaims = (token: string): InterviewGrantClaims => {
     try {
       const validatedToken = interviewGrantSchema.parse(token);
       const segments = validatedToken.split(".");
@@ -209,17 +206,6 @@ export function createInterviewGrantService(input: {
         throw new InterviewGrantError("INTERVIEW_GRANT_EXPIRED");
       }
 
-      const bindingMatches =
-        claims.anonymousSessionId === expected.anonymousSessionId &&
-        claims.entryMode === expected.entryMode &&
-        claims.cvAnalysisHash === expected.cvAnalysisHash &&
-        (expected.planHash === undefined ||
-          claims.planHash === expected.planHash) &&
-        (expected.planVersion === undefined ||
-          claims.planVersion === expected.planVersion);
-      if (!bindingMatches) {
-        throw new InterviewGrantError("INTERVIEW_GRANT_INVALID");
-      }
       return claims;
     } catch (error: unknown) {
       if (error instanceof InterviewGrantError) {
@@ -229,7 +215,37 @@ export function createInterviewGrantService(input: {
     }
   };
 
-  return Object.freeze({ issue, verify });
+  const verify = (
+    token: string,
+    expected: ExpectedInterviewGrantBinding,
+  ): InterviewGrantClaims => {
+    const claims = verifySignedClaims(token);
+    const bindingMatches =
+      claims.anonymousSessionId === expected.anonymousSessionId &&
+      claims.entryMode === expected.entryMode &&
+      claims.cvAnalysisHash === expected.cvAnalysisHash &&
+      (expected.planHash === undefined ||
+        claims.planHash === expected.planHash) &&
+      (expected.planVersion === undefined ||
+        claims.planVersion === expected.planVersion);
+    if (!bindingMatches) {
+      throw new InterviewGrantError("INTERVIEW_GRANT_INVALID");
+    }
+    return claims;
+  };
+
+  const verifyForAnonymousSession = (
+    token: string,
+    anonymousSessionId: string,
+  ): InterviewGrantClaims => {
+    const claims = verifySignedClaims(token);
+    if (claims.anonymousSessionId !== anonymousSessionId) {
+      throw new InterviewGrantError("INTERVIEW_GRANT_INVALID");
+    }
+    return claims;
+  };
+
+  return Object.freeze({ issue, verify, verifyForAnonymousSession });
 }
 
 export type InterviewGrantService = ReturnType<
