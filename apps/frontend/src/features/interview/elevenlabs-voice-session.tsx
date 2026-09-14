@@ -4,20 +4,30 @@ import {
   ConversationProvider,
   useConversationControls,
   type DisconnectionDetails,
+  type HookCallbacks,
+  type Mode,
+  type Status,
 } from "@elevenlabs/react";
 import { useCallback, useEffect, useRef } from "react";
 
 import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
 
+type MessagePayload = Parameters<NonNullable<HookCallbacks["onMessage"]>>[0];
+
 function VoiceSessionStarter({
   authorization,
   dynamicVariables,
+  endRequested,
   onAuthorizationConsumed,
-  onFailure,
+  onEvent,
   terminationRef,
 }: Pick<
   VoiceSessionBridgeProps,
-  "authorization" | "dynamicVariables" | "onAuthorizationConsumed" | "onFailure"
+  | "authorization"
+  | "dynamicVariables"
+  | "endRequested"
+  | "onAuthorizationConsumed"
+  | "onEvent"
 > & {
   terminationRef: { current: (() => void) | null };
 }) {
@@ -37,7 +47,7 @@ function VoiceSessionStarter({
     dynamicVariables,
     endSessionOnce,
     onAuthorizationConsumed,
-    onFailure,
+    onEvent,
     startSession,
   });
 
@@ -74,7 +84,10 @@ function VoiceSessionStarter({
         } catch {
           initialSession.onAuthorizationConsumed();
           initialSession.endSessionOnce();
-          initialSession.onFailure("The voice session could not start.");
+          initialSession.onEvent({
+            type: "error",
+            message: "The voice session could not start.",
+          });
         }
       }, 0);
     }
@@ -90,6 +103,12 @@ function VoiceSessionStarter({
     };
   }, []);
 
+  useEffect(() => {
+    if (endRequested) {
+      endSessionOnce();
+    }
+  }, [endRequested, endSessionOnce]);
+
   return null;
 }
 
@@ -97,11 +116,11 @@ export function ElevenLabsVoiceSession({
   authorization,
   clientTools,
   dynamicVariables,
+  endRequested,
   expectedConversationId,
+  isMuted,
   onAuthorizationConsumed,
-  onConnected,
-  onFailure,
-  onInterrupted,
+  onEvent,
 }: VoiceSessionBridgeProps) {
   const connectedRef = useRef(false);
   const failedRef = useRef(false);
@@ -118,53 +137,110 @@ export function ElevenLabsVoiceSession({
       ) {
         failedRef.current = true;
         terminationRef.current?.();
-        onFailure("The voice-session identifier could not be verified.");
+        onEvent({
+          type: "error",
+          message: "The voice-session identifier could not be verified.",
+        });
         return;
       }
       connectedRef.current = true;
-      onConnected(conversationId);
+      onEvent({ type: "connected", conversationId });
     },
-    [expectedConversationId, onConnected, onFailure],
+    [expectedConversationId, onEvent],
   );
   const handleDisconnect = useCallback(
     (details: DisconnectionDetails) => {
       if (failedRef.current || details.reason === "user") {
+        if (!failedRef.current && details.reason === "user") {
+          onEvent({ type: "disconnected", reason: "user" });
+        }
         return;
       }
-      if (connectedRef.current) {
-        onInterrupted();
+      const message =
+        details.reason === "error"
+          ? details.message
+          : "The voice provider ended the session.";
+      onEvent({ type: "disconnected", reason: details.reason, message });
+    },
+    [onEvent],
+  );
+  const handleError = useCallback(
+    (message: string) => {
+      if (failedRef.current) {
         return;
       }
       failedRef.current = true;
-      onFailure("The voice provider ended the connection before it was ready.");
+      terminationRef.current?.();
+      onEvent({
+        type: "error",
+        message: message || "The voice provider rejected the connection.",
+      });
     },
-    [onFailure, onInterrupted],
+    [onEvent],
   );
-  const handleError = useCallback(() => {
-    if (failedRef.current) {
-      return;
-    }
-    failedRef.current = true;
-    terminationRef.current?.();
-    if (connectedRef.current) {
-      onInterrupted();
-      return;
-    }
-    onFailure("The voice provider rejected the connection.");
-  }, [onFailure, onInterrupted]);
+  const handleMessage = useCallback(
+    (message: MessagePayload) => {
+      // The installed conversational SDK exposes completed turns through its
+      // typed onMessage callback and has no typed interim-transcript callback.
+      // Do not inspect the untyped debug/incoming-event payloads for captions.
+      onEvent({
+        type: "message",
+        ...(message.event_id === undefined
+          ? {}
+          : { eventId: message.event_id }),
+        speaker: message.role === "user" ? "candidate" : "interviewer",
+        stability: "final",
+        text: message.message,
+      });
+    },
+    [onEvent],
+  );
+  const handleModeChange = useCallback(
+    ({ mode }: { mode: Mode }) => {
+      onEvent({ type: "mode", mode });
+    },
+    [onEvent],
+  );
+  const handleStatusChange = useCallback(
+    ({ status }: { status: Status }) => {
+      if (status === "connecting") {
+        onEvent({
+          type: "connection_status",
+          status: connectedRef.current ? "reconnecting" : "connecting",
+        });
+      } else if (status === "connected" && connectedRef.current) {
+        onEvent({ type: "connection_status", status: "reconnected" });
+      } else if (status === "disconnecting") {
+        onEvent({ type: "connection_status", status: "disconnecting" });
+      }
+    },
+    [onEvent],
+  );
+  const handleInterruption = useCallback(
+    ({ event_id: eventId }: { event_id: number }) => {
+      onEvent({ type: "interruption", eventId });
+    },
+    [onEvent],
+  );
 
   return (
     <ConversationProvider
       clientTools={clientTools}
+      isMuted={isMuted}
       onConnect={handleConnect}
       onDisconnect={handleDisconnect}
       onError={handleError}
+      onInterruption={handleInterruption}
+      onMessage={handleMessage}
+      onModeChange={handleModeChange}
+      onStatusChange={handleStatusChange}
     >
       <VoiceSessionStarter
         authorization={authorization}
         dynamicVariables={dynamicVariables}
+        endRequested={endRequested}
         onAuthorizationConsumed={onAuthorizationConsumed}
-        onFailure={onFailure}
+        onEvent={onEvent}
         terminationRef={terminationRef}
       />
     </ConversationProvider>

@@ -261,7 +261,9 @@ export function DemoExperience() {
       />
     );
   } else if (
-    (state.stage === "connecting" || state.stage === "live") &&
+    (state.stage === "connecting" ||
+      state.stage === "live" ||
+      state.stage === "ending") &&
     state.entryMode &&
     state.demoContext &&
     state.screeningPlan &&
@@ -288,21 +290,26 @@ export function DemoExperience() {
           setVoiceStartRequest(null);
           dispatch({ type: "VOICE_CONNECT_CANCELLED" });
         }}
-        onConnected={(conversationId) => {
+        onConnected={(voice) => {
           dispatch({
             type: "VOICE_CONNECTED",
-            voice: {
-              conversationId,
-              status: "connected",
-              startedAt: new Date().toISOString(),
-            },
+            voice,
           });
+        }}
+        onEnded={(voice) => {
+          dispatch({ type: "VOICE_ENDED", voice });
+        }}
+        onEnding={() => {
+          dispatch({ type: "VOICE_ENDING" });
         }}
         onFailure={(failure) => {
           setVoiceStartRequest(null);
           dispatch({ type: "SESSION_FAILED", failure });
         }}
         onGrantRejected={recoverExpiredGrant}
+        onFinalTranscriptTurn={(turn) => {
+          dispatch({ type: "ADD_FINAL_TRANSCRIPT_TURN", turn });
+        }}
         onInterrupted={() => {
           setVoiceStartRequest(null);
           dispatch({

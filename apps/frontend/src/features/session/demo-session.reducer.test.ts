@@ -401,6 +401,46 @@ describe("demoSessionReducer", () => {
     ).toThrow("Only final transcript turns");
   });
 
+  it("orders final turns by provider sequence and ignores sequence duplicates", () => {
+    const state = conversationPreflightState();
+    const laterTurn = {
+      ...finalCandidateTurn,
+      id: "voice-candidate-8",
+      sequence: 8,
+      text: "This callback arrived first.",
+    };
+    const earlierTurn = {
+      ...finalCandidateTurn,
+      id: "voice-candidate-3",
+      sequence: 3,
+      text: "This callback belongs first.",
+    };
+    const repeatedSequence = {
+      ...finalCandidateTurn,
+      id: "different-id-for-sequence-8",
+      sequence: 8,
+      text: "A repeated provider event must not create another turn.",
+    };
+
+    const withLater = demoSessionReducer(state, {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: laterTurn,
+    });
+    const ordered = demoSessionReducer(withLater, {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: earlierTurn,
+    });
+    const deduplicated = demoSessionReducer(ordered, {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: repeatedSequence,
+    });
+
+    expect(deduplicated.transcript.map((turn) => turn.sequence)).toEqual([
+      3, 8,
+    ]);
+    expect(deduplicated.transcript).toHaveLength(2);
+  });
+
   it("requires final candidate turns for candidate-confirmed facts", () => {
     const state = conversationPreflightState();
 

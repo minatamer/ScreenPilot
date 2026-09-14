@@ -1,6 +1,8 @@
 import { StrictMode } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
+import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
 import { ScreenPilotApiError } from "@/shared/api/screenpilot-api";
@@ -27,7 +29,7 @@ function FakeSessionBridge({
   dynamicVariables,
   expectedConversationId,
   onAuthorizationConsumed,
-  onFailure,
+  onEvent,
 }: VoiceSessionBridgeProps) {
   return (
     <div
@@ -43,7 +45,7 @@ function FakeSessionBridge({
       </button>
       <button
         onClick={() => {
-          onFailure("Synthetic SDK failure.");
+          onEvent({ type: "error", message: "Synthetic SDK failure." });
         }}
         type="button"
       >
@@ -60,8 +62,11 @@ function stageProps(requestToken: VoiceTokenRequester) {
     liveSessionBridge: FakeSessionBridge,
     liveVoiceEnabled: true,
     onCancel: vi.fn(),
-    onConnected: vi.fn(),
+    onConnected: vi.fn<(voice: VoiceMetadata) => void>(),
+    onEnded: vi.fn<(voice: VoiceMetadata) => void>(),
+    onEnding: vi.fn(),
     onFailure: vi.fn(),
+    onFinalTranscriptTurn: vi.fn<(turn: TranscriptTurn) => void>(),
     onGrantRejected: vi.fn(),
     onInterrupted: vi.fn(),
     onRetry: vi.fn(),
@@ -162,10 +167,28 @@ describe("VoiceConnectionStage", () => {
     );
 
     await waitFor(() => {
-      expect(props.onConnected).toHaveBeenCalledWith("fake-conversation-014");
+      expect(props.onConnected).toHaveBeenCalledWith(
+        expect.objectContaining({
+          conversationId: "fake-conversation-014",
+          status: "connected",
+        }),
+      );
     });
     expect(liveSessionBridge).not.toHaveBeenCalled();
     expect(props.onConnected).toHaveBeenCalledOnce();
+    await waitFor(
+      () => {
+        expect(props.onFinalTranscriptTurn).toHaveBeenCalledTimes(3);
+      },
+      { timeout: 2_000 },
+    );
+    expect(
+      props.onFinalTranscriptTurn.mock.calls.map(([turn]) => turn.text),
+    ).toEqual([
+      "Hi. What would you like me to call you?",
+      "You can call me Sam.",
+      "Thanks, Sam. Tell me what you would like to focus on today.",
+    ]);
     expect(props.onSensitiveValuesCleared).toHaveBeenCalledOnce();
     expect(window.sessionStorage.length).toBe(0);
   });

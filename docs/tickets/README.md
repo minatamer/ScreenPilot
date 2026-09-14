@@ -76,7 +76,7 @@ If a dependency is missing or materially different, stop at that boundary and re
 
 ## Ordered ticket index
 
-Current implementation progress, reconciled against code and Git history on 2026-09-12:
+Current implementation progress, reconciled against code and Git history on 2026-09-14:
 
 - SP-001 through SP-005 are completed, reviewed, revised, and represented by their documented implementation commits.
 - SP-004's earlier direction is represented by `6f94d0a`; the approved Deep Ink + Warm Coral revision supersedes it for implementation.
@@ -93,7 +93,8 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-013 is completed, verified for its non-hardware boundary, and represented by implementation commit `d5338cb`; real microphone/device checks remain owner-only.
 - SP-014 is completed, validated after its fake-mode and terminal-session cleanup corrections, and represented by implementation commit `9075c7d`; real ElevenLabs, Turnstile, retention-dashboard, and microphone verification remains credential-gated.
 - SP-014A is completed as documentation-only work. Its consolidated runbook covers every non-deployment OpenAI, ElevenLabs, Turnstile, local-secret, spend, rotation, and manual-verification step without requesting credentials or making a paid call; owner account setup and live/microphone checks remain explicitly pending.
-- SP-015 is the next eligible implementation ticket.
+- SP-015 is implemented and deterministically verified without a live provider; its active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018.
+- SP-016 is the next eligible implementation ticket.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

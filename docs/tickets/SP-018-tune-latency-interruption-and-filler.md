@@ -25,12 +25,14 @@ Measure and tune the deployed real-time experience so latency, interruption, vis
 - Latency UI: 0–800 ms visual state only; 800–1,500 ms adds **Reviewing your answer…**; above 1,500 ms may play one static **“Mm-hm…”** soft-timeout filler.
 - At most one filler per turn; more than three per interview or fillers on consecutive turns fail review. The filler is non-evaluative and never GPT-generated.
 - Measure at least 50 representative deployed turns and 50 preparation requests across desktop/mobile and normal/throttled profiles.
+- Complete SP-015's deliberately deferred active-session browser checks for captions, speaking/listening/reconnect states, mute, End, hard stop, keyboard operation, reduced motion, and sticky safe-area controls across the responsive reference anchors.
 
 ## Manual credential gate
 
 - Instrumentation, aggregation, filler limits, and fake timing tests need no credential. Complete them first with the fake voice path.
 - The required deployed sample reuses SP-014's ElevenLabs key/agent/voice and Turnstile group; the native ElevenLabs GPT model does not consume the app's direct `OPENAI_API_KEY`.
 - If those values or paid-test permission are missing, do not fabricate measurements or tune against fake latency. Leave the 50-turn deployed sample and live release thresholds unchecked with the explicit blocker, while retaining all unpaid implementation results.
+- Fake traces do not complete SP-015's deferred manual interaction and visual checks; keep them unchecked until a controlled active session is explicitly authorized.
 
 ## Scope boundaries
 
@@ -67,7 +69,7 @@ Measure and tune the deployed real-time experience so latency, interruption, vis
 - [ ] Use deterministic delayed provider/event fixtures for every latency threshold boundary.
 - [ ] Run the required deployed measurement sample across desktop/mobile and normal/throttled profiles.
 - [ ] Inspect logs/telemetry payloads to confirm no candidate content is captured.
-- [ ] Manually test interruption, consecutive slow turns, cancellation, disconnect, and reduced motion.
+- [ ] Manually test captions, speaking/listening/reconnect states, mute, End, hard stop, keyboard operation, sticky safe-area controls, interruption, consecutive slow turns, cancellation, disconnect, and reduced motion across the responsive reference anchors.
 
 ## Commit boundary
 

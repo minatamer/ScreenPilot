@@ -1,10 +1,14 @@
 "use client";
 
-import type { VoiceTokenResponse } from "@screenpilot/contracts/api/voice-token";
+import type {
+  VoiceMetadata,
+  VoiceTokenResponse,
+} from "@screenpilot/contracts/api/voice-token";
 import type { PublicRoleNeutralDemoContext } from "@screenpilot/contracts/interview/demo-context";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
 import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-plan";
+import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 import {
   lazy,
   Suspense,
@@ -30,6 +34,7 @@ import { Card } from "@/shared/ui/card";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 
 import { FakeVoiceSession } from "./fake-voice-session";
+import { InterviewStage } from "./interview-stage";
 import {
   createDeferredVoiceClientTools,
   createVoiceSessionContext,
@@ -38,6 +43,7 @@ import type {
   VoiceSessionAuthorization,
   VoiceSessionBridgeProps,
 } from "./voice-session-bridge";
+import { useVoiceSession } from "./use-voice-session";
 
 const LazyElevenLabsVoiceSession = lazy(async () => {
   const voiceSession = await import("./elevenlabs-voice-session");
@@ -57,8 +63,11 @@ type VoiceConnectionStageProps = Readonly<{
   entryMode: EntryMode;
   failure?: SessionFailure | undefined;
   onCancel: () => void;
-  onConnected: (conversationId: string) => void;
+  onConnected: (voice: VoiceMetadata) => void;
+  onEnded: (voice: VoiceMetadata) => void;
+  onEnding: () => void;
   onFailure: (failure: SessionFailure) => void;
+  onFinalTranscriptTurn: (turn: TranscriptTurn) => void;
   onGrantRejected: () => void;
   onInterrupted: () => void;
   onRetry: () => void;
@@ -68,7 +77,7 @@ type VoiceConnectionStageProps = Readonly<{
   plan: ScreeningPlan;
   requestToken?: VoiceTokenRequester;
   rolePreference?: RolePreference | undefined;
-  stage: "connecting" | "live";
+  stage: "connecting" | "ending" | "live";
   startRequest: VoiceStartRequest | null;
 }>;
 
@@ -97,7 +106,10 @@ export function VoiceConnectionStage({
   failure,
   onCancel,
   onConnected,
+  onEnded,
+  onEnding,
   onFailure,
+  onFinalTranscriptTurn,
   onGrantRejected,
   onInterrupted,
   onRetry,
@@ -139,6 +151,41 @@ export function VoiceConnectionStage({
     [cv, demoContext, entryMode, plan, rolePreference],
   );
   const clientTools = useMemo(() => createDeferredVoiceClientTools(), []);
+  const handleConnectionFailure = useCallback(
+    (message: string) => {
+      setAuthorization(undefined);
+      setSessionBridgeMounted(false);
+      onFailure({
+        stage: "connecting",
+        code: "VOICE_PROVIDER_REJECTED",
+        message: message || "The voice provider rejected the connection.",
+        retryable: true,
+      });
+    },
+    [onFailure],
+  );
+  const handleInterrupted = useCallback(() => {
+    setAuthorization(undefined);
+    setSessionBridgeMounted(false);
+    onInterrupted();
+  }, [onInterrupted]);
+  const handleEnded = useCallback(
+    (voice: VoiceMetadata) => {
+      setAuthorization(undefined);
+      setSessionBridgeMounted(false);
+      onEnded(voice);
+    },
+    [onEnded],
+  );
+  const voiceSession = useVoiceSession({
+    onConnected,
+    onConnectionFailure: handleConnectionFailure,
+    onEnded: handleEnded,
+    onEnding,
+    onFinalTranscriptTurn,
+    onInterrupted: handleInterrupted,
+  });
+  const { markConnecting } = voiceSession;
 
   useEffect(() => {
     if (cleanupTimerRef.current !== null) {
@@ -183,6 +230,7 @@ export function VoiceConnectionStage({
               conversationId: response.conversationId,
               conversationToken: response.conversationToken,
             });
+            markConnecting();
             setSessionBridgeMounted(true);
           })
           .catch((error: unknown) => {
@@ -218,86 +266,68 @@ export function VoiceConnectionStage({
         }
       }, 0);
     };
-  }, []);
+  }, [markConnecting]);
 
   const handleAuthorizationConsumed = useCallback(() => {
     setAuthorization(undefined);
   }, []);
-  const handleSdkFailure = useCallback(
-    (message: string) => {
-      setAuthorization(undefined);
-      setSessionBridgeMounted(false);
-      onFailure({
-        stage: "connecting",
-        code: "VOICE_PROVIDER_REJECTED",
-        message: message || "The voice provider rejected the connection.",
-        retryable: true,
-      });
-    },
-    [onFailure],
-  );
-  const handleInterrupted = useCallback(() => {
-    setAuthorization(undefined);
-    setSessionBridgeMounted(false);
-    onInterrupted();
-  }, [onInterrupted]);
   const SessionBridge = liveVoiceEnabled ? LiveSessionBridge : FakeVoiceSession;
 
   return (
-    <div className="sp-demo-stage sp-voice-connection-stage">
-      <div className="sp-demo-stage__heading">
-        <p className="sp-eyebrow">
-          {stage === "live" ? "Private voice session" : "Secure connection"}
-        </p>
-        <h1>
-          {stage === "live"
-            ? "Your interview is connected."
-            : "Connecting your AI interview."}
-        </h1>
-        <p className="sp-demo-stage__lead">
-          {stage === "live"
-            ? "The voice session is active. ScreenPilot keeps the working context in this browser session."
-            : "ScreenPilot is authorizing one private WebRTC session. No recording is created."}
-        </p>
-      </div>
-
-      <Card as="section" className="sp-voice-connection-card" tone="soft">
-        {failure ? (
-          <ErrorPanel title="The voice connection could not start">
-            <p>{failure.message}</p>
-          </ErrorPanel>
-        ) : (
-          <div aria-live="polite" className="sp-voice-connection-status">
-            <span
-              aria-hidden="true"
-              className={
-                stage === "live" ? "sp-status-dot" : "sp-button__spinner"
-              }
-            />
-            <div>
-              <strong>
-                {stage === "live" ? "Connected" : "Authorizing voice"}
-              </strong>
-              <span>
-                {stage === "live"
-                  ? "Live captions and interview controls continue in this workspace."
-                  : "You can cancel while the connection is being prepared."}
-              </span>
-            </div>
+    <div
+      className={`sp-demo-stage sp-voice-connection-stage${
+        stage === "connecting" ? "" : " sp-voice-connection-stage--live"
+      }`}
+    >
+      {stage === "connecting" ? (
+        <>
+          <div className="sp-demo-stage__heading">
+            <p className="sp-eyebrow">Secure connection</p>
+            <h1>Connecting your AI interview.</h1>
+            <p className="sp-demo-stage__lead">
+              ScreenPilot is authorizing one private WebRTC session. No
+              recording is created.
+            </p>
           </div>
-        )}
 
-        {stage === "connecting" ? (
-          <ButtonGroup>
-            {failure?.retryable ? (
-              <Button onClick={onRetry}>Retry from preflight</Button>
-            ) : null}
-            <Button onClick={onCancel} variant="secondary">
-              {failure ? "Return to preflight" : "Cancel connection"}
-            </Button>
-          </ButtonGroup>
-        ) : null}
-      </Card>
+          <Card as="section" className="sp-voice-connection-card" tone="soft">
+            {failure ? (
+              <ErrorPanel title="The voice connection could not start">
+                <p>{failure.message}</p>
+              </ErrorPanel>
+            ) : (
+              <div aria-live="polite" className="sp-voice-connection-status">
+                <span aria-hidden="true" className="sp-button__spinner" />
+                <div>
+                  <strong>Authorizing voice</strong>
+                  <span>
+                    You can cancel while the connection is being prepared.
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <ButtonGroup>
+              {failure?.retryable ? (
+                <Button onClick={onRetry}>Retry from preflight</Button>
+              ) : null}
+              <Button onClick={onCancel} variant="secondary">
+                {failure ? "Return to preflight" : "Cancel connection"}
+              </Button>
+            </ButtonGroup>
+          </Card>
+        </>
+      ) : (
+        <InterviewStage
+          caption={voiceSession.caption}
+          elapsedSeconds={voiceSession.elapsedSeconds}
+          entryMode={entryMode}
+          isMuted={voiceSession.isMuted}
+          onEnd={voiceSession.requestEnd}
+          onToggleMute={voiceSession.toggleMuted}
+          phase={voiceSession.phase}
+        />
+      )}
 
       {sessionBridgeMounted ? (
         <Suspense fallback={null}>
@@ -305,11 +335,11 @@ export function VoiceConnectionStage({
             authorization={authorization}
             clientTools={clientTools}
             dynamicVariables={dynamicVariables}
+            endRequested={voiceSession.endRequested}
             expectedConversationId={expectedConversationId}
+            isMuted={voiceSession.isMuted}
             onAuthorizationConsumed={handleAuthorizationConsumed}
-            onConnected={onConnected}
-            onFailure={handleSdkFailure}
-            onInterrupted={handleInterrupted}
+            onEvent={voiceSession.onSessionEvent}
           />
         </Suspense>
       ) : null}

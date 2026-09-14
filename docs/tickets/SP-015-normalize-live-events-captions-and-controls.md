@@ -1,8 +1,8 @@
 # SP-015 — Normalize live events, captions, and controls
 
-Status: Required  
+Status: Implementation complete; live/manual interaction verification deferred to SP-018<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-14<br>
 Depends on: SP-006, SP-014  
 Suggested commit: `SP-015: normalize local conversation events`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -17,9 +17,9 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 ## Standalone implementation context
 
 - The live state machine is `idle → requesting_token → connecting → listening ↔ speaking → ending → ended`, with explicit failed/reconnecting paths.
-- Tentative user text drives only the current live caption line. Only final user text becomes evidence.
+- The installed ElevenLabs conversational SDK exposes completed user/agent text through typed `onMessage` callbacks and no typed interim-transcript callback. The live bridge therefore maps those messages as final. The provider-neutral adapter still accepts typed tentative events for deterministic fixtures or a future typed provider capability; tentative text remains caption-only and never becomes evidence.
 - Final user and agent messages become bounded `TranscriptTurn` objects with browser-generated stable IDs.
-- Events may repeat or arrive out of order; normalize them through one adapter/reducer before UI or evidence tools consume them.
+- Events may repeat or arrive out of order; normalize them through one adapter/reducer before UI or evidence tools consume them. Tentative events require a usable provider sequence; those sequences finalize message identity and advance captions monotonically, so late tentative callbacks are rejected and older finals can enter sorted evidence without replacing newer captions. An ID-less final receives the next bounded local sequence; only an immediately adjacent final with the same speaker and normalized text is considered an indistinguishable duplicate, while distinct provider IDs or an intervening accepted final preserve legitimate repetitions.
 - The UI includes voice signal, speaking/listening status, captions, elapsed timer, mute, End interview, and connection/reconnect banner.
 - An eight-minute hard stop ends the call. Refresh during a call never auto-reconnects the microphone.
 - The transcript is same-tab review evidence, not a certified verbatim recording.
@@ -28,7 +28,7 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 
 - This ticket introduces no new key. Callback normalization, captions, controls, transcript bounds, and recovery tests use checked-in fake ElevenLabs event traces.
 - A live SDK verification reuses SP-014's user-filled ElevenLabs/Turnstile group and private agent. No provider secret enters the frontend; it receives only the short-lived conversation token.
-- If live values or paid-test permission are missing, complete every fake/event-state acceptance item and leave only the real-session callback inspection unchecked with the credential blocker.
+- The owner has deliberately deferred active-session browser interaction, responsive, reduced-motion, microphone, and real callback verification to SP-018. Complete every fake/event-state acceptance item here without treating fake coverage as manual or live verification.
 
 ## Scope boundaries
 
@@ -40,32 +40,32 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 
 ## Implementation checklist
 
-- [ ] Wrap/map ElevenLabs status, mode, message, error, disconnect, and reconnect callbacks behind a typed frontend adapter.
-- [ ] Define stable event IDs/sequence handling and explicit deduplication/reordering rules.
-- [ ] Keep tentative captions replaceable and outside transcript/evidence history.
-- [ ] Create final user/agent transcript turns with stable local IDs, bounded text, speaker, sequence, and local time metadata.
-- [ ] Build the approved voice signal, caption line, timer, mute, End, and connection banner from shared components.
-- [ ] Make mute/end controls keyboard accessible, safe-area aware, and idempotent.
-- [ ] Enforce the eight-minute end and preserve usable final turns on disconnect.
-- [ ] Prevent refresh auto-reconnect; convert an interrupted live state into partial-review eligibility.
-- [ ] Bound retained event/transcript data and ignore content-free malformed/late events safely.
-- [ ] Test fake normal, tentative-to-final, interruption, duplicate, out-of-order, reconnect, disconnect, repeated-End, and time-limit traces.
+- [x] Wrap/map ElevenLabs status, mode, message, error, disconnect, and reconnect callbacks behind a typed frontend adapter.
+- [x] Define stable event IDs/sequence handling, monotonic caption ordering, provider-sequence finalization, and the conservative adjacent-fingerprint fallback for ID-less finals.
+- [x] Keep provider-neutral tentative captions replaceable and outside transcript/evidence history; document that the installed live SDK's typed message callback supplies final messages only.
+- [x] Create final user/agent transcript turns with stable local IDs, bounded text, speaker, sequence, and local time metadata.
+- [x] Build the approved voice signal, caption line, timer, mute, End, and connection banner from shared components.
+- [x] Make mute/end controls keyboard accessible, safe-area aware, and idempotent.
+- [x] Enforce the eight-minute end and preserve usable final turns on disconnect.
+- [x] Prevent refresh auto-reconnect; convert an interrupted live state into partial-review eligibility.
+- [x] Bound retained event/transcript data and ignore content-free malformed/late events safely.
+- [x] Test fake normal, tentative-to-final, interruption, duplicate, out-of-order, reconnect, disconnect, repeated-End, and time-limit traces.
 
 ## Acceptance criteria
 
-- [ ] Tentative text can change without creating transcript history.
-- [ ] Every final turn appears once in deterministic order with a stable local ID.
-- [ ] Duplicate/out-of-order provider callbacks cannot corrupt call state.
-- [ ] Mute and End remain reachable and understandable at all supported viewport sizes.
-- [ ] Disconnect/refresh preserves usable local evidence but never silently reconnects.
-- [ ] No audio or provider artifact is saved.
+- [x] Provider-neutral tentative text can change without creating transcript history; the installed live bridge is final-only at its supported typed SDK boundary.
+- [x] Every final turn appears once in deterministic order with a stable local ID.
+- [x] Duplicate/out-of-order provider callbacks cannot corrupt call state in deterministic adapter/state coverage.
+- [ ] Mute and End remain reachable and understandable at all supported viewport sizes; implementation and component coverage are complete, while active-session viewport verification is deferred to SP-018.
+- [x] Disconnect/refresh preserves usable local evidence but never silently reconnects.
+- [x] No audio or provider artifact is saved.
 
 ## Focused verification
 
-- [ ] Run focused event-adapter/reducer/component tests with deterministic SDK fixtures.
-- [ ] Manually simulate listening, speaking, interruption, mute, End, reconnect, disconnect, and hard stop.
-- [ ] Inspect `sessionStorage` and logs to confirm tentative text/raw events/audio are absent.
-- [ ] Check long captions, keyboard control, reduced motion, mobile portrait/landscape, and sticky safe-area controls.
+- [x] Run focused event-adapter/reducer/component tests with deterministic SDK fixtures.
+- [ ] Manually simulate listening, speaking, interruption, mute, End, reconnect, disconnect, and hard stop; deterministic automated traces pass, while active-session manual verification is deliberately deferred to SP-018.
+- [x] Inspect deterministic `sessionStorage` and logging behavior to confirm tentative text/raw events/audio are absent; the fake browser reached preflight with no console warnings/errors. Active-session browser inspection is deferred to SP-018.
+- [ ] Check long captions, keyboard control, reduced motion, mobile portrait/landscape, and sticky safe-area controls in the running browser; component coverage and responsive CSS are in place, while active-session visual verification is deliberately deferred to SP-018.
 
 ## Commit boundary
 

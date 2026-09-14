@@ -544,7 +544,14 @@ export function demoSessionReducer(
           "Only final transcript turns may enter session evidence.",
         );
       }
-      if (state.transcript.some((turn) => turn.id === event.turn.id)) {
+      if (
+        state.transcript.some(
+          (turn) =>
+            turn.id === event.turn.id ||
+            (turn.speaker === event.turn.speaker &&
+              turn.sequence === event.turn.sequence),
+        )
+      ) {
         return state;
       }
       const transcriptCharacters = state.transcript.reduce(
@@ -556,7 +563,12 @@ export function demoSessionReducer(
           "The persisted transcript limit has been reached.",
         );
       }
-      return { ...state, transcript: [...state.transcript, event.turn] };
+      return {
+        ...state,
+        transcript: [...state.transcript, event.turn].sort(
+          (left, right) => left.sequence - right.sequence,
+        ),
+      };
     }
     case "UPSERT_INSIGHT":
       if (

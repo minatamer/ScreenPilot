@@ -305,7 +305,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Input state:** connected ElevenLabs conversation.
 - **Visible behavior:** agent voice area, listening/speaking status, elapsed time, live captions, insight board, mute, and End interview.
 - **Conversation behavior:** follows the entry-mode opening in Section 8, learns/confirms the candidate's role wording or undecided state, then covers high-level context/experience, collaboration preferences, motivation, location/work-arrangement preferences, availability, compensation expectations, relevant candidate-stated English use, candidate questions, human follow-ups, and close. CV claims are verified only when needed in CV-assisted mode; conversation-first discovers facts from answers. The selected profession never changes the interview into a technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
-- **Client events:** tentative transcript updates captions only; final transcript creates immutable local turns.
+- **Client events:** the installed ElevenLabs conversational SDK exposes completed user/agent messages through typed `onMessage` callbacks and no typed interim-transcript callback. Those completed messages update captions and create immutable local turns. The provider-neutral adapter retains a typed tentative-event boundary for deterministic fixtures or a future typed provider capability; tentative events remain caption-only. Never infer interim text by parsing untyped `onDebug` or `onIncomingEvent` payloads.
 - **Client tools:** add/correct structured insight cards and topic status in browser state.
 - **Output state:** `ending` on agent completion, user End action, time limit, or unrecoverable disconnect.
 - **Failure:** brief reconnect attempt only while SDK supports it; otherwise preserve local transcript and proceed to partial review.
@@ -496,7 +496,7 @@ Rules:
 - The Start button is disabled unless consent, microphone readiness, a valid grant, and the Turnstile client are ready. The token itself is generated only by the deliberate Start action and is never persisted.
 - Start is idempotent in the UI: repeated clicks cannot open concurrent sessions.
 - Only final user transcripts become evidence turns.
-- Tentative captions may be replaced without history.
+- Typed tentative captions, when supplied by a provider adapter, may be replaced without history. The installed ElevenLabs conversational bridge supplies final messages only because its supported typed callback surface has no interim transcript event.
 - End is always reachable by keyboard.
 - An SDK disconnect never marks a summary complete.
 
@@ -999,11 +999,11 @@ This is the only live voice path. Do not add a second transcription/audio archit
 
 ### Captions and local transcript
 
-- Tentative user text drives the live caption line only.
+- Typed tentative user text, when available from a provider adapter, drives the live caption line only. The installed ElevenLabs conversational SDK exposes completed messages through typed `onMessage` callbacks and therefore updates production captions from final messages; ScreenPilot does not parse untyped raw/debug SDK payloads to synthesize interim text.
 - Final user text becomes a `TranscriptTurn` with a browser-generated stable ID.
 - Final agent messages become agent turns.
 - Tool calls reference existing final turn IDs.
-- Duplicate/out-of-order events are ignored by event ID and sequence rules.
+- Usable provider event sequences are the message identity and caption-order authority: tentative events without one are rejected, a finalized sequence rejects later tentative/duplicate callbacks, and an older final may enter the sorted transcript without replacing a newer caption. When a final message has no usable provider ID, assign the next bounded local sequence and suppress only an immediately adjacent final with the same speaker and normalized text; distinct provider IDs or an intervening accepted final preserve legitimate repeated statements.
 - The local transcript is review evidence, not a certified verbatim record.
 
 ### Performance gates
@@ -2949,7 +2949,7 @@ Feature tickets add small tests for logic that is difficult or error-prone to va
 - Session reducer transitions and invalid transitions.
 - Entry-mode branch/convergence, mode-specific retry, and mode/plan/grant consistency.
 - `sessionStorage` serialization, expiry, migration, and clearing.
-- ElevenLabs event deduplication and final/tentative transcript behavior.
+- ElevenLabs event deduplication, legal control-event transitions, final-only live-message mapping, and the provider-neutral final/tentative evidence boundary.
 - Client-tool schema validation, correction, and evidence linking.
 - Conversation-first source enforcement rejects `CV` and `CV + Candidate` provenance.
 - Timer, hard stop, filler cap, and disconnect behavior.
@@ -3563,12 +3563,14 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Checklist:**
 
-- [ ] Map status, speaking/listening, message, error, and disconnect callbacks.
-- [ ] Separate tentative captions from final transcript turns.
-- [ ] Deduplicate/reorder events safely and generate stable local turn IDs.
-- [ ] Build voice signal, captions, timer, mute, End, and connection banner.
-- [ ] Prevent refresh auto-reconnect and preserve partial local evidence.
-- [ ] Test fake normal, interruption, duplicate, disconnect, and time-limit traces.
+- [x] Map status, speaking/listening, message, error, and disconnect callbacks.
+- [x] Separate provider-neutral tentative captions from final transcript turns while documenting the installed live SDK's final-only typed message surface.
+- [x] Deduplicate/reorder events safely, enforce legal control-event transitions, and generate stable local turn IDs.
+- [x] Build voice signal, captions, timer, mute, End, and connection banner.
+- [x] Prevent refresh auto-reconnect and preserve partial local evidence.
+- [x] Test fake normal, interruption, duplicate, stale/out-of-order control events, disconnect, and time-limit traces.
+
+**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. Active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018.
 
 #### [SP-016 — Build browser client tools and Insight Board](tickets/SP-016-build-client-tools-and-insight-board.md)
 

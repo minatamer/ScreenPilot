@@ -3,7 +3,10 @@ import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ElevenLabsVoiceSession } from "./elevenlabs-voice-session";
-import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
+import type {
+  VoiceSessionBridgeProps,
+  VoiceSessionEvent,
+} from "./voice-session-bridge";
 import {
   createDeferredVoiceClientTools,
   type VoiceDynamicVariables,
@@ -55,17 +58,25 @@ function props(
     },
     clientTools: createDeferredVoiceClientTools(),
     dynamicVariables,
+    endRequested: false,
     expectedConversationId: "conversation-014",
+    isMuted: false,
     onAuthorizationConsumed: vi.fn(),
-    onConnected: vi.fn(),
-    onFailure: vi.fn(),
-    onInterrupted: vi.fn(),
+    onEvent: vi.fn(),
     ...overrides,
   };
 }
 
+function emitProviderCallback(name: string, payload: unknown) {
+  act(() => {
+    sdk.providerProps?.[name]?.(payload as never);
+  });
+}
+
 describe("ElevenLabsVoiceSession", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    vi.clearAllMocks();
     sdk.providerProps = undefined;
   });
 
@@ -89,6 +100,9 @@ describe("ElevenLabsVoiceSession", () => {
     expect(sdk.providerProps?.["clientTools"]).toEqual(
       sessionProps.clientTools,
     );
+    expect(sdk.providerProps?.["isMuted"]).toBe(false);
+    expect(sdk.providerProps).not.toHaveProperty("onDebug");
+    expect(sdk.providerProps).not.toHaveProperty("onIncomingEvent");
     expect(JSON.stringify(sdk.startSession.mock.calls)).not.toMatch(
       /agentId|voiceId|promptOverride/i,
     );
@@ -103,68 +117,85 @@ describe("ElevenLabsVoiceSession", () => {
     });
   });
 
-  it("accepts only the provider conversation identifier expected by the backend", async () => {
-    const onConnected = vi.fn();
-    const onFailure = vi.fn();
-    render(<ElevenLabsVoiceSession {...props({ onConnected, onFailure })} />);
+  it("rejects a provider conversation identifier that differs from the backend", async () => {
+    const onEvent = vi.fn<(event: VoiceSessionEvent) => void>();
+    render(<ElevenLabsVoiceSession {...props({ onEvent })} />);
     await waitFor(() => {
       expect(sdk.startSession).toHaveBeenCalledOnce();
     });
 
-    act(() => {
-      sdk.providerProps?.["onConnect"]?.({
-        conversationId: "different-conversation",
-      } as never);
+    emitProviderCallback("onConnect", {
+      conversationId: "different-conversation",
     });
 
-    expect(onConnected).not.toHaveBeenCalled();
-    expect(onFailure).toHaveBeenCalledWith(
-      "The voice-session identifier could not be verified.",
-    );
+    expect(onEvent).toHaveBeenCalledWith({
+      type: "error",
+      message: "The voice-session identifier could not be verified.",
+    });
     expect(sdk.endSession).toHaveBeenCalledOnce();
   });
 
-  it("maps pre-connect failures and post-connect errors to different recovery paths", async () => {
-    const beforeConnectFailure = vi.fn();
-    const first = render(
-      <ElevenLabsVoiceSession
-        {...props({ onFailure: beforeConnectFailure })}
-      />,
-    );
+  it("maps status, reconnect, mode, message, interruption, and disconnect callbacks", async () => {
+    const onEvent = vi.fn<(event: VoiceSessionEvent) => void>();
+    render(<ElevenLabsVoiceSession {...props({ onEvent })} />);
     await waitFor(() => {
       expect(sdk.startSession).toHaveBeenCalledOnce();
     });
-    act(() => {
-      sdk.providerProps?.["onError"]?.("provider rejected" as never);
-    });
-    expect(beforeConnectFailure).toHaveBeenCalledWith(
-      "The voice provider rejected the connection.",
-    );
-    expect(sdk.endSession).toHaveBeenCalledOnce();
-    first.unmount();
 
-    vi.clearAllMocks();
-    const onConnected = vi.fn();
-    const onFailure = vi.fn();
-    const onInterrupted = vi.fn();
-    render(
-      <ElevenLabsVoiceSession
-        {...props({ onConnected, onFailure, onInterrupted })}
-      />,
-    );
+    emitProviderCallback("onStatusChange", { status: "connecting" });
+    emitProviderCallback("onConnect", { conversationId: "conversation-014" });
+    emitProviderCallback("onModeChange", { mode: "speaking" });
+    emitProviderCallback("onMessage", {
+      event_id: 8,
+      message: "Tell me about your goals.",
+      role: "agent",
+      source: "ai",
+    });
+    emitProviderCallback("onInterruption", { event_id: 9 });
+    emitProviderCallback("onStatusChange", { status: "connecting" });
+    emitProviderCallback("onStatusChange", { status: "connected" });
+    emitProviderCallback("onDisconnect", {
+      reason: "error",
+      message: "Connection lost.",
+      context: { type: "close" },
+    });
+
+    expect(onEvent.mock.calls.map(([event]) => event)).toEqual([
+      { type: "connection_status", status: "connecting" },
+      { type: "connected", conversationId: "conversation-014" },
+      { type: "mode", mode: "speaking" },
+      {
+        type: "message",
+        eventId: 8,
+        speaker: "interviewer",
+        stability: "final",
+        text: "Tell me about your goals.",
+      },
+      { type: "interruption", eventId: 9 },
+      { type: "connection_status", status: "reconnecting" },
+      { type: "connection_status", status: "reconnected" },
+      {
+        type: "disconnected",
+        reason: "error",
+        message: "Connection lost.",
+      },
+    ]);
+  });
+
+  it("ends the SDK session once when the UI requests completion", async () => {
+    const sessionProps = props();
+    const rendered = render(<ElevenLabsVoiceSession {...sessionProps} />);
     await waitFor(() => {
       expect(sdk.startSession).toHaveBeenCalledOnce();
     });
-    act(() => {
-      sdk.providerProps?.["onConnect"]?.({
-        conversationId: "conversation-014",
-      } as never);
-      sdk.providerProps?.["onError"]?.("connection lost" as never);
-    });
 
-    expect(onConnected).toHaveBeenCalledWith("conversation-014");
-    expect(onInterrupted).toHaveBeenCalledOnce();
-    expect(onFailure).not.toHaveBeenCalled();
+    rendered.rerender(
+      <ElevenLabsVoiceSession {...sessionProps} endRequested />,
+    );
+    rendered.rerender(
+      <ElevenLabsVoiceSession {...sessionProps} endRequested />,
+    );
+
     expect(sdk.endSession).toHaveBeenCalledOnce();
   });
 });
