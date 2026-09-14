@@ -18,6 +18,7 @@
     "verify:quick": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit && pnpm build",
     "dev:frontend": "pnpm --filter @screenpilot/frontend dev",
     "dev:backend": "pnpm --filter @screenpilot/backend dev",
+    "start:backend:local": "pnpm --filter @screenpilot/backend start:local",
     "build:frontend": "pnpm --filter @screenpilot/frontend... run build",
     "build:backend": "pnpm --filter @screenpilot/backend... run build",
     "build:contracts": "pnpm --filter @screenpilot/contracts run build",

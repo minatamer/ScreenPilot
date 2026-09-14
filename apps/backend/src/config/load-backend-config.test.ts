@@ -81,6 +81,22 @@ describe("loadBackendConfig", () => {
     expect(config.publicRuntime.abuseProtection.siteKey).toBe("");
   });
 
+  it("projects the Turnstile site key only in live provider mode", () => {
+    const fakeConfig = loadBackendConfig({
+      ...fakeEnvironment,
+      TURNSTILE_SITE_KEY: "configured-local-site-key",
+    });
+    const liveConfig = loadBackendConfig(liveEnvironment);
+
+    expect(fakeConfig.providers.turnstile.siteKey).toBe(
+      "configured-local-site-key",
+    );
+    expect(fakeConfig.publicRuntime.abuseProtection.siteKey).toBe("");
+    expect(liveConfig.publicRuntime.abuseProtection.siteKey).toBe(
+      liveEnvironment.TURNSTILE_SITE_KEY,
+    );
+  });
+
   it.each(publishedTurnstileTestSiteKeys)(
     "accepts Cloudflare's published test site key %s outside production",
     (siteKey) => {

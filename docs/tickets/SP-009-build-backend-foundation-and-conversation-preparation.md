@@ -98,6 +98,8 @@ Create the first complete Express 5 backend slice, public bootstrap, determinist
 - A built local fake-mode server returned `200 ok`, `200 ready`, and a `200` no-store bootstrap with a signed HttpOnly cookie; the dedicated lifecycle test proved `SIGTERM` closes the listener and releases signal handlers.
 - Response, cookie, log, provider-call, persistence/dependency, forbidden-content, secret, debug-output, and stale-TODO inspections passed.
 - `apps/backend/.env.local` remains ignored. Real Siteverify and live-production readiness remain unchecked because no user-owned Cloudflare/signing credentials or production hostname have been supplied; fake/injected verification made no paid provider call.
+- Post-completion credential audit on 2026-09-14 found and corrected a local-start gap: `server.ts` loads typed configuration from `process.env`, and the new local-only start script deliberately loads the documented ignored `apps/backend/.env.local` through Node's built-in `--env-file` support. The production start path remains host-injected and file-independent; the ignored file was not opened or printed during implementation.
+- The same correction makes the SP-003 public configuration projection mode-aware: `PROVIDER_MODE=fake` publishes an empty Turnstile site key even when the backend environment contains a configured key, while live mode publishes it normally. This keeps the SP-012 client on its deterministic no-network proof whenever the backend verifier is fake.
 
 ## Commit boundary
 

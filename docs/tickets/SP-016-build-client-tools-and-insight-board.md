@@ -37,7 +37,13 @@ Make ScreenPilot's understanding visible by validating five browser client tools
 
 - Do not build a force-directed/draggable/zoomable graph, confidence percentages, card editing UI, or a second mobile data model.
 - Do not score, rank, infer personality/culture fit, sentiment, emotion, accent, protected traits, employability, or English proficiency.
-- Do not save or replay audio; replayable evidence audio remains a future exploration note only.
+- Do not save or replay audio; replayable evidence audio remains a future
+  exploration note only. That later research must compare browser-local capture
+  with ElevenLabs `Store Call Audio`, including provider storage/access,
+  retrieval APIs and scopes, retention/deletion behavior, and reliable
+  start/end timestamp alignment. The current agent keeps provider audio saving
+  off, and real candidate recording requires a separate owner-approved
+  privacy/scope decision.
 - Do not accept a fact-changing tool call without a valid eligible final candidate turn.
 - Do not allow CV provenance in conversation-first.
 

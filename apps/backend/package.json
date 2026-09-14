@@ -7,6 +7,7 @@
     "dev": "tsc --watch --preserveWatchOutput",
     "build": "tsc -p tsconfig.json",
     "start": "node --enable-source-maps dist/server.js",
+    "start:local": "node --env-file=.env.local --enable-source-maps dist/server.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test:unit": "vitest run"

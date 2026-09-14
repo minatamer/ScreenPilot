@@ -1,7 +1,7 @@
 # ScreenPilot live-provider setup runbook
 
 **Ticket:** SP-014A<br>
-**Last verified against first-party documentation:** 2026-09-12<br>
+**Last verified against first-party documentation:** 2026-09-14<br>
 **Scope:** local setup and live-provider readiness only
 
 This is the single owner runbook for preparing ScreenPilot's credentialed local
@@ -110,6 +110,41 @@ unrelated safety limits.
 | `RATE_LIMIT_VOICE_TOKEN_REQUESTS` | `3` | Preserves the strict voice-token request ceiling. |
 | `RATE_LIMIT_SUMMARY_REQUESTS` | `10` | Preserves the existing summary request ceiling. |
 
+### Runtime wiring audit (2026-09-14)
+
+This audit traces the committed variable names only. It did not open or read
+either ignored `.env.local` file and did not contact a provider.
+
+| Environment value | Current code consumer | Current state / ticket ownership |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | The live backend adapter passes it to the OpenAI Responses client as a Bearer credential. | Live CV analysis is implemented by SP-010. The live post-call summarizer and summary route do not exist yet; SP-020 owns them, and the current live summarizer intentionally fails closed. |
+| `ELEVENLABS_API_KEY` | The live backend client sends it only in the server-side `xi-api-key` header when requesting a private conversation token. | Implemented by SP-014; no browser exposure. |
+| `ELEVENLABS_AGENT_ID` | The live token client binds it into the ElevenLabs `agent_id` request and rejects a mismatched requested agent. | Implemented by SP-014; it is not accepted from the browser. |
+| `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. It is a manual/deployed-agent drift check for SP-018/SP-025, not a missing provider-call parameter. |
+| `TURNSTILE_SITE_KEY` | Copied into the allow-listed public bootstrap response, then passed to the frontend Turnstile widget. | Implemented by SP-003/SP-012. This is the only provider value in this group that is public by design. |
+| `TURNSTILE_SECRET_KEY` | The backend sends it to Cloudflare Siteverify in the form body. | Implemented by SP-009 and used before the current CV-analysis and voice-token provider calls. SP-020 will reuse it for summary. |
+| `TURNSTILE_ALLOWED_HOSTNAMES` | The backend compares Siteverify's returned hostname against this exact allow-list. | Implemented by SP-009; `localhost` is the current local-only value. |
+| `INTERVIEW_GRANT_SIGNING_SECRET` | The backend HMAC-signs and verifies short-lived stateless interview grants. | Implemented by SP-009 and used by preparation, CV analysis, and voice-token authorization. |
+| `ANONYMOUS_COOKIE_SECRET` | Express `cookie-parser` verifies the signed, HttpOnly, content-free anonymous-session cookie and signs replacements. | Implemented by SP-009 and used by bootstrap plus protected routes. |
+
+The audit found two activation defects, both corrected on 2026-09-14:
+
+1. `loadBackendConfig()` reads `process.env`. The new local-only
+   `start:backend:local` path uses Node's built-in `--env-file` support to load
+   `apps/backend/.env.local` deliberately. The production `start` path still
+   expects its host to inject `process.env` and never depends on a local file.
+2. In `PROVIDER_MODE=fake`, provider adapters correctly remain fake, but a
+   populated `TURNSTILE_SITE_KEY` is now suppressed from public bootstrap. The
+   frontend therefore uses its deterministic no-network proof in fake mode;
+   live mode alone receives the configured public site key.
+
+`PAID_DEMO_ENABLED=false` disables the current CV-analysis and voice-token use
+cases before either provider is called. Selecting `PROVIDER_MODE=live` creates
+the real clients and validates the complete credential group, but does not by
+itself make a network request. The fixes above make loading the populated local
+file safe in fake mode, but they do not authorize the still-unchecked live-mode
+readiness or provider tests.
+
 Do not place a literal value in this guide. Record only redacted evidence such
 as a key name, last four characters, creation date, expiry, permission summary,
 and where it is stored.
@@ -215,6 +250,37 @@ before using any non-synthetic content.
 
 Only synthetic candidate data is permitted during setup and smoke testing.
 
+#### Temporary synthetic-only input/output sharing
+
+OpenAI may offer free daily usage for eligible API traffic when the owner opts
+in to share that traffic's inputs and outputs with OpenAI. This is not a credit
+grant and does not change ScreenPilot's runtime behavior. OpenAI states that API
+content is not used to train or improve its models by default unless the owner
+explicitly opts in; review the current
+[OpenAI data controls documentation](https://developers.openai.com/api/docs/guides/your-data)
+before changing the dashboard setting.
+
+The owner may temporarily choose **Enabled for selected projects** and select
+only **ScreenPilot** during local, owner-controlled live tests when every CV,
+candidate detail, transcript, and summary is obviously synthetic. Never choose
+**Enabled for all projects**. Fake mode sends no provider traffic, and localhost
+does not make a live provider request local or private. `store: false` controls
+Responses application-state storage; it does not cancel this explicit sharing
+opt-in.
+
+Before the first real CV, real candidate detail, external tester, or public
+deployment:
+
+1. Stop before sending any provider request and warn the owner that sharing is
+   still enabled.
+2. Open OpenAI API Platform `Organization settings > Data controls` and set
+   **Share inputs and outputs with OpenAI** to **Disabled**.
+3. Verify the disabled state after saving. Record only “OpenAI input/output
+   sharing disabled,” the project name, and the verification date—never
+   candidate content, a key, or account/billing identifiers.
+4. Treat a missing login, unclear state, or failed save as a blocker for the
+   real-data or public run.
+
 ### 7. Rotation and revocation
 
 Create and install a replacement key first, restart and verify the backend with
@@ -283,10 +349,11 @@ changes creates an immutable version. If the UI offers a separate publish or
 deployment action, keep the agent private and do not expose a public channel.
 Record the active version ID after the locked configuration is saved.
 
-The source target currently keeps `agentRevisionId: null`. Leave it null until
-the owner has compared the saved private agent against the entire locked
-matrix. Recording the verified provider version in source is a separate,
-owner-authorized follow-up; the value is not guessed from an agent ID.
+The owner compared the saved private agent against the locked matrix and
+published Main on 2026-09-14. The verified immutable version is recorded as
+`agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr"` in the source target.
+This value came from the dashboard's version history and was not guessed from
+an agent ID.
 
 Authority: [agent versioning](https://elevenlabs.io/docs/eleven-agents/operate/versioning).
 
@@ -445,6 +512,37 @@ webhooks as the way to retrieve data from ZRM calls. ScreenPilot does not add a
 webhook or durable candidate store to work around that limitation. If ZRM
 prevents the required client events or is unavailable, leave it off, retain
 audio saving off and retention at zero days, and record the limitation.
+
+#### Deferred research: ElevenLabs-managed call audio
+
+`Store Call Audio` remains **off** for the current demo. Its presence in the
+dashboard is preserved as a future product-research option for replayable
+evidence audio; it is not authorization to record a candidate or to change the
+current transcript-only design.
+
+Before proposing that the switch be enabled, answer and document all of the
+following from current first-party ElevenLabs documentation and a synthetic
+test call:
+
+- **Storage:** where the recording is stored, which workspace users or provider
+  personnel can access it, its encryption/residency behavior, applicable plan
+  limits and costs, and how `Store Call Audio`, retention `0`, deletion timing,
+  Zero Retention Mode, and manual deletion interact.
+- **Retrieval:** whether recordings are retrievable through the dashboard,
+  API, or both; the required API-key scope; returned format or expiring URL;
+  download/stream/export behavior; and how access and deletion are verified.
+- **Timestamps:** whether ElevenLabs exposes reliable recording, turn, segment,
+  word, or transcript start/end timestamps; the clock/offset reference used;
+  whether interruptions and reconnects preserve alignment; and whether a
+  bounded evidence excerpt can be derived without keeping a full recording in
+  ScreenPilot.
+
+Also decide explicit recording consent and disclosure, candidate access and
+deletion handling, retention duration, authorization, mobile/browser behavior,
+playback echo prevention, and the threat/cost model. Any experiment must use
+synthetic voices and data first. Enabling provider recording for real candidate
+content requires a separate owner-approved scope/privacy decision and updated
+product copy, tests, runbook, and source-of-truth controls.
 
 ### 8. Create the narrow credential
 
@@ -627,26 +725,135 @@ a successful provider setup or live test.
 
 ### Phase B: owner account setup
 
-- [ ] OpenAI ScreenPilot project exists with API billing, model access,
-  conservative project limits, alerts, and a narrow key.
-- [ ] ElevenLabs plan/cost controls are reviewed, the private Blank agent is
-  configured exactly, and a narrow expiring or rotation-tracked key exists.
-- [ ] Turnstile local Managed widget exists for `localhost`.
-- [ ] Provider plan limitations and dashboard label differences are recorded.
+Owner-reported OpenAI checkpoint on 2026-09-14. This records only safe setup
+state, not a payment method, account identifier, key, or billing screenshot:
+
+- [x] The dedicated API project is named **ScreenPilot**.
+- [x] The `gpt-5.4-mini` alias is allowed; the dated model snapshot shown during
+  setup was left unselected.
+- [x] USD 5 of initial prepaid API credits were purchased and auto-reload is
+  disabled.
+- [x] The organization monthly spend limit is USD 5 with hard-limit enforcement
+  enabled.
+- [x] Organization spend alerts are configured at 20%, 50%, 80%, and 100% of
+  the USD 5 monthly hard limit: USD 1, USD 2.50, USD 4, and USD 5. The owner
+  verified the dashboard list on 2026-09-14.
+- [x] Input/output sharing is enabled only for the selected ScreenPilot project
+  under the synthetic-only exception above. Eligible shared traffic may receive
+  free daily usage; this is not treated as a guaranteed credit grant.
+- [ ] Input/output sharing is disabled and re-verified before any real CV, real
+  candidate detail, external tester, or public use.
+- [x] The owner reports that the `ScreenPilot local backend` project key was
+  created with restricted permissions, a finite expiry, and only Responses
+  write access, then saved as `OPENAI_API_KEY` in the ignored backend
+  environment file. The key value was never shared with or read by the coding
+  agent.
+- [x] The ElevenLabs subscription is owner-verified as Free at USD 0/month,
+  with 15 included agent-call minutes, 4 plan-level concurrent calls, and API
+  access. ScreenPilot's stricter per-agent controls remain 5 calls/day and 1
+  concurrent call. By explicit owner decision, no upgrade, Pay As You Go
+  purchase, or paid overage is enabled at this stage.
+- [x] The owner reports that the `ScreenPilot local backend` user key was
+  created with a 30-day expiry, a 2,500-credit quota, restricted access, only
+  `ElevenAgents: Read`, no IP allow-list, and automatic leak disabling enabled,
+  then saved as `ELEVENLABS_API_KEY` in the ignored backend environment file.
+  The key value was never shared with or read by the coding agent.
+- [x] The owner reports that the existing private agent now requires signed
+  authentication; all client overrides are off; initiation and post-call
+  webhooks are off; the daily call limit is 5; the concurrent call limit is 1;
+  and burst pricing and call queuing are off.
+- [x] The owner reports that `Store Call Audio` is off, retention is 0 days,
+  transcript/derived-field deletion and audio deletion are enabled, and the
+  setting was not retroactively applied to existing conversations. Zero
+  Retention Mode remains off because compatibility with the locked native LLM
+  and required events has not been established.
+- [x] The owner reports that chat mode and file attachments are off, Scribe v2
+  Realtime is selected by Turn V3, turn eagerness is Normal, take-turn-after-
+  silence is 12 seconds, end-after-silence is disabled, and maximum
+  conversation duration is 480 seconds. The remaining visible advanced
+  controls are unchanged from the audited disabled/provider-default state.
+- [x] The owner selected the single voice labelled **Bella - Professional,
+  Bright, Warm** with the **Flash** TTS family. The provider voice ID was later
+  copied into the ignored backend environment file; the display label is not
+  used as an identifier.
+- [x] The first message is exactly `Hi, what's your name?`; English is the only
+  language; GPT-5.4 Mini is primary with reasoning set to None, reasoning
+  summaries off, a 160-token limit, backup LLM disabled, soft timeout disabled,
+  parallel tool calling off, and temperature unset. Expressive Mode remains
+  off. A bounded role-neutral placeholder prompt is installed until SP-017.
+- [x] The exact six dynamic-variable names are referenced by the placeholder
+  prompt and have text-only synthetic dashboard-preview defaults:
+  `sp017-pending`, `conversation_first`, `synthetic demo only`,
+  `universal HR topics only`, `undecided`, and `no CV supplied`. These defaults
+  contain no real CV or candidate content and will be replaced with bounded
+  session values by the later runtime integration.
+- [x] The exact five case-sensitive names `recordInsight`, `correctInsight`,
+  `markTopic`, `recordCandidateQuestion`, and `requestFollowup` are attached as
+  Client tools. Each currently has only the explicit SP-016-reserved
+  description, no parameters, no dynamic-variable assignments, no response
+  mock, and wait-for-response off. All system tools remain off; no webhook,
+  integration, server, code, or MCP tool was added. SP-016 still owns the final
+  schemas, descriptions, handlers, and response behavior.
+- [x] Guardrails and procedures are disabled/empty; workflow, knowledge base,
+  extra branches, and traffic splits are absent; only Main receives 100% of
+  traffic. Topic discovery, sentiment analysis, transcript translation, and
+  source attribution are off; evaluation criteria and data collection each
+  contain zero items. The unused default analysis-model selector is unchanged
+  and does not authorize a post-call analysis job.
+- [x] The existing agent's editable title is **ScreenPilot**. A stale selector
+  label may continue to show the provider's earlier default until refresh; the
+  editable agent title is the recorded owner-verified identity. No second agent
+  was created.
+- [x] The owner copied the existing ScreenPilot agent ID from the dashboard URL
+  into `ELEVENLABS_AGENT_ID` in the ignored backend environment file. The
+  identifier value was not shared with or read by the coding agent.
+- [x] The owner copied the selected Bella provider voice ID into
+  `ELEVENLABS_VOICE_ID` in the ignored backend environment file. The identifier
+  value was not shared with or read by the coding agent.
+- [x] The owner published the reviewed configuration to ScreenPilot/Main. The
+  branch is owner-verified as Live at 100%, has no pending Draft badge, and the
+  Publish control is disabled because no unapplied changes remain. No Preview
+  conversation was started.
+- [x] The single private ScreenPilot agent is configured against the locked
+  matrix; its agent and voice identifiers are populated only in the ignored
+  backend environment file, and immutable version
+  `agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` is recorded in source. The existing
+  default agent was reused rather than creating a duplicate.
+- [x] The owner created the free `ScreenPilot local live` Turnstile widget in
+  Managed mode with only `localhost` authorized and pre-clearance off. No
+  Cloudflare zone, Worker, proxy, WAF rule, API token, paid plan, or Spin setup
+  was created.
+- [x] Provider plan limitations and observed dashboard labels are recorded;
+  the remaining usage-summary check does not authorize a Preview or paid call.
 
 ### Phase C: local secret entry
 
-- [ ] Both `.env.local` paths are confirmed ignored.
-- [ ] Provider values are copied only into `apps/backend/.env.local`.
-- [ ] The two locally generated signing secrets are at least 32 characters and
-  different.
+- [x] Both `.env.local` paths are confirmed ignored by `.gitignore`; neither
+  file existed when rechecked on 2026-09-14.
+- [x] The OpenAI project key was copied only into
+  `apps/backend/.env.local`; its value was not inspected.
+- [x] The ElevenLabs user key was copied only into
+  `apps/backend/.env.local`; its value was not inspected.
+- [x] The ElevenLabs agent and voice identifiers are copied only into
+  `apps/backend/.env.local`; neither value was inspected by the coding agent.
+- [x] The Turnstile site key and secret key are copied only into
+  `apps/backend/.env.local`; `TURNSTILE_ALLOWED_HOSTNAMES` is exactly
+  `localhost`. Neither key value was shared with or read by the coding agent.
+- [x] The owner reports that the two locally generated signing secrets are at
+  least 32 characters, different from one another, and stored only in the
+  ignored backend environment file. Neither value was shared with or inspected
+  by the coding agent.
 - [ ] The frontend file contains only the local backend origin.
 - [ ] No secret appears in `git status`, `git diff`, documentation, screenshots,
   shell history, logs, or chat.
 
 ### Phase D: safe configuration readiness
 
-- [ ] With `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`, targeted
+- [x] Correct the SP-009 backend local-start path so it deliberately loads the
+  ignored backend environment file without printing it.
+- [x] Make the SP-003/SP-012 public Turnstile site-key projection mode-aware so
+  fake mode cannot load a real widget while the backend uses fake verification.
+- [x] With `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`, targeted
   deterministic checks still pass.
 - [ ] The owner temporarily selects `PROVIDER_MODE=live` while keeping
   `PAID_DEMO_ENABLED=false`, then confirms startup accepts only the complete

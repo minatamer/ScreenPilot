@@ -12,7 +12,7 @@ export const ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING = 160;
 
 export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   agentConfigVersion: ELEVENLABS_AGENT_CONFIG_VERSION,
-  agentRevisionId: null,
+  agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr",
   clientTools: VOICE_CLIENT_TOOL_NAMES,
   conversation: {
     firstMessage: "Hi, what's your name?",

@@ -13,7 +13,7 @@ import {
 describe("source-controlled ElevenLabs agent configuration", () => {
   it("locks the approved model, transport behavior, privacy, and duration", () => {
     expect(SCREENPILOT_ELEVENLABS_AGENT_CONFIG).toMatchObject({
-      agentRevisionId: null,
+      agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr",
       conversation: {
         firstMessage: "Hi, what's your name?",
         interruptionsEnabled: true,

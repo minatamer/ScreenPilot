@@ -82,7 +82,18 @@ No provider credentials are required for the default fake mode.
 
 ## Run locally
 
-Start the Next.js application:
+Build and start the backend with the ignored local environment file:
+
+```bash
+pnpm build:backend
+pnpm start:backend:local
+```
+
+`start:backend:local` uses Node's built-in `--env-file` support to load
+`apps/backend/.env.local` into the backend process. The production `start`
+script remains environment-injection only and never depends on a local file.
+
+Start the Next.js application in another terminal:
 
 ```bash
 pnpm dev:frontend
@@ -90,7 +101,9 @@ pnpm dev:frontend
 
 Then open [http://localhost:3000](http://localhost:3000).
 
-When working on backend modules, start the backend workspace in TypeScript watch mode in a second terminal:
+When editing backend modules, the backend workspace can compile changes in
+TypeScript watch mode in an additional terminal. Restart the local backend
+process when a compiled change must be loaded:
 
 ```bash
 pnpm dev:backend

@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
-Last synchronized: 2026-09-11<br>
+Last synchronized: 2026-09-14<br>
 Depends on: SP-010A, SP-017, SP-018, SP-021, SP-022, SP-023, SP-024<br>
 Suggested commit: `SP-025: complete focused demo release checks`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -27,6 +27,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 
 - Run all unpaid/fake release checks before asking for live values. The controlled live pass needs the complete user-supplied OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit permission to incur provider charges.
 - Confirm both local `.env.local` paths are ignored and absent from `git status` before the user fills the backend file. Never record secret values in the manual matrix, defect evidence, screenshots, network exports, or provider-revision notes.
+- Before any real candidate content, external tester, or public release, explicitly warn the owner if OpenAI input/output sharing is enabled, require `Organization settings > Data controls > Share inputs and outputs with OpenAI` to be **Disabled**, and record only the project name, disabled state, and verification date. Localhost and `store: false` do not waive this gate.
 - If credentials, account balance, production widget, or paid-test permission are unavailable, do not fake a live pass. Record every unpaid result, mark the two live smoke interviews/real-host challenges blocked, and withhold release approval until the manual gate is satisfied.
 
 ## Scope boundaries
@@ -77,6 +78,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Use a written manual matrix recording environment, viewport/browser, scenario, result, evidence, and defect link.
 - [ ] Re-run the smallest affected scenario/check after each fix and the complete quick gate only at the final boundary.
 - [ ] Review provider dashboards/logs/browser storage after controlled live smokes for cost and privacy expectations.
+- [ ] Verify OpenAI input/output sharing is disabled before any real-data or public run; block release if the dashboard state cannot be confirmed.
 - [ ] Verify the cost file contains no CV/transcript text, candidate identity, API key, account ID, Turnstile token, or secret-bearing billing screenshot.
 - [ ] Obtain explicit user approval of the release candidate and unresolved non-blocking limitations.
 

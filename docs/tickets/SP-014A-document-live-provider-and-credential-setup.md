@@ -1,9 +1,9 @@
 # SP-014A — Document complete live-provider and credential setup
 
 Status: Required<br>
-Implementation state: Complete as documentation-only work; owner account setup, secret entry, live-provider checks, and microphone verification remain pending<br>
+Implementation state: Complete as documentation-led setup work; owner-reported provider accounts, keys, ElevenLabs agent, Turnstile widget, and local signing-secret setup are complete, both runtime activation fixes are implemented, and live-provider plus microphone verification remain pending<br>
 Milestone: Milestone 2 — browser voice experience<br>
-Last synchronized: 2026-09-12<br>
+Last synchronized: 2026-09-14<br>
 Depends on: SP-003, SP-009, SP-010, SP-012, SP-014<br>
 Suggested commit: `SP-014A: document live provider and credential setup`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -111,6 +111,7 @@ The guide must walk the owner through:
 6. Copying the newly displayed key once and placing it only in backend `OPENAI_API_KEY`.
 7. Confirming direct calls remain backend-only, use Responses with `store: false`, use bounded structured input/output, and never use this key for ElevenLabs, browser code, or client-side Realtime.
 8. Locating usage, costs, limits, key last-use data, and revocation. Include safe replacement-first rotation instructions.
+9. Documenting that OpenAI input/output sharing may be temporarily enabled only for the selected ScreenPilot project during synthetic-only owner-controlled testing, never for all projects, and must be disabled with an explicit owner warning before any real CV, real candidate detail, external tester, or public use. Clarify that localhost is not a privacy boundary and `store: false` does not override the dashboard opt-in.
 
 Record the two GPT paths separately:
 
@@ -285,6 +286,7 @@ End with separate checklists for **documentation complete**, **accounts configur
 ## Implementation checklist
 
 - [x] Re-audit active code, environment examples, manifests, operations docs, and tickets for every non-deployment service and credential.
+- [x] Trace every configured provider/local value to its runtime consumer, record deliberate future-ticket deferrals, and correct both activation gaps without opening an ignored environment file.
 - [x] Research every setup path from current first-party docs and record a last-verified date.
 - [x] Create `docs/operations/live-provider-setup.md` using the required provider template.
 - [x] Reconcile or redirect the existing ElevenLabs guide without broken links.
@@ -303,13 +305,14 @@ End with separate checklists for **documentation complete**, **accounts configur
 - [x] A new owner can identify every current non-deployment account and value without reading source or guessing ownership.
 - [x] Every field in both environment examples is explained, explicitly safe/defaulted, or assigned to SP-026.
 - [x] OpenAI instructions distinguish ChatGPT from API Platform, direct GPT from ElevenLabs GPT, restricted keys from admin keys, and soft budgets from enforceable/prepaid limits.
+- [x] OpenAI input/output sharing is documented as a selected-project, synthetic-only temporary exception with a mandatory disabled-state warning and verification gate before real candidate data or public use.
 - [x] ElevenLabs instructions cover every visible and advanced dashboard section, not only prompt, voice, language, and LLM.
 - [x] The ElevenLabs matrix exactly matches `SCREENPILOT_ELEVENLABS_AGENT_CONFIG`; unresolved settings are deferred, not invented.
 - [x] Turnstile instructions cover widget creation, Managed mode, hostname syntax, public/secret separation, all actions, Siteverify, deterministic tests, and no hosting/proxy requirement.
 - [x] The guide concludes whether any fourth credentialed non-deployment third party exists; adding one requires architecture reconciliation.
 - [x] The fake-to-live sequence cannot accidentally authorize a paid call before credentials, safeguards, and approval exist.
 - [x] No secret enters frontend configuration, docs, committed examples, URLs, logs, screenshots, prompts, storage, or build arguments.
-- [x] Owner account changes, secret entry, paid calls, microphone checks, and deployment remain visibly unchecked.
+- [x] Owner account changes, secret entry, paid calls, microphone checks, and deployment were left visibly unchecked during documentation implementation; later owner-reported progress is tracked separately in the runbook.
 - [x] Google Cloud/Firebase/domain/deployment instructions are absent except links to SP-026 ownership.
 
 ## Focused verification
@@ -345,5 +348,20 @@ Keep SP-014A as one documentation-only change represented by `SP-014A: document 
 - Inventory: OpenAI, ElevenLabs, Turnstile, and two local signing secrets are the complete non-deployment credential groups. No fourth credentialed runtime provider exists.
 - ElevenLabs audit: the source-locked agent matrix and every relevant advanced-settings group are classified as configured, disabled, provider-default, deferred, account-dependent, or not applicable.
 - Verification: targeted Prettier, `git diff --check`, environment/config comparisons, secret-pattern checks, and `git check-ignore` completed without a live provider call.
-- Still unchecked: owner account setup, ignored secret entry, dashboard publication/verification, paid calls, real Turnstile, live WebRTC, microphone/manual responsive checks, provider cost/retention evidence, and all SP-026 deployment work.
-- Safety: no credential was read or written, no dashboard/account was mutated, no `.env.local` file was created or opened, and no paid, live-provider, or microphone test ran.
+- Owner progress reported on 2026-09-14: the ScreenPilot OpenAI API project, `gpt-5.4-mini` allow-list, USD 5 initial prepaid credits, disabled auto-reload, USD 5 enforced monthly hard limit, spend alerts at 20%/50%/80%/100%, selected-project synthetic-only input/output sharing, and the restricted finite-expiry `ScreenPilot local backend` OpenAI key with Responses write access only are configured. The owner also reports that the ElevenLabs `ScreenPilot local backend` user key was created with a 30-day expiry, 2,500-credit quota, restricted `ElevenAgents: Read` access only, no IP allow-list, and automatic leak disabling, then saved only in the ignored backend environment file. The private agent's reported partial checkpoint now covers signed authentication, disabled client overrides and webhooks, 5 daily/1 concurrent call limits with burst pricing and queueing off, call-audio storage off, 0-day deletion settings, chat/file inputs off, Scribe v2 Realtime/Turn V3, Normal eagerness, a 12-second silence threshold, disabled end-after-silence, and a 480-second maximum duration. Neither key value was shared with or read by the coding agent. No account identifier, payment method, key value, or billing screenshot is recorded.
+- The same ElevenLabs checkpoint now includes the exact first message, English-only language, GPT-5.4 Mini with reasoning None and a 160-token ceiling, disabled backup LLM/reasoning summary/soft timeout/parallel tool calling/Expressive Mode, unset temperature, a bounded role-neutral placeholder prompt, and the owner-selected **Bella - Professional, Bright, Warm** voice using the Flash TTS family.
+- The owner also reports that the exact six dynamic-variable names are present with text-only synthetic dashboard-preview defaults; SP-017 still owns their bounded per-session runtime rendering.
+- The owner also reports that the exact five case-sensitive client-tool names are attached as Client tools with placeholder-only descriptions, no parameters, assignments, mocks, or response waiting; every system tool remains off and no webhook, integration, server, code, or MCP tool was added. SP-016 still owns the functional schemas and browser handlers.
+- The dashboard audit also confirms empty/disabled guardrails and procedures; no workflow, knowledge base, extra branch, or traffic split; only Main at 100%; topic discovery, sentiment analysis, transcript translation, and source attribution off; and zero evaluation criteria/data points.
+- The existing agent's editable title is now **ScreenPilot** and no duplicate agent was created; any stale provider selector label remains a final pre-publication recheck.
+- The owner copied the existing dashboard agent ID into `ELEVENLABS_AGENT_ID` in the ignored backend environment file without sharing it with the coding agent.
+- The owner copied the selected Bella provider voice ID into `ELEVENLABS_VOICE_ID` in the ignored backend environment file without sharing it with the coding agent.
+- The reviewed configuration is published to ScreenPilot/Main, owner-verified as Live at 100% with no pending Draft badge; no Preview conversation ran.
+- Immutable version `agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` is recorded as `agentRevisionId` in the source-controlled provider target after the owner compared and published the locked dashboard configuration.
+- The ElevenLabs subscription is owner-verified as Free at USD 0/month with 15 included agent-call minutes; by explicit owner decision, no upgrade, Pay As You Go purchase, or paid overage is enabled.
+- The owner created the free `ScreenPilot local live` Turnstile widget in Managed mode with only `localhost` authorized and pre-clearance off, then populated its site key, secret key, and exact allowed hostname only in the ignored backend environment file. Neither key was shared with the coding agent, and no Cloudflare zone, Worker, proxy, WAF rule, API token, paid plan, or Spin setup was created.
+- The owner reports that the two locally generated application secrets are present, at least 32 characters, different from one another, and stored only in the ignored backend environment file; neither value was shared with or inspected by the coding agent.
+- Runtime wiring audit: the OpenAI key is wired to the SP-010 live CV adapter, while SP-020 still owns the absent live summary route/adapter; the ElevenLabs key and agent ID are wired to SP-014 private token creation; the voice ID is intentionally configuration/drift evidence because the published agent owns its voice; Turnstile site/secret/hostnames are wired across bootstrap, widget rendering, Siteverify, and current CV/voice gates; and both local secrets are wired to their HMAC/cookie consumers.
+- Activation fixes completed without reading a credential: the new local-only backend launcher loads `apps/backend/.env.local` through Node's built-in environment-file support, and fake mode now suppresses a populated Turnstile site key from public bootstrap while live mode exposes it normally.
+- Still unchecked after that report: the mandatory OpenAI sharing-disabled gate before real/external/public use, the ready-but-disabled live configuration check, live provider calls, live WebRTC, microphone/manual responsive checks, provider usage/retention evidence, and all SP-026 deployment work.
+- Documentation-implementation safety: no credential was read or written, the coding work did not mutate a dashboard/account, no `.env.local` file was created or opened, and no paid, live-provider, or microphone test ran. The owner performed the separately recorded OpenAI dashboard steps.

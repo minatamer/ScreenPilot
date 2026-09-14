@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-14<br>
 Depends on: SP-006, SP-009, SP-010, SP-014, SP-020  
 Suggested commit: `SP-023: harden stateless data handling`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -20,6 +20,7 @@ Audit and harden the complete browser/backend/provider boundary so candidate con
 - Original PDF/raw text are memory-only; audio streams to ElevenLabs but is never recorded by ScreenPilot.
 - Backend request bodies are not logged and no candidate-content database/filesystem write exists.
 - Direct OpenAI Responses calls use `store: false`; ElevenLabs audio saving is off and transcript retention uses the shortest locked setting.
+- OpenAI input/output sharing may be enabled only as the documented selected-project exception for synthetic-only local live tests. It must be disabled and verified after an explicit owner warning before any real CV, real candidate detail, external tester, or public use; `store: false` does not override the sharing opt-in.
 - The safety cookie is content-free, signed, Secure, HttpOnly, and SameSite=Lax.
 - CSP must permit only exact documented ElevenLabs and Cloudflare Turnstile script/frame/connect origins needed by the app; avoid broad wildcards.
 - Turnstile Siteverify receives no CV, transcript, insight, salary, name, or audio content.
@@ -51,6 +52,7 @@ Audit and harden the complete browser/backend/provider boundary so candidate con
 - [ ] Audit browser storage and memory lifecycle for both modes, including Clear session and conversation-first provenance.
 - [ ] Audit filesystem/object/database/queue code paths and prove none can persist candidate artifacts.
 - [ ] Verify OpenAI/ElevenLabs retention/audio settings and disclosure wording.
+- [ ] Verify OpenAI input/output sharing is **Disabled** before any real-data or public run and record only the non-secret dashboard state and verification date.
 - [ ] Consolidate the approved privacy/demo-limitation wording in the filename-level privacy feature and reuse it on landing/preflight without introducing a third application route.
 - [ ] Add dependency, secret, and prompt-injection scanning/fixtures without paid calls.
 - [ ] Review error reporting/browser diagnostics for content-free codes only.

@@ -410,7 +410,10 @@ export const createBackendConfigCandidate = (
     abuseProtection: {
       appearance: LOCKED_PROVIDER_SETTINGS.turnstileAppearance,
       provider: LOCKED_PROVIDER_SETTINGS.turnstileProvider,
-      siteKey: environment.TURNSTILE_SITE_KEY,
+      siteKey:
+        environment.PROVIDER_MODE === "live"
+          ? environment.TURNSTILE_SITE_KEY
+          : "",
     },
     limits: PUBLIC_RUNTIME_LIMITS,
     paidVoiceEnabled: environment.PAID_DEMO_ENABLED,

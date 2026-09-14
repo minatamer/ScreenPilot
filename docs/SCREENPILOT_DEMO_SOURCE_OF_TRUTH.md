@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-09-11<br>
+Last revised: 2026-09-14<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -1656,6 +1656,7 @@ This is the authoritative credential contract for every implementation ticket. T
 - No usable OpenAI, ElevenLabs, Turnstile, signing, cookie, Google, registrar, or provider credential is ever committed. A browser-visible site key or non-secret deployment identifier may be deployed, but it remains blank in repository templates until the user selects the actual account/project/widget.
 - Provider secrets are backend-only. They never use a `NEXT_PUBLIC_` prefix, enter the frontend environment, pass through bootstrap, appear in browser storage, or become Docker build arguments.
 - Cloudflare's published Turnstile test keys may be injected by test code/configuration only. The committed `.env.example` fields stay blank, and production rejects test keys.
+- OpenAI's optional input/output-sharing incentive is a temporary synthetic-test exception, not the privacy default. The owner may enable it only for the selected ScreenPilot API project while every live request uses synthetic candidate data; enabling it for all projects is forbidden. Localhost does not keep a live provider request local, and `store: false` does not override an explicit dashboard sharing opt-in. Before the first real CV, real candidate detail, or public use, the coding agent or operator must stop, warn the owner, require sharing to be set to **Disabled**, and record only a non-secret verification of that dashboard state. Any uncertainty blocks the real-data or public run.
 
 #### Canonical local files and values
 
@@ -1755,6 +1756,39 @@ Both `.env.local` paths must be reported by `git check-ignore` and absent from `
 | `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` | In the Cloudflare dashboard, open **Turnstile → Add widget**, choose **Managed**, enter allowed hostnames, create it, and copy both values as described in the [widget guide](https://developers.cloudflare.com/turnstile/get-started/widget-management/dashboard/). The site key is public; the secret is backend-only. Use `appearance: interaction-only` in client rendering. No Cloudflare API token or proxied DNS is required. | All three paid action gates; production setup in SP-026. | Fakes or Cloudflare's [published test-key flow](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) work outside production; real-host validation stays blocked. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | Enter the exact local/test hostname for non-production or the canonical apex/`www` values created in SP-026. Keep production widgets free of localhost hostnames. | Strict Siteverify hostname checks. | Fake/test verification only. |
 | `INTERVIEW_GRANT_SIGNING_SECRET` and `ANONYMOUS_COOKIE_SECRET` | Generate two different values locally, for example by running `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"` twice, and paste them manually only into the ignored backend file or Google Secret Manager. | Stateless grant and content-free cookie signing from SP-009 onward. | Tests inject deterministic values; live startup/readiness fails closed. |
+
+#### Credential runtime-wiring audit (2026-09-14)
+
+The committed source trace confirms that all nine configured values enter the
+typed backend configuration boundary. The current consumers and deliberate
+deferrals are:
+
+| Value | Runtime use | Implementation state |
+| --- | --- | --- |
+| `OPENAI_API_KEY` | Backend-only Bearer credential for the Responses client. | SP-010 live CV analysis is wired. SP-020 has not been implemented, so the live summary adapter and route are intentionally unavailable. |
+| `ELEVENLABS_API_KEY` | Backend-only `xi-api-key` credential for private conversation-token creation. | Wired by SP-014. |
+| `ELEVENLABS_AGENT_ID` | Server-owned ElevenLabs `agent_id` for the conversation-token request. | Wired by SP-014 and never accepted from the browser. |
+| `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018/SP-025 own manual drift/live acceptance. |
+| `TURNSTILE_SITE_KEY` | Allow-listed bootstrap field used by the browser widget. | Wired by SP-003/SP-012 and public by design. |
+| `TURNSTILE_SECRET_KEY` | Backend Siteverify secret. | Wired by SP-009 for the current CV and voice gates; SP-020 will reuse it for summary. |
+| `TURNSTILE_ALLOWED_HOSTNAMES` | Exact backend comparison against Siteverify's hostname. | Wired by SP-009. |
+| `INTERVIEW_GRANT_SIGNING_SECRET` | HMAC issue/verify key for stateless interview grants. | Wired by SP-009. |
+| `ANONYMOUS_COOKIE_SECRET` | Express signed-cookie secret for the content-free anonymous session. | Wired by SP-009. |
+
+The trace also found two activation defects, corrected together on 2026-09-14.
+First, the backend loader reads `process.env`, so a local-only start command now
+uses Node's built-in `--env-file` support to load
+`apps/backend/.env.local`; the production start path remains host-injected and
+file-independent. Second, fake mode still selects fake adapters and now also
+projects an empty public Turnstile site key even when the local file contains a
+real one. Live mode alone projects the configured site key. This keeps the
+populated local file compatible with deterministic, network-free fake mode.
+
+`PAID_DEMO_ENABLED=false` rejects the currently implemented CV-analysis and
+voice-token use cases before provider calls. `PROVIDER_MODE=live` validates and
+constructs the live clients but does not itself make a provider request. This
+audit and correction read no ignored credential file and made no live or paid
+call.
 
 The direct `OPENAI_API_KEY` is **not** copied into ElevenLabs for this plan. ElevenLabs documents that its natively integrated OpenAI models use ElevenLabs' internal provider credentials; [Custom LLM/BYOK](https://elevenlabs.io/docs/eleven-agents/customization/llm/custom-llm) is a separate path and remains out of scope. The app's OpenAI key is only for the backend CV-analysis and summary calls.
 
@@ -3425,12 +3459,99 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 **Checklist:**
 
 - [x] Audit active code, environment examples, and tickets to prove the complete non-deployment credentialed-service inventory.
+- [x] Trace every local provider identifier and signing secret from environment validation through its current runtime consumer; record the SP-020 summary deferral and intentional agent-owned voice selection, then correct the two local activation defects without reading an ignored file.
 - [x] Consolidate the OpenAI API Platform, ElevenLabs ElevenAgents, Cloudflare Turnstile, local-secret, fake-to-live, spend, rotation, and owner-verification guides under `docs/operations/`.
 - [x] Audit every ElevenLabs dashboard and advanced setting against the source-controlled agent target; mark each configured, disabled, deferred, account-dependent, or not applicable.
 - [x] Distinguish direct backend GPT access from ElevenLabs' native GPT integration and keep the ScreenPilot OpenAI key out of ElevenLabs and the browser.
 - [x] Document one restricted local Turnstile Managed widget, exact hostname/action/Siteverify ownership, and why Cloudflare hosting, proxying, DNS, WAF, and an API token are unnecessary here.
 - [x] Keep every user-owned value blank, every account/dashboard/local-secret action owner-only, and every paid/microphone check explicitly unverified.
 - [x] Exclude Google Cloud, Firebase, domains, DNS, GitHub deployment identity, and all other SP-026 deployment work.
+
+**Owner-reported OpenAI setup checkpoint (2026-09-14):** The ScreenPilot API
+project, `gpt-5.4-mini` allow-list, USD 5 initial prepaid credits, disabled
+auto-reload, USD 5 enforced monthly hard limit, 20%/50%/80%/100% spend alerts,
+and selected-project-only synthetic-data sharing are configured. The owner also
+reports that the restricted finite-expiry `ScreenPilot local backend` key has
+Responses write access only and is stored as `OPENAI_API_KEY` solely in the
+ignored backend environment file; the coding agent never read its value. The
+required sharing-disabled gate before real candidate, external tester, or
+public use remains unchecked. The detailed safe ledger is maintained in
+`docs/operations/live-provider-setup.md`; it never records payment details,
+account identifiers, or secret values.
+
+**Owner-reported ElevenLabs key checkpoint (2026-09-14):** The owner reports
+that the `ScreenPilot local backend` user key has a 30-day expiry, a
+2,500-credit quota, restricted `ElevenAgents: Read` access only, no IP
+allow-list, and automatic leak disabling enabled. It is stored as
+`ELEVENLABS_API_KEY` solely in the ignored backend environment file; the coding
+agent never read its value. The owner also reports that the existing private
+agent now uses signed authentication with every client override off; no
+initiation/post-call webhook; 5 calls per day; 1 concurrent call; no burst
+pricing or queueing; no stored call audio; 0-day scheduled retention with
+transcript/derived-field and audio deletion enabled; chat mode and file
+attachments off; Scribe v2 Realtime with Turn V3; Normal eagerness; a 12-second
+take-turn silence threshold; no end-after-silence cutoff; and a 480-second
+maximum duration. The owner selected the single voice labelled **Bella -
+Professional, Bright, Warm** with the Flash TTS family; its provider ID is
+populated only in the ignored backend environment file. The exact first
+message, English-only language, GPT-5.4 Mini,
+reasoning None, 160-token ceiling, disabled backup LLM/reasoning summary/soft
+timeout/parallel tool calling/Expressive Mode, unset temperature, and bounded
+role-neutral placeholder prompt are configured. Zero Retention Mode remains off
+pending compatibility. The subscription is owner-verified as Free at USD
+0/month with 15 included agent-call minutes and no upgrade, Pay As You Go
+purchase, or paid overage enabled. Live token/WebRTC verification remains
+unchecked. The safe ledger is maintained in
+`docs/operations/live-provider-setup.md`.
+
+The owner reports that all six source-locked dynamic-variable names are now
+present in the dashboard placeholder prompt with text-only synthetic preview
+defaults. These are replaceable preview values, not candidate hardcodes; the
+names remain the fixed cross-boundary contract and SP-017 owns their bounded
+per-session runtime rendering.
+
+The owner also reports that all five source-locked, case-sensitive client-tool
+names are attached as Client tools with placeholder-only descriptions, no
+parameters, assignments, mocks, or response waiting. All system tools remain
+off and no webhook, integration, server, code, or MCP tool was added. SP-016
+still owns their final schemas, descriptions, browser handlers, and response
+behavior; the placeholders must not be treated as a functional tool setup.
+
+The owner reports that guardrails and procedures are disabled/empty; workflow,
+knowledge base, additional branches, and traffic splits are absent; only Main
+receives 100% of traffic; topic discovery, sentiment analysis, transcript
+translation, and source attribution are off; and evaluation/data-collection
+lists are empty. The unused default analysis-model selector was not treated as
+permission to run post-call analysis.
+
+The owner renamed the existing agent's editable title to **ScreenPilot**; no
+second agent was created. Any stale provider selector label is not treated as a
+second identity and must be rechecked after refresh before final publication.
+The owner reports that the dashboard agent ID was copied into
+`ELEVENLABS_AGENT_ID` in the ignored backend environment file; its value was not
+shared with or read by the coding agent. The owner also reports that the
+selected Bella voice ID was copied into `ELEVENLABS_VOICE_ID` in that same
+ignored file without sharing it with the coding agent. The reviewed
+configuration is now published to ScreenPilot/Main, owner-verified as Live at
+100% with no pending Draft marker. Immutable version
+`agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` is recorded as `agentRevisionId` in the
+source-controlled provider target. No Preview conversation has run.
+
+**Owner-reported Turnstile checkpoint (2026-09-14):** The owner created the
+free `ScreenPilot local live` widget in Managed mode, restricted it to only
+`localhost`, and left pre-clearance off. No Cloudflare zone, Worker, proxy, WAF
+rule, API token, paid plan, or Spin setup was created. The site key and secret
+key are stored only in the ignored backend environment file with
+`TURNSTILE_ALLOWED_HOSTNAMES=localhost`; neither key value was shared with or
+read by the coding agent.
+
+**Owner-reported local-secret checkpoint (2026-09-14):** The two locally
+generated application secrets are reported present, at least 32 characters,
+and different from one another in the ignored backend environment file. Their
+values were not shared with or inspected by the coding agent. The runtime
+wiring audit above confirms their HMAC/cookie consumers. The corrected
+local-only start path now loads the ignored file deliberately, while fake mode
+suppresses its real Turnstile site key from public bootstrap.
 
 #### [SP-015 — Normalize live events, captions, and controls](tickets/SP-015-normalize-live-events-captions-and-controls.md)
 
@@ -3471,7 +3592,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [ ] Prevent scores, sentiment, protected inference, or unsupported English ratings.
 - [ ] Test malformed calls, duplicates, corrections, and reduced motion.
 
-**Future exploration note — replayable evidence audio (not demo scope):** After the core demo is complete, evaluate whether a card could offer a short candidate-audio excerpt linked to the same evidence turn. The current implementation must continue to use transcript evidence only, keep recording and ElevenLabs audio saving disabled, and must not add a Play-audio control. Any later proposal requires a separate privacy/scope decision covering explicit recording consent, browser-local capture feasibility alongside WebRTC, turn-to-audio timestamp alignment, mobile support, memory bounds, playback feedback/echo prevention, and guaranteed cleanup when the tab session ends. This exploration is not an SP-016 acceptance criterion and cannot delay the ticket.
+**Future exploration note — replayable evidence audio (not demo scope):** After the core demo is complete, evaluate whether a card could offer a short candidate-audio excerpt linked to the same evidence turn. The current implementation must continue to use transcript evidence only, keep recording and ElevenLabs `Store Call Audio` disabled, and must not add a Play-audio control. Research both browser-local capture alongside WebRTC and the newly identified ElevenLabs-managed recording option. For ElevenLabs-managed audio, determine from current first-party documentation and a synthetic test how recordings are stored and protected, who can access them, plan/cost/residency implications, how retention `0`/scheduled deletion/ZRM/manual deletion interact, whether recordings can be retrieved through the dashboard or API and with which scope/format/URL lifetime, and whether recording/turn/segment/word or transcript start-and-end timestamps provide reliable interruption-safe evidence alignment. Any later proposal requires a separate owner-approved privacy/scope decision covering explicit recording consent and disclosure, candidate access/deletion handling, bounded excerpt authorization, mobile support, playback feedback/echo prevention, and guaranteed cleanup. Real candidate recording is prohibited until that decision and its product copy, tests, and operational controls are approved. This exploration is not an SP-016 acceptance criterion and cannot delay the ticket. The operational research checklist lives in `docs/operations/live-provider-setup.md`.
 
 #### [SP-017 — Write and evaluate the adaptive interview policy](tickets/SP-017-write-and-evaluate-adaptive-interview-policy.md)
 
