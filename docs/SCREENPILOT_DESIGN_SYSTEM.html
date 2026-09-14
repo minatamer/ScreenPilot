@@ -620,6 +620,14 @@
         letter-spacing: -0.035em;
       }
 
+      .type-panel {
+        margin-bottom: 14px;
+        font-size: 22px;
+        font-weight: 600;
+        line-height: 28px;
+        letter-spacing: -0.025em;
+      }
+
       .type-body {
         max-width: 58ch;
         margin-bottom: 16px;
@@ -2219,6 +2227,11 @@
           grid-row: auto;
           grid-column: auto;
         }
+
+        .sample-market-card .sample-market-metric {
+          align-self: stretch;
+          text-align: left;
+        }
       }
 
       @media (max-width: 700px) {
@@ -2552,6 +2565,7 @@
             <article class="panel">
               <p class="type-display">Clear conversation. Useful evidence.</p>
               <p class="type-section">Candidate-sourced insights</p>
+              <p class="type-panel">How the interview works</p>
               <p class="type-body">Pilot keeps the conversation natural while organizing confirmed facts, open questions, and supporting evidence.</p>
               <p class="type-meta">CAPTION · 02:14 · CONVERSATION-FIRST</p>
             </article>
@@ -2559,10 +2573,13 @@
               <h3>Type sizes</h3>
               <dl class="token-list">
                 <div class="token-row"><dt>Display</dt><dd>56/60 desktop · 38/44 mobile · 600</dd></div>
-                <div class="token-row"><dt>Section title</dt><dd>32/38 · 600</dd></div>
+                <div class="token-row"><dt>Page title</dt><dd>32/38 desktop · 28/34 mobile · 600</dd></div>
+                <div class="token-row"><dt>Panel title</dt><dd>22/28 · 600</dd></div>
                 <div class="token-row"><dt>Card title</dt><dd>15/20 · 600</dd></div>
                 <div class="token-row"><dt>Body</dt><dd>16/25 · 400</dd></div>
+                <div class="token-row"><dt>Live caption</dt><dd>18–24/1.45 · responsive</dd></div>
                 <div class="token-row"><dt>Metadata</dt><dd>12/18 · 500–600</dd></div>
+                <div class="token-row"><dt>Compact progress</dt><dd>10/12 · narrow phones only</dd></div>
               </dl>
               <p class="motion-note">Fallbacks: Inter, system UI, Segoe UI, sans-serif. Long labels stay in normal case.</p>
             </article>
@@ -2606,7 +2623,7 @@
             <article class="page-card dark"><h3>Review</h3><p>Calmer dark spacing and quieter borders organize evidence without changing products.</p></article>
           </div>
 
-          <p class="plain-note"><strong>Shared <code>/demo</code> workspace:</strong> the header, inert progress status, compact session/privacy/human-decision band, active task, and recovery actions stay in one stable max-width frame. Normal desktop and tablet heights keep the task and primary action visible beneath the header; phones, zoom, short heights, errors, and long review content use natural page scrolling. The ScreenPilot logo returns to <code>/</code> without clearing, while <strong>Clear &amp; exit</strong> deliberately clears and replaces the route.</p>
+          <p class="plain-note"><strong>Shared <code>/demo</code> workspace:</strong> the header, inert progress status, top-aligned active task, and recovery actions stay in one stable max-width frame. Every stage uses the same pretitle/page-title primitive, an 8 px internal heading gap, and the shared responsive stage/card rhythm; panel titles use the 22/28 tier rather than inventing a local size. Normal desktop and tablet heights keep the task and primary action visible beneath the header; phones, zoom, short heights, errors, and long review content use natural page scrolling. The ScreenPilot logo returns to <code>/</code> without clearing, while <strong>Privacy details</strong> and <strong>Clear &amp; exit</strong> remain together in the header.</p>
         </div>
       </section>
 
@@ -2771,9 +2788,9 @@
             </article>
           </div>
 
-          <p class="plain-note"><strong>Motion:</strong> normal transitions last 180–240 ms. The hero word “notes.” is a slightly informal handwritten SVG whose individual pen strokes draw over about 1.1 seconds; an imperfect coral underline follows immediately, then the treatment stays still. The ordinary word remains in the accessible headline. Same-page landing links glide smoothly to their targets instead of jumping. The landing preview loops slowly through two three-topic boards: salary, experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It has no playback/topic controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. The active speaker bars and participant waveform scale in place, both question and answer subtitles reveal one spoken word at a time inside fixed-height regions, and note boards/cards enter with opacity plus a small transform. The four-step how-it-works scene changes in response to normal scrolling without hijacking it. Reduced-motion mode keeps the completed handwritten word visible and uses only a gentle opacity finish, cycles through complete speaking and note states without word-by-word or automatic spatial movement, and limits voice bars to slow opacity changes; every story step remains readable.</p>
+          <p class="plain-note"><strong>Motion:</strong> normal transitions last 180–240 ms. The hero word “notes.” is a slightly informal handwritten SVG whose individual pen strokes draw over about 1.1 seconds; an imperfect coral underline follows immediately, then the treatment stays still. The ordinary word remains in the accessible headline. Same-page landing links glide smoothly to their targets instead of jumping; header How it works and hero See it step by step share one brisk 0.9-second journey. The landing preview loops slowly through two three-topic boards: salary, experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It has no playback/topic controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. The active speaker bars and participant waveform scale in place, both question and answer subtitles reveal one spoken word at a time inside fixed-height regions, and note boards/cards enter with opacity plus a small transform. The four-step how-it-works scene changes in response to normal scrolling without hijacking it. Reduced-motion mode keeps the completed handwritten word visible and uses only a gentle opacity finish, cycles through complete speaking and note states without word-by-word or automatic spatial movement, and limits voice bars to slow opacity changes; every story step remains readable.</p>
           <p class="motion-note"><strong>Hero layout:</strong> keep the opening permanently stacked and centered. The promise and actions come first, and the wide interview product frame sits directly beneath them at every viewport width—never beside them.</p>
-          <p class="motion-note"><strong>Landing header:</strong> keep its surface fully transparent and non-sticky inside the edge-to-edge continuous atmosphere so it scrolls away with the page. Place the enlarged ScreenPilot mark and wordmark at the left and the larger How it works / Start demo action cluster at the right; keyboard order follows the same familiar layout. The page-wide grid and glow continue behind the header and hero without restarting at their boundary.</p>
+          <p class="motion-note"><strong>Landing header:</strong> keep its surface fully transparent and non-sticky inside the edge-to-edge continuous atmosphere so it scrolls away with the page. Place the enlarged ScreenPilot mark and wordmark at the left and the larger How it works / Start demo action cluster at the right; keyboard order follows the same familiar layout. How it works shares the hero's controlled scroll journey, while Start demo routes directly to the `/demo` entry chooser. The page-wide grid and glow continue behind the header and hero without restarting at their boundary.</p>
           <p class="motion-note"><strong>Reference boundary:</strong> the supplied dashboard image influenced only the Deep Ink + Warm Coral palette and warm visual mood. ScreenPilot does not inherit its recruiter navigation, candidate profiles, pipeline, analytics, scoring, phone controls, or other unsupported features.</p>
         </div>
       </section>

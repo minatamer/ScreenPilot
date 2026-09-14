@@ -65,7 +65,7 @@ Translate the approved visual reference into maintainable frontend tokens, share
 
 ## Implemented result
 
-- `apps/frontend/src/styles/tokens.css` is the single frontend token source for the approved SP-004 palette, typography, spacing, radii, elevations, bounded layouts, opacity, motion, and semantic light/dark aliases.
+- `apps/frontend/src/styles/tokens.css` is the single frontend token source for the approved SP-004 palette, typography, spacing, radii, elevations, bounded layouts, opacity, motion, and semantic light/dark aliases. The type hierarchy includes distinct page-title, panel-title, card, body, and metadata tiers; the spacing scale includes the 28 px step used by the responsive landing composition.
 - `apps/frontend/src/shared/ui` now owns the code-native ScreenPilot mark, site header, light/dark app shell, buttons and groups, cards, badges, entry-mode presentation, progress, error, container, and stack primitives. These components contain no workflow, provider, HTTP, storage, or candidate rules.
 - `/` is intentionally a temporary SP-005 foundation harness. It proves the primitives in representative light and dark compositions but does not implement the final landing content, routing, or entry behavior owned by SP-011.
 - The implementation uses one component tree and semantic theme aliases. The same primitives adapt continuously rather than branching into phone/desktop implementations.

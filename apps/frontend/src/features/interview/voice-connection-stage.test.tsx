@@ -262,6 +262,13 @@ describe("VoiceConnectionStage", () => {
       expect(requestToken).toHaveBeenCalledOnce();
     });
 
+    expect(screen.getByText("Secure connection")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Connecting your AI interview.",
+      }),
+    ).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Cancel connection" }));
     expect(props.onCancel).toHaveBeenCalledOnce();
     rendered.unmount();

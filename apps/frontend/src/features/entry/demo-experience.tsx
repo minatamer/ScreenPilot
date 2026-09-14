@@ -12,6 +12,7 @@ import { CvStage } from "@/features/cv/cv-stage";
 import type { VoiceStartRequest } from "@/features/interview/voice-connection-stage";
 import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
+import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
 import type {
   DemoStage,
   SessionFailure,
@@ -19,13 +20,13 @@ import type {
 import { useDemoSession } from "@/features/session/use-demo-session";
 import { AppShell } from "@/shared/ui/app-shell";
 import { Button } from "@/shared/ui/button";
+import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { PageContainer } from "@/shared/ui/layout";
 import { SiteHeader } from "@/shared/ui/site-header";
 import { StageIndicator } from "@/shared/ui/stage-indicator";
 
 import { BootstrapStatus } from "./bootstrap-status";
 import { ConversationPreparationStage } from "./conversation-preparation-stage";
-import { DemoSafeguardsFooter } from "./demo-safeguards-footer";
 import { EntryModeChooser } from "./entry-mode-chooser";
 import { useDemoBootstrap } from "./use-demo-bootstrap";
 
@@ -45,8 +46,10 @@ const VoiceConnectionStage = dynamic(
   {
     loading: () => (
       <div className="sp-demo-stage" role="status">
-        <p className="sp-eyebrow">Secure connection</p>
-        <h1>Loading the private voice client.</h1>
+        <DemoStageHeading
+          pretitle="Secure connection"
+          title="Loading the private voice client."
+        />
       </div>
     ),
     ssr: false,
@@ -132,6 +135,14 @@ export function DemoExperience() {
   ) {
     stageContent = (
       <div className="sp-demo-stage">
+        <DemoStageHeading
+          pretitle="Private browser demo"
+          title={
+            state.failure
+              ? "Your private demo needs another try."
+              : "Preparing your private demo."
+          }
+        />
         <BootstrapStatus
           failure={state.failure}
           onExit={returnHomeAfterClear}
@@ -144,13 +155,10 @@ export function DemoExperience() {
   } else if (state.stage === "choosing_entry_mode") {
     stageContent = (
       <div className="sp-demo-stage">
-        <div className="sp-demo-stage__heading">
-          <p className="sp-eyebrow">Choose how to start</p>
-          <h1>Bring a CV, or start with a conversation.</h1>
-          <p className="sp-demo-stage__lead">
-            A CV helps Pilot ask more focused questions. You can also skip it.
-          </p>
-        </div>
+        <DemoStageHeading
+          pretitle="Choose how to start"
+          title="Bring a CV, or start with a conversation."
+        />
         <EntryModeChooser onSelect={selectEntryMode} />
       </div>
     );
@@ -336,8 +344,10 @@ export function DemoExperience() {
   } else {
     stageContent = (
       <div className="sp-demo-stage">
-        <p className="sp-eyebrow">Private browser session</p>
-        <h1>This step is not available in the current demo yet.</h1>
+        <DemoStageHeading
+          pretitle="Private browser session"
+          title="This step is not available in the current demo yet."
+        />
         <p className="sp-demo-stage__lead">
           Your browser session is still private. Clear it to return home and
           start again.
@@ -358,13 +368,19 @@ export function DemoExperience() {
         brandHref="/"
         className="sp-site-header--demo"
         actions={
-          <button
-            className="sp-header-link"
-            onClick={returnHomeAfterClear}
-            type="button"
-          >
-            Clear &amp; exit
-          </button>
+          <>
+            <PrivacyDialog
+              clearActionLabel="Clear & exit"
+              triggerLabel="Privacy details"
+            />
+            <button
+              className="sp-header-link"
+              onClick={returnHomeAfterClear}
+              type="button"
+            >
+              Clear &amp; exit
+            </button>
+          </>
         }
       />
       <main className="sp-demo-main" id="main-content">
@@ -382,7 +398,6 @@ export function DemoExperience() {
               />
             </div>
             <div className="sp-demo-workspace__task">{stageContent}</div>
-            <DemoSafeguardsFooter />
           </section>
         </PageContainer>
       </main>

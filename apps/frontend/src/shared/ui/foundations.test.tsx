@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { AppShell } from "./app-shell";
 import { Badge } from "./badge";
 import { Button } from "./button";
+import { DemoStageHeading } from "./demo-stage-heading";
 import { EntryModeCard } from "./entry-mode-card";
 import { ErrorPanel } from "./error-panel";
 import { ScreenPilotMark } from "./screenpilot-mark";
@@ -30,6 +31,24 @@ describe("Signal Canvas foundations", () => {
     const button = screen.getByRole("button", { name: "Checking permissions" });
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute("aria-busy", "true");
+  });
+
+  it("keeps demo stage pretitles and page titles in one shared hierarchy", () => {
+    render(
+      <DemoStageHeading
+        pretitle="Before you begin"
+        title="Get ready for your interview."
+        titleId="preflight-title"
+      />,
+    );
+
+    expect(screen.getByText("Before you begin")).toHaveClass("sp-eyebrow");
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Get ready for your interview.",
+      }),
+    ).toHaveAttribute("id", "preflight-title");
   });
 
   it("marks the current stage and completed stages", () => {

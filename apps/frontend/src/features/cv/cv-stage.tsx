@@ -11,6 +11,7 @@ import type {
 } from "@/features/session/demo-session.types";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 import { Stack } from "@/shared/ui/layout";
 
@@ -90,20 +91,14 @@ export function CvStage({
 
   return (
     <Stack className="sp-cv-stage" gap="medium">
-      <div className="sp-cv-stage__heading">
-        <div>
-          <p className="sp-cv-stage__eyebrow">CV-assisted path</p>
-          <h1>
-            {showIntake
-              ? "Prepare a focused screening conversation."
-              : "Turning CV details into interview context."}
-          </h1>
-        </div>
-        <p className="sp-demo-stage__lead">
-          The role remains unconfirmed until the candidate describes it during
-          the call. Any named role is synthetic and exists only in this tab.
-        </p>
-      </div>
+      <DemoStageHeading
+        pretitle="CV-assisted path"
+        title={
+          showIntake
+            ? "Prepare a focused screening conversation."
+            : "Turning CV details into interview context."
+        }
+      />
 
       {restoreNotice === "cv_file_required_after_refresh" ? (
         <Card aria-live="polite" className="sp-cv-notice" tone="soft">

@@ -31,6 +31,7 @@ import {
 } from "@/shared/api/screenpilot-api";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 
 import { FakeVoiceSession } from "./fake-voice-session";
@@ -281,14 +282,10 @@ export function VoiceConnectionStage({
     >
       {stage === "connecting" ? (
         <>
-          <div className="sp-demo-stage__heading">
-            <p className="sp-eyebrow">Secure connection</p>
-            <h1>Connecting your AI interview.</h1>
-            <p className="sp-demo-stage__lead">
-              ScreenPilot is authorizing one private WebRTC session. No
-              recording is created.
-            </p>
-          </div>
+          <DemoStageHeading
+            pretitle="Secure connection"
+            title="Connecting your AI interview."
+          />
 
           <Card as="section" className="sp-voice-connection-card" tone="soft">
             {failure ? (

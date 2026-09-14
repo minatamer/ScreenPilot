@@ -138,19 +138,7 @@ describe("DemoExperience preparation paths", () => {
       "aria-current",
       "step",
     );
-    const safeguardsFooter = screen.getByLabelText("Demo safeguards");
-    expect(safeguardsFooter.tagName).toBe("FOOTER");
-    expect(within(safeguardsFooter).getByText("Demo-only role")).toBeVisible();
-    expect(
-      within(safeguardsFooter).getByText(
-        /Name any role or stay undecided.*only for this tab session/iu,
-      ),
-    ).toBeVisible();
-    expect(
-      within(safeguardsFooter).getByRole("button", {
-        name: "Privacy details",
-      }),
-    ).toBeEnabled();
+    expect(screen.queryByLabelText("Demo safeguards")).not.toBeInTheDocument();
     const header = document.querySelector(".sp-site-header");
     expect(header).not.toBeNull();
     expect(
@@ -159,11 +147,20 @@ describe("DemoExperience preparation paths", () => {
       }),
     ).not.toBeInTheDocument();
     expect(
-      within(header as HTMLElement).queryByRole("button", {
-        name: /privacy/iu,
+      within(header as HTMLElement)
+        .getAllByRole("button")
+        .map((button) => button.textContent),
+    ).toEqual(["Privacy details", "Clear & exit"]);
+    expect(
+      within(header as HTMLElement).getByRole("button", {
+        name: "Privacy details",
       }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Clear & exit" })).toBeEnabled();
+    ).toBeEnabled();
+    expect(
+      within(header as HTMLElement).getByRole("button", {
+        name: "Clear & exit",
+      }),
+    ).toBeEnabled();
     expect(
       screen.getByRole("link", { name: "ScreenPilot home" }),
     ).toHaveAttribute("href", "/");
@@ -173,12 +170,21 @@ describe("DemoExperience preparation paths", () => {
     );
     expect(
       await screen.findByRole("heading", {
-        name: "Your first interview is prepared.",
+        name: "How the interview works",
+      }),
+    ).toBeVisible();
+    expect(screen.getByText("Before you begin")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Get ready for your interview.",
       }),
     ).toBeVisible();
     expect(screen.getByText("Conversation-first")).toBeVisible();
     expect(
-      screen.getByText(/build the conversation only from what you say/),
+      screen.getByText(
+        /analyzes your answers to ask useful follow-up questions/,
+      ),
     ).toBeVisible();
     expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
       "aria-current",
@@ -245,7 +251,7 @@ describe("DemoExperience preparation paths", () => {
     );
     expect(
       await screen.findByRole("heading", {
-        name: "Preparing an open conversation",
+        name: "Preparing an open conversation.",
       }),
     ).toBeVisible();
     expect(screen.getByText("Prepare").closest("li")).toHaveAttribute(
@@ -268,6 +274,11 @@ describe("DemoExperience preparation paths", () => {
         name: "Bring a CV, or start with a conversation.",
       }),
     ).toBeVisible();
+    expect(
+      screen.queryByText(
+        "A CV helps Pilot ask more focused questions. You can also skip it.",
+      ),
+    ).not.toBeInTheDocument();
     expect(preparationSignal?.aborted).toBe(true);
   });
 
@@ -321,7 +332,7 @@ describe("DemoExperience preparation paths", () => {
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
     expect(
       await screen.findByRole("heading", {
-        name: "Your first interview is prepared.",
+        name: "How the interview works",
       }),
     ).toBeVisible();
     expect(requestIds).toHaveLength(2);
@@ -350,7 +361,7 @@ describe("DemoExperience preparation paths", () => {
       await screen.findByRole("button", { name: "Start without a CV" }),
     );
     await screen.findByRole("heading", {
-      name: "Your first interview is prepared.",
+      name: "How the interview works",
     });
 
     fireEvent.click(
@@ -365,7 +376,7 @@ describe("DemoExperience preparation paths", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Start without a CV" }));
     await screen.findByRole("heading", {
-      name: "Your first interview is prepared.",
+      name: "How the interview works",
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Privacy details" }));
@@ -466,7 +477,7 @@ describe("DemoExperience preparation paths", () => {
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(
       await screen.findByRole("heading", {
-        name: "Your first interview is prepared.",
+        name: "How the interview works",
       }),
     ).toBeVisible();
     expect(screen.getByText("CV-assisted")).toBeVisible();

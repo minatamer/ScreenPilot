@@ -17,6 +17,7 @@ import { HeroFeatureStack } from "./hero-feature-stack";
 import { HowItWorksStory } from "./how-it-works-story";
 import { IllustrativeInterviewPreview } from "./illustrative-interview-preview";
 import { MarketSignals } from "./market-signals";
+import { useDeliberateAnchorScroll } from "./use-deliberate-anchor-scroll";
 import { useDemoBootstrap } from "./use-demo-bootstrap";
 
 const ACTIVE_SESSION_STAGES = new Set([
@@ -37,6 +38,7 @@ const ACTIVE_SESSION_STAGES = new Set([
 export function LandingExperience() {
   const router = useRouter();
   const { clearSession, dispatch, state } = useDemoSession();
+  const scrollToHowItWorks = useDeliberateAnchorScroll("how-it-works");
   useDemoBootstrap(true);
 
   const selectEntryMode = (entryMode: EntryMode) => {
@@ -62,10 +64,14 @@ export function LandingExperience() {
         className="sp-site-header--landing"
         actions={
           <>
-            <a className="sp-landing-header-link" href="#how-it-works">
+            <a
+              className="sp-landing-header-link"
+              href="#how-it-works"
+              onClick={scrollToHowItWorks}
+            >
               How it works
             </a>
-            <a className="sp-landing-header-cta" href="#start">
+            <a className="sp-landing-header-cta" href="/demo">
               Start demo
             </a>
           </>
@@ -137,6 +143,7 @@ export function LandingExperience() {
                   <a
                     className="sp-button sp-landing__secondary-action"
                     href="#how-it-works"
+                    onClick={scrollToHowItWorks}
                   >
                     <span>See it step by step</span>
                   </a>

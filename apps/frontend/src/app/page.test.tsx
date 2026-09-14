@@ -176,6 +176,17 @@ describe("HomePage", () => {
         ),
     ).toEqual(["ScreenPilot home", "How it works", "Start demo"]);
     expect(
+      within(header as HTMLElement).getByRole("link", {
+        name: "How it works",
+      }),
+    ).toHaveAttribute("href", "#how-it-works");
+    expect(
+      within(header as HTMLElement).getByRole("link", { name: "Start demo" }),
+    ).toHaveAttribute("href", "/demo");
+    expect(
+      screen.getByRole("link", { name: "See it step by step" }),
+    ).toHaveAttribute("href", "#how-it-works");
+    expect(
       within(header as HTMLElement).queryByRole("button", {
         name: /privacy/iu,
       }),

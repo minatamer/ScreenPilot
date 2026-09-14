@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-type ConversationPhase = "answer" | "note" | "question";
+type ConversationPhase = "answer" | "highlight" | "note" | "question";
 type MotionPreference = "no-preference" | "reduce" | "unknown";
 
 type IllustrativeConversationExample = Readonly<{
@@ -13,6 +13,7 @@ type IllustrativeConversationExample = Readonly<{
 const SPOKEN_WORD_DELAY_MS = 200;
 const QUESTION_HOLD_MS = 800;
 const ANSWER_HOLD_MS = 800;
+const HIGHLIGHT_DRAW_MS = 1_100;
 const NOTE_HOLD_MS = 1_200;
 const COMPLETED_BOARD_HOLD_MS = 2_400;
 const REDUCED_MOTION_NOTE_HOLD_MS = 1_600;
@@ -185,10 +186,14 @@ export function useIllustrativeConversation(
         }, SPOKEN_WORD_DELAY_MS);
       } else {
         timeoutId = setTimeout(() => {
-          setCompletedExampleCount(activeExample + 1);
-          setPhase("note");
+          setPhase("highlight");
         }, ANSWER_HOLD_MS);
       }
+    } else if (phase === "highlight") {
+      timeoutId = setTimeout(() => {
+        setCompletedExampleCount(activeExample + 1);
+        setPhase("note");
+      }, HIGHLIGHT_DRAW_MS);
     } else {
       let noteHoldMs = completedBoard ? COMPLETED_BOARD_HOLD_MS : NOTE_HOLD_MS;
       if (motionPreference === "reduce") {

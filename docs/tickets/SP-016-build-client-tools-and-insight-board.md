@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-11<br>
-Depends on: SP-005, SP-006, SP-010A, SP-015<br>
+Last synchronized: 2026-09-14<br>
+Depends on: SP-005, SP-006, SP-010A, SP-015, SP-015A<br>
 Suggested commit: `SP-016: visualize live interview understanding`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)

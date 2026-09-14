@@ -68,11 +68,8 @@ function props(overrides: Partial<PreflightProps> = {}): PreflightProps {
 function acceptDisclosure(): void {
   fireEvent.click(
     screen.getByRole("checkbox", {
-      name: /I understand the processing, session, and synthetic-data boundaries/iu,
+      name: /I understand how my microphone and answers will be used/iu,
     }),
-  );
-  fireEvent.click(
-    screen.getByRole("button", { name: "I understand and continue" }),
   );
 }
 
@@ -89,7 +86,7 @@ describe("shared voice preflight", () => {
     window.sessionStorage.clear();
   });
 
-  it("shows complete disclosure with unchecked consent and requests nothing automatically", () => {
+  it("shows two plain-language cards with unchecked consent and requests nothing automatically", () => {
     const microphone = microphoneHarness();
     const browserFetch = vi.fn();
     vi.stubGlobal("fetch", browserFetch);
@@ -101,23 +98,35 @@ describe("shared voice preflight", () => {
     );
 
     expect(screen.getByText("Conversation-first")).toBeVisible();
+    expect(screen.getByText("Before you begin")).toBeVisible();
     expect(
-      screen.getByText(/ElevenLabs streams microphone audio/iu),
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Get ready for your interview.",
+      }),
     ).toBeVisible();
-    expect(screen.getByText(/OpenAI processes CV planning/iu)).toBeVisible();
-    expect(screen.getByText(/not sent to Turnstile/iu)).toBeVisible();
-    expect(screen.getByText(/does not record or save audio/iu)).toBeVisible();
-    expect(screen.getByText(/no more than eight minutes/iu)).toBeVisible();
-    expect(screen.getByText(/No role is confirmed yet/iu)).toBeVisible();
-    expect(screen.getByRole("checkbox")).not.toBeChecked();
     expect(
-      screen.getByRole("button", { name: "I understand and continue" }),
-    ).toBeDisabled();
+      screen.getByRole("heading", {
+        level: 2,
+        name: "How the interview works",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Your privacy and consent" }),
+    ).toBeVisible();
+    expect(screen.getAllByRole("region")).toHaveLength(2);
+    expect(screen.queryByText(/ElevenLabs|OpenAI|Cloudflare/iu)).toBeNull();
+    expect(
+      screen.getByText(/does not record or save your audio/iu),
+    ).toBeVisible();
+    expect(screen.getByText(/lasts up to eight minutes/iu)).toBeVisible();
+    expect(screen.getByText(/only for this demo session/iu)).toBeVisible();
+    expect(screen.getByRole("checkbox")).not.toBeChecked();
     expect(
       screen.getByRole("button", { name: "Check microphone" }),
     ).toBeDisabled();
     expect(
-      screen.getByRole("button", { name: "Start AI interview" }),
+      screen.getByRole("button", { name: "Start interview" }),
     ).toBeDisabled();
     expect(microphone.openMicrophoneMonitor).not.toHaveBeenCalled();
     expect(browserFetch).not.toHaveBeenCalled();
@@ -145,7 +154,7 @@ describe("shared voice preflight", () => {
       expect(onReady).toHaveBeenCalledOnce();
     });
     expect(
-      screen.getByRole("button", { name: "Start AI interview" }),
+      screen.getByRole("button", { name: "Start interview" }),
     ).toBeEnabled();
 
     act(() => {
@@ -177,7 +186,7 @@ describe("shared voice preflight", () => {
     await prepareMicrophone();
 
     const startButton = screen.getByRole("button", {
-      name: "Start AI interview",
+      name: "Start interview",
     });
     fireEvent.click(startButton);
     fireEvent.click(startButton);
@@ -193,7 +202,7 @@ describe("shared voice preflight", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Cancel start" }));
     expect(
-      screen.getByRole("button", { name: "Start AI interview" }),
+      screen.getByRole("button", { name: "Start interview" }),
     ).toBeEnabled();
   });
 
@@ -221,7 +230,7 @@ describe("shared voice preflight", () => {
       expect(await screen.findByText(title)).toBeVisible();
       expect(screen.getByText(guidance)).toBeVisible();
       expect(
-        screen.getByRole("button", { name: "Start AI interview" }),
+        screen.getByRole("button", { name: "Start interview" }),
       ).toBeDisabled();
       expect(browserFetch).not.toHaveBeenCalled();
 
@@ -304,7 +313,7 @@ describe("shared voice preflight", () => {
       />,
     );
     await prepareMicrophone();
-    fireEvent.click(screen.getByRole("button", { name: "Start AI interview" }));
+    fireEvent.click(screen.getByRole("button", { name: "Start interview" }));
 
     expect(
       await screen.findByText("The start check could not finish"),
@@ -344,7 +353,7 @@ describe("shared voice preflight", () => {
       await prepareMicrophone();
 
       expect(
-        screen.getByRole("button", { name: "Start AI interview" }),
+        screen.getByRole("button", { name: "Start interview" }),
       ).toBeDisabled();
       expect(executeChallenge).not.toHaveBeenCalled();
       expect(browserFetch).not.toHaveBeenCalled();
@@ -391,7 +400,7 @@ describe("shared voice preflight", () => {
       expect(onNotReady).not.toHaveBeenCalled();
       expect(microphone.stop).toHaveBeenCalledOnce();
       expect(
-        screen.getByRole("button", { name: "Start AI interview" }),
+        screen.getByRole("button", { name: "Start interview" }),
       ).toBeDisabled();
     },
   );

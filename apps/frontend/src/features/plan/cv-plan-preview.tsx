@@ -6,6 +6,7 @@ import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-p
 
 import { Badge } from "@/shared/ui/badge";
 import { Button, ButtonGroup } from "@/shared/ui/button";
+import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 
 type CvPlanPreviewProps = Readonly<{
   cv: NormalizedCv;
@@ -38,16 +39,10 @@ export function CvPlanPreview({
 
   return (
     <div className="sp-demo-stage sp-plan-preview">
-      <div className="sp-plan-preview__heading">
-        <div>
-          <p className="sp-eyebrow">CV-assisted plan</p>
-          <h1>The first interview has a grounded starting point.</h1>
-        </div>
-        <p className="sp-demo-stage__lead">
-          These details came from the CV and remain provisional. Pilot will ask
-          the candidate to confirm or correct them during the conversation.
-        </p>
-      </div>
+      <DemoStageHeading
+        pretitle="CV-assisted plan"
+        title="The first interview has a grounded starting point."
+      />
 
       {plan.roleClarification.suggestedRole ? (
         <section

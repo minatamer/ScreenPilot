@@ -4,37 +4,49 @@ import { useIllustrativeConversation } from "./use-illustrative-conversation";
 
 const conversationExamples = [
   {
-    answer: "Around 25k–30k.",
+    answer: ["Around ", "25k–30k", "."],
     noteLabel: "Salary expectation",
     noteValue: "25k–30k",
     question: ["What are your ", "salary expectations?", ""],
   },
   {
-    answer: "I spent three years helping customers solve account issues.",
+    answer: [
+      "I spent ",
+      "three years helping customers",
+      " solve account issues.",
+    ],
     noteLabel: "Relevant experience",
     noteValue: "3 years in customer support",
     question: ["What ", "experience", " would you like to highlight?"],
   },
   {
-    answer: "I could start in about four weeks.",
+    answer: ["I could start in ", "about four weeks", "."],
     noteLabel: "Availability",
     noteValue: "About 4 weeks",
     question: ["When would you be ", "available to start?", ""],
   },
   {
-    answer: "I enjoy customer-facing work and solving practical problems.",
+    answer: [
+      "I enjoy ",
+      "customer-facing work and solving practical problems",
+      ".",
+    ],
     noteLabel: "Role preference",
     noteValue: "Customer-facing problem solving",
     question: ["What kind of ", "role", " would you like to explore?"],
   },
   {
-    answer: "Remote or hybrid work both suit me.",
+    answer: ["", "Remote or hybrid", " work both suit me."],
     noteLabel: "Work setup",
     noteValue: "Remote or hybrid",
     question: ["Which ", "work setup", " suits you best?"],
   },
   {
-    answer: "I want to grow my product knowledge and leadership skills.",
+    answer: [
+      "I want to grow my ",
+      "product knowledge and leadership skills",
+      ".",
+    ],
     noteLabel: "Growth goal",
     noteValue: "Product knowledge and leadership",
     question: ["What would you like to ", "learn", " in your next role?"],
@@ -43,7 +55,7 @@ const conversationExamples = [
 
 const EXAMPLES_PER_BOARD = 3;
 const conversationLines = conversationExamples.map(({ answer, question }) => ({
-  answer,
+  answer: answer.join(""),
   question: question.join(""),
 }));
 
@@ -60,14 +72,16 @@ function renderSpokenWords(value: string, keyPrefix: string) {
   ));
 }
 
-function renderHighlightedQuestion(
-  questionSegments: readonly [string, string, string],
-  spokenQuestion: string,
+function renderHighlightedLine(
+  lineSegments: readonly [string, string, string],
+  spokenLine: string,
+  keyPrefix: string,
+  highlighted: boolean,
 ) {
   let segmentStart = 0;
 
-  return questionSegments.map((segment, index) => {
-    const visibleSegment = spokenQuestion.slice(
+  return lineSegments.map((segment, index) => {
+    const visibleSegment = spokenLine.slice(
       segmentStart,
       segmentStart + segment.length,
     );
@@ -77,10 +91,10 @@ function renderHighlightedQuestion(
       return null;
     }
 
-    const segmentKey = `question-${String(index)}`;
+    const segmentKey = `${keyPrefix}-${String(index)}`;
 
     return index === 1 ? (
-      <mark key={segmentKey}>
+      <mark data-highlighted={highlighted} key={segmentKey}>
         {renderSpokenWords(visibleSegment, segmentKey)}
       </mark>
     ) : (
@@ -106,13 +120,15 @@ function SpeakerBars({ active }: Readonly<{ active: boolean }>) {
 }
 
 function CandidateAtLaptopIllustration({
-  speaking,
-}: Readonly<{ speaking: boolean }>) {
+  candidateSpeaking,
+  pilotSpeaking,
+}: Readonly<{ candidateSpeaking: boolean; pilotSpeaking: boolean }>) {
   return (
     <svg
-      aria-label="Illustration of a person speaking beside a laptop"
+      aria-label="Illustration of a candidate behind a laptop during a Pilot conversation"
       className="sp-live-conversation__person"
-      data-speaking={speaking}
+      data-candidate-speaking={candidateSpeaking}
+      data-pilot-speaking={pilotSpeaking}
       role="img"
       viewBox="0 0 360 300"
     >
@@ -124,56 +140,87 @@ function CandidateAtLaptopIllustration({
       />
       <path
         d="M146 162c8 13 19 20 32 20 14 0 25-7 33-20l-10-24h-45l-10 24Z"
-        fill="#F7CEC9"
+        fill="#B87356"
       />
-      <circle cx="177" cy="108" fill="#FDE8E4" r="50" />
-      <circle cx="128" cy="111" fill="#FDE8E4" r="9" />
-      <circle cx="226" cy="111" fill="#FDE8E4" r="9" />
+      <circle cx="177" cy="108" fill="#D49A79" r="50" />
+      <circle cx="128" cy="111" fill="#D49A79" r="9" />
+      <circle cx="226" cy="111" fill="#D49A79" r="9" />
       <path
         d="M127 105c1-39 20-61 55-61 34 0 56 26 54 65-21-1-40-11-55-29-13 15-31 24-54 27v-2Z"
         fill="#18243A"
       />
-      <circle cx="158" cy="111" fill="#22314B" r="3.5" />
-      <circle cx="198" cy="111" fill="#22314B" r="3.5" />
       <path
-        className="sp-live-conversation__person-mouth"
-        d="M157 129c6 7 13 11 21 11 9 0 16-4 22-12"
+        d="M147 174c8 8 18 12 31 12 12 0 23-4 32-12"
         fill="none"
+        opacity=".32"
         stroke="#CC493F"
         strokeLinecap="round"
-        strokeWidth="5"
+        strokeWidth="3"
       />
       <path
-        d="M105 216c21 1 42 10 62 29"
-        fill="none"
-        stroke="#FDE8E4"
-        strokeLinecap="round"
-        strokeWidth="17"
-      />
-      <circle cx="171" cy="247" fill="#FDE8E4" r="9" />
-      <path
-        d="M250 222c12 5 23 14 32 27"
-        fill="none"
-        stroke="#FDE8E4"
-        strokeLinecap="round"
-        strokeWidth="17"
-      />
-      <path
-        d="M211 202h111l-19 57H191l20-57Z"
-        fill="#22314B"
-        stroke="#FAFAF8"
-        strokeLinejoin="round"
-        strokeWidth="4"
-      />
-      <path d="M201 250h105" opacity=".26" stroke="#FCA39A" />
-      <circle cx="263" cy="230" fill="#F26B5B" r="7" />
-      <path
-        d="M35 260h290"
+        d="M35 265h290"
         fill="none"
         stroke="#FAFAF8"
         strokeLinecap="round"
         strokeWidth="5"
       />
+      <g aria-hidden="true" className="sp-live-conversation__laptop">
+        <path
+          d="M106 252h148l10 7H96l10-7Z"
+          fill="#8592A5"
+          stroke="#C9D1DE"
+          strokeLinejoin="round"
+          strokeWidth="1.5"
+        />
+        <path
+          className="sp-live-conversation__laptop-lid"
+          d="M114 183h132c3 0 5 2 6 5l12 69H96l12-69c1-3 3-5 6-5Z"
+          fill="#293750"
+          stroke="#C9D1DE"
+          strokeLinejoin="round"
+          strokeWidth="4"
+        />
+        <path
+          d="M116 189h128"
+          fill="none"
+          opacity=".12"
+          stroke="#FFFFFF"
+          strokeLinecap="round"
+          strokeWidth="2"
+        />
+        <g className="sp-live-conversation__laptop-pilot">
+          <circle
+            className="sp-live-conversation__laptop-pilot-ring sp-live-conversation__laptop-pilot-ring--outer"
+            cx="180"
+            cy="218"
+            fill="none"
+            r="17"
+            stroke="#F26B5B"
+            strokeWidth="2"
+          />
+          <circle
+            className="sp-live-conversation__laptop-pilot-ring sp-live-conversation__laptop-pilot-ring--inner"
+            cx="180"
+            cy="218"
+            fill="none"
+            r="12"
+            stroke="#FCA39A"
+            strokeWidth="2"
+          />
+          <g transform="translate(164 202)">
+            <g className="sp-live-conversation__laptop-pilot-mark">
+              <path
+                d="M7 9.5 25 5l-5.2 20-4.4-7.2L7 9.5Z"
+                fill="#F26B5B"
+              />
+              <path
+                d="m11 11 8.5-2.2-5.8 6.3L11 11Z"
+                fill="#FDE8E4"
+              />
+            </g>
+          </g>
+        </g>
+      </g>
       <g aria-hidden="true" className="sp-live-conversation__person-voice">
         <rect height="18" rx="3" width="6" x="40" y="106" />
         <rect height="34" rx="3" width="6" x="50" y="98" />
@@ -240,7 +287,10 @@ export function IllustrativeInterviewPreview() {
 
       <div className="sp-live-conversation__stage">
         <div className="sp-live-conversation__participant">
-          <CandidateAtLaptopIllustration speaking={candidateIsSpeaking} />
+          <CandidateAtLaptopIllustration
+            candidateSpeaking={candidateIsSpeaking}
+            pilotSpeaking={pilotIsSpeaking}
+          />
         </div>
 
         <div className="sp-live-conversation__exchange">
@@ -253,7 +303,12 @@ export function IllustrativeInterviewPreview() {
               <SpeakerBars active={pilotIsSpeaking} />
             </div>
             <p aria-label={example.question.join("")}>
-              {renderHighlightedQuestion(example.question, spokenQuestion)}
+              {renderHighlightedLine(
+                example.question,
+                spokenQuestion,
+                "question",
+                phase === "highlight" || phase === "note",
+              )}
             </p>
           </div>
 
@@ -265,10 +320,13 @@ export function IllustrativeInterviewPreview() {
               <span>You answer</span>
               <SpeakerBars active={candidateIsSpeaking} />
             </div>
-            <p aria-label={example.answer}>
-              <mark data-highlighted={phase === "note"}>
-                {renderSpokenWords(spokenAnswer, "answer")}
-              </mark>
+            <p aria-label={example.answer.join("")}>
+              {renderHighlightedLine(
+                example.answer,
+                spokenAnswer,
+                "answer",
+                phase === "highlight" || phase === "note",
+              )}
             </p>
           </div>
         </div>

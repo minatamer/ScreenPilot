@@ -19,6 +19,13 @@ describe("CvPlanPreview", () => {
       />,
     );
 
+    expect(screen.getByText("CV-assisted plan")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "The first interview has a grounded starting point.",
+      }),
+    ).toBeVisible();
     expect(
       screen.getByRole("heading", { name: "What the CV says" }),
     ).toBeVisible();

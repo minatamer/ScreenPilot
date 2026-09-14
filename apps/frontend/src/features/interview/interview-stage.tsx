@@ -1,6 +1,7 @@
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
 import { Badge } from "@/shared/ui/badge";
+import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 
 import { InterviewControls } from "./interview-controls";
 import { LiveCaptions } from "./live-captions";
@@ -54,10 +55,10 @@ export function InterviewStage({
   return (
     <div className="sp-interview-stage" data-phase={phase}>
       <header className="sp-interview-stage__header">
-        <div>
-          <p className="sp-eyebrow">ScreenPilot interview</p>
-          <h1>Pilot is interviewing</h1>
-        </div>
+        <DemoStageHeading
+          pretitle="ScreenPilot interview"
+          title="Pilot is interviewing"
+        />
         <Badge tone="coral">{modeLabel(entryMode)}</Badge>
       </header>
 

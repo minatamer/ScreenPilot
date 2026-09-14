@@ -94,7 +94,8 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-014 is completed, validated after its fake-mode and terminal-session cleanup corrections, and represented by implementation commit `9075c7d`; real ElevenLabs, Turnstile, retention-dashboard, and microphone verification remains credential-gated.
 - SP-014A is completed as documentation-only work. Its consolidated runbook covers every non-deployment OpenAI, ElevenLabs, Turnstile, local-secret, spend, rotation, and manual-verification step without requesting credentials or making a paid call; owner account setup and live/microphone checks remain explicitly pending.
 - SP-015 is implemented and deterministically verified without a live provider; its active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018.
-- SP-016 is the next eligible implementation ticket.
+- SP-015A's owner-directed landing and `/demo` UI/UX implementation is complete in the current unstaged work. Motion, illustration, CTA, responsive alignment, preflight hierarchy, the shared stage-heading primitive, typography tokens, and spacing rhythm have focused deterministic coverage; the ticket remains open for consolidated owner visual acceptance and its remaining whole-flow/manual checks, and must close before SP-016 begins.
+- SP-016 is the next feature ticket after SP-015A.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
@@ -118,7 +119,8 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-014 | [Configure ElevenLabs agent and private token flow](SP-014-configure-elevenlabs-agent-and-token-flow.md) | SP-003, SP-009, SP-010, SP-010A, SP-013 | Required |
 | SP-014A | [Document complete live-provider and credential setup](SP-014A-document-live-provider-and-credential-setup.md) | SP-003, SP-009, SP-010, SP-012, SP-014 | Required |
 | SP-015 | [Normalize live events, captions, and controls](SP-015-normalize-live-events-captions-and-controls.md) | SP-006, SP-014 | Required |
-| SP-016 | [Build client tools and Insight Board](SP-016-build-client-tools-and-insight-board.md) | SP-005, SP-006, SP-010A, SP-015 | Required |
+| SP-015A | [Polish the landing and demo flow after visual review](SP-015A-polish-landing-and-demo-flow-after-visual-review.md) | SP-005, SP-011A, SP-012, SP-013, SP-015 | Required |
+| SP-016 | [Build client tools and Insight Board](SP-016-build-client-tools-and-insight-board.md) | SP-005, SP-006, SP-010A, SP-015, SP-015A | Required |
 | SP-017 | [Write and evaluate adaptive interview policy](SP-017-write-and-evaluate-adaptive-interview-policy.md) | SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016 | Required |
 | SP-018 | [Tune latency, interruption, and filler](SP-018-tune-latency-interruption-and-filler.md) | SP-014, SP-015, SP-017 | Required |
 | SP-019 | [Finalize transcript and evidence navigation](SP-019-finalize-transcript-and-evidence-navigation.md) | SP-015, SP-016 | Required |
@@ -136,7 +138,7 @@ Execute in order unless the dependency column proves a later packet can safely p
 
 - Milestone 0: SP-001 through SP-005 — repository, quality, configuration, and visual foundations.
 - Milestone 1: SP-006 through SP-012, including SP-010A and SP-011A — disposable state, the role-neutral migration, the modern entry shell, and both preparation paths.
-- Milestone 2: SP-013 through SP-018, including SP-014A — shared preflight, provider setup, real-time voice, insights, policy, and latency.
+- Milestone 2: SP-013 through SP-018, including SP-014A and SP-015A — shared preflight, provider setup, real-time voice, owner-reviewed UI polish, insights, policy, and latency.
 - Milestone 3: SP-019 through SP-021 — transcript evidence, summary, and local review.
 - Milestone 4: SP-022 through SP-025 — public-demo hardening and focused release approval.
 - Milestone 5: SP-026 — deployment.

@@ -116,6 +116,13 @@ describe("CvStage", () => {
   it("offers accessible picker, privacy, limits, sample, and role-neutral recovery", () => {
     render(<CvStageHarness />);
 
+    expect(screen.getByText("CV-assisted path")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Prepare a focused screening conversation.",
+      }),
+    ).toBeVisible();
     expect(
       screen.getByRole("heading", { name: "Bring a synthetic CV" }),
     ).toBeInTheDocument();

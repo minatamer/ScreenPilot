@@ -3,7 +3,7 @@
 Status: Required  
 Implementation state: Completed in deterministic fake mode; user-owned microphone and credential-gated live verification remain pending<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-12<br>
+Last synchronized: 2026-09-14<br>
 Depends on: SP-006, SP-011, SP-011A, SP-012  
 Suggested commit: `SP-013: add voice disclosure and preflight`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -18,8 +18,8 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 ## Standalone implementation context
 
 - Both entry modes arrive with an unexpired `interviewGrant` and use this exact shared preflight.
-- SP-011A's compact in-workspace Privacy/session/human-decision context band remains visible inside the centralized dark `/demo` shell, but it does not replace this ticket's complete provider/AI/voice/microphone disclosure immediately before consent.
-- Disclosure identifies OpenAI/ElevenLabs processing, Cloudflare Turnstile anti-abuse verification, no ScreenPilot audio recording, session-only review, eight-minute maximum, and the expectation to use synthetic data.
+- SP-011A's compact in-workspace Privacy/session/human-decision context band remains visible inside the centralized dark `/demo` shell, but it does not replace this ticket's plain-language interview, microphone, and consent explanation immediately before voice begins.
+- Preflight presents exactly two stacked cards in candidate-friendly language: a short explanation of how the interview works, then privacy/consent with the microphone check. It explains microphone use, adaptive questions, human-reviewed notes, no ScreenPilot audio recording, session-only review, the eight-minute maximum, and the expectation to use synthetic data without exposing provider names, tokens, anti-abuse implementation, or other infrastructure details.
 - The mode badge explains whether the interviewer has CV-derived context or will learn only from spoken answers.
 - Consent begins unchecked and requires a deliberate action.
 - Microphone readiness includes permission, selected-device label, live input meter, and recovery guidance.
@@ -43,9 +43,9 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 ## Implementation checklist
 
 - [x] Build preflight inside the shared centralized dark workspace with mode badge, inert stage status, **Clear & exit**, and reducer-valid Back behavior; do not add white panels or a second shell.
-- [x] Present concise disclosure and privacy/provider roles before consent.
+- [x] Present the interview explanation and privacy/consent as two stacked cards using concise candidate language; keep provider and infrastructure details out of visible preflight copy.
 - [x] State that the candidate-authored role is a synthetic browser-session demo vacancy—not a real opening/application—or that the interview will remain role-neutral when undecided; do not show employer facts or a supported-role list.
-- [x] Implement an unchecked consent control and deliberate continuation.
+- [x] Implement an unchecked consent control; **Check microphone** deliberately accepts the selected consent before requesting permission, avoiding a redundant intermediate confirmation action.
 - [x] Request microphone permission only from user action; show selected input and a non-recording level meter.
 - [x] Handle denied, unavailable, in-use, removed, and permission-retry states with browser-appropriate guidance.
 - [x] Reuse the managed Turnstile gate for `voice_token`, placing rare interaction inline beside Start with responsive/keyboard support.
@@ -72,13 +72,15 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 
 ## Implemented result
 
-- One shared preflight now presents provider, privacy, synthetic-data, session, duration, and human-decision boundaries before an unchecked consent control in both entry modes. Candidate-stated role labels remain untrusted, synthetic, and session-scoped; an undecided session stays role-neutral.
+- One shared preflight now uses two stacked cards: **How the interview works** and **Your privacy and consent**. Candidate-facing copy describes only the experience and data boundaries—microphone use, adaptive questions, human-reviewed notes, no ScreenPilot audio recording, session-only review, duration, and synthetic data—without naming infrastructure or providers. Candidate-stated role labels remain untrusted, synthetic, and session-scoped; an undecided session stays role-neutral.
 - Browser microphone access lives behind a deliberate action and a dedicated hook/service boundary. It reports the selected track, computes an RMS level locally through Web Audio, maps browser failures to recovery guidance, distinguishes observable permission revocation from track/device removal through the Permissions API with a conservative fallback, and releases media tracks, graph nodes, animation frames, listeners, pending requests, and the audio context on retry, cancellation, expiry, or unmount.
 - Consent, microphone readiness, grant validity, and browser challenge capability jointly drive the reducer's `preflight`/`ready` boundary. While preflight is mounted, its local expiry path releases microphone/readiness resources before dispatching the mode-specific `CONVERSATION_GRANT_EXPIRED` or `CV_GRANT_EXPIRED` recovery event; CV plan preview retains the provider-level timer. Persisted `ready` state restores as preflight because consent and device readiness are deliberately non-persistent.
 - The final Start action alone mounts the reusable managed Turnstile gate with action `voice_token`. The response token is handed off synchronously in memory, repeated Start actions are ignored, challenge-only retry preserves preparation and microphone state, and the connecting/cancel seam is ready for SP-014 without adding a voice-token request or ElevenLabs client early.
+- The presentation keeps the same gates but removes the four-step implementation walkthrough. The microphone check lives inside the consent card, and the single **Start interview** action is anchored at the lower right.
 
 ## Verification evidence
 
+- The 2026-09-14 presentation refinement passed all 21 focused preflight and entry-flow tests, frontend lint, frontend typecheck, targeted formatting, and `git diff --check`. The running fake-mode route showed exactly two preflight cards, no provider or infrastructure names, and a lower-right **Start interview** action at the default desktop viewport; 390 × 844 and 768 × 1024 checks retained two cards with no horizontal overflow.
 - Passed 54 focused preflight/microphone/reducer/provider/entry tests after the validation fixes. The focused coverage exercises expiry from `preflight` and `ready` for both modes, mode-specific grant cleanup, observable permission revocation versus removal fallback, every Start prerequisite, idempotent Start, memory-only Turnstile tokens, challenge retry/reset, and low-level media/Web Audio cleanup.
 - Passed the complete frontend gate using the pinned toolchain: targeted formatting verification, zero-warning frontend ESLint, frontend typecheck, all 114 frontend unit tests, and the optimized production build. `git diff --check` also passed.
 - Browser-checked the conversation-first path, unchecked disclosure, keyboard-only consent, disabled gate states, mode-aware Back, accessibility names/live regions, and the shared dark composition at 320 px, 768 px, 913 px, 1280 px, 1440 px, and 1920 px. Every checked width had no horizontal overflow; the 320 px progress labels were tightened after visual inspection.

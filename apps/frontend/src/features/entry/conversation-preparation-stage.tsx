@@ -12,6 +12,7 @@ import {
 } from "@/shared/api/screenpilot-api";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 
 type PrepareConversation = typeof prepareConversationFirst;
@@ -87,32 +88,35 @@ export function ConversationPreparationStage({
 
   return (
     <div className="sp-demo-stage sp-conversation-preparation">
-      <p className="sp-eyebrow">Conversation-first path</p>
+      <DemoStageHeading
+        pretitle="Conversation-first path"
+        title={
+          failure
+            ? "The open conversation is not prepared yet."
+            : isRefreshingExpiredGrant
+              ? "Refreshing your open conversation."
+              : "Preparing an open conversation."
+        }
+      />
       {failure ? (
-        <>
-          <h1>The open conversation is not prepared yet.</h1>
-          <p className="sp-demo-stage__lead">
-            No candidate details were collected and no provider interview was
-            started.
-          </p>
-          <ErrorPanel
-            actions={
-              <ButtonGroup>
-                {failure.retryable ? (
-                  <Button onClick={onRetry} variant="secondary">
-                    Retry
-                  </Button>
-                ) : null}
-                <Button onClick={onBack} variant="quiet">
-                  Change starting option
+        <ErrorPanel
+          actions={
+            <ButtonGroup>
+              {failure.retryable ? (
+                <Button onClick={onRetry} variant="secondary">
+                  Retry
                 </Button>
-              </ButtonGroup>
-            }
-            title="Preparation could not finish"
-          >
-            <p>{failure.message}</p>
-          </ErrorPanel>
-        </>
+              ) : null}
+              <Button onClick={onBack} variant="quiet">
+                Change starting option
+              </Button>
+            </ButtonGroup>
+          }
+          title="Preparation could not finish"
+        >
+          <p>{failure.message}</p>
+          <p>No interview was started.</p>
+        </ErrorPanel>
       ) : (
         <Card aria-live="polite" className="sp-preparation-card">
           <span aria-hidden="true" className="sp-open-conversation-signal">
@@ -121,11 +125,7 @@ export function ConversationPreparationStage({
             <span />
           </span>
           <div>
-            <h1>
-              {isRefreshingExpiredGrant
-                ? "Refreshing your open conversation"
-                : "Preparing an open conversation"}
-            </h1>
+            <h2>Getting the questions ready</h2>
             <p>
               Pilot is setting up a role-neutral first interview. No CV is being
               analyzed and no candidate facts are being invented.

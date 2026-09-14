@@ -23,6 +23,13 @@ describe("InterviewStage", () => {
       />,
     );
 
+    expect(screen.getByText("ScreenPilot interview")).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        level: 1,
+        name: "Pilot is interviewing",
+      }),
+    ).toBeVisible();
     expect(screen.getByText("Pilot is listening…")).toBeVisible();
     expect(screen.getByText("Conversation-first")).toBeVisible();
     expect(screen.getByText("01:05")).toBeVisible();
