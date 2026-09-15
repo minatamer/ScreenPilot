@@ -10,8 +10,9 @@ import {
   prepareConversationFirst,
   ScreenPilotApiError,
 } from "@/shared/api/screenpilot-api";
-import { Button, ButtonGroup } from "@/shared/ui/button";
+import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 
@@ -87,7 +88,7 @@ export function ConversationPreparationStage({
   }, [failure, onFailure, onPrepared, prepare, requestIdFactory]);
 
   return (
-    <div className="sp-demo-stage sp-conversation-preparation">
+    <div className="sp-demo-stage sp-demo-stage--with-footer sp-conversation-preparation">
       <DemoStageHeading
         pretitle="Conversation-first path"
         title={
@@ -101,16 +102,11 @@ export function ConversationPreparationStage({
       {failure ? (
         <ErrorPanel
           actions={
-            <ButtonGroup>
-              {failure.retryable ? (
-                <Button onClick={onRetry} variant="secondary">
-                  Retry
-                </Button>
-              ) : null}
-              <Button onClick={onBack} variant="quiet">
-                Change starting option
+            failure.retryable ? (
+              <Button onClick={onRetry} variant="secondary">
+                Retry
               </Button>
-            </ButtonGroup>
+            ) : undefined
           }
           title="Preparation could not finish"
         >
@@ -131,11 +127,13 @@ export function ConversationPreparationStage({
               analyzed and no candidate facts are being invented.
             </p>
           </div>
-          <Button onClick={onBack} variant="quiet">
-            Change starting option
-          </Button>
         </Card>
       )}
+      <DemoActionFooter>
+        <Button onClick={onBack} variant="quiet">
+          Change starting option
+        </Button>
+      </DemoActionFooter>
     </div>
   );
 }

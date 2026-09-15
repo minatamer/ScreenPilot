@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { UNIVERSAL_TOPIC_KEYS } from "./screening-plan.ts";
+
 export const TOPIC_PROGRESS_STATUSES = [
   "not_started",
   "in_progress",
@@ -9,9 +11,14 @@ export const TOPIC_PROGRESS_STATUSES = [
 ] as const;
 
 export const topicProgressSchema = z.strictObject({
-  topicKey: z.string().trim().min(1).max(64),
+  topicKey: z.enum(UNIVERSAL_TOPIC_KEYS),
   status: z.enum(TOPIC_PROGRESS_STATUSES),
-  evidenceTurnIds: z.array(z.string().trim().min(1).max(64)).max(16),
+  evidenceTurnIds: z
+    .array(z.string().trim().min(1).max(64))
+    .max(16)
+    .refine((ids) => new Set(ids).size === ids.length, {
+      message: "Topic evidence cannot be duplicated.",
+    }),
   updatedAt: z.iso.datetime({ offset: true }),
 });
 

@@ -1,7 +1,7 @@
 # ScreenPilot standalone ticket index
 
 Status: execution-packet index  
-Last synchronized: 2026-09-12<br>
+Last synchronized: 2026-09-15<br>
 Parent source of truth: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
 
 ---
@@ -94,8 +94,9 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-014 is completed, validated after its fake-mode and terminal-session cleanup corrections, and represented by implementation commit `9075c7d`; real ElevenLabs, Turnstile, retention-dashboard, and microphone verification remains credential-gated.
 - SP-014A is completed as documentation-only work. Its consolidated runbook covers every non-deployment OpenAI, ElevenLabs, Turnstile, local-secret, spend, rotation, and manual-verification step without requesting credentials or making a paid call; owner account setup and live/microphone checks remain explicitly pending.
 - SP-015 is implemented and deterministically verified without a live provider; its active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018.
-- SP-015A's owner-directed landing and `/demo` UI/UX implementation is complete in the current unstaged work. Motion, illustration, CTA, responsive alignment, preflight hierarchy, the shared stage-heading primitive, typography tokens, and spacing rhythm have focused deterministic coverage; the ticket remains open for consolidated owner visual acceptance and its remaining whole-flow/manual checks, and must close before SP-016 begins.
-- SP-016 is the next feature ticket after SP-015A.
+- SP-015A's owner-directed landing and `/demo` UI/UX implementation is represented by commit `cab2990`. Motion, illustration, CTA, responsive alignment, preflight hierarchy, the shared stage-heading primitive, typography tokens, and spacing rhythm have focused deterministic coverage; consolidated owner visual acceptance and remaining whole-flow/manual checks stay tracked in that packet.
+- SP-016 is implemented in the current unstaged work and locally verified without credentials or a paid provider call. Its schemas, five-tool dispatcher, evidence validation, correction-history preservation, CV seeding, strict session synchronization, aligned height-matched Insight Board, responsive connector treatment, and safety cases have focused coverage; a reduced-motion alternative is implemented, while published-agent callback verification and an owner/browser reduced-motion visual check remain explicitly pending.
+- SP-017 is the next feature ticket after SP-016.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

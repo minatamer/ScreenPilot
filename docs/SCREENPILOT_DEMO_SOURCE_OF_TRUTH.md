@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-09-14<br>
+Last revised: 2026-09-15<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -263,7 +263,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 5A — plan preview
 
 - **Input state:** validated CV facts and screening plan.
-- **Visible behavior:** two-column view with **What the CV says** and **What ScreenPilot will explore**; every CV-derived topic links to a short source excerpt. Any role-alignment hint is labelled **Suggested from CV — confirm during the call**, never **Applied role**.
+- **Visible behavior:** two-column view with **What the CV says** and **What ScreenPilot will explore**. Laptop/desktop layouts use two matching raised panels that consume the available preparation workspace, keep their headings visible, and scroll their fact/topic card lists internally so neither collection makes the page unnaturally tall; compact layouts retain natural stacked page flow. Every CV-derived topic links to a short source excerpt. Any role-alignment hint is labelled **Suggested from CV — confirm during the call**, never **Applied role**.
 - **Allowed action:** continue or start over. No plan editor, regeneration control, job editor, or recruiter approval workflow.
 - **Output state:** `preflight`.
 - **Failure:** if browser validation detects an incomplete plan, return to analysis error instead of continuing.
@@ -510,9 +510,9 @@ The board is the demo's visual signature. It should make AI comprehension visibl
 
 ### Layout
 
-- Desktop: interviewer signal in the center-left and a fixed constellation of insight cards on the right.
+- Desktop: interviewer signal in the center-left and an aligned insight-card column on the right that scrolls vertically inside a panel matched to the voice/caption panel height.
 - Mobile: the same voice signal, captions, categories, source chips, correction states, and connector motif are recomposed into a deliberate vertical canvas with a swipeable insight rail and expandable evidence cards.
-- Use fixed card regions and restrained connector lines; do not build a force-directed graph engine.
+- Use one stable category order, aligned card edges, and restrained connector lines; do not build a force-directed graph engine.
 
 ### Card categories
 
@@ -1406,11 +1406,16 @@ screen-pilot/
 │  │     │  │  ├─ normalize-voice-event.ts       # SP-015
 │  │     │  │  ├─ normalize-voice-event.test.ts  # SP-015
 │  │     │  │  ├─ use-voice-session.ts           # SP-015
-│  │     │  │  ├─ interview-timer.ts             # SP-015/SP-018
+│  │     │  │  └─ interview-timer.ts             # SP-015/SP-018
+│  │     │  ├─ insights/
 │  │     │  │  ├─ insight-board.tsx              # SP-016
-│  │     │  │  ├─ insight-card.tsx               # SP-016
+│  │     │  │  ├─ insight-board.test.tsx         # SP-016
 │  │     │  │  ├─ insight-client-tools.ts        # SP-016
-│  │     │  │  └─ insight-client-tools.test.ts   # SP-016
+│  │     │  │  ├─ insight-client-tools.test.ts   # SP-016
+│  │     │  │  ├─ seed-cv-insights.ts            # SP-016
+│  │     │  │  ├─ seed-cv-insights.test.ts       # SP-016
+│  │     │  │  ├─ use-insight-client-tools.ts    # SP-016
+│  │     │  │  └─ use-insight-client-tools.test.tsx # SP-016
 │  │     │  ├─ transcript/
 │  │     │  │  ├─ transcript-store.ts            # SP-019
 │  │     │  │  ├─ transcript-store.test.ts       # SP-019
@@ -2625,10 +2630,10 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 
 #### Plan preview
 
-- Left region: CV fact cards with source excerpts on layered dark surfaces.
-- Right region: interview topic cards connected to their source fact IDs inside the same bounded workspace.
+- Left region: CV fact cards with source excerpts inside a raised, softly coral-tinted dark panel.
+- Right region: interview topic cards connected to their source fact IDs inside a matching raised panel. On laptop/desktop, both panels fill the available stage row, keep their headings fixed, and scroll their card lists internally; at compact widths, restore ordinary stacked document flow.
 - Fixed topics use a subtle “standard screen” badge.
-- One clear Continue action; no editor controls.
+- Keep the status note, **Continue**, and **Start over** in the shared preparation-stage action footer, anchored as the active card/workspace's bottom row even when the content above is short; no editor controls.
 
 #### Conversation-first preparation
 
@@ -2641,8 +2646,8 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - Treat `/demo` as an independently understandable product surface, not a marketing-page continuation. One stable bounded shell owns ScreenPilot identity, an inert canonical stage panel, and the active task; the header persistently owns **Privacy details** and **Clear & exit**.
 - Use the landing's Deep Ink/plum/coral atmosphere across every `/demo` stage. Warm White and White are reserved mainly for typography, icons, and small high-contrast details; they are not page, card, panel, input, drop-zone, or review backgrounds anywhere on `/demo`. This supersedes older setup/review guidance that called for Warm White surfaces.
 - Author the dark hierarchy rather than inverting the former light UI: atmospheric page field → bounded product frame → raised task regions → quiet status/details. Borders, spacing, type scale, and coral signal moments—not many generic cards—separate responsibilities.
-- Place the inert five-step status in a compact horizontal panel at the top of the workspace. Do not add a workspace footer. Keep **Privacy details** immediately before **Clear & exit** in the persistent header across bootstrap/retry, choose, CV input/status, deterministic preparation/retry, shared preflight, live stages, and review.
-- Align the active stage's working surface to the same inner inline gutter as the progress panel; do not add a second centered-stage inset on wide screens. Top-align the task content beneath progress so short stages do not acquire content-dependent blank space. Every reachable `/demo` state—including bootstrap/error, choose, CV intake/status, conversation preparation/error, plan, preflight, connection, live interview, and the future-stage fallback—uses the shared stage-heading primitive: a short uppercase pretitle followed immediately by one page-level title. The design-system title, panel-title, card, body, and metadata tokens own the hierarchy; the shared stage, card, and heading-gap variables own vertical rhythm rather than stage-local margins. Desktop stage titles use the full task width and remain on one line when the viewport can hold them. Do not split a heading into an artificially narrow left column or float a detached explanatory sentence on its right; necessary guidance belongs inside the relevant task card, while compact widths may wrap naturally. Fluidly adapt header height, outer spacing, frame padding, type scale, and task-panel density to the available dynamic viewport height. Standard choose, CV intake, preparation, and preflight states must keep progress, task, and primary/recovery actions visible without document scrolling at the 1024 × 768, 1280 × 800, and 1440 × 900 reference anchors. Phones, 200% zoom, unusually short-height viewports, validation/errors, and content-heavy later stages use natural document scrolling; never add a nested scroll trap, hide page overflow, or clip required controls.
+- Place the inert five-step status in a compact horizontal panel at the top of the workspace. Do not add a site-wide workspace footer. Stage-level navigation and primary actions across CV intake/status, deterministic conversation preparation, plan preview, preflight, and voice connection use one consistent bordered action row anchored as the bottom row of the active card/workspace, including when the content above is short; file selection, consent, microphone permission, and error-specific Retry controls remain with the content that owns them. Keep **Privacy details** immediately before **Clear & exit** in the persistent header across bootstrap/retry, choose, CV input/status, deterministic preparation/retry, shared preflight, live stages, and review.
+- Align the active stage's working surface to the same inner inline gutter as the progress panel; do not add a second centered-stage inset on wide screens. Top-align the task content beneath progress so short stages do not acquire content-dependent blank space. Every reachable `/demo` state—including bootstrap/error, choose, CV intake/status, conversation preparation/error, plan, preflight, connection, live interview, and the future-stage fallback—uses the shared stage-heading primitive: a short uppercase pretitle followed immediately by one page-level title. The design-system title, panel-title, card, body, and metadata tokens own the hierarchy; the shared stage, card, and heading-gap variables own vertical rhythm rather than stage-local margins. Desktop stage titles use the full task width and remain on one line when the viewport can hold them. Do not split a heading into an artificially narrow left column or float a detached explanatory sentence on its right; necessary guidance belongs inside the relevant task card, while compact widths may wrap naturally. Fluidly adapt header height, outer spacing, frame padding, type scale, and task-panel density to the available dynamic viewport height. Standard choose, CV intake, preparation, plan, and preflight states must keep progress, task, and primary/recovery actions visible without document scrolling at the 1024 × 768, 1280 × 800, and 1440 × 900 reference anchors. Phones, 200% zoom, validation/errors, and compact layouts use natural document scrolling. The laptop/desktop plan preview and active-interview Insight Board use their documented bounded inner list/panel scrolling so content volume does not inflate the page; never create a keyboard trap, hide page overflow, or clip required controls.
 - The logo links to `/` and preserves the active tab session. Browser Back follows ordinary page history and does not impersonate reducer history. **Clear & exit** dispatches `CLEAR_SESSION` then replaces the route with `/` so a cleared workflow cannot be revived by Back.
 - Normalize stage recovery: **Change starting option** dispatches only reducer-valid Back/Start-over events; **Retry** repeats only the failed operation; **Continue** appears only when the next reducer transition is implemented; **Clear & exit** is the explicit destructive escape. Do not render two controls with the same transition or allow stage skipping.
 - On compact widths, the progress panel stacks above the active stage and the two header actions remain readable and keyboard-accessible. Progress may abbreviate visually only when its full accessible name and current step remain clear.
@@ -2818,7 +2823,7 @@ Follow the approved “Signal Canvas” visual language exactly: precise, calm, 
 
 Depict Pilot, ScreenPilot's AI interviewer, interviewing a synthetic candidate in a role-agnostic first-stage HR demo. The candidate is using conversation-first mode and has stated “Graphic Designer,” which is shown as the synthetic session-only vacancy—not a real opening or application. They have also stated a compensation expectation and candidate-described English-use context. Show a clearly listening coral Pilot voice signal, Pilot status using the exact visible phrases “Pilot is interviewing” and “Pilot is listening…”, readable live caption, elapsed timer, a mute control whose action/state reads **Mute — Microphone on**, an **End interview** control, a subtle Conversation-first mode badge, and an insight area containing candidate-sourced cards for role preference (“Graphic Designer — synthetic demo role”), compensation expectation, English-use context, availability, and high-level relevant experience. Mark only role preference, compensation expectation, and English-use context as confirmed, using both text/icon and green status color with caption-evidence cues. Availability must read **Not confirmed yet** and relevant experience must read **Not discussed yet**; both use the amber **Needs clarification** state and neither claims caption evidence. Do not invent a company or candidate name, employer facts, responsibilities, qualifications, salary band, benefits, work pattern, or hiring timeline. Do not use “AI” as the visible interviewer label, and do not show hiring scores, rankings, pass/fail decisions, sentiment, emotion, login, recruiter navigation, job management, pause, phone controls, device chrome, or unsupported features.
 
-Desktop composition: full-height dark canvas; approximately 42% left voice/caption/control area and 58% right fixed-layout insight constellation; cards emerge visually from the voice area but never cover captions. Mobile composition: compact voice signal at top, readable captions, swipeable insight-card rail with one selected card expanded, and sticky safe-area-aware mute/end controls. Preserve the same content, status, actions, visual identity, and evidence meaning in both views rather than removing mobile features. All interactive targets should look at least 44 × 44 px and status must never rely on color alone.
+Desktop composition: full-height dark canvas; approximately 42% left voice/caption/control area and 58% right Insight Board. The board matches the voice/caption panel height, scrolls vertically inside that boundary, and keeps every card on one aligned column; cards emerge visually from the voice area but never cover captions. Mobile composition: compact voice signal at top, readable captions, swipeable insight-card rail with one selected card expanded, and sticky safe-area-aware mute/end controls. Preserve the same content, status, actions, visual identity, and evidence meaning in both views rather than removing mobile features. All interactive targets should look at least 44 × 44 px and status must never rely on color alone.
 
 Present this as a high-quality UI concept for composition and visual direction. Keep text concise and legible, but do not add invented copy or features. The result will guide a responsive React implementation; it is not a pixel-exact specification.
 ```
@@ -3600,17 +3605,19 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Checklist:**
 
-- [ ] Register the five locked ElevenLabs client tools.
-- [ ] Validate every tool call and referenced final turn.
-- [ ] Implement a fixed desktop constellation and equally intentional mobile insight rail/expanded-card composition with the same information and states.
-- [ ] Implement card appearance, correction, clarification, and source chips.
-- [ ] Implement candidate-evidenced role-preference cards and synchronized `DemoSession.rolePreference` updates through the existing record/correct tools.
-- [ ] Preserve any bounded candidate role—including compound wording—as one inert label, support undecided/correction states, and use the same insight semantics for every profession.
-- [ ] Implement preferred-name capture/correction and synchronized `DemoSession.preferredName` updates without hardcoded candidate names.
-- [ ] Support separate evidence-grounded cards for current context, broad responsibility/strongest areas, and candidate-stated team/work style; never label a preference as a personality trait or culture-fit result.
-- [ ] Seed CV cards only in CV-assisted mode; start conversation-first fact cards empty and reject any `CV`/`CV + Candidate` source in that mode.
-- [ ] Prevent scores, sentiment, protected inference, or unsupported English ratings.
+- [x] Register the five locked ElevenLabs client tools.
+- [x] Validate every tool call and referenced final turn.
+- [x] Implement an aligned, height-matched, vertically scrollable desktop board and equally intentional mobile insight rail/expanded-card composition with the same information and states.
+- [x] Implement card appearance, correction, clarification, and source chips.
+- [x] Implement candidate-evidenced role-preference cards and synchronized `DemoSession.rolePreference` updates through the existing record/correct tools.
+- [x] Preserve any bounded candidate role—including compound wording—as one inert label, support undecided/correction states, and use the same insight semantics for every profession.
+- [x] Implement preferred-name capture/correction and synchronized `DemoSession.preferredName` updates without hardcoded candidate names.
+- [x] Support separate evidence-grounded cards for current context, broad responsibility/strongest areas, and candidate-stated team/work style; never label a preference as a personality trait or culture-fit result.
+- [x] Seed CV cards only in CV-assisted mode; start conversation-first fact cards empty and reject any `CV`/`CV + Candidate` source in that mode.
+- [x] Prevent scores, sentiment, protected inference, or unsupported English ratings.
 - [ ] Test malformed calls, duplicates, corrections, and reduced motion.
+
+**Implementation evidence (2026-09-15):** strict shared schemas and one browser dispatcher now own the five client tools, attach only the latest eligible final candidate turn, preserve correction/evidence history, enforce mode/source and inference boundaries, and synchronize preferred name plus role preference through the canonical session reducer. One shared contract-level validator protects every model-authored visible insight field and CV-analysis description while leaving verbatim candidate questions untouched, and the frontend tool map is exhaustively keyed by the voice-token contract. Later same-value evidence preserves an existing Corrected state/reason, and the allow-listed persisted projection rejects name or role state that diverges from its insight card. CV-assisted mode seeds only validated facts; conversation-first remains Candidate-only and intentionally empty before final speech. The active interview uses one exhaustive category metadata map to compose the same local Insight Board data into a stable aligned order inside a height-matched, vertically scrollable desktop panel, a tablet grid, and a phone swipe rail with a restrained connector motif, evidence disclosure, correction/clarification/source states, topic progress, bounded animation, and a reduced-motion fallback. Deterministic Node 24 verification passes 3 contract files/59 tests, 12 focused frontend files/90 tests, both TypeScript projects, targeted lint/formatting, diff checks, and credential-free production builds for contracts/backend/frontend. A clean fake-mode runtime smoke check returned `200` for `/`, `/demo`, and direct/proxied bootstrap requests on `localhost:3000`/`3001`. Credential-free browser inspection passed at 390 × 844, 768 × 1024, 1120 × 800, 1440 × 900, and 1920 × 1080; published-agent callbacks remain credential-gated, and a real owner/browser reduced-motion preference-mode check remains pending.
 
 **Future exploration note — replayable evidence audio (not demo scope):** After the core demo is complete, evaluate whether a card could offer a short candidate-audio excerpt linked to the same evidence turn. The current implementation must continue to use transcript evidence only, keep recording and ElevenLabs `Store Call Audio` disabled, and must not add a Play-audio control. Research both browser-local capture alongside WebRTC and the newly identified ElevenLabs-managed recording option. For ElevenLabs-managed audio, determine from current first-party documentation and a synthetic test how recordings are stored and protected, who can access them, plan/cost/residency implications, how retention `0`/scheduled deletion/ZRM/manual deletion interact, whether recordings can be retrieved through the dashboard or API and with which scope/format/URL lifetime, and whether recording/turn/segment/word or transcript start-and-end timestamps provide reliable interruption-safe evidence alignment. Any later proposal requires a separate owner-approved privacy/scope decision covering explicit recording consent and disclosure, candidate access/deletion handling, bounded excerpt authorization, mobile support, playback feedback/echo prevention, and guaranteed cleanup. Real candidate recording is prohibited until that decision and its product copy, tests, and operational controls are approved. This exploration is not an SP-016 acceptance criterion and cannot delay the ticket. The operational research checklist lives in `docs/operations/live-provider-setup.md`.
 
@@ -3951,7 +3958,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Conversation-first path | Locked, equal priority with CV-assisted | Keep because it provides the fastest trial and demonstrates live adaptive discovery. Share preflight/interview/review components; do not let it become a separate app or a long manual form. |
 | Candidate-defined synthetic role | Locked, role-agnostic | Accept any bounded candidate-stated label as the synthetic vacancy for that browser session or continue undecided. Keep one universal HR screen; do not add an allow-list, classifier, vacancy CRUD, pre-call picker, profession-specific assessment, or inferred employer facts. |
 | Separate Express backend | In scope | Keep because it protects keys, uses a broadly recognized Node.js API stack, and demonstrates backend/API skill. Collapsing into Next.js route handlers is the largest remaining architectural simplification if schedule becomes tight. |
-| Real-time insight constellation | In scope with fixed layout | Keep the cards; avoid a true mind-map/graph engine, draggable nodes, zoom, physics, or editable relationships. |
+| Real-time Insight Board | In scope with an aligned scrollable layout | Keep the cards; avoid a true mind-map/graph engine, draggable nodes, zoom, physics, or editable relationships. |
 | Five client tools | In scope | Keep only if all five are reliable. `recordInsight` and `correctInsight` are essential; topic/question/follow-up tools may be merged into one structured event tool. |
 | Full local transcript | In scope | Keep final text and evidence navigation; cut word-level timestamps, speaker audio alignment, search, and editing. |
 | GPT post-call summary | In scope | Keep because it completes the story. Do not add recruiter decisions, scoring, regeneration history, or multiple summary formats. |

@@ -1,7 +1,5 @@
 import {
   VOICE_AGENT_POLICY_VERSION,
-  VOICE_CLIENT_TOOL_NAMES,
-  type VoiceClientToolName,
   type VoiceDynamicVariableKey,
 } from "@screenpilot/contracts/api/voice-token";
 import {
@@ -28,14 +26,6 @@ const INERT_DATA_NOTICE =
 
 export type VoiceDynamicVariables = Readonly<
   Record<VoiceDynamicVariableKey, string | number | boolean>
->;
-
-export type VoiceClientTool = (
-  parameters: Record<string, unknown>,
-) => string | Promise<string>;
-
-export type VoiceClientTools = Readonly<
-  Record<VoiceClientToolName, VoiceClientTool>
 >;
 
 function truncate(value: string, maximumCharacters: number): string {
@@ -158,24 +148,4 @@ export function createVoiceSessionContext(input: {
       MAXIMUM_CV_CONTEXT_CHARACTERS,
     ),
   });
-}
-
-const deferredToolResult =
-  "The browser could not apply this interview-board update.";
-
-export function createDeferredVoiceClientTools(): VoiceClientTools {
-  const deferredTool = () => deferredToolResult;
-  return Object.freeze({
-    recordInsight: deferredTool,
-    correctInsight: deferredTool,
-    markTopic: deferredTool,
-    recordCandidateQuestion: deferredTool,
-    requestFollowup: deferredTool,
-  });
-}
-
-export function voiceClientToolNames(
-  tools: VoiceClientTools,
-): readonly VoiceClientToolName[] {
-  return VOICE_CLIENT_TOOL_NAMES.filter((name) => name in tools);
 }

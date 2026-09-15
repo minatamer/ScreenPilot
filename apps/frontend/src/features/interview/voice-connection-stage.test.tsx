@@ -59,6 +59,7 @@ function stageProps(requestToken: VoiceTokenRequester) {
   return {
     demoContext: DEMO_CONTEXT,
     entryMode: "conversation_first" as const,
+    insights: [],
     liveSessionBridge: FakeSessionBridge,
     liveVoiceEnabled: true,
     onCancel: vi.fn(),
@@ -69,12 +70,16 @@ function stageProps(requestToken: VoiceTokenRequester) {
     onFinalTranscriptTurn: vi.fn<(turn: TranscriptTurn) => void>(),
     onGrantRejected: vi.fn(),
     onInterrupted: vi.fn(),
+    onInsight: vi.fn(),
     onRetry: vi.fn(),
     onSensitiveValuesCleared: vi.fn(),
+    onTopicProgress: vi.fn(),
     plan: createConversationFirstPlanFixture(),
     requestToken,
     stage: "connecting" as const,
     startRequest: START_REQUEST,
+    topicProgress: [],
+    transcript: [],
   };
 }
 
@@ -189,6 +194,21 @@ describe("VoiceConnectionStage", () => {
       "You can call me Sam.",
       "Thanks, Sam. Tell me what you would like to focus on today.",
     ]);
+    await waitFor(() => {
+      expect(props.onInsight).toHaveBeenCalledWith(
+        expect.objectContaining({
+          category: "preferred_name",
+          source: "Candidate",
+          value: "Sam",
+        }),
+      );
+      expect(props.onTopicProgress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: "covered",
+          topicKey: "preferred_name",
+        }),
+      );
+    });
     expect(props.onSensitiveValuesCleared).toHaveBeenCalledOnce();
     expect(window.sessionStorage.length).toBe(0);
   });

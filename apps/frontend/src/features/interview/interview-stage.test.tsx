@@ -16,10 +16,13 @@ describe("InterviewStage", () => {
         }}
         elapsedSeconds={65}
         entryMode="conversation_first"
+        insights={[]}
         isMuted={false}
         onEnd={onEnd}
         onToggleMute={onToggleMute}
         phase="listening"
+        topicProgress={[]}
+        transcript={[]}
       />,
     );
 
@@ -32,6 +35,8 @@ describe("InterviewStage", () => {
     ).toBeVisible();
     expect(screen.getByText("Pilot is listening…")).toBeVisible();
     expect(screen.getByText("Conversation-first")).toBeVisible();
+    expect(screen.getByText("What ScreenPilot understood")).toBeVisible();
+    expect(screen.getByText("Ready for candidate evidence")).toBeVisible();
     expect(screen.getByText("01:05")).toBeVisible();
     expect(
       screen.getByText(
@@ -53,10 +58,13 @@ describe("InterviewStage", () => {
         caption={null}
         elapsedSeconds={12}
         entryMode="cv_assisted"
+        insights={[]}
         isMuted
         onEnd={vi.fn()}
         onToggleMute={vi.fn()}
         phase="reconnecting"
+        topicProgress={[]}
+        transcript={[]}
       />,
     );
 
@@ -73,10 +81,13 @@ describe("InterviewStage", () => {
         caption={null}
         elapsedSeconds={12}
         entryMode="cv_assisted"
+        insights={[]}
         isMuted
         onEnd={vi.fn()}
         onToggleMute={vi.fn()}
         phase="ending"
+        topicProgress={[]}
+        transcript={[]}
       />,
     );
     expect(

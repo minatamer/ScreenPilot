@@ -7,8 +7,11 @@ import { useCallback, useEffect, useState } from "react";
 import type { PrepareInterviewResponse } from "@screenpilot/contracts/api/interview-preparation";
 import type { AnalyzeCvResponse } from "@screenpilot/contracts/api/cv-analysis";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
+import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
+import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
 
 import { CvStage } from "@/features/cv/cv-stage";
+import { createCvInsightSeeds } from "@/features/insights/seed-cv-insights";
 import type { VoiceStartRequest } from "@/features/interview/voice-connection-stage";
 import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
@@ -101,6 +104,7 @@ export function DemoExperience() {
   );
   const handleCvPrepared = useCallback(
     (response: AnalyzeCvResponse) => {
+      const preparedAt = new Date().toISOString();
       dispatch({
         type: "CV_PREPARATION_SUCCEEDED",
         cv: response.cv,
@@ -109,6 +113,9 @@ export function DemoExperience() {
         interviewGrantExpiresAt: response.expiresAt,
         usage: response.usage,
       });
+      for (const insight of createCvInsightSeeds(response.cv, preparedAt)) {
+        dispatch({ type: "UPSERT_INSIGHT", insight });
+      }
     },
     [dispatch],
   );
@@ -169,7 +176,7 @@ export function DemoExperience() {
     state.runtimeConfig
   ) {
     stageContent = (
-      <div className="sp-demo-stage">
+      <div className="sp-demo-stage sp-demo-stage--with-footer">
         <CvStage
           failure={state.failure}
           onChooseAnotherCv={() => {
@@ -318,6 +325,9 @@ export function DemoExperience() {
         onFinalTranscriptTurn={(turn) => {
           dispatch({ type: "ADD_FINAL_TRANSCRIPT_TURN", turn });
         }}
+        onInsight={(insight: InsightCard) => {
+          dispatch({ type: "UPSERT_INSIGHT", insight });
+        }}
         onInterrupted={() => {
           setVoiceStartRequest(null);
           dispatch({
@@ -332,6 +342,10 @@ export function DemoExperience() {
         onSensitiveValuesCleared={() => {
           setVoiceStartRequest(null);
         }}
+        onTopicProgress={(progress: TopicProgress) => {
+          dispatch({ type: "SET_TOPIC_PROGRESS", progress });
+        }}
+        insights={state.insights}
         liveVoiceEnabled={state.runtimeConfig.paidVoiceEnabled}
         plan={state.screeningPlan}
         {...(state.rolePreference
@@ -339,6 +353,8 @@ export function DemoExperience() {
           : {})}
         stage={state.stage}
         startRequest={voiceStartRequest}
+        topicProgress={state.topicProgress}
+        transcript={state.transcript}
       />
     );
   } else {

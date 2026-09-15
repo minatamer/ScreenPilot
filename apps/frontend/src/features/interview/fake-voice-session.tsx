@@ -1,6 +1,9 @@
 "use client";
 
+import type { VoiceClientToolName } from "@screenpilot/contracts/api/voice-token";
 import { useEffect, useRef } from "react";
+
+import { INSIGHT_CATEGORY_METADATA } from "@/features/insights/insight-category-metadata";
 
 import type {
   VoiceSessionBridgeProps,
@@ -79,8 +82,34 @@ export const FAKE_VOICE_EVENT_TRACE = [
   event: VoiceSessionEvent;
 }>[];
 
+export const FAKE_VOICE_TOOL_TRACE = [
+  {
+    afterMs: 600,
+    name: "recordInsight",
+    parameters: {
+      category: "preferred_name",
+      label: INSIGHT_CATEGORY_METADATA.preferred_name.label,
+      value: "Sam",
+      source: "Candidate",
+    },
+  },
+  {
+    afterMs: 620,
+    name: "markTopic",
+    parameters: {
+      topicKey: "preferred_name",
+      status: "covered",
+    },
+  },
+] as const satisfies readonly Readonly<{
+  afterMs: number;
+  name: VoiceClientToolName;
+  parameters: Record<string, unknown>;
+}>[];
+
 export function FakeVoiceSession({
   authorization,
+  clientTools,
   endRequested,
   expectedConversationId,
   onAuthorizationConsumed,
@@ -91,6 +120,7 @@ export function FakeVoiceSession({
   const traceTimerIdsRef = useRef<number[]>([]);
   const initialSessionRef = useRef({
     authorization,
+    clientTools,
     expectedConversationId,
     onAuthorizationConsumed,
     onEvent,
@@ -126,6 +156,35 @@ export function FakeVoiceSession({
           }
         }, traceEntry.afterMs);
         traceTimerIdsRef.current.push(traceTimerId);
+      }
+      for (const toolEntry of FAKE_VOICE_TOOL_TRACE) {
+        const toolTimerId = window.setTimeout(() => {
+          if (endedRef.current) {
+            return;
+          }
+          const clientTool = initialSession.clientTools[toolEntry.name];
+          if (!clientTool) {
+            initialSession.onEvent({
+              type: "error",
+              message: "The fake client-tool registration is incomplete.",
+            });
+            return;
+          }
+          try {
+            void Promise.resolve(clientTool(toolEntry.parameters)).catch(() => {
+              initialSession.onEvent({
+                type: "error",
+                message: "The fake client-tool update failed.",
+              });
+            });
+          } catch {
+            initialSession.onEvent({
+              type: "error",
+              message: "The fake client-tool update failed.",
+            });
+          }
+        }, toolEntry.afterMs);
+        traceTimerIdsRef.current.push(toolTimerId);
       }
     }, 0);
 

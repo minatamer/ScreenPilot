@@ -6,6 +6,7 @@ import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-p
 
 import { Badge } from "@/shared/ui/badge";
 import { Button, ButtonGroup } from "@/shared/ui/button";
+import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 
 type CvPlanPreviewProps = Readonly<{
@@ -38,7 +39,7 @@ export function CvPlanPreview({
   const fixedTopicKeys: ReadonlySet<string> = new Set(plan.fixedTopics);
 
   return (
-    <div className="sp-demo-stage sp-plan-preview">
+    <div className="sp-demo-stage sp-demo-stage--with-footer sp-plan-preview">
       <DemoStageHeading
         pretitle="CV-assisted plan"
         title="The first interview has a grounded starting point."
@@ -100,7 +101,10 @@ export function CvPlanPreview({
           )}
         </section>
 
-        <section aria-labelledby="plan-topics-title" className="sp-plan-column">
+        <section
+          aria-labelledby="plan-topics-title"
+          className="sp-plan-column sp-plan-column--topics"
+        >
           <div className="sp-plan-column__heading">
             <p className="sp-eyebrow">Interview plan</p>
             <h2 id="plan-topics-title">What ScreenPilot will explore</h2>
@@ -134,17 +138,14 @@ export function CvPlanPreview({
         </section>
       </div>
 
-      <div className="sp-plan-preview__actions">
-        <p>
-          Structured response checked · no raw PDF or extracted text retained
-        </p>
+      <DemoActionFooter note="Structured response checked · no raw PDF or extracted text retained">
         <ButtonGroup>
           <Button onClick={onContinue}>Continue</Button>
           <Button onClick={onStartOver} variant="quiet">
             Start over
           </Button>
         </ButtonGroup>
-      </div>
+      </DemoActionFooter>
     </div>
   );
 }

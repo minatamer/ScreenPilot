@@ -6,8 +6,10 @@ import type {
 } from "@screenpilot/contracts/api/voice-token";
 import type { PublicRoleNeutralDemoContext } from "@screenpilot/contracts/interview/demo-context";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
+import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
 import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-plan";
+import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 import {
   lazy,
@@ -24,6 +26,7 @@ import type {
   RolePreference,
   SessionFailure,
 } from "@/features/session/demo-session.types";
+import { useInsightClientTools } from "@/features/insights/use-insight-client-tools";
 import {
   isAbortError,
   requestVoiceToken,
@@ -31,15 +34,13 @@ import {
 } from "@/shared/api/screenpilot-api";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 
 import { FakeVoiceSession } from "./fake-voice-session";
 import { InterviewStage } from "./interview-stage";
-import {
-  createDeferredVoiceClientTools,
-  createVoiceSessionContext,
-} from "./voice-session-context";
+import { createVoiceSessionContext } from "./voice-session-context";
 import type {
   VoiceSessionAuthorization,
   VoiceSessionBridgeProps,
@@ -63,6 +64,7 @@ type VoiceConnectionStageProps = Readonly<{
   demoContext: PublicRoleNeutralDemoContext;
   entryMode: EntryMode;
   failure?: SessionFailure | undefined;
+  insights: readonly InsightCard[];
   onCancel: () => void;
   onConnected: (voice: VoiceMetadata) => void;
   onEnded: (voice: VoiceMetadata) => void;
@@ -71,8 +73,10 @@ type VoiceConnectionStageProps = Readonly<{
   onFinalTranscriptTurn: (turn: TranscriptTurn) => void;
   onGrantRejected: () => void;
   onInterrupted: () => void;
+  onInsight: (insight: InsightCard) => void;
   onRetry: () => void;
   onSensitiveValuesCleared: () => void;
+  onTopicProgress: (progress: TopicProgress) => void;
   liveSessionBridge?: ComponentType<VoiceSessionBridgeProps>;
   liveVoiceEnabled: boolean;
   plan: ScreeningPlan;
@@ -80,6 +84,8 @@ type VoiceConnectionStageProps = Readonly<{
   rolePreference?: RolePreference | undefined;
   stage: "connecting" | "ending" | "live";
   startRequest: VoiceStartRequest | null;
+  topicProgress: readonly TopicProgress[];
+  transcript: readonly TranscriptTurn[];
 }>;
 
 function voiceConnectionFailure(error: unknown): SessionFailure {
@@ -105,6 +111,7 @@ export function VoiceConnectionStage({
   demoContext,
   entryMode,
   failure,
+  insights,
   onCancel,
   onConnected,
   onEnded,
@@ -113,8 +120,10 @@ export function VoiceConnectionStage({
   onFinalTranscriptTurn,
   onGrantRejected,
   onInterrupted,
+  onInsight,
   onRetry,
   onSensitiveValuesCleared,
+  onTopicProgress,
   liveSessionBridge: LiveSessionBridge = LazyElevenLabsVoiceSession,
   liveVoiceEnabled,
   plan,
@@ -122,6 +131,8 @@ export function VoiceConnectionStage({
   rolePreference,
   stage,
   startRequest,
+  topicProgress,
+  transcript,
 }: VoiceConnectionStageProps) {
   const initialStartRequestRef = useRef(startRequest);
   const requestStartedRef = useRef(false);
@@ -151,7 +162,15 @@ export function VoiceConnectionStage({
       }),
     [cv, demoContext, entryMode, plan, rolePreference],
   );
-  const clientTools = useMemo(() => createDeferredVoiceClientTools(), []);
+  const insightClientTools = useInsightClientTools({
+    entryMode,
+    insights,
+    onFinalTranscriptTurn,
+    onInsight,
+    onTopicProgress,
+    topicProgress,
+    transcript,
+  });
   const handleConnectionFailure = useCallback(
     (message: string) => {
       setAuthorization(undefined);
@@ -183,7 +202,7 @@ export function VoiceConnectionStage({
     onConnectionFailure: handleConnectionFailure,
     onEnded: handleEnded,
     onEnding,
-    onFinalTranscriptTurn,
+    onFinalTranscriptTurn: insightClientTools.onFinalTranscriptTurn,
     onInterrupted: handleInterrupted,
   });
   const { markConnecting } = voiceSession;
@@ -277,8 +296,8 @@ export function VoiceConnectionStage({
   return (
     <div
       className={`sp-demo-stage sp-voice-connection-stage${
-        stage === "connecting" ? "" : " sp-voice-connection-stage--live"
-      }`}
+        stage === "connecting" ? " sp-demo-stage--with-footer" : ""
+      }${stage === "connecting" ? "" : " sp-voice-connection-stage--live"}`}
     >
       {stage === "connecting" ? (
         <>
@@ -303,7 +322,8 @@ export function VoiceConnectionStage({
                 </div>
               </div>
             )}
-
+          </Card>
+          <DemoActionFooter>
             <ButtonGroup>
               {failure?.retryable ? (
                 <Button onClick={onRetry}>Retry from preflight</Button>
@@ -312,17 +332,21 @@ export function VoiceConnectionStage({
                 {failure ? "Return to preflight" : "Cancel connection"}
               </Button>
             </ButtonGroup>
-          </Card>
+          </DemoActionFooter>
         </>
       ) : (
         <InterviewStage
           caption={voiceSession.caption}
+          {...(cv ? { cv } : {})}
           elapsedSeconds={voiceSession.elapsedSeconds}
           entryMode={entryMode}
+          insights={insights}
           isMuted={voiceSession.isMuted}
           onEnd={voiceSession.requestEnd}
           onToggleMute={voiceSession.toggleMuted}
           phase={voiceSession.phase}
+          topicProgress={topicProgress}
+          transcript={transcript}
         />
       )}
 
@@ -330,7 +354,7 @@ export function VoiceConnectionStage({
         <Suspense fallback={null}>
           <SessionBridge
             authorization={authorization}
-            clientTools={clientTools}
+            clientTools={insightClientTools.clientTools}
             dynamicVariables={dynamicVariables}
             endRequested={voiceSession.endRequested}
             expectedConversationId={expectedConversationId}

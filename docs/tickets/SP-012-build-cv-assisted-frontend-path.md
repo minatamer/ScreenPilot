@@ -21,7 +21,8 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - Uploaded and bundled sample PDFs use the same local extraction and backend analysis path.
 - Immediately before paid analysis, execute the reusable managed Turnstile gate with action `cv_analyze`; its token is memory-only and single-use.
 - After a validated response, clear raw extracted text and store only normalized facts, the plan, grant, and bounded public metadata in `sessionStorage`.
-- Plan preview has **What the CV says** and **What ScreenPilot will explore**. Every CV-derived topic links to evidence; fixed topics are marked as standard screening.
+- Plan preview has **What the CV says** and **What ScreenPilot will explore**. Laptop/desktop layouts fill the available preparation workspace with two matching raised panels; their fact/topic card lists scroll internally so neither collection makes the page unnaturally tall. Compact layouts retain ordinary stacked document flow. Every CV-derived topic links to evidence; fixed topics are marked as standard screening.
+- Stage-level preparation actions use one shared action row anchored to the bottom of the active card/workspace across CV intake/status, conversation preparation, plan preview, preflight, and voice connection, including when the stage content is short. Content-owned controls such as file selection, consent, microphone permission, and error-specific Retry actions remain with their owning surface.
 - An evidence-linked role suggestion is labelled **Suggested from CV — confirm during the call**. The visitor does not select or confirm a role before the call.
 - This branch converges into the exact shared preflight used by conversation-first.
 - Render every CV preparation stage inside SP-011A's centralized Deep Ink/plum/coral `/demo` workspace. Preserve its header-owned inert progress status, **Clear & exit**, and compact session/privacy/human-decision context band; do not reintroduce a marketing navbar, white/Warm White page/card/form surfaces, or a stage-local shell.
@@ -49,9 +50,9 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - [x] Call the SP-010A-migrated `POST /v1/cv/analyze` with bounded text, client request ID, and one-time token; do not send a fixed catalogue key.
 - [x] Clear raw text only after a validated successful response; preserve it in component memory for a safe manual retry.
 - [x] Validate and store normalized CV, plan, grant, expiry, and coarse metadata.
-- [x] Render evidence-linked CV fact cards and planned topic cards with fixed-topic badges.
+- [x] Render evidence-linked CV fact cards and planned topic cards with fixed-topic badges; keep both laptop/desktop lists inside matching raised panels with internal vertical scrolling.
 - [x] Display any evidence-linked bounded role suggestion as **Suggested from CV — confirm during the call** and provide no pre-call role selector or supported-role list.
-- [x] Offer only Continue and Start over; implement typed analysis/Turnstile/schema/grant-expiry errors and mode-aware Back behavior.
+- [x] Offer only Continue and Start over; place them in the shared preparation-stage action footer, anchor that row to the bottom of the active card/workspace, and preserve typed analysis/Turnstile/schema/grant-expiry errors plus mode-aware Back behavior.
 - [x] Converge on the same shared preflight state/components.
 - [x] Preserve the SP-011A shared dark workspace, compact context band, navigation language, and viewport-aware natural-scroll fallback across extraction, analysis, plan preview, and shared preflight.
 - [x] Test two distinct fixtures, no-placeholder leakage, retry/reset, evidence links, and responsive parity.
@@ -80,14 +81,15 @@ Connect upload/sample extraction to protected CV analysis, then present grounded
 - `useCvPreparation` owns the CV path's ephemeral PDF/text lifecycle, abort controllers, progress timers, protected analysis call, retry behavior, and reducer-event bridge. `CvStage` is limited to composing the visible intake, progress, challenge, and error states.
 - One browser-safe shared contract now defines the three documented metered boundaries (`cv_analyze`, `voice_token`, and `interview_summary`) for both applications without wiring either later-ticket route. The client's shared script load has a 10-second ceiling; the last cancelled waiter removes the script, listeners, and timer, while cancellation by one of several waiters leaves the shared load available to the others.
 - Raw file/text references remain inside the mounted CV feature across safe retries and are released after validated success. Persistence schema v3 stores only public runtime configuration, normalized CV facts, the universal HR plan, grant/expiry, and bounded usage metadata.
-- The plan preview renders provisional evidence, evidence-linked topic intents, standard-screen badges, an explicitly unconfirmed fact-linked role suggestion, and only Continue/Start over before converging on the existing shared preflight.
+- The plan preview renders provisional evidence, evidence-linked topic intents, standard-screen badges, an explicitly unconfirmed fact-linked role suggestion, and only Continue/Start over before converging on the existing shared preflight. A later user-directed visual correction makes the laptop/desktop stage consume its bounded workspace: matching coral-tinted evidence/topic panels keep their headings visible and scroll card lists internally, while the shared action footer is anchored as the stable bottom row even when the stage content is short. Compact layouts preserve natural stacked scrolling.
 - The deterministic fake analyzer now accepts the compact single-line-break layout produced by the bundled sample PDF while preserving its bounded evidence requirements.
 
 ## Verification evidence
 
 - Passed repository formatting, zero-warning ESLint, all workspace typechecks, all 252 unit tests (48 contracts, 120 backend, 84 frontend), and the complete production build using the repository-pinned Node 24 and pnpm 11.24 toolchain. The validation follow-up specifically reran 15 Turnstile/CV tests, all 84 frontend tests, the frontend typecheck/lint, and the frontend production build.
 - Browser-tested the bundled sample through extraction, fake protected analysis, evidence-link keyboard focus, plan restore after refresh, Continue, CV-aware Back, Start over, and conversation-first convergence on the same preflight.
-- Visually checked 375 px phone, 768 px tablet, 980 px intermediate, 1280 px laptop/desktop, and 1920 px large-monitor layouts. Every checked width had natural vertical scrolling and `scrollWidth === clientWidth`; browser logs contained no warnings or errors.
+- Visually checked 390 × 844 phone, 768 × 1024 tablet, 1100 × 760 intermediate, 1296 × 588 short desktop, 1320 × 708 laptop, and 1600 × 900 large-monitor layouts. Compact phone/tablet layouts retain stacked document scrolling without horizontal overflow. Intermediate through large-monitor layouts match document and viewport height, keep equal-height panels with usable internally scrollable lists, and anchor the shared action footer to the workspace bottom; the 1296 × 588 stress check retained a 100 px list viewport instead of collapsing it.
+- The user-directed bounded-plan/shared-footer correction passes all 180 frontend unit tests, zero-warning frontend lint, frontend typecheck, formatting and diff checks, and a fresh frontend production build under the pinned Node 24/pnpm 11.24 toolchain. The existing fake frontend/backend remained responsive on `localhost:3000`/`3001`; no paid provider call was made.
 
 ## Unchecked gates
 

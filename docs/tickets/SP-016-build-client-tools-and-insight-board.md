@@ -1,8 +1,8 @@
 # SP-016 — Build browser client tools and Insight Board
 
-Status: Required  
+Status: Implementation complete; live-provider and reduced-motion manual checks pending<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-14<br>
+Last synchronized: 2026-09-15<br>
 Depends on: SP-005, SP-006, SP-010A, SP-015, SP-015A<br>
 Suggested commit: `SP-016: visualize live interview understanding`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -23,7 +23,7 @@ Make ScreenPilot's understanding visible by validating five browser client tools
 - Conversation-first begins with no candidate fact cards and allows only `Candidate` provenance.
 - Preferred-name and role-preference tool updates synchronize the typed `DemoSession` fields from the same evidence.
 - Role-preference tools accept any bounded candidate-stated label or an undecided state. They do not classify professions, check an allow-list, split compound labels, or create unavailable-role behavior.
-- Desktop uses a fixed constellation; mobile retains identical categories/sources/states in a vertical composition with swipeable rail and expandable evidence.
+- Desktop uses one aligned Insight Board column that scrolls vertically inside a panel matched to the voice/caption panel height; mobile retains identical categories/sources/states in a vertical composition with swipeable rail and expandable evidence.
 - Card lifecycle is empty → appearing → confirmed, with confirmed → corrected or needs-clarification.
 - The live Insight Board stays inside SP-011A's centralized Deep Ink/plum/coral `/demo` workspace. It preserves the same home/exit/status language and layered dark hierarchy; cards use raised dark surfaces rather than white panels or a separate dashboard shell.
 
@@ -49,39 +49,49 @@ Make ScreenPilot's understanding visible by validating five browser client tools
 
 ## Implementation checklist
 
-- [ ] Define strict shared schemas for all five client-tool arguments and allowed insight categories/statuses/sources.
-- [ ] Register the five tools with the ElevenLabs client and route calls through one validated dispatcher.
-- [ ] Attach the latest eligible final candidate turn ID locally; reject missing, stale, wrong-speaker, malformed, or duplicate evidence.
-- [ ] Implement the fixed desktop constellation and intentional mobile rail/expanded-card composition.
-- [ ] Implement appearance, confirmed, corrected, clarification, and evidence-chip states with reduced-motion alternatives.
-- [ ] Synchronize preferred name and role preference from record/correct events while preserving candidate wording/evidence.
-- [ ] Support current context, relevant experience, broad responsibility, strongest areas, team/work style, availability, location/work-arrangement preference, compensation expectation, English-use context when relevant, motivation, candidate question, and human-follow-up categories.
-- [ ] Seed only validated CV facts in CV-assisted and leave conversation-first fact state empty.
-- [ ] Treat salary, English, availability, and team/work preferences neutrally.
+- [x] Define strict shared schemas for all five client-tool arguments and allowed insight categories/statuses/sources.
+- [x] Register the five tools with the ElevenLabs client and route calls through one validated dispatcher.
+- [x] Attach the latest eligible final candidate turn ID locally; reject missing, stale, wrong-speaker, malformed, or duplicate evidence.
+- [x] Implement the aligned, height-matched, vertically scrollable desktop board and intentional mobile rail/expanded-card composition.
+- [x] Implement appearance, confirmed, corrected, clarification, and evidence-chip states with reduced-motion alternatives.
+- [x] Synchronize preferred name and role preference from record/correct events while preserving candidate wording/evidence.
+- [x] Support current context, relevant experience, broad responsibility, strongest areas, team/work style, availability, location/work-arrangement preference, compensation expectation, English-use context when relevant, motivation, candidate question, and human-follow-up categories.
+- [x] Seed only validated CV facts in CV-assisted and leave conversation-first fact state empty.
+- [x] Treat salary, English, availability, and team/work preferences neutrally.
 - [ ] Test malformed calls, wrong sources, no-evidence calls, duplicates, corrections, source transitions, role/name synchronization, layout, and reduced motion.
 
 ## Acceptance criteria
 
-- [ ] A final candidate salary statement can create a neutral evidence-linked range card in real time.
-- [ ] A correction replaces the prior card value, displays Corrected, and preserves valid evidence history without duplication.
-- [ ] Conversation-first cannot create a CV-sourced card by type, reducer, or malformed tool call.
-- [ ] Name/role cards and `DemoSession` values stay synchronized from candidate evidence.
-- [ ] Any bounded role label, compound wording, correction, and undecided state use one role-card/session contract with no classification, splitting, allow-list check, or unavailable status.
-- [ ] Desktop and mobile show the same categories, source chips, clarification/correction states, and evidence access.
-- [ ] No backend write, audio control, hidden score, or unsupported inference exists.
-- [ ] Unsupported employer/vacancy questions create evidence-linked human-follow-up cards without inventing responsibilities, qualifications, compensation, benefits, reporting lines, team size, work pattern, location requirements, or timelines.
+- [x] A final candidate salary statement can create a neutral evidence-linked range card in real time.
+- [x] A correction replaces the prior card value, displays Corrected, and preserves valid evidence history without duplication.
+- [x] Conversation-first cannot create a CV-sourced card by type, reducer, or malformed tool call.
+- [x] Name/role cards and `DemoSession` values stay synchronized from candidate evidence.
+- [x] Any bounded role label, compound wording, correction, and undecided state use one role-card/session contract with no classification, splitting, allow-list check, or unavailable status.
+- [x] Desktop and mobile show the same categories, source chips, clarification/correction states, and evidence access.
+- [x] No backend write, audio control, hidden score, or unsupported inference exists.
+- [x] Unsupported employer/vacancy questions create evidence-linked human-follow-up cards without inventing responsibilities, qualifications, compensation, benefits, reporting lines, team size, work pattern, location requirements, or timelines.
 
 ## Focused verification
 
-- [ ] Run focused tool-schema, dispatcher, reducer, and component tests.
-- [ ] Replay fake events for salary, availability, team style, name correction, role correction, candidate question, and clarification.
-- [ ] Replay Graphic Designer, Full Stack Developer, compound-role, undecided, and unsupported-employer-question events and verify universal categories plus evidence-linked human follow-up.
-- [ ] Attempt invalid source, missing final turn, invented ID, duplicate, and unsupported category calls.
+- [x] Run focused tool-schema, dispatcher, reducer, and component tests.
+- [x] Replay fake events for salary, availability, team style, name correction, role correction, candidate question, and clarification.
+- [x] Replay Graphic Designer, Full Stack Developer, compound-role, undecided, and unsupported-employer-question events and verify universal categories plus evidence-linked human follow-up.
+- [x] Attempt invalid source, missing final turn, invented ID, duplicate, and unsupported category calls.
 - [ ] Manually inspect desktop/mobile appearance, correction, long values, evidence chips, reduced motion, and conversation-first empty state.
+
+## Verification evidence
+
+- Deterministic verification on 2026-09-15 passed with the repository's bundled Node 24 runtime: 3 contract files/59 tests, 12 focused frontend files/90 tests, both contract and frontend TypeScript projects, targeted ESLint, Prettier, and diff-whitespace checks.
+- The fake/client-tool coverage exercises neutral salary, availability, team/work style, English-use context, preferred-name and role corrections, Graphic Designer, Full Stack Developer, compound and undecided roles, candidate questions, human follow-up, malformed/missing/stale evidence, duplicate rejection, and CV-to-candidate source transitions without a paid provider call.
+- Corrective coverage proves a later same-value observation cannot erase a card's Corrected state or reason, fixed category metadata owns labels/order/marks, and persisted preferred-name/role projections cannot diverge from their evidence-linked insight cards. One shared contract-level boundary now guards every model-authored visible insight field and CV-analysis description while leaving verbatim candidate questions untouched; the frontend tool map is exhaustively keyed by the voice-token contract. The obsolete direct name/role reducer setters were removed.
+- Credential-free production builds passed for contracts, backend, and frontend. A clean fake-mode runtime smoke check then returned `200` for `/`, `/demo`, the frontend-proxied `/v1/demo/bootstrap`, and the direct backend bootstrap on `localhost:3000`/`3001`; no `.env.local` file was read and no provider call was made.
+- A credential-free local browser harness was inspected at 390 × 844, 768 × 1024, 1120 × 800, 1440 × 900, and 1920 × 1080. The height-matched desktop composition and internal board scroll, tablet grid, mobile swipe rail, aligned cards, long/corrected values, evidence disclosure, source/status chips, topic states, and conversation-first empty state remained usable without horizontal page overflow. The harness was removed after verification.
+- The shared stylesheet contains the reduced-motion fallback, but OS/browser reduced-motion emulation was not available in the controlled preview. A real preference-mode inspection remains the only unverified portion of the two unchecked reduced-motion items above; all other listed cases passed.
+- Published-agent callback verification remains credential-gated by SP-014/SP-014A. No local secret was read and no live or paid provider call was made.
 
 ## Commit boundary
 
-Keep SP-016 reviewable as one logical change represented by `feat(insights): visualize live interview understanding`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
+Keep SP-016 reviewable as one logical change represented by `SP-016: visualize live interview understanding`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
 
 ## Precision references
 

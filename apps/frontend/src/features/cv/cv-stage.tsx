@@ -11,6 +11,7 @@ import type {
 } from "@/features/session/demo-session.types";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 import { Stack } from "@/shared/ui/layout";
@@ -90,7 +91,7 @@ export function CvStage({
   });
 
   return (
-    <Stack className="sp-cv-stage" gap="medium">
+    <Stack className="sp-cv-stage sp-demo-stage--with-footer" gap="medium">
       <DemoStageHeading
         pretitle="CV-assisted path"
         title={
@@ -243,11 +244,13 @@ export function CvStage({
         </ErrorPanel>
       ) : null}
 
-      <ButtonGroup className="sp-cv-stage__footer-actions">
-        <Button onClick={handleReturnToChoices} variant="secondary">
-          Change starting option
-        </Button>
-      </ButtonGroup>
+      <DemoActionFooter>
+        <ButtonGroup>
+          <Button onClick={handleReturnToChoices} variant="secondary">
+            Change starting option
+          </Button>
+        </ButtonGroup>
+      </DemoActionFooter>
     </Stack>
   );
 }

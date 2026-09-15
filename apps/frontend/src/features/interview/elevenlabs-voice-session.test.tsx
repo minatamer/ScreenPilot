@@ -7,10 +7,7 @@ import type {
   VoiceSessionBridgeProps,
   VoiceSessionEvent,
 } from "./voice-session-bridge";
-import {
-  createDeferredVoiceClientTools,
-  type VoiceDynamicVariables,
-} from "./voice-session-context";
+import type { VoiceDynamicVariables } from "./voice-session-context";
 
 const sdk = vi.hoisted(() => ({
   endSession: vi.fn(),
@@ -48,6 +45,14 @@ const dynamicVariables = {
   screenpilot_cv_context: "bounded empty CV context",
 } satisfies VoiceDynamicVariables;
 
+const testClientTools = {
+  recordInsight: () => "Applied",
+  correctInsight: () => "Applied",
+  markTopic: () => "Applied",
+  recordCandidateQuestion: () => "Applied",
+  requestFollowup: () => "Applied",
+} as const;
+
 function props(
   overrides: Partial<VoiceSessionBridgeProps> = {},
 ): VoiceSessionBridgeProps {
@@ -56,7 +61,7 @@ function props(
       conversationId: "conversation-014",
       conversationToken: "short-lived-conversation-token",
     },
-    clientTools: createDeferredVoiceClientTools(),
+    clientTools: testClientTools,
     dynamicVariables,
     endRequested: false,
     expectedConversationId: "conversation-014",

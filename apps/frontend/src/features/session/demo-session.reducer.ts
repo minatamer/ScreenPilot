@@ -5,17 +5,24 @@ import {
   type PublicRuntimeConfig,
 } from "@screenpilot/contracts/api/public-runtime-config";
 import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
+import { isUndecidedRoleValue } from "@screenpilot/contracts/interview/client-tools";
 import {
   publicRoleNeutralDemoContextSchema,
   rolePreferenceSchema,
   type PublicRoleNeutralDemoContext,
 } from "@screenpilot/contracts/interview/demo-context";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
-import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
+import {
+  insightCardSchema,
+  type InsightCard,
+} from "@screenpilot/contracts/interview/insight-card";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
 import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-plan";
 import type { ScreeningSummary } from "@screenpilot/contracts/interview/screening-summary";
-import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
+import {
+  topicProgressSchema,
+  type TopicProgress,
+} from "@screenpilot/contracts/interview/topic-progress";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 
 import {
@@ -23,8 +30,6 @@ import {
   type DemoStage,
   type DemoSessionState,
   type FailureStage,
-  type PreferredName,
-  type RolePreference,
   type SessionFailure,
   type SessionRestoreNotice,
 } from "./demo-session.types";
@@ -87,8 +92,6 @@ export type DemoSessionEvent =
   | Readonly<{ type: "ADD_FINAL_TRANSCRIPT_TURN"; turn: TranscriptTurn }>
   | Readonly<{ type: "UPSERT_INSIGHT"; insight: InsightCard }>
   | Readonly<{ type: "SET_TOPIC_PROGRESS"; progress: TopicProgress }>
-  | Readonly<{ type: "SET_PREFERRED_NAME"; preferredName: PreferredName }>
-  | Readonly<{ type: "SET_ROLE_PREFERENCE"; rolePreference: RolePreference }>
   | Readonly<{ type: "START_OVER" }>
   | Readonly<{ type: "BEGIN_NEW_SESSION"; now: string }>
   | Readonly<{ type: "SESSION_EXPIRED" }>
@@ -570,76 +573,111 @@ export function demoSessionReducer(
         ),
       };
     }
-    case "UPSERT_INSIGHT":
+    case "UPSERT_INSIGHT": {
+      const insight = insightCardSchema.parse(event.insight);
       if (
         state.entryMode === "conversation_first" &&
-        event.insight.source !== "Candidate"
+        insight.source !== "Candidate"
       ) {
         throw new TypeError(
           "Conversation-first insights require Candidate provenance.",
         );
       }
       if (
-        event.insight.source !== "CV" &&
-        !hasFinalCandidateEvidence(state, event.insight.evidenceTurnIds)
+        insight.source !== "CV" &&
+        !hasFinalCandidateEvidence(state, insight.evidenceTurnIds)
       ) {
         throw new TypeError(
           "Candidate-sourced insights require final candidate evidence.",
         );
       }
       if (
-        event.insight.source !== "Candidate" &&
-        !hasNormalizedCvEvidence(state, event.insight.cvFactIds)
+        insight.source !== "Candidate" &&
+        !hasNormalizedCvEvidence(state, insight.cvFactIds)
       ) {
         throw new TypeError(
           "CV-sourced insights require normalized CV evidence.",
         );
       }
-      return {
+      const existingInsight = state.insights.find(
+        (candidate) => candidate.id === insight.id,
+      );
+      if (
+        existingInsight &&
+        (existingInsight.category !== insight.category ||
+          existingInsight.createdAt !== insight.createdAt ||
+          existingInsight.evidenceTurnIds.some(
+            (turnId) => !insight.evidenceTurnIds.includes(turnId),
+          ) ||
+          existingInsight.cvFactIds.some(
+            (factId) => !insight.cvFactIds.includes(factId),
+          ))
+      ) {
+        throw new TypeError(
+          "Insight updates must preserve their identity and evidence history.",
+        );
+      }
+      const nextState: DemoSessionState = {
         ...state,
         insights: upsertByKey(
           state.insights,
-          event.insight,
+          insight,
           (insight) => insight.id,
           24,
         ),
       };
-    case "SET_TOPIC_PROGRESS":
+      if (insight.category === "preferred_name") {
+        return {
+          ...nextState,
+          preferredName: {
+            value: insight.value,
+            source: insight.source,
+            evidenceTurnIds: insight.evidenceTurnIds,
+          },
+        };
+      }
+      if (insight.category === "role_preference") {
+        return {
+          ...nextState,
+          rolePreference: rolePreferenceSchema.parse({
+            label: isUndecidedRoleValue(insight.value) ? null : insight.value,
+            status: isUndecidedRoleValue(insight.value)
+              ? "undecided"
+              : "candidate_stated",
+            evidenceTurnIds: insight.evidenceTurnIds,
+          }),
+        };
+      }
+      return nextState;
+    }
+    case "SET_TOPIC_PROGRESS": {
+      const progress = topicProgressSchema.parse(event.progress);
+      if (!hasFinalCandidateEvidence(state, progress.evidenceTurnIds)) {
+        throw new TypeError(
+          "Topic progress requires final candidate evidence.",
+        );
+      }
+      const existingProgress = state.topicProgress.find(
+        (candidate) => candidate.topicKey === progress.topicKey,
+      );
+      if (
+        existingProgress?.evidenceTurnIds.some(
+          (turnId) => !progress.evidenceTurnIds.includes(turnId),
+        )
+      ) {
+        throw new TypeError(
+          "Topic progress updates must preserve their evidence history.",
+        );
+      }
       return {
         ...state,
         topicProgress: upsertByKey(
           state.topicProgress,
-          event.progress,
+          progress,
           (progress) => progress.topicKey,
           16,
         ),
       };
-    case "SET_PREFERRED_NAME":
-      if (
-        state.entryMode === "conversation_first" &&
-        event.preferredName.source !== "Candidate"
-      ) {
-        throw new TypeError(
-          "Conversation-first preferred names require Candidate provenance.",
-        );
-      }
-      if (
-        event.preferredName.source !== "CV" &&
-        !hasFinalCandidateEvidence(state, event.preferredName.evidenceTurnIds)
-      ) {
-        throw new TypeError(
-          "Candidate-confirmed preferred names require final candidate evidence.",
-        );
-      }
-      return { ...state, preferredName: event.preferredName };
-    case "SET_ROLE_PREFERENCE": {
-      const rolePreference = rolePreferenceSchema.parse(event.rolePreference);
-      if (!hasFinalCandidateEvidence(state, rolePreference.evidenceTurnIds)) {
-        throw new TypeError(
-          "Role preferences require final candidate evidence.",
-        );
-      }
-      return { ...state, rolePreference };
     }
     case "START_OVER":
       assertStage(state, event.type, [

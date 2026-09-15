@@ -10,6 +10,7 @@ import {
 } from "@/features/abuse-protection/turnstile-client";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { EntryModeBadge } from "@/shared/ui/entry-mode-badge";
 import { ErrorPanel } from "@/shared/ui/error-panel";
@@ -106,7 +107,7 @@ export function PreflightHandoff({
   };
 
   return (
-    <div className="sp-demo-stage sp-preflight-handoff">
+    <div className="sp-demo-stage sp-demo-stage--with-footer sp-preflight-handoff">
       <DemoStageHeading
         pretitle="Before you begin"
         title="Get ready for your interview."
@@ -264,46 +265,39 @@ export function PreflightHandoff({
                 </div>
               </div>
             ) : null}
-
-            <div className="sp-preflight-consent__footer">
-              <Button
-                disabled={startInProgress}
-                onClick={onBack}
-                variant="quiet"
-              >
-                {cvAssisted
-                  ? "Back to interview plan"
-                  : "Change starting option"}
-              </Button>
-              <div className="sp-preflight-handoff__start-actions">
-                {microphone.state.status === "idle" ||
-                microphone.state.status === "requesting" ? (
-                  <Button
-                    disabled={!consentChecked}
-                    loading={microphone.state.status === "requesting"}
-                    loadingLabel="Checking microphone"
-                    onClick={checkMicrophone}
-                    variant="secondary"
-                  >
-                    Check microphone
-                  </Button>
-                ) : null}
-                {startInProgress ? (
-                  <Button onClick={cancelStart} variant="quiet">
-                    Cancel start
-                  </Button>
-                ) : null}
-                <Button
-                  disabled={!prerequisitesReady || startInProgress}
-                  onClick={startInterview}
-                >
-                  {startButtonLabel(startStatus)}
-                </Button>
-              </div>
-            </div>
           </div>
         </Card>
       </div>
+      <DemoActionFooter>
+        <Button disabled={startInProgress} onClick={onBack} variant="quiet">
+          {cvAssisted ? "Back to interview plan" : "Change starting option"}
+        </Button>
+        <div className="sp-preflight-handoff__start-actions">
+          {microphone.state.status === "idle" ||
+          microphone.state.status === "requesting" ? (
+            <Button
+              disabled={!consentChecked}
+              loading={microphone.state.status === "requesting"}
+              loadingLabel="Checking microphone"
+              onClick={checkMicrophone}
+              variant="secondary"
+            >
+              Check microphone
+            </Button>
+          ) : null}
+          {startInProgress ? (
+            <Button onClick={cancelStart} variant="quiet">
+              Cancel start
+            </Button>
+          ) : null}
+          <Button
+            disabled={!prerequisitesReady || startInProgress}
+            onClick={startInterview}
+          >
+            {startButtonLabel(startStatus)}
+          </Button>
+        </div>
+      </DemoActionFooter>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   normalizedCvSchema,
   type NormalizedCv,
 } from "../interview/normalized-cv.ts";
+import { containsUnsupportedAssessmentOrSensitiveInference } from "../interview/assessment-boundary.ts";
 import {
   FIXED_TOPIC_KEYS,
   screeningPlanSchema,
@@ -16,8 +17,6 @@ import {
 
 const technicalEvaluationPattern =
   /\b(?:coding challenge|framework trivia|system design|technical (?:assessment|exercise|interview|question|quiz|screen))\b|\b(?:ask|assess|evaluate|explore|follow up|grade|probe|question|quiz|score|test)\b.{0,80}\b(?:algorithm|api|architecture|coding|debugging|framework|implementation|system design|technical|testing)\b/i;
-const unsupportedAssessmentPattern =
-  /\b(?:accent|age|culture[ -]?fit|disability|employability|employable|ethnicity|gender|hire|hired|hiring|marital status|nationality|personality|pregnancy|protected(?: trait)?|race|rank|ranked|ranking|rating|reject|rejected|rejection|religion|sentiment|sexual orientation|score|scored|scoring)\b|\b(?:recommend|recommendation)\b.{0,40}\b(?:candidate|hire|hiring|reject|role)\b/i;
 const applicationClaimPatterns = [
   /\b(?:apply|applies|applying|applied)\s+for\b/i,
   /\b(?:candidate|applicant|they|he|she)\b[^.!?\n]{0,64}\b(?:apply|applies|applying|applied)\s+(?:as|to)\b/i,
@@ -171,8 +170,8 @@ function validateCvAnalysisOutput(
     ...output.cv.ambiguities.map((ambiguity) => ambiguity.description),
   ].filter((value): value is string => typeof value === "string");
   if (
-    candidateDescriptions.some((value) =>
-      unsupportedAssessmentPattern.test(value),
+    candidateDescriptions.some(
+      containsUnsupportedAssessmentOrSensitiveInference,
     )
   ) {
     addIssue(
@@ -198,8 +197,8 @@ function validateCvAnalysisOutput(
     );
   }
   if (
-    screeningPlanDescriptions.some((value) =>
-      unsupportedAssessmentPattern.test(value),
+    screeningPlanDescriptions.some(
+      containsUnsupportedAssessmentOrSensitiveInference,
     )
   ) {
     addIssue(

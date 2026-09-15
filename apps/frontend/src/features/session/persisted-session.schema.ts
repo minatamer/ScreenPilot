@@ -2,6 +2,7 @@ import { providerUsageSchema } from "@screenpilot/contracts/api/cv-analysis";
 import { interviewGrantSchema } from "@screenpilot/contracts/api/interview-preparation";
 import { publicRuntimeConfigSchema } from "@screenpilot/contracts/api/public-runtime-config";
 import { voiceMetadataSchema } from "@screenpilot/contracts/api/voice-token";
+import { isUndecidedRoleValue } from "@screenpilot/contracts/interview/client-tools";
 import {
   publicRoleNeutralDemoContextSchema,
   rolePreferenceSchema,
@@ -56,6 +57,16 @@ const UNPREPARED_STAGES = new Set<DemoStage>([
   "analyzing_cv",
   "preparing_conversation",
 ]);
+
+function haveSameEvidenceIds(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  return (
+    left.length === right.length &&
+    left.every((evidenceId, index) => evidenceId === right[index])
+  );
+}
 
 export const preferredNameSchema = z
   .strictObject({
@@ -316,6 +327,77 @@ export const persistedDemoSessionSchema = z
           code: "custom",
           message: "CV-sourced insights must reference normalized CV facts.",
           path: ["insights", insightIndex, "cvFactIds"],
+        });
+      }
+    });
+
+    const preferredNameInsights = session.insights.filter(
+      (insight) => insight.category === "preferred_name",
+    );
+    const preferredNameInsight = preferredNameInsights[0];
+    if (
+      preferredNameInsights.length > 1 ||
+      (session.preferredName === undefined) !==
+        (preferredNameInsight === undefined) ||
+      (session.preferredName !== undefined &&
+        preferredNameInsight !== undefined &&
+        (session.preferredName.value !== preferredNameInsight.value ||
+          session.preferredName.source !== preferredNameInsight.source ||
+          !haveSameEvidenceIds(
+            session.preferredName.evidenceTurnIds,
+            preferredNameInsight.evidenceTurnIds,
+          )))
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "The preferred name must match exactly one preferred-name insight card.",
+        path: ["preferredName"],
+      });
+    }
+
+    const rolePreferenceInsights = session.insights.filter(
+      (insight) => insight.category === "role_preference",
+    );
+    const rolePreferenceInsight = rolePreferenceInsights[0];
+    const expectedRolePreference = rolePreferenceInsight
+      ? {
+          label: isUndecidedRoleValue(rolePreferenceInsight.value)
+            ? null
+            : rolePreferenceInsight.value,
+          status: isUndecidedRoleValue(rolePreferenceInsight.value)
+            ? ("undecided" as const)
+            : ("candidate_stated" as const),
+          evidenceTurnIds: rolePreferenceInsight.evidenceTurnIds,
+        }
+      : undefined;
+    if (
+      rolePreferenceInsights.length > 1 ||
+      (session.rolePreference === undefined) !==
+        (expectedRolePreference === undefined) ||
+      (session.rolePreference !== undefined &&
+        expectedRolePreference !== undefined &&
+        (session.rolePreference.label !== expectedRolePreference.label ||
+          session.rolePreference.status !== expectedRolePreference.status ||
+          !haveSameEvidenceIds(
+            session.rolePreference.evidenceTurnIds,
+            expectedRolePreference.evidenceTurnIds,
+          )))
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "The role preference must match exactly one role-preference insight card.",
+        path: ["rolePreference"],
+      });
+    }
+
+    session.topicProgress.forEach((progress, progressIndex) => {
+      if (!hasFinalCandidateEvidence(progress.evidenceTurnIds)) {
+        context.addIssue({
+          code: "custom",
+          message: "Topic progress must reference final candidate turns.",
+          path: ["topicProgress", progressIndex, "evidenceTurnIds"],
         });
       }
     });

@@ -173,6 +173,86 @@ describe("session storage", () => {
     expect(provenanceResult.success).toBe(false);
   });
 
+  it("requires persisted name and role fields to match their insight cards", () => {
+    const candidateTurn = {
+      id: "turn-1",
+      sequence: 1,
+      speaker: "candidate" as const,
+      status: "final" as const,
+      text: "Call me Sam. I am interested in Product Designer roles.",
+      occurredAt: CREATED_AT,
+    };
+    const synchronizedSession = persistedSession({
+      transcript: [candidateTurn],
+      insights: [
+        {
+          id: "insight-preferred_name",
+          category: "preferred_name",
+          label: "Preferred name",
+          value: "Sam",
+          source: "Candidate",
+          status: "confirmed",
+          evidenceTurnIds: [candidateTurn.id],
+          cvFactIds: [],
+          createdAt: CREATED_AT,
+          updatedAt: CREATED_AT,
+        },
+        {
+          id: "insight-role_preference",
+          category: "role_preference",
+          label: "Role preference",
+          value: "Product Designer",
+          source: "Candidate",
+          status: "confirmed",
+          evidenceTurnIds: [candidateTurn.id],
+          cvFactIds: [],
+          createdAt: CREATED_AT,
+          updatedAt: CREATED_AT,
+        },
+      ],
+      preferredName: {
+        value: "Sam",
+        source: "Candidate",
+        evidenceTurnIds: [candidateTurn.id],
+      },
+      rolePreference: {
+        label: "Product Designer",
+        status: "candidate_stated",
+        evidenceTurnIds: [candidateTurn.id],
+      },
+    });
+
+    expect(
+      persistedDemoSessionSchema.safeParse(synchronizedSession).success,
+    ).toBe(true);
+    expect(
+      persistedDemoSessionSchema.safeParse({
+        ...synchronizedSession,
+        preferredName: {
+          value: "Samantha",
+          source: "Candidate",
+          evidenceTurnIds: [candidateTurn.id],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      persistedDemoSessionSchema.safeParse({
+        ...synchronizedSession,
+        rolePreference: {
+          label: "Customer Support Specialist",
+          status: "candidate_stated",
+          evidenceTurnIds: [candidateTurn.id],
+        },
+      }).success,
+    ).toBe(false);
+    expect(
+      persistedDemoSessionSchema.safeParse({
+        ...synchronizedSession,
+        insights: [],
+      }).success,
+    ).toBe(false);
+  });
+
   it("rejects the superseded fixed-catalogue envelope during restore", () => {
     const storage = new MemorySessionStorage();
     const invalidSession = {

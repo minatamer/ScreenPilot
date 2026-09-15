@@ -54,6 +54,16 @@
       "development": "./src/interview/demo-context.ts",
       "default": "./dist/interview/demo-context.js"
     },
+    "./interview/client-tools": {
+      "types": "./src/interview/client-tools.ts",
+      "development": "./src/interview/client-tools.ts",
+      "default": "./dist/interview/client-tools.js"
+    },
+    "./interview/assessment-boundary": {
+      "types": "./src/interview/assessment-boundary.ts",
+      "development": "./src/interview/assessment-boundary.ts",
+      "default": "./dist/interview/assessment-boundary.js"
+    },
     "./interview/entry-mode": {
       "types": "./src/interview/entry-mode.ts",
       "development": "./src/interview/entry-mode.ts",
