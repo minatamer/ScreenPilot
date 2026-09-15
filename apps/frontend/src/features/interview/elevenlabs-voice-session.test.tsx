@@ -153,6 +153,19 @@ describe("ElevenLabsVoiceSession", () => {
     emitProviderCallback("onStatusChange", { status: "connecting" });
     emitProviderCallback("onConnect", { conversationId: "conversation-014" });
     emitProviderCallback("onModeChange", { mode: "speaking" });
+    emitProviderCallback("onVadScore", { vadScore: 0.49 });
+    emitProviderCallback("onVadScore", { vadScore: 0.5 });
+    emitProviderCallback("onVadScore", { vadScore: 0.8 });
+    emitProviderCallback("onVadScore", { vadScore: 0.2 });
+    emitProviderCallback("onAudio", "base64-audio-not-inspected");
+    emitProviderCallback("onAudio", "second-audio-chunk");
+    emitProviderCallback("onMessage", {
+      event_id: 7,
+      message: "Mm-hm…",
+      role: "agent",
+      source: "ai",
+    });
+    emitProviderCallback("onAudio", "substantive-audio-chunk");
     emitProviderCallback("onMessage", {
       event_id: 8,
       message: "Tell me about your goals.",
@@ -172,6 +185,11 @@ describe("ElevenLabsVoiceSession", () => {
       { type: "connection_status", status: "connecting" },
       { type: "connected", conversationId: "conversation-014" },
       { type: "mode", mode: "speaking" },
+      { type: "candidate_speech_activity", active: true },
+      { type: "candidate_speech_activity", active: false },
+      { type: "agent_audio_started" },
+      { type: "latency_filler" },
+      { type: "agent_audio_started" },
       {
         type: "message",
         eventId: 8,

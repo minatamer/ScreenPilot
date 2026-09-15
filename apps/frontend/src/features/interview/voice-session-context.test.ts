@@ -8,6 +8,7 @@ import { createConversationFirstPlanFixture } from "@/test/conversation-first-pl
 import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
 
 import {
+  calculateRemainingVoiceSessionMilliseconds,
   calculateRemainingVoiceSessionSeconds,
   createVoiceSessionContext,
 } from "./voice-session-context";
@@ -174,6 +175,12 @@ describe("voice session dynamic context", () => {
     const now = Date.parse("2026-09-15T10:10:00.000Z");
 
     expect(calculateRemainingVoiceSessionSeconds(undefined, now)).toBe(480);
+    expect(
+      calculateRemainingVoiceSessionMilliseconds(
+        "2026-09-15T10:08:00.500Z",
+        now,
+      ),
+    ).toBe(360_500);
     expect(
       calculateRemainingVoiceSessionSeconds("2026-09-15T10:11:00.000Z", now),
     ).toBe(480);

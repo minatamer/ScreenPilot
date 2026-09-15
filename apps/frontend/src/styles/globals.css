@@ -1507,6 +1507,81 @@ h3 {
   font-weight: var(--sp-weight-bold);
 }
 
+.sp-interview-latency {
+  min-height: 1.35rem;
+  margin: calc(var(--sp-space-3) * -1) 0 0;
+  color: var(--sp-color-coral-300);
+  font-size: var(--sp-text-meta-size);
+  font-weight: var(--sp-weight-semibold);
+  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.sp-interview-latency--visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+}
+
+.sp-interview-latency--visual > span {
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 50%;
+  animation: sp-latency-pulse 720ms ease-in-out infinite alternate;
+  background: var(--sp-color-coral-300);
+  opacity: 0.42;
+}
+
+.sp-interview-latency--visual > span:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.sp-interview-latency--visual > span:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.sp-voice-performance-diagnostics {
+  padding: var(--sp-space-3) var(--sp-space-4);
+  border: 1px solid var(--sp-color-dark-line);
+  border-radius: var(--sp-radius-control);
+  color: var(--sp-color-dark-muted);
+  font-size: var(--sp-text-meta-size);
+}
+
+.sp-voice-performance-diagnostics summary {
+  color: var(--sp-color-dark-text);
+  cursor: pointer;
+  font-weight: var(--sp-weight-semibold);
+}
+
+.sp-voice-performance-diagnostics p {
+  margin: var(--sp-space-2) 0;
+}
+
+.sp-voice-performance-diagnostics dl,
+.sp-voice-performance-diagnostics dl > div {
+  display: grid;
+  gap: var(--sp-space-2);
+}
+
+.sp-voice-performance-diagnostics dl {
+  margin: var(--sp-space-3) 0 0;
+}
+
+.sp-voice-performance-diagnostics dl > div {
+  grid-template-columns: minmax(10rem, 0.42fr) minmax(0, 0.58fr);
+}
+
+.sp-voice-performance-diagnostics dt {
+  color: var(--sp-color-dark-text);
+}
+
+.sp-voice-performance-diagnostics dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .sp-interview-signal {
   display: flex;
   width: min(100%, 24rem);
@@ -2152,6 +2227,18 @@ h3 {
 
   to {
     transform: scaleY(1);
+  }
+}
+
+@keyframes sp-latency-pulse {
+  from {
+    opacity: 0.35;
+    transform: translateY(0.12rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(-0.12rem);
   }
 }
 
@@ -3511,6 +3598,7 @@ h3 {
   .sp-live-captions__message[data-speaker="candidate"],
   .sp-live-captions__message[data-speaker="interviewer"][data-stability="tentative"]
     .sp-live-captions__caption::after,
+  .sp-interview-latency--visual > span,
   .sp-interview-signal[data-active="true"] > span {
     animation: none;
   }

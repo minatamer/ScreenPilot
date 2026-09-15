@@ -3,7 +3,7 @@
 Status: Required  
 Milestone: Milestone 3 — same-session review  
 Last synchronized: 2026-08-26  
-Depends on: SP-015, SP-016  
+Depends on: SP-015, SP-016, SP-018A<br>
 Suggested commit: `SP-019: link local transcript evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)

@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import type { PrepareInterviewResponse } from "@screenpilot/contracts/api/interview-preparation";
 
 import type { SessionFailure } from "@/features/session/demo-session.types";
+import type { VoicePerformanceTracker } from "@/features/interview/voice-performance";
 import {
   isAbortError,
   prepareConversationFirst,
@@ -26,6 +27,7 @@ type ConversationPreparationStageProps = Readonly<{
   onPrepared: (response: PrepareInterviewResponse) => void;
   onRetry: () => void;
   prepare?: PrepareConversation;
+  performanceTracker?: VoicePerformanceTracker;
   requestIdFactory?: () => string;
 }>;
 
@@ -62,6 +64,7 @@ export function ConversationPreparationStage({
   onPrepared,
   onRetry,
   prepare = prepareConversationFirst,
+  performanceTracker,
   requestIdFactory = createClientRequestId,
 }: ConversationPreparationStageProps) {
   useEffect(() => {
@@ -70,11 +73,24 @@ export function ConversationPreparationStage({
     }
 
     const controller = new AbortController();
+    let measurementId: string | null = null;
     const startTimer = window.setTimeout(() => {
       const clientRequestId = requestIdFactory();
+      measurementId =
+        performanceTracker?.begin("conversation_preparation") ?? null;
       void prepare(clientRequestId, controller.signal)
-        .then(onPrepared)
+        .then((response) => {
+          if (measurementId) {
+            performanceTracker?.complete(measurementId);
+            measurementId = null;
+          }
+          onPrepared(response);
+        })
         .catch((error: unknown) => {
+          if (measurementId) {
+            performanceTracker?.cancel(measurementId);
+            measurementId = null;
+          }
           if (!controller.signal.aborted && !isAbortError(error)) {
             onFailure(preparationFailure(error));
           }
@@ -84,8 +100,18 @@ export function ConversationPreparationStage({
     return () => {
       window.clearTimeout(startTimer);
       controller.abort();
+      if (measurementId) {
+        performanceTracker?.cancel(measurementId);
+      }
     };
-  }, [failure, onFailure, onPrepared, prepare, requestIdFactory]);
+  }, [
+    failure,
+    onFailure,
+    onPrepared,
+    performanceTracker,
+    prepare,
+    requestIdFactory,
+  ]);
 
   return (
     <div className="sp-demo-stage sp-demo-stage--with-footer sp-conversation-preparation">

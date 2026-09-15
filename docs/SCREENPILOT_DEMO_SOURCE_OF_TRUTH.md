@@ -1016,7 +1016,11 @@ This is the only live voice path. Do not add a second transcription/audio archit
 
 ### Performance gates
 
-TTFA means candidate speech end to first substantive agent audio. A filler does not stop the timer.
+TTFA means candidate speech end to first substantive agent audio. The browser
+timestamps speech end from the provider `vad_score` speaking-to-not-speaking
+transition at the locked 0.5 threshold. A later final-transcript callback does
+not replace that boundary; when VAD is unavailable the visual wait may continue
+but no TTFA sample is recorded. A filler does not stop the timer.
 
 | Metric | Target | Release blocker |
 | --- | ---: | ---: |
@@ -1029,6 +1033,26 @@ TTFA means candidate speech end to first substantive agent audio. A filler does 
 
 Measure at least 50 representative deployed turns and 50 conversation-preparation requests across desktop and mobile reference devices under normal and throttled profiles before publishing latency claims.
 
+SP-018 measures these boundaries with a bounded browser-memory tracker. A
+sample contains only a content-free measurement ID, metric name, numeric start
+and completion timestamps, and duration; it is never persisted, uploaded, added
+to application analytics, or combined with CV, transcript, audio, or insight
+content. TTFA and conversation-preparation aggregates remain explicitly
+`insufficient_sample` below 50 samples. A report records its fake/live source,
+batch ID, sample date, desktop/mobile profile, normal/throttled profile, provider
+revision, raw content-free timing samples, p50/p95 results, gate status, and
+content-free target/blocker outliers; fake and live batches cannot be combined.
+The local developer/test interview diagnostics form captures uncaptured samples
+into batches and renders the report JSON for copying. The collector remains in
+browser memory and has no persistence or upload path.
+
+Interruption timing starts when candidate VAD becomes active while agent audio is
+speaking and ends when the provider returns to listening. The bridge tolerates
+the interruption and listening callbacks arriving in either order and records
+the observation once. The eight-minute deadline is absolute from the original
+session start across reconnect authorization and bridge setup; an exhausted
+budget prevents another provider request.
+
 ### Latency response policy
 
 - `0–800 ms`: visual listening/thinking state only.
@@ -1038,6 +1062,14 @@ Measure at least 50 representative deployed turns and 50 conversation-preparatio
 - A filler is non-evaluative and cannot imply agreement, praise, or a hiring judgment.
 - More than three fillers in one interview or fillers on consecutive turns fail the performance review.
 - Do not generate filler text through GPT.
+
+The source-controlled provider target contains exactly one static 1.5-second
+soft-timeout path with alternate/randomized and LLM-generated messages disabled.
+It remains disabled until deployed measurement shows that activation is needed.
+When observed, the browser treats the filler as a distinct content-free event,
+does not add it to captions/transcript/evidence, does not stop TTFA, and fails
+the performance review for an early, repeated-turn, consecutive-turn, or fourth
+observation.
 
 ### Cost controls
 
@@ -1781,7 +1813,7 @@ deferrals are:
 | `OPENAI_API_KEY` | Backend-only Bearer credential for the Responses client. | SP-010 live CV analysis is wired. SP-020 has not been implemented, so the live summary adapter and route are intentionally unavailable. |
 | `ELEVENLABS_API_KEY` | Backend-only `xi-api-key` credential for private conversation-token creation. | Wired by SP-014. |
 | `ELEVENLABS_AGENT_ID` | Server-owned ElevenLabs `agent_id` for the conversation-token request. | Wired by SP-014 and never accepted from the browser. |
-| `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018/SP-025 own manual drift/live acceptance. |
+| `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018A/SP-025 own manual drift/live acceptance. |
 | `TURNSTILE_SITE_KEY` | Allow-listed bootstrap field used by the browser widget. | Wired by SP-003/SP-012 and public by design. |
 | `TURNSTILE_SECRET_KEY` | Backend Siteverify secret. | Wired by SP-009 for the current CV and voice gates; SP-020 will reuse it for summary. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | Exact backend comparison against Siteverify's hostname. | Wired by SP-009. |
@@ -1824,7 +1856,7 @@ Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIR
 | SP-013 / SP-014 | Turnstile pair plus ElevenLabs key/agent/voice for real voice start | Fake challenge/token/session paths remain the default. |
 | SP-014A | Current first-party OpenAI, ElevenLabs, and Turnstile documentation only; no dashboard login, account mutation, or credential | Consolidates all non-deployment provider, key, local-secret, spend, rotation, and verification guidance while values stay blank. |
 | SP-015 / SP-016 | The published SP-014 agent/session for live callbacks and client tools; no new key | Fake event traces and tool calls complete local work. |
-| SP-017 / SP-018 | Published ElevenLabs agent/account access for sync and controlled live evaluation | Source prompt, fixtures, and deterministic timing logic remain testable; live tuning stays unchecked. |
+| SP-017 / SP-018 / SP-018A | Published ElevenLabs agent/account access for sync and controlled live evaluation | Source prompt, fixtures, and deterministic timing logic remain testable; SP-018A live tuning stays unchecked. |
 | SP-020 / SP-021 | OpenAI key plus Turnstile pair for real summary/retry | Fake summary and challenge paths complete automated work. |
 | SP-022 / SP-023 | Provider dashboard access for caps, retention, and secret audits | Rejection ordering, redaction, and scanning use fakes. |
 | SP-025 | All live provider values and explicit paid-test permission | Unpaid release checks run first; live acceptance blocks honestly. |
@@ -3592,7 +3624,7 @@ suppresses its real Turnstile site key from public bootstrap.
 - [x] Prevent refresh auto-reconnect and preserve partial local evidence.
 - [x] Test fake normal, interruption, duplicate, stale/out-of-order control events, disconnect, and time-limit traces.
 
-**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. Active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018.
+**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. Active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018A after SP-018 implements the measurement/runtime controls.
 
 #### [SP-015A — Polish the landing and demo flow after visual review](tickets/SP-015A-polish-landing-and-demo-flow-after-visual-review.md)
 
@@ -3692,7 +3724,7 @@ suppresses its real Turnstile site key from public bootstrap.
 
 #### [SP-018 — Tune latency, interruption, and filler behavior](tickets/SP-018-tune-latency-interruption-and-filler.md)
 
-**Outcome:** Real-time performance is measured and release-blocking.
+**Outcome:** Content-free real-time instrumentation and runtime controls are deterministic and ready for live verification.
 
 **Depends on:** SP-014, SP-015, SP-017.
 
@@ -3700,12 +3732,48 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Checklist:**
 
-- [ ] Instrument conversation-preparation response, browser TTFA, connect, interruption, and card timings without content logs.
-- [ ] Tune prompt size, context bounds, turn eagerness, and TTS settings.
-- [ ] Implement visual latency stages and one static soft-timeout filler.
-- [ ] Enforce filler frequency rules and 8-minute hard stop.
-- [ ] Measure 50 deployed turns plus 50 conversation-preparation requests across desktop/mobile and normal/throttled profiles.
-- [ ] Block release when documented thresholds fail.
+- [x] Instrument conversation-preparation response, browser TTFA, connect, interruption, and card timings without content logs.
+- [x] Tune prompt size, context bounds, turn eagerness, and TTS settings.
+- [x] Implement visual latency stages and one static soft-timeout filler.
+- [x] Enforce filler frequency rules and 8-minute hard stop.
+- [x] Provide repeatable content-free aggregation for 50 live turns plus 50 conversation-preparation requests across desktop/mobile and normal/throttled profiles.
+- [x] Encode documented release thresholds as failures; SP-018A owns the live sample and must not weaken them.
+
+**Implementation evidence (2026-09-15):** Browser-only instrumentation now
+covers every named boundary, emits bounded content-free samples, and exposes an
+in-app developer/test batch collector with source-labelled JSON reports, raw
+timing samples, exact p50/p95 gates, and outlier output. TTFA begins at the
+provider-VAD speech-end transition rather than the final-transcript callback and
+is omitted when that boundary is unavailable. Interruption callback ordering,
+the visual 0/800 ms states, substantive-audio/filler separation, static-filler
+review limits, and the absolute original-session eight-minute deadline have
+deterministic coverage. The provider
+target keeps the bounded prompt/context, 160-token ceiling, normal eagerness,
+interruptions, provider-default buffering, and Flash v2.5 explicit; the static
+soft timeout remains off until empirical measurement warrants it. No live
+provider sample or active-session acceptance is claimed by SP-018. Post-fix
+verification passed repository lint, every package typecheck, 221 frontend tests,
+201 backend tests, 62 contract tests, and a final focused 3-file/24-test collector
+and UI integration run. No production build or microphone/browser acceptance is
+claimed by this verification.
+
+#### [SP-018A — Verify live CV and voice integrations](tickets/SP-018A-verify-live-cv-and-voice-integrations.md)
+
+**Outcome:** Owner-authorized synthetic testing proves the live CV and private voice paths, provider/dashboard synchronization, conversation behavior, client tools, performance gates, privacy, cleanup, usage, and cost before same-session review work begins.
+
+**Depends on:** SP-014A, SP-018.
+
+**Suggested commit:** `SP-018A: verify live CV and voice integrations`
+
+**Checklist:**
+
+- [ ] Complete repository, secret, dashboard, revision, retention, account, cap, and synthetic-data preconditions before a paid operation.
+- [ ] Boot with `PROVIDER_MODE=live` and `PAID_DEMO_ENABLED=false`; prove paid routes fail closed and no provider, Turnstile, microphone, or WebRTC operation occurs.
+- [ ] With explicit owner authorization, temporarily enable the paid gate and verify real Turnstile plus one bounded OpenAI CV-analysis operation.
+- [ ] Verify private ElevenLabs token issuance, WebRTC voice, all eight runtime variables, both entry modes, adaptive HR behavior, five client tools, controls, and cleanup with synthetic data.
+- [ ] Collect the real 50-turn and 50-preparation content-free performance sample; treat every documented blocking threshold as a failure.
+- [ ] Review provider revision, retention, usage, and actual cost; immediately restore paid false/fake mode and record sanitized evidence only.
+- [ ] Do not call live summary, use real-person data, invite external testers, or claim public/release readiness.
 
 ### Milestone 3 — same-session review
 
@@ -3713,7 +3781,7 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Outcome:** The browser review can trace insights to final transcript turns without provider retrieval.
 
-**Depends on:** SP-015, SP-016.
+**Depends on:** SP-015, SP-016, SP-018A.
 
 **Suggested commit:** `SP-019: link local transcript evidence`
 
@@ -3833,7 +3901,7 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Outcome:** The complete demo is manually approved across phone, tablet, compact-laptop, laptop/desktop, and large-monitor layouts and passes the fast essential checks without requiring the extended automation suite.
 
-**Depends on:** SP-010A, SP-017, SP-018, SP-021, SP-022, SP-023, SP-024.
+**Depends on:** SP-010A, SP-017, SP-018, SP-018A, SP-021, SP-022, SP-023, SP-024.
 
 **Suggested commit:** `SP-025: complete focused demo release checks`
 
@@ -3888,7 +3956,7 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Release status:** Optional. SP-026 completes the releasable deployed demo; SP-027 cannot block deployment, release approval, or any later optional work.
 
-**Depends on:** SP-018, SP-021, SP-025, SP-026.
+**Depends on:** SP-018, SP-018A, SP-021, SP-025, SP-026.
 
 **Suggested commit:** `SP-027: prepare the ScreenPilot portfolio release`
 

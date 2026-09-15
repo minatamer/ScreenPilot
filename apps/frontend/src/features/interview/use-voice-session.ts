@@ -2,19 +2,22 @@
 
 import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
+import { VOICE_LATENCY_REVIEWING_THRESHOLD_MS } from "@screenpilot/contracts/interview/voice-performance-policy";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import {
+  createFillerPolicyState,
+  observeLatencyFiller,
+  type FillerPolicyState,
+} from "./latency-filler-policy";
 import {
   createVoiceEventNormalizerState,
   normalizeVoiceEvent,
   type LiveCaption,
 } from "./normalize-voice-event";
-import {
-  elapsedInterviewSeconds,
-  INTERVIEW_HARD_STOP_MS,
-  remainingInterviewMilliseconds,
-} from "./interview-timer";
+import { INTERVIEW_HARD_STOP_MS } from "./interview-timer";
 import type { VoiceSessionEvent } from "./voice-session-bridge";
+import type { VoicePerformanceTracker } from "./voice-performance";
 
 export type VoiceSessionPhase =
   | "idle"
@@ -26,6 +29,8 @@ export type VoiceSessionPhase =
   | "ending"
   | "ended"
   | "failed";
+
+export type VoiceLatencyStage = "idle" | "visual" | "reviewing";
 
 type VoiceSessionViewState = Readonly<{
   caption: LiveCaption | null;
@@ -119,7 +124,7 @@ function voiceSessionViewReducer(
 
 type UseVoiceSessionOptions = Readonly<{
   endFallbackMs?: number;
-  hardStopMs?: number;
+  hardStopAtMs?: number;
   now?: () => number;
   onConnected: (voice: VoiceMetadata) => void;
   onConnectionFailure: (message: string) => void;
@@ -127,6 +132,7 @@ type UseVoiceSessionOptions = Readonly<{
   onEnding: () => void;
   onFinalTranscriptTurn: (turn: TranscriptTurn) => void;
   onInterrupted: () => void;
+  performanceTracker?: VoicePerformanceTracker | undefined;
 }>;
 
 const DEFAULT_END_FALLBACK_MS = 2_000;
@@ -139,6 +145,10 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   );
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [endRequested, setEndRequested] = useState(false);
+  const [latencyStage, setLatencyStage] = useState<VoiceLatencyStage>("idle");
+  const [fillerPolicy, setFillerPolicy] = useState<FillerPolicyState>(
+    createFillerPolicyState,
+  );
   const callbacksRef = useRef(options);
   const normalizationStateRef = useRef(createVoiceEventNormalizerState());
   const voiceRef = useRef<VoiceMetadata | null>(null);
@@ -146,6 +156,25 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   const endingRequestedRef = useRef(false);
   const endingReasonRef = useRef("Interview ended by the candidate.");
   const completedRef = useRef(false);
+  const candidateTurnRef = useRef(0);
+  const candidateSpeechActiveRef = useRef(false);
+  const fillerPolicyRef = useRef(createFillerPolicyState());
+  const latencyTimerRef = useRef<number | null>(null);
+  const latencySequenceRef = useRef(0);
+  const pendingTtfaRef = useRef<{
+    candidateFinalSeen: boolean;
+    candidateTurn: number;
+    firstAudioAtMs: number | null;
+    measurementId: string | null;
+    sequence: number;
+    speechEndedAtMs: number | null;
+    substantiveMessageSeen: boolean;
+    visualStartedAtMs: number;
+  } | null>(null);
+  const pendingInterruptionRef = useRef<string | null>(null);
+  const providerModeRef = useRef<"listening" | "speaking" | null>(null);
+  const interruptionCompletedBeforeNotificationRef = useRef(false);
+  const unpairedAudioStopAtRef = useRef<number | null>(null);
 
   useEffect(() => {
     callbacksRef.current = options;
@@ -156,11 +185,93 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
     [],
   );
 
+  const clearLatencyTimer = useCallback(() => {
+    if (latencyTimerRef.current !== null) {
+      window.clearTimeout(latencyTimerRef.current);
+      latencyTimerRef.current = null;
+    }
+  }, []);
+
+  const cancelPendingMeasurements = useCallback(() => {
+    clearLatencyTimer();
+    const tracker = callbacksRef.current.performanceTracker;
+    const pendingTtfa = pendingTtfaRef.current;
+    if (pendingTtfa?.measurementId) {
+      tracker?.cancel(pendingTtfa.measurementId);
+    }
+    if (pendingInterruptionRef.current) {
+      tracker?.cancel(pendingInterruptionRef.current);
+    }
+    pendingTtfaRef.current = null;
+    pendingInterruptionRef.current = null;
+    interruptionCompletedBeforeNotificationRef.current = false;
+    unpairedAudioStopAtRef.current = null;
+  }, [clearLatencyTimer]);
+
+  const completeTtfa = useCallback(
+    (completedAtMs: number) => {
+      const pending = pendingTtfaRef.current;
+      if (!pending) {
+        return;
+      }
+      clearLatencyTimer();
+      if (pending.measurementId) {
+        callbacksRef.current.performanceTracker?.complete(
+          pending.measurementId,
+          completedAtMs,
+        );
+      }
+      pendingTtfaRef.current = null;
+      setLatencyStage("idle");
+    },
+    [clearLatencyTimer],
+  );
+
+  const beginCandidateResponseWait = useCallback(
+    (input: {
+      candidateFinalSeen: boolean;
+      candidateTurn: number;
+      speechEndedAtMs: number | null;
+      visualStartedAtMs: number;
+    }) => {
+      const tracker = callbacksRef.current.performanceTracker;
+      const previous = pendingTtfaRef.current;
+      if (previous?.measurementId) {
+        tracker?.cancel(previous.measurementId);
+      }
+      clearLatencyTimer();
+      latencySequenceRef.current += 1;
+      const sequence = latencySequenceRef.current;
+      pendingTtfaRef.current = {
+        candidateFinalSeen: input.candidateFinalSeen,
+        candidateTurn: input.candidateTurn,
+        firstAudioAtMs: null,
+        measurementId:
+          input.speechEndedAtMs === null
+            ? null
+            : (tracker?.begin("ttfa", input.speechEndedAtMs) ?? null),
+        sequence,
+        speechEndedAtMs: input.speechEndedAtMs,
+        substantiveMessageSeen: false,
+        visualStartedAtMs: input.visualStartedAtMs,
+      };
+      setLatencyStage("visual");
+      latencyTimerRef.current = window.setTimeout(() => {
+        if (pendingTtfaRef.current?.sequence === sequence) {
+          setLatencyStage("reviewing");
+        }
+      }, VOICE_LATENCY_REVIEWING_THRESHOLD_MS);
+    },
+    [clearLatencyTimer],
+  );
+
   const completeEnd = useCallback(() => {
     if (completedRef.current || !voiceRef.current) {
       return;
     }
     completedRef.current = true;
+    cancelPendingMeasurements();
+    setLatencyStage("idle");
     dispatch({ type: "ENDED" });
     callbacksRef.current.onEnded({
       ...voiceRef.current,
@@ -168,7 +279,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       endReason: endingReasonRef.current,
       status: "ended",
     });
-  }, [currentTime]);
+  }, [cancelPendingMeasurements, currentTime]);
 
   const requestEnd = useCallback(
     (reason = "Interview ended by the candidate.") => {
@@ -181,11 +292,13 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       }
       endingRequestedRef.current = true;
       endingReasonRef.current = reason;
+      cancelPendingMeasurements();
+      setLatencyStage("idle");
       dispatch({ type: "ENDING" });
       setEndRequested(true);
       callbacksRef.current.onEnding();
     },
-    [],
+    [cancelPendingMeasurements],
   );
 
   const handleUnexpectedTerminalEvent = useCallback(
@@ -198,6 +311,8 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         return;
       }
       completedRef.current = true;
+      cancelPendingMeasurements();
+      setLatencyStage("idle");
       dispatch({ type: "FAILED" });
       if (connectedRef.current) {
         callbacksRef.current.onInterrupted();
@@ -205,7 +320,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         callbacksRef.current.onConnectionFailure(message);
       }
     },
-    [completeEnd],
+    [cancelPendingMeasurements, completeEnd],
   );
 
   const onSessionEvent = useCallback(
@@ -217,6 +332,9 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         !connectedRef.current &&
         (providerEvent.type === "message" ||
           providerEvent.type === "mode" ||
+          providerEvent.type === "candidate_speech_activity" ||
+          providerEvent.type === "agent_audio_started" ||
+          providerEvent.type === "latency_filler" ||
           providerEvent.type === "interruption" ||
           (providerEvent.type === "connection_status" &&
             providerEvent.status !== "connecting"))
@@ -240,6 +358,29 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         }
         if (event.transcriptTurn) {
           callbacksRef.current.onFinalTranscriptTurn(event.transcriptTurn);
+          if (event.speaker === "candidate") {
+            candidateTurnRef.current += 1;
+            unpairedAudioStopAtRef.current = null;
+            const pending = pendingTtfaRef.current;
+            if (pending?.candidateTurn === candidateTurnRef.current) {
+              pending.candidateFinalSeen = true;
+            } else {
+              beginCandidateResponseWait({
+                candidateFinalSeen: true,
+                candidateTurn: candidateTurnRef.current,
+                speechEndedAtMs: null,
+                visualStartedAtMs: eventTime,
+              });
+            }
+          } else {
+            const pending = pendingTtfaRef.current;
+            if (pending) {
+              pending.substantiveMessageSeen = true;
+              if (pending.firstAudioAtMs !== null) {
+                completeTtfa(pending.firstAudioAtMs);
+              }
+            }
+          }
         }
       }
 
@@ -249,9 +390,14 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
             return;
           }
           connectedRef.current = true;
+          const hardStopAtMs = callbacksRef.current.hardStopAtMs;
+          const startedAtMs =
+            hardStopAtMs !== undefined && Number.isFinite(hardStopAtMs)
+              ? hardStopAtMs - INTERVIEW_HARD_STOP_MS
+              : eventTime;
           const voice: VoiceMetadata = {
             conversationId: event.conversationId,
-            startedAt: new Date(eventTime).toISOString(),
+            startedAt: new Date(startedAtMs).toISOString(),
             status: "connected",
           };
           voiceRef.current = voice;
@@ -269,13 +415,117 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
           }
           return;
         case "mode":
+          if (event.mode === "speaking") {
+            providerModeRef.current = "speaking";
+            unpairedAudioStopAtRef.current = null;
+            interruptionCompletedBeforeNotificationRef.current = false;
+          } else {
+            const stoppedAgentAudio = providerModeRef.current === "speaking";
+            providerModeRef.current = "listening";
+            if (stoppedAgentAudio && pendingInterruptionRef.current) {
+              callbacksRef.current.performanceTracker?.complete(
+                pendingInterruptionRef.current,
+                eventTime,
+              );
+              pendingInterruptionRef.current = null;
+              interruptionCompletedBeforeNotificationRef.current = true;
+            } else if (stoppedAgentAudio) {
+              unpairedAudioStopAtRef.current = eventTime;
+            }
+          }
           dispatch({ type: "MODE", mode: event.mode });
           return;
+        case "candidate_speech_activity": {
+          if (event.active === candidateSpeechActiveRef.current) {
+            return;
+          }
+          candidateSpeechActiveRef.current = event.active;
+          if (event.active) {
+            const pending = pendingTtfaRef.current;
+            if (pending && !pending.candidateFinalSeen) {
+              if (pending.measurementId) {
+                callbacksRef.current.performanceTracker?.cancel(
+                  pending.measurementId,
+                );
+              }
+              pendingTtfaRef.current = null;
+              clearLatencyTimer();
+              setLatencyStage("idle");
+            }
+            if (
+              providerModeRef.current === "speaking" &&
+              !pendingInterruptionRef.current
+            ) {
+              pendingInterruptionRef.current =
+                callbacksRef.current.performanceTracker?.begin(
+                  "interruption_to_audio_stop",
+                  eventTime,
+                ) ?? null;
+            }
+            return;
+          }
+          beginCandidateResponseWait({
+            candidateFinalSeen: false,
+            candidateTurn: candidateTurnRef.current + 1,
+            speechEndedAtMs: eventTime,
+            visualStartedAtMs: eventTime,
+          });
+          return;
+        }
+        case "agent_audio_started": {
+          const pending = pendingTtfaRef.current;
+          if (!pending) {
+            return;
+          }
+          if (pending.substantiveMessageSeen) {
+            completeTtfa(eventTime);
+          } else {
+            pending.firstAudioAtMs ??= eventTime;
+          }
+          return;
+        }
+        case "latency_filler": {
+          const pending = pendingTtfaRef.current;
+          const speechEndedAtMs = pending?.speechEndedAtMs ?? null;
+          if (pending) {
+            pending.firstAudioAtMs = null;
+          }
+          const nextPolicy = observeLatencyFiller(
+            fillerPolicyRef.current,
+            pending?.candidateTurn ?? candidateTurnRef.current,
+            speechEndedAtMs === null ? null : eventTime - speechEndedAtMs,
+          );
+          fillerPolicyRef.current = nextPolicy;
+          setFillerPolicy(nextPolicy);
+          return;
+        }
         case "message":
           return;
-        case "interruption":
+        case "interruption": {
+          if (interruptionCompletedBeforeNotificationRef.current) {
+            interruptionCompletedBeforeNotificationRef.current = false;
+            dispatch({ type: "MODE", mode: "listening" });
+            return;
+          }
+          pendingInterruptionRef.current ??=
+            callbacksRef.current.performanceTracker?.begin(
+              "interruption_to_audio_stop",
+              eventTime,
+            ) ?? null;
+          if (
+            pendingInterruptionRef.current &&
+            unpairedAudioStopAtRef.current !== null
+          ) {
+            callbacksRef.current.performanceTracker?.complete(
+              pendingInterruptionRef.current,
+              eventTime,
+            );
+            pendingInterruptionRef.current = null;
+            unpairedAudioStopAtRef.current = null;
+          }
           dispatch({ type: "MODE", mode: "listening" });
           return;
+        }
         case "error":
           handleUnexpectedTerminalEvent(
             event.message.trim()
@@ -306,7 +556,15 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
           return;
       }
     },
-    [completeEnd, currentTime, handleUnexpectedTerminalEvent, requestEnd],
+    [
+      beginCandidateResponseWait,
+      clearLatencyTimer,
+      completeEnd,
+      completeTtfa,
+      currentTime,
+      handleUnexpectedTerminalEvent,
+      requestEnd,
+    ],
   );
 
   const markConnecting = useCallback(() => {
@@ -324,11 +582,19 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
     if (state.connectedAt === null || completedRef.current) {
       return;
     }
+    const connectedAt = state.connectedAt;
+    const configuredHardStopAtMs = callbacksRef.current.hardStopAtMs;
+    const hardStopAtMs =
+      configuredHardStopAtMs !== undefined &&
+      Number.isFinite(configuredHardStopAtMs)
+        ? configuredHardStopAtMs
+        : connectedAt + INTERVIEW_HARD_STOP_MS;
+    const sessionStartedAtMs = hardStopAtMs - INTERVIEW_HARD_STOP_MS;
     const updateElapsed = () => {
       setElapsedSeconds(
-        elapsedInterviewSeconds(
-          state.connectedAt ?? currentTime(),
-          currentTime(),
+        Math.min(
+          INTERVIEW_HARD_STOP_MS / 1_000,
+          Math.floor(Math.max(0, currentTime() - sessionStartedAtMs) / 1_000),
         ),
       );
     };
@@ -338,11 +604,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       () => {
         requestEnd("The eight-minute interview limit was reached.");
       },
-      remainingInterviewMilliseconds(
-        state.connectedAt,
-        currentTime(),
-        callbacksRef.current.hardStopMs ?? INTERVIEW_HARD_STOP_MS,
-      ),
+      Math.max(0, hardStopAtMs - currentTime()),
     );
     return () => {
       window.clearInterval(intervalId);
@@ -363,11 +625,15 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
     };
   }, [completeEnd, endRequested]);
 
+  useEffect(() => cancelPendingMeasurements, [cancelPendingMeasurements]);
+
   return {
     caption: state.caption,
     elapsedSeconds,
     endRequested,
     isMuted: state.isMuted,
+    fillerPolicy,
+    latencyStage,
     markConnecting,
     onSessionEvent,
     phase: state.phase,

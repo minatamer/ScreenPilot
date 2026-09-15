@@ -4,6 +4,11 @@ import {
   VOICE_CLIENT_TOOL_NAMES,
   VOICE_DYNAMIC_VARIABLE_KEYS,
 } from "@screenpilot/contracts/api/voice-token";
+import {
+  VOICE_MAX_FILLERS_PER_TURN,
+  VOICE_STATIC_FILLER_MESSAGE,
+  VOICE_STATIC_FILLER_THRESHOLD_MS,
+} from "@screenpilot/contracts/interview/voice-performance-policy";
 
 import { LOCKED_PROVIDER_SETTINGS } from "../../config/provider-mode.js";
 import {
@@ -11,7 +16,7 @@ import {
   INTERVIEWER_SYSTEM_PROMPT,
 } from "../../ai/prompts/interviewer-prompt.js";
 
-export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp017-2026-09-15.1";
+export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp018-2026-09-15.1";
 export const ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING = 160;
 export const ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION =
   "sp014-connection-v1";
@@ -22,10 +27,20 @@ export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   agentRevisionPolicyVersion: ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
   clientTools: VOICE_CLIENT_TOOL_NAMES,
   conversation: {
+    clientEvents: ["vad_score"],
     firstMessage: INTERVIEWER_FIRST_MESSAGE,
     interruptionsEnabled: true,
     maxDurationSeconds: PUBLIC_RUNTIME_LIMITS.callSeconds,
-    softTimeoutEnabled: false,
+    softTimeout: {
+      additionalMessages: [],
+      disableUntilFirstUserMessage: true,
+      enabled: false,
+      maximumPerGeneration: VOICE_MAX_FILLERS_PER_TURN,
+      message: VOICE_STATIC_FILLER_MESSAGE,
+      randomizeFillers: false,
+      timeoutSeconds: VOICE_STATIC_FILLER_THRESHOLD_MS / 1_000,
+      useLlmGeneratedMessage: false,
+    },
     turnEagerness: "normal",
     turnTimeoutSeconds: 12,
   },
@@ -34,6 +49,11 @@ export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
     model: LOCKED_PROVIDER_SETTINGS.openAiModel,
     outputTokenCeiling: ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING,
     reasoning: LOCKED_PROVIDER_SETTINGS.openAiReasoning,
+  },
+  latencyTuning: {
+    audioBuffering: "provider_default",
+    empiricalAdjustmentRequired: true,
+    turnSettings: "provider_dashboard",
   },
   platform: LOCKED_PROVIDER_SETTINGS.elevenLabsAgentPlatform,
   policyVersion: VOICE_AGENT_POLICY_VERSION,

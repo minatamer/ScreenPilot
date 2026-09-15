@@ -98,6 +98,11 @@
       "types": "./src/interview/transcript-turn.ts",
       "development": "./src/interview/transcript-turn.ts",
       "default": "./dist/interview/transcript-turn.js"
+    },
+    "./interview/voice-performance-policy": {
+      "types": "./src/interview/voice-performance-policy.ts",
+      "development": "./src/interview/voice-performance-policy.ts",
+      "default": "./dist/interview/voice-performance-policy.js"
     }
   },
   "files": [

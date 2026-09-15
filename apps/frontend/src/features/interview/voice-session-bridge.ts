@@ -23,6 +23,16 @@ export type VoiceSessionEvent =
       mode: "listening" | "speaking";
     }>
   | Readonly<{
+      type: "agent_audio_started";
+    }>
+  | Readonly<{
+      type: "latency_filler";
+    }>
+  | Readonly<{
+      type: "candidate_speech_activity";
+      active: boolean;
+    }>
+  | Readonly<{
       type: "message";
       eventId?: number | undefined;
       speaker: VoiceSessionSpeaker;

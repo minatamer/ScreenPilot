@@ -152,18 +152,39 @@ export function calculateRemainingVoiceSessionSeconds(
   startedAt: string | undefined,
   nowMilliseconds = Date.now(),
 ): number {
+  return Math.ceil(
+    calculateRemainingVoiceSessionMilliseconds(startedAt, nowMilliseconds) /
+      1_000,
+  );
+}
+
+export function calculateRemainingVoiceSessionMilliseconds(
+  startedAt: string | undefined,
+  nowMilliseconds = Date.now(),
+): number {
+  const maximumDurationMilliseconds = PUBLIC_RUNTIME_LIMITS.callSeconds * 1_000;
+  const deadlineMilliseconds = calculateVoiceSessionDeadlineMilliseconds(
+    startedAt,
+  );
+  return deadlineMilliseconds === null
+    ? maximumDurationMilliseconds
+    : Math.min(
+        maximumDurationMilliseconds,
+        Math.max(0, deadlineMilliseconds - nowMilliseconds),
+      );
+}
+
+export function calculateVoiceSessionDeadlineMilliseconds(
+  startedAt: string | undefined,
+): number | null {
   if (!startedAt) {
-    return PUBLIC_RUNTIME_LIMITS.callSeconds;
+    return null;
   }
   const startedAtMilliseconds = Date.parse(startedAt);
   if (!Number.isFinite(startedAtMilliseconds)) {
     throw new TypeError("Voice-session start time must be a valid timestamp.");
   }
-  const elapsedSeconds = Math.max(
-    0,
-    Math.floor((nowMilliseconds - startedAtMilliseconds) / 1_000),
-  );
-  return Math.max(0, PUBLIC_RUNTIME_LIMITS.callSeconds - elapsedSeconds);
+  return startedAtMilliseconds + PUBLIC_RUNTIME_LIMITS.callSeconds * 1_000;
 }
 
 export function createVoiceSessionContext(input: {

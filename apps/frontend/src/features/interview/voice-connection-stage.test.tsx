@@ -1,6 +1,6 @@
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   VOICE_AGENT_POLICY_VERSION,
   type VoiceMetadata,
@@ -15,6 +15,10 @@ import {
   type VoiceTokenRequester,
 } from "./voice-connection-stage";
 import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
+import {
+  createVoicePerformanceCollector,
+  createVoicePerformanceTracker,
+} from "./voice-performance";
 
 const DEMO_CONTEXT = {
   kind: "role_agnostic_first_stage_hr_screen",
@@ -62,6 +66,21 @@ function FakeSessionBridge({
   );
 }
 
+function ConnectedSessionBridge({
+  expectedConversationId,
+  onAuthorizationConsumed,
+  onEvent,
+}: VoiceSessionBridgeProps) {
+  useEffect(() => {
+    onAuthorizationConsumed();
+    onEvent({
+      type: "connected",
+      conversationId: expectedConversationId ?? "missing-conversation",
+    });
+  }, [expectedConversationId, onAuthorizationConsumed, onEvent]);
+  return null;
+}
+
 function stageProps(requestToken: VoiceTokenRequester) {
   return {
     demoContext: DEMO_CONTEXT,
@@ -93,6 +112,10 @@ function stageProps(requestToken: VoiceTokenRequester) {
 describe("VoiceConnectionStage", () => {
   beforeEach(() => {
     window.sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("requests exactly one token and clears one-time values before SDK start", async () => {
@@ -141,6 +164,58 @@ describe("VoiceConnectionStage", () => {
     });
   });
 
+  it("does not request or mount a provider after the original deadline", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(
+      Date.parse("2026-09-15T10:08:00.000Z"),
+    );
+    const requestToken = vi.fn<VoiceTokenRequester>().mockResolvedValue({
+      conversationId: "must-not-start",
+      conversationToken: "must-not-be-issued",
+    });
+    const props = {
+      ...stageProps(requestToken),
+      sessionStartedAt: "2026-09-15T10:00:00.000Z",
+    };
+
+    render(<VoiceConnectionStage {...props} />);
+
+    await waitFor(() => {
+      expect(props.onInterrupted).toHaveBeenCalledOnce();
+    });
+    expect(requestToken).not.toHaveBeenCalled();
+    expect(props.onSensitiveValuesCleared).toHaveBeenCalledOnce();
+    expect(screen.queryByTestId("fake-session-bridge")).not.toBeInTheDocument();
+  });
+
+  it("measures Start through the verified provider-ready callback", async () => {
+    const requestToken = vi.fn<VoiceTokenRequester>().mockResolvedValue({
+      conversationId: "conversation-018",
+      conversationToken: "short-lived-conversation-token",
+    });
+    const clock = [100, 450];
+    const performanceTracker = createVoicePerformanceTracker(
+      () => clock.shift() ?? 450,
+    );
+    const props = {
+      ...stageProps(requestToken),
+      liveSessionBridge: ConnectedSessionBridge,
+      performanceTracker,
+    };
+
+    render(<VoiceConnectionStage {...props} />);
+
+    await waitFor(() => {
+      expect(props.onConnected).toHaveBeenCalledWith(
+        expect.objectContaining({ conversationId: "conversation-018" }),
+      );
+    });
+    expect(
+      performanceTracker
+        .getSnapshot()
+        .samples.find((sample) => sample.metric === "connect_request_to_ready"),
+    ).toMatchObject({ durationMs: 350 });
+  });
+
   it("routes grant expiry back to preparation without mounting the SDK", async () => {
     const requestToken = vi.fn<VoiceTokenRequester>().mockRejectedValue(
       new ScreenPilotApiError({
@@ -170,11 +245,16 @@ describe("VoiceConnectionStage", () => {
       conversationToken: "fake-conversation-token",
     });
     const liveSessionBridge = vi.fn(() => null);
+    const performanceTracker = createVoicePerformanceTracker();
+    const performanceCollector =
+      createVoicePerformanceCollector(performanceTracker);
     const props = {
       ...stageProps(requestToken),
       liveSessionBridge,
       liveVoiceEnabled: false,
       onConnected: vi.fn(),
+      performanceCollector,
+      performanceTracker,
     };
     const rendered = render(
       <StrictMode>
@@ -231,6 +311,7 @@ describe("VoiceConnectionStage", () => {
         <VoiceConnectionStage {...props} stage="live" />
       </StrictMode>,
     );
+    expect(screen.getByText("fake")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "End interview" }));
     await waitFor(() => {
       expect(props.onEnded).toHaveBeenCalledWith(

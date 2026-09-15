@@ -41,7 +41,8 @@ import { ErrorPanel } from "@/shared/ui/error-panel";
 import { FakeVoiceSession } from "./fake-voice-session";
 import { InterviewStage } from "./interview-stage";
 import {
-  calculateRemainingVoiceSessionSeconds,
+  calculateRemainingVoiceSessionMilliseconds,
+  calculateVoiceSessionDeadlineMilliseconds,
   createVoiceSessionContext,
 } from "./voice-session-context";
 import type {
@@ -49,6 +50,10 @@ import type {
   VoiceSessionBridgeProps,
 } from "./voice-session-bridge";
 import { useVoiceSession } from "./use-voice-session";
+import type {
+  VoicePerformanceCollector,
+  VoicePerformanceTracker,
+} from "./voice-performance";
 
 const LazyElevenLabsVoiceSession = lazy(async () => {
   const voiceSession = await import("./elevenlabs-voice-session");
@@ -83,6 +88,8 @@ type VoiceConnectionStageProps = Readonly<{
   liveSessionBridge?: ComponentType<VoiceSessionBridgeProps>;
   liveVoiceEnabled: boolean;
   plan: ScreeningPlan;
+  performanceCollector?: VoicePerformanceCollector;
+  performanceTracker?: VoicePerformanceTracker;
   requestToken?: VoiceTokenRequester;
   rolePreference?: RolePreference | undefined;
   sessionStartedAt?: string | undefined;
@@ -131,6 +138,8 @@ export function VoiceConnectionStage({
   liveSessionBridge: LiveSessionBridge = LazyElevenLabsVoiceSession,
   liveVoiceEnabled,
   plan,
+  performanceCollector,
+  performanceTracker,
   requestToken = requestVoiceToken,
   rolePreference,
   sessionStartedAt,
@@ -144,14 +153,21 @@ export function VoiceConnectionStage({
   const requestAbortControllerRef = useRef<AbortController | null>(null);
   const cleanupTimerRef = useRef<number | null>(null);
   const sensitiveValuesClearedRef = useRef(false);
-  const [initialRemainingSeconds] = useState(() =>
-    calculateRemainingVoiceSessionSeconds(sessionStartedAt),
+  const connectMeasurementRef = useRef<string | null>(null);
+  const interruptionHandledRef = useRef(false);
+  const [sessionDeadlineMilliseconds] = useState(() =>
+    calculateVoiceSessionDeadlineMilliseconds(sessionStartedAt),
   );
+  const [remainingMilliseconds, setRemainingMilliseconds] = useState(() =>
+    calculateRemainingVoiceSessionMilliseconds(sessionStartedAt),
+  );
+  const remainingSeconds = Math.ceil(remainingMilliseconds / 1_000);
   const initialRequestRef = useRef({
     onFailure,
     onGrantRejected,
     onSensitiveValuesCleared,
     requestToken,
+    performanceTracker,
   });
   const [authorization, setAuthorization] =
     useState<VoiceSessionAuthorization>();
@@ -167,7 +183,7 @@ export function VoiceConnectionStage({
         entryMode,
         insights,
         plan,
-        remainingSeconds: initialRemainingSeconds,
+        remainingSeconds,
         ...(rolePreference ? { rolePreference } : {}),
         topicProgress,
       }),
@@ -175,9 +191,9 @@ export function VoiceConnectionStage({
       cv,
       demoContext,
       entryMode,
-      initialRemainingSeconds,
       insights,
       plan,
+      remainingSeconds,
       rolePreference,
       topicProgress,
     ],
@@ -188,11 +204,23 @@ export function VoiceConnectionStage({
     onFinalTranscriptTurn,
     onInsight,
     onTopicProgress,
+    performanceTracker,
     topicProgress,
     transcript,
   });
+  const clearSensitiveValues = useCallback(() => {
+    if (sensitiveValuesClearedRef.current) {
+      return;
+    }
+    sensitiveValuesClearedRef.current = true;
+    initialRequestRef.current.onSensitiveValuesCleared();
+  }, []);
   const handleConnectionFailure = useCallback(
     (message: string) => {
+      if (connectMeasurementRef.current) {
+        performanceTracker?.cancel(connectMeasurementRef.current);
+        connectMeasurementRef.current = null;
+      }
       setAuthorization(undefined);
       setSessionBridgeMounted(false);
       onFailure({
@@ -202,13 +230,35 @@ export function VoiceConnectionStage({
         retryable: true,
       });
     },
-    [onFailure],
+    [onFailure, performanceTracker],
+  );
+  const handleConnected = useCallback(
+    (voice: VoiceMetadata) => {
+      if (connectMeasurementRef.current) {
+        performanceTracker?.complete(connectMeasurementRef.current);
+        connectMeasurementRef.current = null;
+      }
+      onConnected(voice);
+    },
+    [onConnected, performanceTracker],
   );
   const handleInterrupted = useCallback(() => {
+    if (interruptionHandledRef.current) {
+      return;
+    }
+    interruptionHandledRef.current = true;
+    requestAbortControllerRef.current?.abort();
+    requestAbortControllerRef.current = null;
+    initialStartRequestRef.current = null;
+    if (connectMeasurementRef.current) {
+      performanceTracker?.cancel(connectMeasurementRef.current);
+      connectMeasurementRef.current = null;
+    }
+    clearSensitiveValues();
     setAuthorization(undefined);
     setSessionBridgeMounted(false);
     onInterrupted();
-  }, [onInterrupted]);
+  }, [clearSensitiveValues, onInterrupted, performanceTracker]);
   const handleEnded = useCallback(
     (voice: VoiceMetadata) => {
       setAuthorization(undefined);
@@ -218,12 +268,16 @@ export function VoiceConnectionStage({
     [onEnded],
   );
   const voiceSession = useVoiceSession({
-    onConnected,
+    ...(sessionDeadlineMilliseconds === null
+      ? {}
+      : { hardStopAtMs: sessionDeadlineMilliseconds }),
+    onConnected: handleConnected,
     onConnectionFailure: handleConnectionFailure,
     onEnded: handleEnded,
     onEnding,
     onFinalTranscriptTurn: insightClientTools.onFinalTranscriptTurn,
     onInterrupted: handleInterrupted,
+    performanceTracker,
   });
   const { markConnecting } = voiceSession;
 
@@ -234,23 +288,30 @@ export function VoiceConnectionStage({
     }
     const initialStartRequest = initialStartRequestRef.current;
     const initialRequest = initialRequestRef.current;
-    const clearSensitiveValues = () => {
-      if (sensitiveValuesClearedRef.current) {
-        return;
-      }
-      sensitiveValuesClearedRef.current = true;
-      initialRequest.onSensitiveValuesCleared();
-    };
 
     let startTimer: number | undefined;
     if (initialStartRequest && !requestStartedRef.current) {
       const abortController = new AbortController();
       requestAbortControllerRef.current = abortController;
       startTimer = window.setTimeout(() => {
-        if (requestStartedRef.current) {
+        if (
+          requestStartedRef.current ||
+          initialStartRequestRef.current !== initialStartRequest
+        ) {
+          return;
+        }
+        if (
+          sessionDeadlineMilliseconds !== null &&
+          Date.now() >= sessionDeadlineMilliseconds
+        ) {
+          handleInterrupted();
           return;
         }
         requestStartedRef.current = true;
+        connectMeasurementRef.current =
+          initialRequest.performanceTracker?.begin(
+            "connect_request_to_ready",
+          ) ?? null;
         void initialRequest
           .requestToken(
             {
@@ -265,6 +326,18 @@ export function VoiceConnectionStage({
             if (abortController.signal.aborted) {
               return;
             }
+            if (
+              sessionDeadlineMilliseconds !== null &&
+              Date.now() >= sessionDeadlineMilliseconds
+            ) {
+              handleInterrupted();
+              return;
+            }
+            setRemainingMilliseconds(
+              sessionDeadlineMilliseconds === null
+                ? calculateRemainingVoiceSessionMilliseconds(undefined)
+                : Math.max(0, sessionDeadlineMilliseconds - Date.now()),
+            );
             setExpectedConversationId(response.conversationId);
             setAuthorization({
               conversationId: response.conversationId,
@@ -277,7 +350,19 @@ export function VoiceConnectionStage({
             initialStartRequestRef.current = null;
             clearSensitiveValues();
             if (abortController.signal.aborted || isAbortError(error)) {
+              if (connectMeasurementRef.current) {
+                initialRequest.performanceTracker?.cancel(
+                  connectMeasurementRef.current,
+                );
+                connectMeasurementRef.current = null;
+              }
               return;
+            }
+            if (connectMeasurementRef.current) {
+              initialRequest.performanceTracker?.cancel(
+                connectMeasurementRef.current,
+              );
+              connectMeasurementRef.current = null;
             }
             if (
               error instanceof ScreenPilotApiError &&
@@ -300,13 +385,42 @@ export function VoiceConnectionStage({
         cleanupTimerRef.current = null;
         requestAbortControllerRef.current?.abort();
         requestAbortControllerRef.current = null;
+        if (connectMeasurementRef.current) {
+          initialRequest.performanceTracker?.cancel(
+            connectMeasurementRef.current,
+          );
+          connectMeasurementRef.current = null;
+        }
         if (requestStartedRef.current) {
           initialStartRequestRef.current = null;
           clearSensitiveValues();
         }
       }, 0);
     };
-  }, [markConnecting]);
+  }, [
+    clearSensitiveValues,
+    handleInterrupted,
+    markConnecting,
+    sessionDeadlineMilliseconds,
+  ]);
+
+  useEffect(() => {
+    if (stage !== "connecting" || sessionDeadlineMilliseconds === null) {
+      return;
+    }
+    const remainingBeforeDeadline = sessionDeadlineMilliseconds - Date.now();
+    if (remainingBeforeDeadline <= 0) {
+      handleInterrupted();
+      return;
+    }
+    const deadlineTimer = window.setTimeout(
+      handleInterrupted,
+      remainingBeforeDeadline,
+    );
+    return () => {
+      window.clearTimeout(deadlineTimer);
+    };
+  }, [handleInterrupted, sessionDeadlineMilliseconds, stage]);
 
   const handleAuthorizationConsumed = useCallback(() => {
     setAuthorization(undefined);
@@ -360,13 +474,22 @@ export function VoiceConnectionStage({
           {...(cv ? { cv } : {})}
           elapsedSeconds={voiceSession.elapsedSeconds}
           entryMode={entryMode}
+          fillerPolicy={voiceSession.fillerPolicy}
           insights={insights}
           isMuted={voiceSession.isMuted}
+          latencyStage={voiceSession.latencyStage}
           onEnd={() => {
             voiceSession.requestEnd();
           }}
           onToggleMute={voiceSession.toggleMuted}
           phase={voiceSession.phase}
+          {...(performanceCollector
+            ? {
+                performanceCollector,
+                performanceSource: liveVoiceEnabled ? "live" : "fake",
+              }
+            : {})}
+          performanceTracker={performanceTracker}
           topicProgress={topicProgress}
           transcript={transcript}
         />

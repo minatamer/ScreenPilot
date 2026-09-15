@@ -4,8 +4,9 @@ import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
 import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { VoicePerformanceTracker } from "@/features/interview/voice-performance";
 import {
   createInsightClientTools,
   type InsightClientTools,
@@ -20,6 +21,7 @@ type UseInsightClientToolsOptions = Readonly<{
   onFinalTranscriptTurn: (turn: TranscriptTurn) => void;
   onInsight: (insight: InsightCard) => void;
   onTopicProgress: (progress: TopicProgress) => void;
+  performanceTracker?: VoicePerformanceTracker | undefined;
   topicProgress: readonly TopicProgress[];
   transcript: readonly TranscriptTurn[];
 }>;
@@ -125,7 +127,7 @@ function createInsightToolController(
     appearanceTimers.set(insight.id, timerId);
   };
 
-  const clientTools = createInsightClientTools({
+  const unmeasuredClientTools = createInsightClientTools({
     getSnapshot: () => snapshot,
     onInsight: publishInsight,
     onTopicProgress: (progress) => {
@@ -135,6 +137,50 @@ function createInsightToolController(
       };
       callbacks.onTopicProgress(progress);
     },
+  });
+  const measureCardTool = (
+    tool: InsightClientTools[keyof InsightClientTools],
+  ): InsightClientTools[keyof InsightClientTools] => {
+    if (!initialOptions.performanceTracker) {
+      return tool;
+    }
+    return (parameters) => {
+      const measurementId = initialOptions.performanceTracker?.begin(
+        "client_tool_to_card",
+      );
+      const retainOnlyWhenApplied = (result: string) => {
+        if (!result.startsWith("Applied:") && measurementId) {
+          initialOptions.performanceTracker?.cancel(measurementId);
+        }
+        return result;
+      };
+      try {
+        const result = tool(parameters);
+        if (typeof result === "string") {
+          return retainOnlyWhenApplied(result);
+        }
+        return result.then(retainOnlyWhenApplied, (error: unknown) => {
+          if (measurementId) {
+            initialOptions.performanceTracker?.cancel(measurementId);
+          }
+          throw error;
+        });
+      } catch (error) {
+        if (measurementId) {
+          initialOptions.performanceTracker?.cancel(measurementId);
+        }
+        throw error;
+      }
+    };
+  };
+  const clientTools: InsightClientTools = Object.freeze({
+    recordInsight: measureCardTool(unmeasuredClientTools.recordInsight),
+    correctInsight: measureCardTool(unmeasuredClientTools.correctInsight),
+    markTopic: unmeasuredClientTools.markTopic,
+    recordCandidateQuestion: measureCardTool(
+      unmeasuredClientTools.recordCandidateQuestion,
+    ),
+    requestFollowup: measureCardTool(unmeasuredClientTools.requestFollowup),
   });
 
   return {
@@ -184,10 +230,37 @@ function createInsightToolController(
 
 export function useInsightClientTools(options: UseInsightClientToolsOptions) {
   const [controller] = useState(() => createInsightToolController(options));
+  const renderedInsightVersionsRef = useRef(
+    new Map(
+      options.insights.map((insight) => [
+        insight.id,
+        `${insight.updatedAt}:${insight.status}`,
+      ]),
+    ),
+  );
 
   useEffect(() => {
     controller.reconcile(options);
   }, [controller, options]);
+
+  useEffect(() => {
+    const nextVersions = new Map(
+      options.insights.map((insight) => [
+        insight.id,
+        `${insight.updatedAt}:${insight.status}`,
+      ]),
+    );
+    let renderedCardCount = 0;
+    for (const [insightId, version] of nextVersions) {
+      if (renderedInsightVersionsRef.current.get(insightId) !== version) {
+        renderedCardCount += 1;
+      }
+    }
+    renderedInsightVersionsRef.current = nextVersions;
+    for (let index = 0; index < renderedCardCount; index += 1) {
+      options.performanceTracker?.completeOldest("client_tool_to_card");
+    }
+  }, [options.insights, options.performanceTracker]);
 
   useEffect(() => {
     return () => {

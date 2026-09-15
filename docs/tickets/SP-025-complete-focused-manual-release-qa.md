@@ -3,7 +3,7 @@
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
 Last synchronized: 2026-09-14<br>
-Depends on: SP-010A, SP-017, SP-018, SP-021, SP-022, SP-023, SP-024<br>
+Depends on: SP-010A, SP-017, SP-018, SP-018A, SP-021, SP-022, SP-023, SP-024<br>
 Suggested commit: `SP-025: complete focused demo release checks`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)

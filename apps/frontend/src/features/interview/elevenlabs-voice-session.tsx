@@ -8,8 +8,10 @@ import {
   type Mode,
   type Status,
 } from "@elevenlabs/react";
+import { VOICE_VAD_SPEECH_PROBABILITY_THRESHOLD } from "@screenpilot/contracts/interview/voice-performance-policy";
 import { useCallback, useEffect, useRef } from "react";
 
+import { isStaticLatencyFiller } from "./latency-filler-policy";
 import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
 
 type MessagePayload = Parameters<NonNullable<HookCallbacks["onMessage"]>>[0];
@@ -124,6 +126,8 @@ export function ElevenLabsVoiceSession({
 }: VoiceSessionBridgeProps) {
   const connectedRef = useRef(false);
   const failedRef = useRef(false);
+  const audioStartedRef = useRef(false);
+  const candidateSpeechActiveRef = useRef(false);
   const terminationRef = useRef<(() => void) | null>(null);
 
   const handleConnect = useCallback(
@@ -183,6 +187,11 @@ export function ElevenLabsVoiceSession({
       // The installed conversational SDK exposes completed turns through its
       // typed onMessage callback and has no typed interim-transcript callback.
       // Do not inspect the untyped debug/incoming-event payloads for captions.
+      if (message.role !== "user" && isStaticLatencyFiller(message.message)) {
+        audioStartedRef.current = false;
+        onEvent({ type: "latency_filler" });
+        return;
+      }
       onEvent({
         type: "message",
         ...(message.event_id === undefined
@@ -197,7 +206,31 @@ export function ElevenLabsVoiceSession({
   );
   const handleModeChange = useCallback(
     ({ mode }: { mode: Mode }) => {
+      if (mode === "listening") {
+        audioStartedRef.current = false;
+      }
       onEvent({ type: "mode", mode });
+    },
+    [onEvent],
+  );
+  const handleAudio = useCallback(() => {
+    if (audioStartedRef.current) {
+      return;
+    }
+    audioStartedRef.current = true;
+    onEvent({ type: "agent_audio_started" });
+  }, [onEvent]);
+  const handleVadScore = useCallback(
+    ({ vadScore }: { vadScore: number }) => {
+      if (!Number.isFinite(vadScore)) {
+        return;
+      }
+      const active = vadScore >= VOICE_VAD_SPEECH_PROBABILITY_THRESHOLD;
+      if (candidateSpeechActiveRef.current === active) {
+        return;
+      }
+      candidateSpeechActiveRef.current = active;
+      onEvent({ type: "candidate_speech_activity", active });
     },
     [onEvent],
   );
@@ -227,6 +260,7 @@ export function ElevenLabsVoiceSession({
     <ConversationProvider
       clientTools={clientTools}
       isMuted={isMuted}
+      onAudio={handleAudio}
       onConnect={handleConnect}
       onDisconnect={handleDisconnect}
       onError={handleError}
@@ -234,6 +268,7 @@ export function ElevenLabsVoiceSession({
       onMessage={handleMessage}
       onModeChange={handleModeChange}
       onStatusChange={handleStatusChange}
+      onVadScore={handleVadScore}
     >
       <VoiceSessionStarter
         authorization={authorization}

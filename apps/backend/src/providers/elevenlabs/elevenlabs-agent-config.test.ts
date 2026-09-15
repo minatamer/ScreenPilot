@@ -3,6 +3,7 @@ import {
   VOICE_CLIENT_TOOL_NAMES,
   VOICE_DYNAMIC_VARIABLE_KEYS,
 } from "@screenpilot/contracts/api/voice-token";
+import { VOICE_STATIC_FILLER_MESSAGE } from "@screenpilot/contracts/interview/voice-performance-policy";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -21,10 +22,20 @@ describe("source-controlled ElevenLabs agent configuration", () => {
       agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr",
       agentRevisionPolicyVersion: "sp014-connection-v1",
       conversation: {
+        clientEvents: ["vad_score"],
         firstMessage: INTERVIEWER_FIRST_MESSAGE,
         interruptionsEnabled: true,
         maxDurationSeconds: 480,
-        softTimeoutEnabled: false,
+        softTimeout: {
+          additionalMessages: [],
+          disableUntilFirstUserMessage: true,
+          enabled: false,
+          maximumPerGeneration: 1,
+          message: VOICE_STATIC_FILLER_MESSAGE,
+          randomizeFillers: false,
+          timeoutSeconds: 1.5,
+          useLlmGeneratedMessage: false,
+        },
         turnEagerness: "normal",
         turnTimeoutSeconds: 12,
       },
@@ -32,6 +43,11 @@ describe("source-controlled ElevenLabs agent configuration", () => {
         model: "gpt-5.4-mini",
         outputTokenCeiling: 160,
         reasoning: "none",
+      },
+      latencyTuning: {
+        audioBuffering: "provider_default",
+        empiricalAdjustmentRequired: true,
+        turnSettings: "provider_dashboard",
       },
       platform: "elevenagents",
       policyVersion: VOICE_AGENT_POLICY_VERSION,

@@ -16,6 +16,10 @@ export const FAKE_VOICE_EVENT_TRACE = [
     event: { type: "mode", mode: "speaking" },
   },
   {
+    afterMs: 100,
+    event: { type: "agent_audio_started" },
+  },
+  {
     afterMs: 180,
     event: {
       type: "message",
@@ -70,6 +74,10 @@ export const FAKE_VOICE_EVENT_TRACE = [
     event: { type: "mode", mode: "listening" },
   },
   {
+    afterMs: 1_300,
+    event: { type: "candidate_speech_activity", active: true },
+  },
+  {
     afterMs: 1_350,
     event: {
       type: "message",
@@ -100,6 +108,10 @@ export const FAKE_VOICE_EVENT_TRACE = [
     },
   },
   {
+    afterMs: 1_950,
+    event: { type: "candidate_speech_activity", active: false },
+  },
+  {
     afterMs: 2_025,
     event: {
       type: "message",
@@ -112,6 +124,10 @@ export const FAKE_VOICE_EVENT_TRACE = [
   {
     afterMs: 2_300,
     event: { type: "mode", mode: "speaking" },
+  },
+  {
+    afterMs: 2_325,
+    event: { type: "agent_audio_started" },
   },
   {
     afterMs: 2_500,

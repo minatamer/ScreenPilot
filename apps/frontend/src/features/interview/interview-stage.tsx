@@ -11,7 +11,14 @@ import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { InterviewControls } from "./interview-controls";
 import { LiveCaptions } from "./live-captions";
 import type { LiveCaption } from "./normalize-voice-event";
-import type { VoiceSessionPhase } from "./use-voice-session";
+import type { VoiceLatencyStage, VoiceSessionPhase } from "./use-voice-session";
+import type { FillerPolicyState } from "./latency-filler-policy";
+import { VoicePerformanceDiagnostics } from "./voice-performance-diagnostics";
+import type {
+  VoicePerformanceBatch,
+  VoicePerformanceCollector,
+  VoicePerformanceTracker,
+} from "./voice-performance";
 import { VoiceSignal } from "./voice-signal";
 
 type InterviewStageProps = Readonly<{
@@ -19,11 +26,16 @@ type InterviewStageProps = Readonly<{
   cv?: NormalizedCv | undefined;
   elapsedSeconds: number;
   entryMode: EntryMode;
+  fillerPolicy?: FillerPolicyState | undefined;
   insights: readonly InsightCard[];
   isMuted: boolean;
+  latencyStage?: VoiceLatencyStage | undefined;
   onEnd: () => void;
   onToggleMute: () => void;
   phase: VoiceSessionPhase;
+  performanceCollector?: VoicePerformanceCollector | undefined;
+  performanceSource?: VoicePerformanceBatch["source"] | undefined;
+  performanceTracker?: VoicePerformanceTracker | undefined;
   topicProgress: readonly TopicProgress[];
   transcript: readonly TranscriptTurn[];
 }>;
@@ -54,11 +66,16 @@ export function InterviewStage({
   cv,
   elapsedSeconds,
   entryMode,
+  fillerPolicy,
   insights,
   isMuted,
+  latencyStage = "idle",
   onEnd,
   onToggleMute,
   phase,
+  performanceCollector,
+  performanceSource,
+  performanceTracker,
   topicProgress,
   transcript,
 }: InterviewStageProps) {
@@ -66,7 +83,11 @@ export function InterviewStage({
   const ending = phase === "ending";
 
   return (
-    <div className="sp-interview-stage" data-phase={phase}>
+    <div
+      className="sp-interview-stage"
+      data-latency-stage={latencyStage}
+      data-phase={phase}
+    >
       <header className="sp-interview-stage__header">
         <DemoStageHeading
           pretitle="ScreenPilot interview"
@@ -92,6 +113,22 @@ export function InterviewStage({
               </div>
             </div>
           </div>
+
+          {latencyStage === "visual" ? (
+            <span
+              aria-hidden="true"
+              className="sp-interview-latency sp-interview-latency--visual"
+            >
+              <span />
+              <span />
+              <span />
+            </span>
+          ) : null}
+          {latencyStage === "reviewing" ? (
+            <p className="sp-interview-latency" role="status">
+              Reviewing your answer…
+            </p>
+          ) : null}
 
           {reconnecting ? (
             <div
@@ -124,6 +161,17 @@ export function InterviewStage({
           transcript={transcript}
         />
       </div>
+      {performanceCollector &&
+      performanceSource &&
+      performanceTracker &&
+      fillerPolicy ? (
+        <VoicePerformanceDiagnostics
+          collector={performanceCollector}
+          fillerPolicy={fillerPolicy}
+          source={performanceSource}
+          tracker={performanceTracker}
+        />
+      ) : null}
     </div>
   );
 }

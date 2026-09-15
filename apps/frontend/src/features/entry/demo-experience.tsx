@@ -12,6 +12,10 @@ import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progr
 
 import { CvStage } from "@/features/cv/cv-stage";
 import { createCvInsightSeeds } from "@/features/insights/seed-cv-insights";
+import {
+  createVoicePerformanceCollector,
+  createVoicePerformanceTracker,
+} from "@/features/interview/voice-performance";
 import type { VoiceStartRequest } from "@/features/interview/voice-connection-stage";
 import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
@@ -86,6 +90,10 @@ export function DemoExperience() {
     useDemoSession();
   const [voiceStartRequest, setVoiceStartRequest] =
     useState<VoiceStartRequest | null>(null);
+  const [performanceTracker] = useState(createVoicePerformanceTracker);
+  const [performanceCollector] = useState(() =>
+    createVoicePerformanceCollector(performanceTracker),
+  );
   useDemoBootstrap();
 
   useEffect(() => {
@@ -240,6 +248,7 @@ export function DemoExperience() {
         onRetry={() => {
           dispatch({ type: "RETRY" });
         }}
+        performanceTracker={performanceTracker}
       />
     );
   } else if (
@@ -360,6 +369,8 @@ export function DemoExperience() {
         insights={state.insights}
         liveVoiceEnabled={state.runtimeConfig.paidVoiceEnabled}
         plan={state.screeningPlan}
+        performanceCollector={performanceCollector}
+        performanceTracker={performanceTracker}
         {...(state.rolePreference
           ? { rolePreference: state.rolePreference }
           : {})}

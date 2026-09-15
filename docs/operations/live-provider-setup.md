@@ -120,7 +120,7 @@ either ignored `.env.local` file and did not contact a provider.
 | `OPENAI_API_KEY` | The live backend adapter passes it to the OpenAI Responses client as a Bearer credential. | Live CV analysis is implemented by SP-010. The live post-call summarizer and summary route do not exist yet; SP-020 owns them, and the current live summarizer intentionally fails closed. |
 | `ELEVENLABS_API_KEY` | The live backend client sends it only in the server-side `xi-api-key` header when requesting a private conversation token. | Implemented by SP-014; no browser exposure. |
 | `ELEVENLABS_AGENT_ID` | The live token client binds it into the ElevenLabs `agent_id` request and rejects a mismatched requested agent. | Implemented by SP-014; it is not accepted from the browser. |
-| `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. It is a manual/deployed-agent drift check for SP-018/SP-025, not a missing provider-call parameter. |
+| `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. It is a manual/deployed-agent drift check for SP-018A/SP-025, not a missing provider-call parameter. |
 | `TURNSTILE_SITE_KEY` | Copied into the allow-listed public bootstrap response, then passed to the frontend Turnstile widget. | Implemented by SP-003/SP-012. This is the only provider value in this group that is public by design. |
 | `TURNSTILE_SECRET_KEY` | The backend sends it to Cloudflare Siteverify in the form body. | Implemented by SP-009 and used before the current CV-analysis and voice-token provider calls. SP-020 will reuse it for summary. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | The backend compares Siteverify's returned hostname against this exact allow-list. | Implemented by SP-009; `localhost` is the current local-only value. |
@@ -378,11 +378,12 @@ control; do not improvise a different behavior.
 | Text to speech | Flash v2.5 (`eleven_flash_v2_5`) |
 | Voice | One owner-selected voice whose ID matches `ELEVENLABS_VOICE_ID` |
 | Expressive mode | Off |
-| Voice behavior | Provider defaults; tuning deferred to SP-018 |
+| Voice behavior | SP-018 source baseline keeps normal eagerness, interruptions enabled, and provider-default buffering; empirical adjustment requires controlled live measurement |
 | Turn eagerness | Normal |
 | Take turn after silence | 12 seconds |
 | Interruptions | Enabled |
-| Soft timeout | Disabled |
+| Client events | `vad_score` enabled; ScreenPilot treats scores ≥0.5 as candidate speech and uses the speaking-to-not-speaking transition as the TTFA start boundary |
+| Soft timeout | Source target `sp018-2026-09-15.1`: disabled pending deployed evidence; if measurement warrants activation, exactly 1.5 seconds, static `Mm-hm…`, one maximum per generation, no alternate/randomized messages, no LLM-generated message, and disabled before the first user message |
 | Maximum conversation duration | 480 seconds |
 | Transport | Private browser WebRTC with a backend-issued conversation token |
 | Save audio | Off |
@@ -513,7 +514,7 @@ not applicable, or deferred to a named later ticket.
 | Soft timeout | Disabled |
 | Maximum duration / call limit | 480 seconds |
 | Idle prompts or extra timeout messages | Provider default or off; do not add unapproved behavior |
-| Dynamic variables | Exact six names; configured with synthetic placeholders |
+| Dynamic variables | Exact eight names; configured with synthetic placeholders |
 | Secret dynamic variables and overrides | None; disabled |
 | Client tools | Exact five names; detailed schema and handlers deferred to SP-016 |
 | Tool-call sounds, tool interruption, wait-for-response, and response behavior | Off or provider default; final behavior deferred to SP-016 and SP-018 |
@@ -521,7 +522,7 @@ not applicable, or deferred to a named later ticket.
 | Knowledge base / RAG | Disabled or empty |
 | Workflows, branches, sub-agents, transfer rules | Disabled or not applicable |
 | Evaluation criteria, post-call analysis, data collection, sentiment | Disabled or empty |
-| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation is deferred to SP-017 and live tuning to SP-018 |
+| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation is deferred to SP-017, deterministic timing behavior to SP-018, and controlled live tuning to SP-018A |
 | Initiation and post-call webhooks | Disabled |
 | Experiments, traffic splits, alternate versions | Disabled; one active Main version |
 | Server-to-client and client-to-server events | Only events required by the private WebRTC bridge and exact client tools; normalization and handlers are deferred to SP-015 and SP-016 |
@@ -898,6 +899,8 @@ state, not a payment method, account identifier, key, or billing screenshot:
 
 ### Phase D: safe configuration readiness
 
+SP-018A executes this phase before any paid CV or voice operation.
+
 - [x] Correct the SP-009 backend local-start path so it deliberately loads the
   ignored backend environment file without printing it.
 - [x] Make the SP-003/SP-012 public Turnstile site-key projection mode-aware so
@@ -913,9 +916,14 @@ state, not a payment method, account identifier, key, or billing screenshot:
 
 ### Phase E: owner-authorized live provider and dashboard checks
 
+SP-018A executes the CV-analysis and voice portions with synthetic data. The
+summary item remains deferred to SP-020/SP-021.
+
 - [ ] The owner explicitly authorizes the paid smoke test.
-- [ ] Synthetic CV analysis and summary each make at most one bounded direct
-  OpenAI operation and are checked for cost and `store: false` behavior.
+- [ ] Synthetic CV analysis makes at most one bounded direct OpenAI operation
+  and is checked for cost and `store: false` behavior during SP-018A.
+- [ ] After SP-020/SP-021, synthetic summary makes at most one bounded direct
+  OpenAI operation and is checked for cost and `store: false` behavior.
 - [ ] The owner verifies real Turnstile success, action and hostname validation,
   expiration, and replay rejection.
 - [ ] The owner verifies one private ElevenLabs token issuance and one WebRTC
