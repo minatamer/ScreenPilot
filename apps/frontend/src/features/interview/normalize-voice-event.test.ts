@@ -40,11 +40,14 @@ describe("normalizeVoiceEvent", () => {
     ]);
 
     expect(first).toMatchObject({
-      caption: { text: "I am looking" },
+      caption: { text: "I am looking", turnId: "voice-candidate-4" },
       type: "message",
     });
     expect(second).toMatchObject({
-      caption: { text: "I am looking for a role" },
+      caption: {
+        text: "I am looking for a role",
+        turnId: "voice-candidate-4",
+      },
       type: "message",
     });
     if (first?.type !== "message" || second?.type !== "message") {
@@ -89,6 +92,7 @@ describe("normalizeVoiceEvent", () => {
       speaker: "interviewer",
       status: "final",
     });
+    expect(later.caption.turnId).toBe("voice-interviewer-8");
     expect(later.transcriptTurn?.text).toHaveLength(
       MAX_LIVE_CAPTION_CHARACTERS,
     );

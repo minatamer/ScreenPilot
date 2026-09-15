@@ -95,8 +95,9 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-014A is completed as documentation-only work. Its consolidated runbook covers every non-deployment OpenAI, ElevenLabs, Turnstile, local-secret, spend, rotation, and manual-verification step without requesting credentials or making a paid call; owner account setup and live/microphone checks remain explicitly pending.
 - SP-015 is implemented and deterministically verified without a live provider; its active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018.
 - SP-015A's owner-directed landing and `/demo` UI/UX implementation is represented by commit `cab2990`. Motion, illustration, CTA, responsive alignment, preflight hierarchy, the shared stage-heading primitive, typography tokens, and spacing rhythm have focused deterministic coverage; consolidated owner visual acceptance and remaining whole-flow/manual checks stay tracked in that packet.
-- SP-016 is implemented in the current unstaged work and locally verified without credentials or a paid provider call. Its schemas, five-tool dispatcher, evidence validation, correction-history preservation, CV seeding, strict session synchronization, aligned height-matched Insight Board, responsive connector treatment, and safety cases have focused coverage; a reduced-motion alternative is implemented, while published-agent callback verification and an owner/browser reduced-motion visual check remain explicitly pending.
-- SP-017 is the next feature ticket after SP-016.
+- SP-016 is implemented, locally verified without credentials or paid calls, and represented by commit `13fc434`. Its schemas, five-tool dispatcher, evidence validation, correction-history preservation, CV seeding, strict session synchronization, aligned height-matched Insight Board, responsive connector treatment, and safety cases have focused coverage; published-agent callbacks and an owner/browser reduced-motion visual check remain explicitly pending.
+- SP-016A is implemented and locally verified. Every currently reachable `/demo` step fits practical tablet and laptop browser viewports through height-aware density, responsive composition, concise copy, bottom-anchored action footers, and bounded inner scrolling; the final compact-anchor evidence uses the real `/demo` flow from asserted top-of-page state, reduced motion is computed and checked, and the production build ran in a zero-local-environment snapshot. The fake-mode End interview path now enters a reducer-owned, scrubbed, non-persistable placeholder stage. Owner visual acceptance and the ticket commit remain pending.
+- SP-017 is the next feature ticket after SP-016A.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
@@ -122,14 +123,15 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-015 | [Normalize live events, captions, and controls](SP-015-normalize-live-events-captions-and-controls.md) | SP-006, SP-014 | Required |
 | SP-015A | [Polish the landing and demo flow after visual review](SP-015A-polish-landing-and-demo-flow-after-visual-review.md) | SP-005, SP-011A, SP-012, SP-013, SP-015 | Required |
 | SP-016 | [Build client tools and Insight Board](SP-016-build-client-tools-and-insight-board.md) | SP-005, SP-006, SP-010A, SP-015, SP-015A | Required |
-| SP-017 | [Write and evaluate adaptive interview policy](SP-017-write-and-evaluate-adaptive-interview-policy.md) | SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016 | Required |
+| SP-016A | [Fit demo steps to tablet and laptop viewports](SP-016A-fit-demo-steps-to-tablet-and-laptop-viewports.md) | SP-005, SP-011A, SP-012, SP-013, SP-015A, SP-016 | Required |
+| SP-017 | [Write and evaluate adaptive interview policy](SP-017-write-and-evaluate-adaptive-interview-policy.md) | SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016, SP-016A | Required |
 | SP-018 | [Tune latency, interruption, and filler](SP-018-tune-latency-interruption-and-filler.md) | SP-014, SP-015, SP-017 | Required |
 | SP-019 | [Finalize transcript and evidence navigation](SP-019-finalize-transcript-and-evidence-navigation.md) | SP-015, SP-016 | Required |
 | SP-020 | [Generate stateless post-call summary](SP-020-generate-stateless-post-call-summary.md) | SP-009, SP-010, SP-010A, SP-017, SP-019 | Required |
 | SP-021 | [Build review, retry, and Clear session](SP-021-build-review-retry-and-clear-session.md) | SP-005, SP-006, SP-010A, SP-019, SP-020 | Required |
 | SP-022 | [Add public abuse and spend controls](SP-022-add-public-abuse-and-spend-controls.md) | SP-003, SP-009, SP-010, SP-014, SP-020, SP-021 | Required |
 | SP-023 | [Harden privacy, headers, and logging](SP-023-harden-privacy-headers-and-logging.md) | SP-006, SP-009, SP-010, SP-014, SP-020 | Required |
-| SP-024 | [Harden accessibility, responsiveness, and performance](SP-024-harden-accessibility-responsiveness-and-performance.md) | SP-005, SP-011, SP-012, SP-013, SP-016, SP-021 | Required |
+| SP-024 | [Harden accessibility, responsiveness, and performance](SP-024-harden-accessibility-responsiveness-and-performance.md) | SP-005, SP-011, SP-012, SP-013, SP-016, SP-016A, SP-021 | Required |
 | SP-025 | [Complete focused manual release QA](SP-025-complete-focused-manual-release-qa.md) | SP-010A, SP-017, SP-018, SP-021, SP-022, SP-023, SP-024 | Required |
 | SP-026 | [Deploy frontend and backend](SP-026-deploy-frontend-and-backend.md) | SP-022, SP-023, SP-025 | Required |
 | SP-027 | [Optionally produce portfolio materials](SP-027-optionally-produce-portfolio-materials.md) | SP-018, SP-021, SP-025, SP-026 | Optional |

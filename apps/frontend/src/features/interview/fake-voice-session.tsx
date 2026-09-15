@@ -21,16 +21,66 @@ export const FAKE_VOICE_EVENT_TRACE = [
       type: "message",
       eventId: 0,
       speaker: "interviewer",
+      stability: "tentative",
+      text: "Hi.",
+    },
+  },
+  {
+    afterMs: 360,
+    event: {
+      type: "message",
+      eventId: 0,
+      speaker: "interviewer",
+      stability: "tentative",
+      text: "Hi. What would you",
+    },
+  },
+  {
+    afterMs: 540,
+    event: {
+      type: "message",
+      eventId: 0,
+      speaker: "interviewer",
+      stability: "tentative",
+      text: "Hi. What would you like me to call",
+    },
+  },
+  {
+    afterMs: 720,
+    event: {
+      type: "message",
+      eventId: 0,
+      speaker: "interviewer",
+      stability: "tentative",
+      text: "Hi. What would you like me to call you?",
+    },
+  },
+  {
+    afterMs: 920,
+    event: {
+      type: "message",
+      eventId: 0,
+      speaker: "interviewer",
       stability: "final",
       text: "Hi. What would you like me to call you?",
     },
   },
   {
-    afterMs: 260,
+    afterMs: 1_150,
     event: { type: "mode", mode: "listening" },
   },
   {
-    afterMs: 360,
+    afterMs: 1_350,
+    event: {
+      type: "message",
+      eventId: 1,
+      speaker: "candidate",
+      stability: "tentative",
+      text: "You can",
+    },
+  },
+  {
+    afterMs: 1_575,
     event: {
       type: "message",
       eventId: 1,
@@ -40,7 +90,7 @@ export const FAKE_VOICE_EVENT_TRACE = [
     },
   },
   {
-    afterMs: 460,
+    afterMs: 1_800,
     event: {
       type: "message",
       eventId: 1,
@@ -50,7 +100,7 @@ export const FAKE_VOICE_EVENT_TRACE = [
     },
   },
   {
-    afterMs: 560,
+    afterMs: 2_025,
     event: {
       type: "message",
       eventId: 1,
@@ -60,11 +110,51 @@ export const FAKE_VOICE_EVENT_TRACE = [
     },
   },
   {
-    afterMs: 640,
+    afterMs: 2_300,
     event: { type: "mode", mode: "speaking" },
   },
   {
-    afterMs: 760,
+    afterMs: 2_500,
+    event: {
+      type: "message",
+      eventId: 2,
+      speaker: "interviewer",
+      stability: "tentative",
+      text: "Thanks, Sam.",
+    },
+  },
+  {
+    afterMs: 2_750,
+    event: {
+      type: "message",
+      eventId: 2,
+      speaker: "interviewer",
+      stability: "tentative",
+      text: "Thanks, Sam. Tell me what",
+    },
+  },
+  {
+    afterMs: 3_000,
+    event: {
+      type: "message",
+      eventId: 2,
+      speaker: "interviewer",
+      stability: "tentative",
+      text: "Thanks, Sam. Tell me what you would like to focus",
+    },
+  },
+  {
+    afterMs: 3_250,
+    event: {
+      type: "message",
+      eventId: 2,
+      speaker: "interviewer",
+      stability: "tentative",
+      text: "Thanks, Sam. Tell me what you would like to focus on today.",
+    },
+  },
+  {
+    afterMs: 3_500,
     event: {
       type: "message",
       eventId: 2,
@@ -74,7 +164,7 @@ export const FAKE_VOICE_EVENT_TRACE = [
     },
   },
   {
-    afterMs: 840,
+    afterMs: 3_900,
     event: { type: "mode", mode: "listening" },
   },
 ] as const satisfies readonly Readonly<{
@@ -84,7 +174,7 @@ export const FAKE_VOICE_EVENT_TRACE = [
 
 export const FAKE_VOICE_TOOL_TRACE = [
   {
-    afterMs: 600,
+    afterMs: 2_100,
     name: "recordInsight",
     parameters: {
       category: "preferred_name",
@@ -94,7 +184,7 @@ export const FAKE_VOICE_TOOL_TRACE = [
     },
   },
   {
-    afterMs: 620,
+    afterMs: 2_150,
     name: "markTopic",
     parameters: {
       topicKey: "preferred_name",

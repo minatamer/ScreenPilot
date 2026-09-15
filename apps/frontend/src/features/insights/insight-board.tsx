@@ -165,10 +165,6 @@ export function InsightBoard({
           {insights.length} {insights.length === 1 ? "note" : "notes"}
         </Badge>
       </header>
-      <p className="sp-insight-board__disclaimer">
-        AI-organized notes for human interpretation—not a score or hiring
-        decision.
-      </p>
 
       {insights.length === 0 ? (
         <div className="sp-insight-board__empty" role="status">

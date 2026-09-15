@@ -29,6 +29,7 @@ export const MAX_PERSISTED_SESSION_BYTES = 512 * 1_024;
 const NON_PERSISTABLE_SESSION_STAGES = new Set<DemoStage>([
   "empty",
   "bootstrapping",
+  "complete_placeholder",
   "cleared",
 ]);
 const CV_ASSISTED_STAGES = new Set<DemoStage>([
@@ -440,7 +441,7 @@ export function projectPersistedDemoSession(
 ): PersistedDemoSession | null {
   if (
     state.hydrationStatus !== "ready" ||
-    state.stage === "cleared" ||
+    NON_PERSISTABLE_SESSION_STAGES.has(state.stage) ||
     state.createdAt === null ||
     state.expiresAt === null ||
     state.runtimeConfig === null ||

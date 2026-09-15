@@ -36,6 +36,7 @@ const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
 export type DemoSessionContextValue = Readonly<{
   state: DemoSessionState;
   dispatch: Dispatch<DemoSessionEvent>;
+  completeInterview: () => void;
   clearSession: () => void;
   startOver: () => void;
   storageStatus: SavePersistedSessionResult["status"] | "idle";
@@ -120,7 +121,7 @@ export function DemoSessionProvider({
     if (state.hydrationStatus !== "ready") {
       return;
     }
-    if (state.stage === "cleared") {
+    if (state.stage === "cleared" || state.stage === "complete_placeholder") {
       setStorageStatus(
         clearScreenPilotSession(storageRef.current) ? "idle" : "unavailable",
       );
@@ -196,13 +197,25 @@ export function DemoSessionProvider({
     dispatch({ type: "CLEAR_SESSION" });
   }, []);
 
+  const completeInterview = useCallback(() => {
+    clearScreenPilotSession(storageRef.current);
+    dispatch({ type: "DEMO_INTERVIEW_COMPLETED" });
+  }, []);
+
   const startOver = useCallback(() => {
     dispatch({ type: "START_OVER" });
   }, []);
 
   const value = useMemo<DemoSessionContextValue>(
-    () => ({ state, dispatch, clearSession, startOver, storageStatus }),
-    [clearSession, startOver, state, storageStatus],
+    () => ({
+      state,
+      dispatch,
+      completeInterview,
+      clearSession,
+      startOver,
+      storageStatus,
+    }),
+    [clearSession, completeInterview, startOver, state, storageStatus],
   );
 
   return (

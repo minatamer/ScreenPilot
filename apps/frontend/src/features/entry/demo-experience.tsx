@@ -16,6 +16,7 @@ import type { VoiceStartRequest } from "@/features/interview/voice-connection-st
 import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
 import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
+import { InterviewCompletePlaceholder } from "@/features/review/interview-complete-placeholder";
 import type {
   DemoStage,
   SessionFailure,
@@ -75,12 +76,14 @@ const DEMO_STAGE_PROGRESS: Readonly<Record<DemoStage, number>> = {
   ending: 3,
   summarizing: 4,
   review_ready: 4,
+  complete_placeholder: 4,
   cleared: 0,
 };
 
 export function DemoExperience() {
   const router = useRouter();
-  const { clearSession, dispatch, startOver, state } = useDemoSession();
+  const { completeInterview, clearSession, dispatch, startOver, state } =
+    useDemoSession();
   const [voiceStartRequest, setVoiceStartRequest] =
     useState<VoiceStartRequest | null>(null);
   useDemoBootstrap();
@@ -135,6 +138,14 @@ export function DemoExperience() {
 
   let stageContent;
   if (
+    state.stage === "complete_placeholder" ||
+    state.stage === "summarizing" ||
+    state.stage === "review_ready"
+  ) {
+    stageContent = (
+      <InterviewCompletePlaceholder onReturnHome={returnHomeAfterClear} />
+    );
+  } else if (
     state.hydrationStatus === "pending" ||
     state.stage === "empty" ||
     state.stage === "bootstrapping" ||
@@ -311,8 +322,9 @@ export function DemoExperience() {
             voice,
           });
         }}
-        onEnded={(voice) => {
-          dispatch({ type: "VOICE_ENDED", voice });
+        onEnded={() => {
+          setVoiceStartRequest(null);
+          completeInterview();
         }}
         onEnding={() => {
           dispatch({ type: "VOICE_ENDING" });

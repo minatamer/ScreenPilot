@@ -64,7 +64,7 @@ export function EntryModeChooser({
           </Button>
         }
         badge={<EntryModeBadge>More tailored questions</EntryModeBadge>}
-        description="Bring a CV to help Pilot ask more focused follow-up questions. It stays inside this demo while you use it."
+        description="Bring a CV for more focused follow-up questions. It stays in this tab."
         icon={<DocumentIcon />}
         title="Use a CV"
       />
@@ -80,7 +80,7 @@ export function EntryModeChooser({
           </Button>
         }
         badge={<EntryModeBadge>Jump straight in</EntryModeBadge>}
-        description="Skip the document. Pilot starts with a few broad questions and builds the interview from your answers."
+        description="Skip the document. Pilot starts broadly and learns from your answers."
         icon={<ConversationIcon />}
         title="Start without a CV"
       />

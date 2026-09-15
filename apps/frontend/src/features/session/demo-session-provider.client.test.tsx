@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { StrictMode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -6,6 +6,7 @@ import {
   createCvAnalysisResponseFixture,
   TEST_PUBLIC_RUNTIME_CONFIG,
 } from "@/test/cv-analysis.fixture";
+import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
 
 import { DemoSessionProvider } from "./demo-session-provider";
 import { persistedDemoSessionSchema } from "./persisted-session.schema";
@@ -18,6 +19,34 @@ function SessionProbe() {
     <output>
       {state.hydrationStatus}:{state.stage}:{state.restoreNotice ?? "none"}
     </output>
+  );
+}
+
+function CompletionProbe() {
+  const { completeInterview, dispatch, state } = useDemoSession();
+  return (
+    <>
+      <output>{state.stage}</output>
+      <button
+        onClick={() => {
+          dispatch({ type: "PREFLIGHT_READY" });
+          dispatch({ type: "VOICE_CONNECTING" });
+          dispatch({
+            type: "VOICE_CONNECTED",
+            voice: {
+              conversationId: "fake-conversation-1",
+              status: "connected",
+              startedAt: "2026-09-09T09:05:00.000Z",
+            },
+          });
+          dispatch({ type: "VOICE_ENDING" });
+          completeInterview();
+        }}
+        type="button"
+      >
+        Complete interview
+      </button>
+    </>
   );
 }
 
@@ -138,5 +167,48 @@ describe("DemoSessionProvider client lifecycle", () => {
     const stored = window.sessionStorage.getItem(SESSION_STORAGE_KEY);
     expect(stored).not.toContain(analysis.interviewGrant);
     expect(stored).not.toContain(analysis.cv.facts[0]?.evidenceExcerpt);
+  });
+
+  it("clears browser storage while entering the scrubbed completion stage", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-09T09:05:00.000Z"));
+    window.sessionStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify(
+        persistedDemoSessionSchema.parse({
+          schemaVersion: 3,
+          stage: "preflight",
+          entryMode: "conversation_first",
+          createdAt: "2026-09-09T09:00:00.000Z",
+          expiresAt: "2026-09-09T11:00:00.000Z",
+          runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
+          demoContext: {
+            kind: "role_agnostic_first_stage_hr_screen",
+            roleAvailability: "candidate_selected_synthetic_session_vacancy",
+            employerFactsAvailable: false,
+          },
+          screeningPlan: createConversationFirstPlanFixture(),
+          interviewGrant: "signed-conversation-first-grant",
+          interviewGrantExpiresAt: "2026-09-09T09:15:00.000Z",
+          transcript: [],
+          insights: [],
+          topicProgress: [],
+        }),
+      ),
+    );
+
+    render(
+      <DemoSessionProvider>
+        <CompletionProbe />
+      </DemoSessionProvider>,
+    );
+
+    await act(() => Promise.resolve());
+    expect(screen.getByText("preflight")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Complete interview" }));
+
+    await act(() => Promise.resolve());
+    expect(screen.getByText("complete_placeholder")).toBeInTheDocument();
+    expect(window.sessionStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
   });
 });

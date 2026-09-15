@@ -121,10 +121,10 @@ export function ConversationPreparationStage({
             <span />
           </span>
           <div>
-            <h2>Getting the questions ready</h2>
+            <h2>No CV needed</h2>
             <p>
-              Pilot is setting up a role-neutral first interview. No CV is being
-              analyzed and no candidate facts are being invented.
+              Pilot starts role-neutral and learns from your answers. It does
+              not invent candidate facts.
             </p>
           </div>
         </Card>

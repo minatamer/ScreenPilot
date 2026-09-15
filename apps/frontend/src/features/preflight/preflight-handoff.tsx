@@ -56,6 +56,80 @@ function startButtonLabel(startStatus: VoiceStartStatus): string {
     : "Start interview";
 }
 
+type PreflightFactIconKind = "clock" | "microphone" | "notes" | "spark";
+
+function PreflightFactIcon({
+  kind,
+}: Readonly<{ kind: PreflightFactIconKind }>) {
+  if (kind === "microphone") {
+    return (
+      <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+        <rect
+          height="10"
+          rx="4"
+          stroke="currentColor"
+          width="7"
+          x="8.5"
+          y="3"
+        />
+        <path
+          d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7"
+          stroke="currentColor"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  if (kind === "spark") {
+    return (
+      <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+        <path
+          d="M12 3.5 14 9l5.5 2-5.5 2-2 5.5-2-5.5-5.5-2L10 9l2-5.5Z"
+          stroke="currentColor"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  if (kind === "notes") {
+    return (
+      <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+        <path
+          d="M6 4.5h12v15H6zM9 9h6M9 12h6M9 15h4"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+  return (
+    <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="8" stroke="currentColor" />
+      <path
+        d="M12 7.5V12l3 2"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function PreflightFact({
+  children,
+  icon,
+}: Readonly<{ children: string; icon: PreflightFactIconKind }>) {
+  return (
+    <div className="sp-preflight-fact" role="listitem">
+      <span className="sp-preflight-fact__icon">
+        <PreflightFactIcon kind={icon} />
+      </span>
+      <p>{children}</p>
+    </div>
+  );
+}
+
 export function PreflightHandoff({
   entryMode,
   executeChallenge,
@@ -119,37 +193,32 @@ export function PreflightHandoff({
           className="sp-preflight-disclosure"
           tone="soft"
         >
-          <div className="sp-preflight-step-label">
-            <span aria-hidden="true">01</span>
-            <p>What to expect</p>
-          </div>
           <div className="sp-preflight-disclosure__body">
             <div className="sp-preflight-disclosure__heading">
+              <div>
+                <p className="sp-preflight-kicker">01 · Interview</p>
+                <h2 id="voice-disclosure-title">How the interview works</h2>
+              </div>
               <EntryModeBadge>
                 {cvAssisted ? "CV-assisted" : "Conversation-first"}
               </EntryModeBadge>
-              <h2 id="voice-disclosure-title">How the interview works</h2>
             </div>
-            <ul className="sp-preflight-disclosure__list">
-              <li>
-                ScreenPilot listens through your microphone only during the
-                interview.
-              </li>
-              <li>
+            <div className="sp-preflight-fact-grid" role="list">
+              <PreflightFact icon="microphone">
+                Your microphone is used only during the interview.
+              </PreflightFact>
+              <PreflightFact icon="spark">
                 {cvAssisted
-                  ? "The AI uses your CV and answers to ask useful follow-up questions."
-                  : "The AI analyzes your answers to ask useful follow-up questions."}
-              </li>
-              <li>Key details become clear notes for a person to review.</li>
-              <li>
-                The conversation lasts up to eight minutes, and you can stop at
-                any time.
-              </li>
-            </ul>
-            <p className="sp-preflight-disclosure__boundary">
-              ScreenPilot supports human review. It does not score you or make a
-              hiring decision.
-            </p>
+                  ? "Pilot uses your CV and answers for follow-up questions."
+                  : "Pilot uses your answers for follow-up questions."}
+              </PreflightFact>
+              <PreflightFact icon="notes">
+                Key details become notes for a person to review.
+              </PreflightFact>
+              <PreflightFact icon="clock">
+                It lasts up to eight minutes; you can stop anytime.
+              </PreflightFact>
+            </div>
           </div>
         </Card>
 
@@ -158,21 +227,35 @@ export function PreflightHandoff({
           as="section"
           className="sp-preflight-consent"
         >
-          <div className="sp-preflight-step-label">
-            <span aria-hidden="true">02</span>
-            <p>Before you start</p>
-          </div>
           <div className="sp-preflight-consent__body">
-            <div>
+            <div className="sp-preflight-consent__heading">
+              <p className="sp-preflight-kicker">02 · Permission</p>
               <h2 id="voice-consent-title">Your privacy and consent</h2>
-              <p>
-                Your microphone stays off until you check it. ScreenPilot does
-                not record or save your audio. Your notes stay only in this tab.
-              </p>
-              <p>
-                Use made-up information for this demo.{" "}
-                {roleDisclosure(rolePreference)}
-              </p>
+            </div>
+            <div className="sp-preflight-privacy-summary">
+              <span className="sp-preflight-fact__icon">
+                <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+                  <path
+                    d="M12 3.5 19 6v5.5c0 4.4-2.7 7.4-7 9-4.3-1.6-7-4.6-7-9V6l7-2.5Z"
+                    stroke="currentColor"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="m9 12 2 2 4-4"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </span>
+              <div>
+                <p>
+                  Nothing starts until you check your microphone. ScreenPilot
+                  does not record or save your audio; notes stay only in this
+                  tab.
+                </p>
+                <p>Use made-up information. {roleDisclosure(rolePreference)}</p>
+              </div>
             </div>
             <label className="sp-preflight-consent__control">
               <input

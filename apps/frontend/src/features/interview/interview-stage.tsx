@@ -93,23 +93,21 @@ export function InterviewStage({
             </div>
           </div>
 
-          <div
-            className="sp-interview-connection-banner"
-            data-reconnecting={reconnecting}
-            role="status"
-          >
-            <span aria-hidden="true" />
-            <p>
-              <strong>
-                {reconnecting ? "Reconnecting voice" : "Private connection"}
-              </strong>
-              {reconnecting
-                ? "The voice client is making its brief built-in reconnect attempt."
-                : "Connected through a private WebRTC session. No recording is created."}
-            </p>
-          </div>
+          {reconnecting ? (
+            <div
+              className="sp-interview-connection-banner"
+              data-reconnecting="true"
+              role="status"
+            >
+              <span aria-hidden="true" />
+              <p>
+                <strong>Reconnecting voice</strong>
+                Pilot is making one brief reconnect attempt.
+              </p>
+            </div>
+          ) : null}
 
-          <LiveCaptions caption={caption} />
+          <LiveCaptions caption={caption} transcript={transcript} />
           <InterviewControls
             elapsedSeconds={elapsedSeconds}
             ending={ending}

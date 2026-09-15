@@ -165,7 +165,7 @@ describe("VoiceConnectionStage", () => {
       liveVoiceEnabled: false,
       onConnected: vi.fn(),
     };
-    render(
+    const rendered = render(
       <StrictMode>
         <VoiceConnectionStage {...props} />
       </StrictMode>,
@@ -185,7 +185,7 @@ describe("VoiceConnectionStage", () => {
       () => {
         expect(props.onFinalTranscriptTurn).toHaveBeenCalledTimes(3);
       },
-      { timeout: 2_000 },
+      { timeout: 5_000 },
     );
     expect(
       props.onFinalTranscriptTurn.mock.calls.map(([turn]) => turn.text),
@@ -194,6 +194,9 @@ describe("VoiceConnectionStage", () => {
       "You can call me Sam.",
       "Thanks, Sam. Tell me what you would like to focus on today.",
     ]);
+    expect(
+      props.onFinalTranscriptTurn.mock.calls.map(([turn]) => turn.speaker),
+    ).toEqual(["interviewer", "candidate", "interviewer"]);
     await waitFor(() => {
       expect(props.onInsight).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -211,6 +214,21 @@ describe("VoiceConnectionStage", () => {
     });
     expect(props.onSensitiveValuesCleared).toHaveBeenCalledOnce();
     expect(window.sessionStorage.length).toBe(0);
+
+    rendered.rerender(
+      <StrictMode>
+        <VoiceConnectionStage {...props} stage="live" />
+      </StrictMode>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "End interview" }));
+    await waitFor(() => {
+      expect(props.onEnded).toHaveBeenCalledWith(
+        expect.objectContaining({
+          endReason: "Interview ended by the candidate.",
+          status: "ended",
+        }),
+      );
+    });
   });
 
   it("unmounts the selected bridge immediately after a terminal SDK failure", async () => {

@@ -13,6 +13,7 @@ describe("InterviewStage", () => {
           speaker: "candidate",
           stability: "final",
           text: "I am interested in a general first-stage conversation.",
+          turnId: "voice-candidate-1",
         }}
         elapsedSeconds={65}
         entryMode="conversation_first"
@@ -40,7 +41,10 @@ describe("InterviewStage", () => {
     expect(screen.getByText("01:05")).toBeVisible();
     expect(
       screen.getByText(
-        "I am interested in a general first-stage conversation.",
+        (_content, element) =>
+          element?.tagName === "P" &&
+          element.textContent ===
+            "I am interested in a general first-stage conversation.",
       ),
     ).toBeVisible();
 

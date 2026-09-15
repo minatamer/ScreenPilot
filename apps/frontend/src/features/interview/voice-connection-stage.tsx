@@ -342,7 +342,9 @@ export function VoiceConnectionStage({
           entryMode={entryMode}
           insights={insights}
           isMuted={voiceSession.isMuted}
-          onEnd={voiceSession.requestEnd}
+          onEnd={() => {
+            voiceSession.requestEnd();
+          }}
           onToggleMute={voiceSession.toggleMuted}
           phase={voiceSession.phase}
           topicProgress={topicProgress}

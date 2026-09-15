@@ -4,8 +4,6 @@ type VoiceSignalProps = Readonly<{
   phase: VoiceSessionPhase;
 }>;
 
-const ACTIVE_PHASES = new Set<VoiceSessionPhase>(["listening", "speaking"]);
-
 function signalLabel(phase: VoiceSessionPhase) {
   switch (phase) {
     case "speaking":
@@ -28,7 +26,7 @@ export function VoiceSignal({ phase }: VoiceSignalProps) {
     <div
       aria-label={signalLabel(phase)}
       className="sp-interview-signal"
-      data-active={ACTIVE_PHASES.has(phase)}
+      data-active={phase === "speaking"}
       data-phase={phase}
       role="img"
     >

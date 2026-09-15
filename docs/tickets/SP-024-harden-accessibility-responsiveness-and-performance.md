@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
-Last synchronized: 2026-08-26  
-Depends on: SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-021  
+Last synchronized: 2026-09-15<br>
+Depends on: SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-016A, SP-021<br>
 Suggested commit: `SP-024: harden demo quality`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)

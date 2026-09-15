@@ -93,6 +93,7 @@ export type DemoSessionEvent =
   | Readonly<{ type: "UPSERT_INSIGHT"; insight: InsightCard }>
   | Readonly<{ type: "SET_TOPIC_PROGRESS"; progress: TopicProgress }>
   | Readonly<{ type: "START_OVER" }>
+  | Readonly<{ type: "DEMO_INTERVIEW_COMPLETED" }>
   | Readonly<{ type: "BEGIN_NEW_SESSION"; now: string }>
   | Readonly<{ type: "SESSION_EXPIRED" }>
   | Readonly<{ type: "CLEAR_SESSION" }>;
@@ -690,6 +691,13 @@ export function demoSessionReducer(
         "ready",
       ]);
       return clearModeSpecificState(state);
+    case "DEMO_INTERVIEW_COMPLETED":
+      assertStage(state, event.type, ["ending"]);
+      return {
+        ...createInitialDemoSessionState(),
+        hydrationStatus: "ready",
+        stage: "complete_placeholder",
+      };
     case "BEGIN_NEW_SESSION":
       assertStage(state, event.type, ["cleared"]);
       return {

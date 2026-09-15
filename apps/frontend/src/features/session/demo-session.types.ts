@@ -30,6 +30,7 @@ export const DEMO_STAGES = [
   "ending",
   "summarizing",
   "review_ready",
+  "complete_placeholder",
   "cleared",
 ] as const;
 

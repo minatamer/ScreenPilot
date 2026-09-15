@@ -14,6 +14,7 @@ export type LiveCaption = Readonly<{
   speaker: VoiceSessionSpeaker;
   stability: "tentative" | "final";
   text: string;
+  turnId: string;
 }>;
 
 type VoiceMessageEvent = Extract<VoiceSessionEvent, { type: "message" }>;
@@ -68,6 +69,23 @@ function validProviderSequence(eventId: number | undefined) {
     : undefined;
 }
 
+function voiceTurnId(speaker: VoiceSessionSpeaker, sequence: number) {
+  return `voice-${speaker}-${String(sequence)}`;
+}
+
+function createLiveCaption(
+  event: VoiceMessageEvent,
+  text: string,
+  sequence: number,
+): LiveCaption {
+  return {
+    speaker: event.speaker,
+    stability: event.stability,
+    text,
+    turnId: voiceTurnId(event.speaker, sequence),
+  };
+}
+
 function nextSequence(
   eventId: number | undefined,
   state: VoiceEventNormalizerState,
@@ -105,11 +123,6 @@ export function normalizeVoiceEvent(
     return { event: null, state };
   }
 
-  const caption: LiveCaption = {
-    speaker: event.speaker,
-    stability: event.stability,
-    text,
-  };
   const providerSequence = validProviderSequence(event.eventId);
   if (event.stability === "tentative") {
     if (
@@ -121,7 +134,11 @@ export function normalizeVoiceEvent(
       return { event: null, state };
     }
     return {
-      event: { ...event, caption, shouldDisplayCaption: true },
+      event: {
+        ...event,
+        caption: createLiveCaption(event, text, providerSequence),
+        shouldDisplayCaption: true,
+      },
       state: {
         ...state,
         latestCaptionSequence: providerSequence,
@@ -148,7 +165,7 @@ export function normalizeVoiceEvent(
   if (!resolvedSequence) {
     return { event: null, state };
   }
-  const id = `voice-${event.speaker}-${String(resolvedSequence.sequence)}`;
+  const id = voiceTurnId(event.speaker, resolvedSequence.sequence);
   if (state.seenFinalTurnIds.includes(id)) {
     return {
       event: null,
@@ -185,7 +202,12 @@ export function normalizeVoiceEvent(
     resolvedSequence.sequence >= state.latestCaptionSequence;
 
   return {
-    event: { ...event, caption, shouldDisplayCaption, transcriptTurn },
+    event: {
+      ...event,
+      caption: createLiveCaption(event, text, resolvedSequence.sequence),
+      shouldDisplayCaption,
+      transcriptTurn,
+    },
     state: {
       finalizedProviderSequences:
         providerSequence === undefined

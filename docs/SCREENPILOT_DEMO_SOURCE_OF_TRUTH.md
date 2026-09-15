@@ -2660,6 +2660,7 @@ choosing_entry_mode -> Use a CV -> awaiting_cv
 choosing_entry_mode -> Start without a CV -> preparing_conversation -> preflight
 awaiting_cv -> local extract/status -> SP-012 analysis -> plan_ready -> preflight
 preflight -> SP-013 consent/readiness -> ready/connecting -> live -> ending/summarizing -> review_ready
+current SP-016A placeholder -> ending -> DEMO_INTERVIEW_COMPLETED -> complete_placeholder (scrubbed and non-persistable)
 retryable failure -> Retry the failed operation without changing entry mode
 CV/preparation change -> reducer-valid Change starting option
 preflight Back -> choosing_entry_mode for conversation-first; plan_ready for CV-assisted
@@ -2667,7 +2668,7 @@ logo or browser Back -> landing/history while the tab session remains resumable
 Clear & exit -> CLEAR_SESSION -> router.replace('/')
 ```
 
-The stage indicator reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine.
+The stage indicator reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine. Until SP-021 implements the real Review surface, `complete_placeholder` is a reducer-owned terminal presentation stage rather than a component-local override: its transition clears the in-memory candidate/session fields, the provider removes the versioned browser projection, and the projection schema rejects persistence of that stage.
 
 #### Preflight
 
@@ -2680,15 +2681,17 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 
 - Deep Ink `ink-950` centralized canvas that continues the shared `/demo` shell.
 - The background field fills the dynamic viewport, while wide screens center a bounded interview workspace instead of stretching panels and copy across the display.
-- Left 42%: voice signal, Pilot status, captions, timer, mute/end controls.
-- Right 58%: a calm vertical stack of roomy candidate-sourced insight cards with category icons, explicit confirmation states, and caption-evidence affordances.
-- Place readable live captions inside a distinct bordered `ink-900` panel below the signal, with the elapsed-time row and primary controls separated beneath it.
+- Left 48%: voice signal, Pilot status, a scrollable conversation-caption log, timer, mute/end controls.
+- Right 52%: one efficient vertically scrollable stack of candidate-sourced insight cards with category icons, explicit confirmation states, and caption-evidence affordances.
+- Place readable live captions inside a distinct bordered `ink-900` panel below the signal, with the elapsed-time row and primary controls separated beneath it. The panel uses a familiar AI-chat composition: candidate captions sit on the right in compact coral/plum bubbles, while Pilot responses remain unboxed text on the left. Messages begin at the top, retain finalized turns, and automatically follow each newly received Pilot or candidate caption inside the panel's own vertical scroll region.
 - Show the microphone control as an unambiguous action and current state, for example **Mute** with **Microphone on**; never use an unclear label such as “Mute Off.”
 - Place a compact ScreenPilot/mode header above two clearly bordered work areas so the bounded workspace reads as one composed application shell rather than two unrelated panels.
 - Follow the approved raster's spacious vertical insight rhythm on desktop; keep card content concise enough that role, compensation, English, availability, and relevant experience remain visible without turning the panel into a dense dashboard.
 - New cards emerge from the signal area with a short path animation.
 - Conversation-first begins with an intentionally open insight canvas and fills it from candidate answers; CV-assisted may begin with clearly marked CV facts. The empty state must feel purposeful, not unfinished.
 - The current speaking party is visually obvious without relying on color alone.
+- The caption panel labels both Pilot and candidate turns. Pilot responses retain the received-word reveal; candidate captions grow through incoming tentative updates inside a single bubble whose only entrance motion is the short message-bubble transition. A stable normalized turn identity preserves already-mounted Pilot words and the candidate bubble across tentative-to-final updates but restarts the appropriate entrance for a later same-speaker turn, including repeated prefixes. The voice signal animates only while the provider reports Pilot speaking; while the candidate speaks, the explicit **Pilot is listening…** state remains visible and the signal rests.
+- Fake mode emits a visibly paced, deterministic sequence of tentative and final captions for both speakers. The installed live SDK exposes completed turns through its typed callback, so live word reveal begins when that validated text arrives; do not inspect untyped debug payloads or add a parallel audio transcription path merely to simulate unavailable interim events.
 - Captions remain readable and are never covered by cards.
 
 #### Review
@@ -2704,11 +2707,11 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 
 ### Responsive behavior
 
-- Responsive quality is a continuous requirement, not a desktop/mobile toggle. Small phones, standard phones, tablets, compact laptops, standard laptops/desktops, and large monitors are equal product-quality targets; none may ship with missing content, actions, states, or recovery paths.
+- Responsive quality is a continuous requirement, not a desktop/mobile toggle. Small phones, standard phones, tablets, compact laptops, standard laptops/desktops, and large monitors are equal product-quality targets; none may ship with missing content, actions, states, or recovery paths. For standard `/demo` states, tablets and laptops use a bounded height-aware workspace that keeps the step indicator, active content, and primary/recovery actions visible without outer document scrolling; phones retain natural document flow.
 - The implementation must reflow fluidly across the complete practical width range from 320 px through 2560 px and beyond. Breakpoints respond to content pressure and available space rather than pretending every device belongs to one fixed preset.
 - Reference anchors are 320 px small phone; 360 × 800 and 390 × 844 standard phones; 768/820 px tablet widths in portrait and landscape; 1024 × 768 compact laptop/tablet landscape; 1280 × 800 and 1440 × 900 laptop/desktop; and 1920 × 1080 plus 2560 × 1440 large monitors. These are verification anchors, not separately designed versions or the only supported sizes.
 - Drag-resize and intermediate-width checks must show continuous, intentional adaptation without overflow, clipped content, sudden unusable density changes, or awkward empty bands between breakpoints.
-- Large monitors use bounded readable content widths, deliberate whitespace, and expanded insight composition rather than stretching paragraphs, controls, and cards across the entire display.
+- Large monitors use bounded readable content widths, deliberate whitespace, and expanded composition rather than stretching paragraphs, controls, and cards without limit. The public landing may break out of the 75 rem application-workspace cap from 1440 px upward: align its navbar and all landing sections to one fluid container that approaches the viewport and stops at a 128 rem cap, with the product preview capped at 120 rem. This landing-only rule must not widen the bounded `/demo` task workspace.
 - Responsive design preserves the same tokens, information hierarchy, insight categories, evidence model, copy, and state language while changing composition for available space.
 - On mobile landing, the two entry cards stack with equal emphasis and complete explanatory copy; the first card's height or order must not make the second feel optional.
 - On mobile interview view: compact voice signal at the top, readable captions beneath it, sticky safe-area-aware mute/end controls, and a swipeable insight rail whose selected card expands into full evidence detail.
@@ -2716,6 +2719,11 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - On mobile review: summary sections remain in the same logical order, evidence chips scroll to transcript turns, and transcript content is never hidden behind fixed controls.
 - Any visible Turnstile fallback fits at 320 px without horizontal scrolling or clipped controls and retains an understandable retry state in portrait and landscape.
 - Use dynamic viewport units and safe-area insets so browser chrome, display cutouts, and virtual keyboards do not cover primary actions.
+- Treat browser content height as a first-class responsive input. At 768/820 px tablet widths and practical tablet/laptop browser viewports down through 1024 × 600, use fluid type/density and feature-owned inner scrolling for variable collections before allowing the outer document to grow. Preserve 14 px body text, 12 px metadata, 44 × 44 px targets, required disclosures, and keyboard escape from every inner scroll region. Error expansion, interactive Turnstile, 200% zoom, and virtual-keyboard states may fall back to natural page scrolling rather than clip content.
+- In the bounded `/demo` workspace, entry choices use two full-width horizontal rows, CV intake/processing owns the flexible middle track, and every preparation action footer occupies the final `auto` row beneath a `minmax(0, 1fr)` content track so it cannot drift upward.
+- Preflight uses four icon-led fact tiles and a separate consent surface rather than native bullets or a narrow vertical step-label gutter.
+- Short phone-landscape viewports stay in natural document flow even when their width crosses a tablet breakpoint; the height-aware bounded-workspace contract begins only when both axes can support it.
+- Roomy laptops and desktops add a density tier that caps sparse entry, CV, and completion cards, stacks the preflight sections into compact full-width bands, and reorganizes the interview voice panel into status/controls beside a bounded caption surface. Open canvas is intentional at this tier; content-light cards must not inflate merely to eliminate whitespace.
 - Portrait is the primary mobile orientation; landscape must remain operable and free of clipped controls.
 - Minimum 44 × 44 px interactive targets.
 - No horizontal page scrolling at any supported or intermediate width.
@@ -2730,6 +2738,7 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - Reduced-motion mode removes automatic spatial travel and scaling. Essential voice-status bars may use slow opacity-only activity so the speaking party remains understandable. Same-page anchor navigation retains its native smooth-scroll fallback rather than running the custom timed journey.
 - The landing product preview loops slowly through two three-topic boards: salary expectation, relevant experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It starts automatically without playback or topic-switching controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. Normal motion reveals both questions and answers one spoken word at a time inside fixed-height regions, waits for both complete lines, draws both evidence highlights together from left to right, and then creates the corresponding note. Speaker activity and board/card transitions stay on opacity/transform. Reduced motion keeps the same word-by-word timing through opacity-only entrances, removes spatial movement, resolves the highlight without a sweep, and limits voice activity to slow opacity changes.
 - Each newly spoken subtitle word mounts with a short fade-and-rise so the timing reads as speech rather than a whole-line replacement. The compact participant pane contains only the centered speaking illustration and its integrated waveform; it has no redundant lower identity/instruction strip. Preview note cards use only sequence, captured field, captured value, and a quiet completion dot—no “Interview note,” “Added from your answer,” “Waiting,” or “Listening for answer” filler copy.
+- The active-interview caption panel reuses that word-entry language for received Pilot turns, with a restrained caret for tentative Pilot text. Candidate turns use one short right-side chat-bubble entrance instead of per-word spatial motion. Reduced motion resolves Pilot caption words immediately, removes the candidate bubble entrance, and disables repeated waveform travel through the global motion preference contract.
 - Decorative headline motion is one-shot only: the handwritten SVG **notes.** traces its individual pen strokes over about 1.1 seconds and immediately receives a brief imperfect coral underline, then remains static. The ordinary word stays in the accessible headline. Reduced-motion mode keeps the completed word visible and uses an opacity-only finish.
 - The four hero feature cards slide diagonally into place once in reading order over roughly 1.1 seconds each, with a slow near-sequential stagger that lets each title and short description register before the next card arrives. They remain static afterward. On pointer hover, the targeted card rises above the stack and receives a small compositor-only lift; it does not become interactive content. Reduced-motion mode retains the reading order with a shorter shallow horizontal slide and no scaling, while hover keeps only stacking-order and border emphasis; compact layouts keep the same semantic list while removing overlap and fixed rotation.
 
@@ -3621,11 +3630,30 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Future exploration note — replayable evidence audio (not demo scope):** After the core demo is complete, evaluate whether a card could offer a short candidate-audio excerpt linked to the same evidence turn. The current implementation must continue to use transcript evidence only, keep recording and ElevenLabs `Store Call Audio` disabled, and must not add a Play-audio control. Research both browser-local capture alongside WebRTC and the newly identified ElevenLabs-managed recording option. For ElevenLabs-managed audio, determine from current first-party documentation and a synthetic test how recordings are stored and protected, who can access them, plan/cost/residency implications, how retention `0`/scheduled deletion/ZRM/manual deletion interact, whether recordings can be retrieved through the dashboard or API and with which scope/format/URL lifetime, and whether recording/turn/segment/word or transcript start-and-end timestamps provide reliable interruption-safe evidence alignment. Any later proposal requires a separate owner-approved privacy/scope decision covering explicit recording consent and disclosure, candidate access/deletion handling, bounded excerpt authorization, mobile support, playback feedback/echo prevention, and guaranteed cleanup. Real candidate recording is prohibited until that decision and its product copy, tests, and operational controls are approved. This exploration is not an SP-016 acceptance criterion and cannot delay the ticket. The operational research checklist lives in `docs/operations/live-provider-setup.md`.
 
+#### [SP-016A — Fit demo steps to tablet and laptop viewports](tickets/SP-016A-fit-demo-steps-to-tablet-and-laptop-viewports.md)
+
+**Outcome:** Implemented and locally verified; owner visual acceptance and the commit remain pending. Every currently reachable `/demo` step reads as one complete application screen on practical tablet and laptop browser viewports, with height-aware density, concise copy, bottom-anchored action footers, and bounded scrolling for variable content instead of outer-page growth. Successful End interview dispatches a reducer-owned transition into a scrubbed, non-persistable temporary Review-step placeholder until SP-021.
+
+**Depends on:** SP-005, SP-011A, SP-012, SP-013, SP-015A, SP-016.
+
+**Suggested commit:** `SP-016A: fit demo steps to tablet and laptop viewports`
+
+**Checklist:**
+
+- [x] Measure every reachable standard state at tablet/laptop stress anchors and record outer overflow, clipped actions, and unusable inner regions.
+- [x] Implement the shared height-aware workspace/density contract without shrinking text below readable floors or controls below 44 px.
+- [x] Bound variable CV, plan, and insight content with persistent headings and keyboard-safe inner scrolling.
+- [x] Recompose live interview content so current status/caption, controls, and insights remain visible together.
+- [x] Remove redundant copy and oversized presentation blocks without weakening required disclosures.
+- [x] Preserve phone natural flow and verify every current page-level step with deterministic per-step screenshots at multiple laptop sizes.
+
+**Implementation evidence (2026-09-15):** The shared shell passed deterministic fake-mode measurement at 768 × 1024, 820 × 1180, 1024 × 600, 1280 × 650, 1366 × 680, and 1440 × 800 with no outer/horizontal overflow and all primary/recovery actions visible; 1180 × 720 also passed. The final compact-anchor evidence used only the real `/demo` flow at 1024 × 600 and 1366 × 680: 16 page-state captures each began with asserted `scrollX = 0` and `scrollY = 0`, kept the complete header/brand/actions, progress panel/content, heading, and 44 px stage actions inside the viewport, and produced exact outer-document fit with zero horizontal overflow. The superseded preview-route harness was removed and misleading earlier captures were refreshed from the actual flow. Phone portrait and short landscape preserve natural flow without horizontal overflow. Compact-laptop entry rows, flexible CV states, icon-led preflight, 48/52 interview composition, plan/insight inner rails, and explicit three-track preparation footers were visually inspected with synthetic fixtures. A roomy-screen tier was verified at 1440 × 800, 1600 × 900, and 1920 × 1080: sparse entry/CV/completion cards retain natural caps, preflight sections stack compactly, and the interview voice panel reorganizes around a bounded caption surface without stretching to the Insight Board height. A fresh fake conversation at 1440 × 800 captured progressive Pilot/candidate/Pilot caption phases and verified computed signal animation only for Pilot speech. Captions now carry stable normalized turn identities, and a repeated-prefix regression proves tentative-to-final continuity plus fresh same-speaker-turn animation. Emulated reduced motion during tentative Pilot speech at both compact anchors measured `0s` word delays and `none` for the caret and all seven signal bars. The landing was separately inspected at 1440 × 800, 1600 × 900, 1920 × 1080, and 2560 × 1440: its aligned header/section containers expand beyond the old 1200 px cap with zero horizontal overflow, while the largest anchor preserves a bounded 2048 px content width and 1920 px product preview. The fake-mode End interview path passed at 1024 × 600, 1366 × 680, and 1920 × 1080, reached a reducer-owned scrubbed Review placeholder without a runtime overlay, and a regression prevents React click events from becoming `voice.endReason`. Frontend verification passed 31 files / 189 unit tests, typecheck, zero-warning lint, targeted formatting for the full SP-016A change set, and diff checks. Focused completion tests cover the valid and invalid reducer transitions, full memory scrub, non-persistable stage, browser projection deletion, and Review-step UI. The final production build ran from a fresh snapshot assembled only from Git-visible tracked/untracked files plus dependency-only junctions; it reported zero local environment files, retained the committed `.env.example` schemas, and could not include ignored owner files. Next's webpack production builder was used because Turbopack rejects dependency links outside an isolated filesystem root. No credential was read and no package was downloaded. The exact local artifact directories are recorded in the SP-016A packet; real hardware/credentialed/live-provider checks, 200% zoom, and owner visual acceptance remain pending.
+
 #### [SP-017 — Write and evaluate the adaptive interview policy](tickets/SP-017-write-and-evaluate-adaptive-interview-policy.md)
 
 **Outcome:** GPT conducts a focused CV-assisted or open conversation-first screen, becomes more specific as evidence arrives, and uses tools consistently without unsafe hiring judgments.
 
-**Depends on:** SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016.
+**Depends on:** SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016, SP-016A.
 
 **Suggested commit:** `SP-017: implement the screening conversation policy`
 
@@ -3774,7 +3802,7 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Outcome:** The complete portfolio path adapts fluidly and remains equally polished and functionally complete from small phones through tablets, compact/standard laptops, desktops, and large monitors, including keyboard, safe-area, and reduced-motion behavior.
 
-**Depends on:** SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-021.
+**Depends on:** SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-016A, SP-021.
 
 **Suggested commit:** `SP-024: harden demo quality`
 

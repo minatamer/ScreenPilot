@@ -182,9 +182,7 @@ describe("DemoExperience preparation paths", () => {
     ).toBeVisible();
     expect(screen.getByText("Conversation-first")).toBeVisible();
     expect(
-      screen.getByText(
-        /analyzes your answers to ask useful follow-up questions/,
-      ),
+      screen.getByText(/Pilot uses your answers for follow-up questions/),
     ).toBeVisible();
     expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
       "aria-current",

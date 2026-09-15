@@ -25,7 +25,9 @@ describe("InsightBoard", () => {
     expect(
       screen.getByText("Cards appear only after your final spoken answers."),
     ).toBeVisible();
-    expect(screen.getByText(/not a score or hiring decision/i)).toBeVisible();
+    expect(
+      screen.queryByText(/AI-organized notes—not a score or hiring decision/i),
+    ).not.toBeInTheDocument();
   });
 
   it("places cards in stable category order without staggered regions", () => {

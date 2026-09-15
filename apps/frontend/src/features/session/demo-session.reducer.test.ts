@@ -648,6 +648,53 @@ describe("demoSessionReducer", () => {
     });
   });
 
+  it("completes the temporary demo through a scrubbed reducer-owned stage", () => {
+    let state = demoSessionReducer(conversationPreflightState(), {
+      type: "PREFLIGHT_READY",
+    });
+    state = demoSessionReducer(state, { type: "VOICE_CONNECTING" });
+    state = demoSessionReducer(state, {
+      type: "VOICE_CONNECTED",
+      voice: {
+        conversationId: "conversation-1",
+        status: "connected",
+        startedAt: LATER,
+      },
+    });
+    state = demoSessionReducer(state, {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: finalCandidateTurn,
+    });
+    state = demoSessionReducer(state, { type: "VOICE_ENDING" });
+
+    const completed = demoSessionReducer(state, {
+      type: "DEMO_INTERVIEW_COMPLETED",
+    });
+
+    expect(completed).toEqual({
+      schemaVersion: 3,
+      hydrationStatus: "ready",
+      stage: "complete_placeholder",
+      entryMode: null,
+      createdAt: null,
+      expiresAt: null,
+      runtimeConfig: null,
+      demoContext: null,
+      transcript: [],
+      insights: [],
+      topicProgress: [],
+    });
+    expect(projectPersistedDemoSession(completed)).toBeNull();
+  });
+
+  it("rejects demo completion before voice shutdown begins", () => {
+    expect(() =>
+      demoSessionReducer(conversationPreflightState(), {
+        type: "DEMO_INTERVIEW_COMPLETED",
+      }),
+    ).toThrow(InvalidSessionTransitionError);
+  });
+
   it("expires an open tab into an understandable cleared state", () => {
     const expired = demoSessionReducer(bootstrappedState(), {
       type: "SESSION_EXPIRED",
