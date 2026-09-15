@@ -363,6 +363,9 @@ export function DemoExperience() {
         {...(state.rolePreference
           ? { rolePreference: state.rolePreference }
           : {})}
+        {...(state.voice?.startedAt
+          ? { sessionStartedAt: state.voice.startedAt }
+          : {})}
         stage={state.stage}
         startRequest={voiceStartRequest}
         topicProgress={state.topicProgress}

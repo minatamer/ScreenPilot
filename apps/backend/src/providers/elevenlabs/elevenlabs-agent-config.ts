@@ -6,16 +6,23 @@ import {
 } from "@screenpilot/contracts/api/voice-token";
 
 import { LOCKED_PROVIDER_SETTINGS } from "../../config/provider-mode.js";
+import {
+  INTERVIEWER_FIRST_MESSAGE,
+  INTERVIEWER_SYSTEM_PROMPT,
+} from "../../ai/prompts/interviewer-prompt.js";
 
-export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp014-2026-09-12.1";
+export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp017-2026-09-15.1";
 export const ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING = 160;
+export const ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION =
+  "sp014-connection-v1";
 
 export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   agentConfigVersion: ELEVENLABS_AGENT_CONFIG_VERSION,
   agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr",
+  agentRevisionPolicyVersion: ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
   clientTools: VOICE_CLIENT_TOOL_NAMES,
   conversation: {
-    firstMessage: "Hi, what's your name?",
+    firstMessage: INTERVIEWER_FIRST_MESSAGE,
     interruptionsEnabled: true,
     maxDurationSeconds: PUBLIC_RUNTIME_LIMITS.callSeconds,
     softTimeoutEnabled: false,
@@ -30,6 +37,7 @@ export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   },
   platform: LOCKED_PROVIDER_SETTINGS.elevenLabsAgentPlatform,
   policyVersion: VOICE_AGENT_POLICY_VERSION,
+  systemPrompt: INTERVIEWER_SYSTEM_PROMPT,
   privateAgent: true,
   privacy: {
     audioSaving: false,

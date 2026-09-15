@@ -1,0 +1,404 @@
+{
+  "fixtureVersion": "sp017-2026-09-15.1",
+  "id": "conversation-first-adaptive-screen",
+  "entryMode": "conversation_first",
+  "initialMessage": "Hi, what's your name?",
+  "reconnectCheckpoint": {
+    "afterTurnId": "cf-assistant-5",
+    "remainingSeconds": 214,
+    "knownInsightCategories": [
+      "preferred_name",
+      "role_preference",
+      "current_context",
+      "responsibility",
+      "team_work_style",
+      "motivation",
+      "location_work_arrangement",
+      "availability"
+    ],
+    "coveredTopics": [
+      "preferred_name",
+      "role_preference",
+      "current_context",
+      "relevant_experience_summary",
+      "team_work_style",
+      "motivation_and_next_role",
+      "location_work_arrangement",
+      "availability"
+    ],
+    "resumedAssistantText": "We can continue from where we stopped. What compensation range would you be comfortable sharing?"
+  },
+  "turns": [
+    {
+      "id": "cf-candidate-1",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "I'm Noor.",
+      "evidence": {
+        "insights": [
+          { "category": "preferred_name", "meaningTokens": ["Noor"] }
+        ],
+        "topics": ["preferred_name"]
+      }
+    },
+    {
+      "id": "cf-assistant-1",
+      "speaker": "assistant",
+      "text": "Which role or direction would you like to use for this demo?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "preferred_name",
+            "label": "Preferred name",
+            "value": "Noor",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-1"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "preferred_name",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-1"
+        }
+      ]
+    },
+    {
+      "id": "cf-candidate-2",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "kind": "counterquestion",
+      "text": "What positions do you have open?",
+      "evidence": {
+        "candidateQuestionMeaningTokens": ["positions", "open"]
+      }
+    },
+    {
+      "id": "cf-assistant-2",
+      "speaker": "assistant",
+      "text": "This role-agnostic demo uses your choice as synthetic session context. Which role would you like to explore?",
+      "toolCalls": [
+        {
+          "name": "recordCandidateQuestion",
+          "arguments": {
+            "question": "Asked which positions are open"
+          },
+          "attachedTurnId": "cf-candidate-2"
+        }
+      ],
+      "semantic": {
+        "directAnswerTerms": ["role-agnostic demo", "synthetic session context"]
+      }
+    },
+    {
+      "id": "cf-candidate-3",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Graphic Designer or Customer Support Representative.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "role_preference",
+            "meaningTokens": [
+              "Graphic Designer",
+              "Customer Support Representative"
+            ]
+          }
+        ],
+        "topics": ["role_preference"]
+      }
+    },
+    {
+      "id": "cf-assistant-3",
+      "speaker": "assistant",
+      "text": "What are you doing at the moment—working, studying, or between roles?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "role_preference",
+            "label": "Requested role",
+            "value": "Graphic Designer or Customer Support Representative",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-3"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "role_preference",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-3"
+        }
+      ]
+    },
+    {
+      "id": "cf-candidate-4",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "I'm finishing university and volunteer weekly, making event graphics and answering attendee questions.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "current_context",
+            "meaningTokens": ["university", "volunteer"]
+          },
+          {
+            "category": "responsibility",
+            "meaningTokens": ["event graphics", "attendee questions"]
+          }
+        ],
+        "topics": ["current_context", "relevant_experience_summary"]
+      }
+    },
+    {
+      "id": "cf-assistant-4",
+      "speaker": "assistant",
+      "text": "What kind of team environment helps you work well?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "current_context",
+            "label": "Current context",
+            "value": "Finishing university and volunteering weekly",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-4"
+        },
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "responsibility",
+            "label": "Broad responsibility",
+            "value": "Creates event graphics and answers attendee questions",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-4"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "current_context",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-4"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "relevant_experience_summary",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-4"
+        }
+      ]
+    },
+    {
+      "id": "cf-candidate-5",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "A mix of focused solo work and quick check-ins suits me. I want mentoring, prefer remote work, and can start in July.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "team_work_style",
+            "meaningTokens": ["focused solo work", "check-ins"]
+          },
+          { "category": "motivation", "meaningTokens": ["mentoring"] },
+          {
+            "category": "location_work_arrangement",
+            "meaningTokens": ["remote work"]
+          },
+          { "category": "availability", "meaningTokens": ["July"] }
+        ],
+        "topics": [
+          "team_work_style",
+          "motivation_and_next_role",
+          "location_work_arrangement",
+          "availability"
+        ]
+      }
+    },
+    {
+      "id": "cf-assistant-5",
+      "speaker": "assistant",
+      "text": "What compensation range would you be comfortable sharing?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "team_work_style",
+            "label": "Team and work style",
+            "value": "Prefers focused solo work with quick team check-ins",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        },
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "motivation",
+            "label": "Motivation",
+            "value": "Wants mentoring in the next role",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        },
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "location_work_arrangement",
+            "label": "Location and work arrangement",
+            "value": "Prefers remote work",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        },
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "availability",
+            "label": "Availability",
+            "value": "Available in July",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "team_work_style",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "motivation_and_next_role",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "location_work_arrangement",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "availability",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-5"
+        }
+      ]
+    },
+    {
+      "id": "cf-candidate-6",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "kind": "refusal",
+      "text": "I'd prefer not to share a number yet.",
+      "evidence": {
+        "topics": ["compensation_expectation"]
+      }
+    },
+    {
+      "id": "cf-assistant-6",
+      "speaker": "assistant",
+      "text": "That's fine. Do you regularly use English at work or university?",
+      "toolCalls": [
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "compensation_expectation",
+            "status": "skipped"
+          },
+          "attachedTurnId": "cf-candidate-6"
+        }
+      ]
+    },
+    {
+      "id": "cf-candidate-7",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Yes, my classes and volunteer meetings are in English.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "english_use",
+            "meaningTokens": ["classes", "volunteer meetings", "English"]
+          }
+        ],
+        "topics": ["english_use_context"]
+      }
+    },
+    {
+      "id": "cf-assistant-7",
+      "speaker": "assistant",
+      "text": "Do you have any questions before we finish?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "english_use",
+            "label": "English use",
+            "value": "Uses English in classes and volunteer meetings",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cf-candidate-7"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "english_use_context",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-7"
+        }
+      ]
+    },
+    {
+      "id": "cf-candidate-8",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "No questions.",
+      "evidence": {
+        "topics": ["candidate_questions"]
+      }
+    },
+    {
+      "id": "cf-assistant-8",
+      "speaker": "assistant",
+      "text": "We'll close the synthetic screen here, with your answers ready for human review.",
+      "toolCalls": [
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "candidate_questions",
+            "status": "covered"
+          },
+          "attachedTurnId": "cf-candidate-8"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,335 @@
+{
+  "fixtureVersion": "sp017-2026-09-15.1",
+  "id": "cv-assisted-focused-correction",
+  "entryMode": "cv_assisted",
+  "initialMessage": "Hi, what's your name?",
+  "cvFacts": [
+    {
+      "id": "cv-name-1",
+      "statement": "Display name: Lina Haddad"
+    },
+    {
+      "id": "cv-role-1",
+      "statement": "Product coordinator at Northstar"
+    },
+    {
+      "id": "cv-date-1",
+      "statement": "Northstar role ended in June"
+    }
+  ],
+  "seededInsights": [
+    {
+      "id": "insight-preferred_name",
+      "category": "preferred_name",
+      "value": "Lina Haddad"
+    },
+    {
+      "id": "insight-current_context",
+      "category": "current_context",
+      "value": "Northstar role ended in June"
+    }
+  ],
+  "turns": [
+    {
+      "id": "cv-candidate-1",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Lina is fine.",
+      "evidence": {
+        "corrections": [
+          {
+            "cardId": "insight-preferred_name",
+            "meaningTokens": ["Lina"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cv-assistant-1",
+      "speaker": "assistant",
+      "text": "Your coordination work suggests Product Manager as a demo direction. Would you like to use that role?",
+      "toolCalls": [
+        {
+          "name": "correctInsight",
+          "arguments": {
+            "cardId": "insight-preferred_name",
+            "value": "Lina",
+            "reason": "Candidate selected Lina as the preferred name"
+          },
+          "attachedTurnId": "cv-candidate-1"
+        }
+      ]
+    },
+    {
+      "id": "cv-candidate-2",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Yes, Product Manager works for this demo.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "role_preference",
+            "meaningTokens": ["Product Manager"]
+          }
+        ],
+        "topics": ["role_preference"]
+      }
+    },
+    {
+      "id": "cv-assistant-2",
+      "speaker": "assistant",
+      "text": "The CV says your Northstar role ended in June. Is that still accurate?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "role_preference",
+            "label": "Requested role",
+            "value": "Product Manager",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cv-candidate-2"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "role_preference",
+            "status": "covered"
+          },
+          "attachedTurnId": "cv-candidate-2"
+        }
+      ]
+    },
+    {
+      "id": "cv-candidate-3",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "kind": "correction",
+      "text": "No, I left in May.",
+      "evidence": {
+        "corrections": [
+          {
+            "cardId": "insight-current_context",
+            "meaningTokens": ["May"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cv-assistant-3",
+      "speaker": "assistant",
+      "text": "Understood—the correct month is May. Which broad responsibilities there felt most relevant to your next move?",
+      "toolCalls": [
+        {
+          "name": "correctInsight",
+          "arguments": {
+            "cardId": "insight-current_context",
+            "value": "Northstar role ended in May",
+            "reason": "Candidate corrected the CV end month from June to May"
+          },
+          "attachedTurnId": "cv-candidate-3"
+        }
+      ]
+    },
+    {
+      "id": "cv-candidate-4",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "I coordinated launch schedules and kept design, support, and operations aligned.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "responsibility",
+            "meaningTokens": ["coordinated", "design", "support", "operations"]
+          }
+        ],
+        "topics": ["relevant_experience_summary"]
+      }
+    },
+    {
+      "id": "cv-assistant-4",
+      "speaker": "assistant",
+      "text": "What kind of collaboration helps you work effectively?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "responsibility",
+            "label": "Broad responsibility",
+            "value": "Coordinated launches across design, support, and operations",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cv-candidate-4"
+        },
+        {
+          "name": "markTopic",
+          "arguments": {
+            "topicKey": "relevant_experience_summary",
+            "status": "covered"
+          },
+          "attachedTurnId": "cv-candidate-4"
+        }
+      ]
+    },
+    {
+      "id": "cv-candidate-5",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Clear ownership and short check-ins work best. I want broader product responsibility next.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "team_work_style",
+            "meaningTokens": ["clear ownership", "short check-ins"]
+          },
+          {
+            "category": "motivation",
+            "meaningTokens": ["broader product responsibility"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cv-assistant-5",
+      "speaker": "assistant",
+      "text": "What work arrangement would suit you?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "team_work_style",
+            "label": "Team and work style",
+            "value": "Prefers clear ownership with short check-ins",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cv-candidate-5"
+        },
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "motivation",
+            "label": "Motivation",
+            "value": "Wants broader product responsibility",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cv-candidate-5"
+        }
+      ]
+    },
+    {
+      "id": "cv-candidate-6",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Hybrid is ideal, and I can start in about five weeks.",
+      "evidence": {
+        "insights": [
+          {
+            "category": "location_work_arrangement",
+            "meaningTokens": ["Hybrid"]
+          },
+          {
+            "category": "availability",
+            "meaningTokens": ["about five weeks"]
+          }
+        ]
+      }
+    },
+    {
+      "id": "cv-assistant-6",
+      "speaker": "assistant",
+      "text": "What compensation range are you considering?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "location_work_arrangement",
+            "label": "Location and work arrangement",
+            "value": "Prefers hybrid work",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cv-candidate-6"
+        },
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "availability",
+            "label": "Availability",
+            "value": "Available in about five weeks",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cv-candidate-6"
+        }
+      ]
+    },
+    {
+      "id": "cv-candidate-7",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Around forty-five to fifty thousand euros annually.",
+      "evidence": {
+        "insights": [
+          { "category": "compensation", "meaningTokens": ["annually"] }
+        ]
+      }
+    },
+    {
+      "id": "cv-assistant-7",
+      "speaker": "assistant",
+      "text": "Do you have any questions before we close?",
+      "toolCalls": [
+        {
+          "name": "recordInsight",
+          "arguments": {
+            "category": "compensation",
+            "label": "Compensation",
+            "value": "EUR 45,000-50,000 annually",
+            "source": "Candidate"
+          },
+          "attachedTurnId": "cv-candidate-7"
+        }
+      ]
+    },
+    {
+      "id": "cv-candidate-8",
+      "speaker": "candidate",
+      "status": "final",
+      "clarity": "clear",
+      "text": "Who would I report to?",
+      "evidence": {
+        "candidateQuestionMeaningTokens": ["report"],
+        "followupMeaningTokens": ["report"]
+      }
+    },
+    {
+      "id": "cv-assistant-8",
+      "speaker": "assistant",
+      "text": "No reporting line is provided, so a human recruiter must confirm it. We'll close here for human review.",
+      "toolCalls": [
+        {
+          "name": "recordCandidateQuestion",
+          "arguments": {
+            "question": "Asked who the role reports to"
+          },
+          "attachedTurnId": "cv-candidate-8"
+        },
+        {
+          "name": "requestFollowup",
+          "arguments": {
+            "reason": "A human recruiter needs to confirm the reporting line"
+          },
+          "attachedTurnId": "cv-candidate-8"
+        }
+      ],
+      "semantic": {
+        "directAnswerTerms": ["no reporting line", "human recruiter"]
+      }
+    }
+  ]
+}

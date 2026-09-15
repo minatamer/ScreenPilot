@@ -1,5 +1,6 @@
 import { StrictMode, type ReactNode } from "react";
 import { act, render, waitFor } from "@testing-library/react";
+import { VOICE_AGENT_POLICY_VERSION } from "@screenpilot/contracts/api/voice-token";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ElevenLabsVoiceSession } from "./elevenlabs-voice-session";
@@ -37,12 +38,14 @@ vi.mock("@elevenlabs/react", () => ({
 }));
 
 const dynamicVariables = {
-  screenpilot_policy_version: "sp014-connection-v1",
+  screenpilot_policy_version: VOICE_AGENT_POLICY_VERSION,
   screenpilot_entry_mode: "conversation_first",
   screenpilot_demo_disclosure: "bounded disclosure",
   screenpilot_screening_plan: "bounded universal plan",
   screenpilot_role_context: "bounded role context",
   screenpilot_cv_context: "bounded empty CV context",
+  screenpilot_known_state: "bounded known state",
+  screenpilot_remaining_seconds: 480,
 } satisfies VoiceDynamicVariables;
 
 const testClientTools = {

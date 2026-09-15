@@ -40,7 +40,10 @@ import { ErrorPanel } from "@/shared/ui/error-panel";
 
 import { FakeVoiceSession } from "./fake-voice-session";
 import { InterviewStage } from "./interview-stage";
-import { createVoiceSessionContext } from "./voice-session-context";
+import {
+  calculateRemainingVoiceSessionSeconds,
+  createVoiceSessionContext,
+} from "./voice-session-context";
 import type {
   VoiceSessionAuthorization,
   VoiceSessionBridgeProps,
@@ -82,6 +85,7 @@ type VoiceConnectionStageProps = Readonly<{
   plan: ScreeningPlan;
   requestToken?: VoiceTokenRequester;
   rolePreference?: RolePreference | undefined;
+  sessionStartedAt?: string | undefined;
   stage: "connecting" | "ending" | "live";
   startRequest: VoiceStartRequest | null;
   topicProgress: readonly TopicProgress[];
@@ -129,6 +133,7 @@ export function VoiceConnectionStage({
   plan,
   requestToken = requestVoiceToken,
   rolePreference,
+  sessionStartedAt,
   stage,
   startRequest,
   topicProgress,
@@ -139,6 +144,9 @@ export function VoiceConnectionStage({
   const requestAbortControllerRef = useRef<AbortController | null>(null);
   const cleanupTimerRef = useRef<number | null>(null);
   const sensitiveValuesClearedRef = useRef(false);
+  const [initialRemainingSeconds] = useState(() =>
+    calculateRemainingVoiceSessionSeconds(sessionStartedAt),
+  );
   const initialRequestRef = useRef({
     onFailure,
     onGrantRejected,
@@ -157,10 +165,22 @@ export function VoiceConnectionStage({
         ...(cv ? { cv } : {}),
         demoContext,
         entryMode,
+        insights,
         plan,
+        remainingSeconds: initialRemainingSeconds,
         ...(rolePreference ? { rolePreference } : {}),
+        topicProgress,
       }),
-    [cv, demoContext, entryMode, plan, rolePreference],
+    [
+      cv,
+      demoContext,
+      entryMode,
+      initialRemainingSeconds,
+      insights,
+      plan,
+      rolePreference,
+      topicProgress,
+    ],
   );
   const insightClientTools = useInsightClientTools({
     entryMode,

@@ -369,7 +369,7 @@ control; do not improvise a different behavior.
 | --- | --- |
 | Product and template | ElevenAgents (`elevenagents`), one private Blank agent |
 | First message | `Hi, what's your name?` |
-| System prompt | Bounded placeholder until SP-017; no technical or hiring-suitability assessment |
+| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts` at policy version `sp017-2026-09-15.1` |
 | Language | English only |
 | Native LLM | GPT-5.4 Mini (`gpt-5.4-mini`) through ElevenLabs |
 | Reasoning | None / reasoning budget 0 |
@@ -400,7 +400,7 @@ Relevant first-party settings guides:
 
 ### 5. Add the exact dynamic-variable names
 
-Create exactly these six dynamic variables, preserving case and spelling:
+Create exactly these eight dynamic variables, preserving case and spelling:
 
 - `screenpilot_policy_version`
 - `screenpilot_entry_mode`
@@ -408,17 +408,59 @@ Create exactly these six dynamic variables, preserving case and spelling:
 - `screenpilot_screening_plan`
 - `screenpilot_role_context`
 - `screenpilot_cv_context`
+- `screenpilot_known_state`
+- `screenpilot_remaining_seconds`
 
 Use obvious synthetic placeholders while editing the dashboard, for example
 `sp017-pending`, `conversation_first`, `synthetic demo only`,
-`universal HR topics only`, `undecided`, and `no CV supplied`. Never paste a
-real CV or candidate transcript into a dashboard placeholder.
+`universal HR topics only`, `undecided`, `no CV supplied`,
+`no confirmed facts`, and `480`. Never paste a real CV or candidate transcript
+into a dashboard placeholder.
 
-SP-017 owns the final prompt and runtime rendering. Dynamic-variable names and
+The SP-017 prompt references these names directly. Dynamic-variable names and
 template references must match exactly:
 [dynamic variables](https://elevenlabs.io/docs/eleven-agents/customization/personalization/dynamic-variables).
 
-### 6. Add the exact client-tool names
+### 6. Synchronize the source-controlled interviewer prompt
+
+Do this only after the local SP-017 prompt tests pass. The TypeScript constant
+is the prose source of truth; the dashboard is a deployed copy and must never
+be edited as an independent prompt draft.
+
+1. Run the focused prompt suite in fake mode. Do not start a Preview
+   conversation.
+
+   ```powershell
+   node ./node_modules/vitest/vitest.mjs run --root apps/backend src/ai/prompts/interviewer-prompt.test.ts
+   ```
+2. Run `pnpm build:backend`, then print the exact rendered prompt without
+   reading any local environment file:
+
+   ```powershell
+   node -e "import('./apps/backend/dist/ai/prompts/interviewer-prompt.js').then((module) => process.stdout.write(module.INTERVIEWER_SYSTEM_PROMPT))"
+   ```
+
+3. In the existing private **ScreenPilot** agent, replace the complete System
+   prompt with that rendered value. Do not paste the surrounding TypeScript,
+   alter the `{{screenpilot_*}}` references, add procedures/guardrails in a
+   second dashboard field, or enter real candidate content as preview data.
+4. Confirm the first message, eight dynamic variables, five client tools, native
+   GPT-5.4 Mini model, reasoning None, and 160-token output limit still match
+   the source-controlled configuration. Keep Preview off; prompt publication
+   alone does not authorize a paid or microphone test.
+5. Save/publish only to the private Main branch. Record the resulting immutable
+   agent version and matching `agentRevisionPolicyVersion` in
+   `apps/backend/src/providers/elevenlabs/elevenlabs-agent-config.ts`, rerun the
+   same prompt test, and record the prompt version, model alias or snapshot, and
+   agent revision in the SP-017 completion evidence. If publication is not
+   performed, leave revision/live acceptance unchecked and keep the last
+   verified revision explicitly identified as pre-SP-017.
+
+Never use a real CV, real candidate detail, or live transcript for dashboard
+preview values. The checked-in synthetic fixtures under
+`tests/fixtures/transcripts/` are the only approved evaluation content.
+
+### 7. Add the exact client-tool names
 
 Create exactly these five client tools, preserving case and spelling:
 
@@ -435,7 +477,7 @@ names without inventing the deferred contract. Do not create server tools,
 webhooks, code tools, MCP tools, or system tools:
 [client tools](https://elevenlabs.io/docs/eleven-agents/customization/tools/client-tools).
 
-### 7. Advanced-settings audit
+### 8. Advanced-settings audit
 
 Review every dashboard section before saving. This table records whether a
 setting is configured now, deliberately disabled, kept at a provider default,
@@ -445,8 +487,8 @@ not applicable, or deferred to a named later ticket.
 | --- | --- |
 | Agent identity/template | Blank private agent; configured now |
 | First message | Exact locked sentence; configured now |
-| System prompt | Safe role-neutral placeholder; final prompt deferred to SP-017 |
-| Procedures and guardrails | Disabled or empty; adaptive policy and evaluation are deferred to SP-017 |
+| System prompt | Exact rendered SP-017 source-controlled prompt; publication/revision evidence stays unchecked until synchronized |
+| Procedures and guardrails | Disabled or empty; all adaptive policy prose remains in the source-controlled prompt |
 | Multimodal input | Disabled or not applicable |
 | Channel behavior | Provider default for WebRTC; channel tuning deferred to SP-018 |
 | Languages | English only; additional languages and automatic multilingual expansion disabled |
@@ -544,7 +586,7 @@ synthetic voices and data first. Enabling provider recording for real candidate
 content requires a separate owner-approved scope/privacy decision and updated
 product copy, tests, runbook, and source-of-truth controls.
 
-### 8. Create the narrow credential
+### 9. Create the narrow credential
 
 1. For a user key, open the dashboard's personal API-key settings. For a
    service account, use `profile icon > Workspace settings > Service Accounts`
@@ -571,7 +613,7 @@ Authorities:
 - [Private-agent authentication](https://elevenlabs.io/docs/eleven-agents/customization/authentication)
 - [WebRTC conversation-token endpoint](https://elevenlabs.io/docs/eleven-agents/api-reference/conversations/get-webrtc-token)
 
-### 9. Safe verification, rotation, and revocation
+### 10. Safe verification, rotation, and revocation
 
 Before any live conversation:
 
@@ -580,7 +622,7 @@ Before any live conversation:
 - Confirm the selected voice ID matches the environment value.
 - Confirm audio saving is off, retention is 0, backup LLM is off, and debug is
   off.
-- Confirm the exact six dynamic variables and five client-tool names.
+- Confirm the exact eight dynamic variables and five client-tool names.
 - Record the agent version ID and a redacted key permission summary.
 - Keep `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`.
 
@@ -781,8 +823,8 @@ state, not a payment method, account identifier, key, or billing screenshot:
   summaries off, a 160-token limit, backup LLM disabled, soft timeout disabled,
   parallel tool calling off, and temperature unset. Expressive Mode remains
   off. A bounded role-neutral placeholder prompt is installed until SP-017.
-- [x] The exact six dynamic-variable names are referenced by the placeholder
-  prompt and have text-only synthetic dashboard-preview defaults:
+- [x] The six pre-SP-017 dynamic-variable names are referenced by the
+  placeholder prompt and have text-only synthetic dashboard-preview defaults:
   `sp017-pending`, `conversation_first`, `synthetic demo only`,
   `universal HR topics only`, `undecided`, and `no CV supplied`. These defaults
   contain no real CV or candidate content and will be replaced with bounded
@@ -819,6 +861,13 @@ state, not a payment method, account identifier, key, or billing screenshot:
   backend environment file, and immutable version
   `agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` is recorded in source. The existing
   default agent was reused rather than creating a duplicate.
+- [ ] SP-017 policy `sp017-2026-09-15.1`, including
+  `screenpilot_known_state` and `screenpilot_remaining_seconds`, is synchronized
+  to ScreenPilot/Main and its new immutable agent revision is recorded. Until
+  this is performed,
+  source identifies `agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` with
+  `agentRevisionPolicyVersion: "sp014-connection-v1"` as the last verified
+  pre-SP-017 deployment; no Preview conversation is authorized by this item.
 - [x] The owner created the free `ScreenPilot local live` Turnstile widget in
   Managed mode with only `localhost` authorized and pre-clearance off. No
   Cloudflare zone, Worker, proxy, WAF rule, API token, paid plan, or Spin setup

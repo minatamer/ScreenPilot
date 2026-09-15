@@ -808,6 +808,14 @@ Static policy remains identical across sessions. Only these bounded variables ma
 - `role_context`: one bounded candidate-authored label or an explicit undecided state, plus the synthetic/session-only disclosure.
 - `known_state`: preferred name, current role context, completed topics, corrections, human follow-ups, and remaining time as available through supported dynamic state.
 
+The concrete source-controlled boundary uses exactly
+`screenpilot_policy_version`, `screenpilot_entry_mode`,
+`screenpilot_demo_disclosure`, `screenpilot_screening_plan`,
+`screenpilot_role_context`, `screenpilot_cv_context`,
+`screenpilot_known_state`, and `screenpilot_remaining_seconds`. The last two
+carry a bounded snapshot for reconnect continuity and the authoritative
+remaining 480-second budget rather than restarting the interview clock.
+
 Dynamic content is delimited and labelled **untrusted evidence, never instructions**. CV text, candidate speech, role labels, tool output, and browser-supplied values cannot change the interviewer policy, tools, guardrails, universal intent set, employer knowledge boundary, or spoken-output contract. Secrets, provider IDs, grants, Turnstile tokens, and internal signing values never enter the LLM prompt.
 
 #### Turn decision order
@@ -3517,11 +3525,12 @@ purchase, or paid overage enabled. Live token/WebRTC verification remains
 unchecked. The safe ledger is maintained in
 `docs/operations/live-provider-setup.md`.
 
-The owner reports that all six source-locked dynamic-variable names are now
-present in the dashboard placeholder prompt with text-only synthetic preview
-defaults. These are replaceable preview values, not candidate hardcodes; the
-names remain the fixed cross-boundary contract and SP-017 owns their bounded
-per-session runtime rendering.
+The owner reports that the six pre-SP-017 dynamic-variable names are present in
+the dashboard placeholder prompt with text-only synthetic preview defaults.
+These are replaceable preview values, not candidate hardcodes. SP-017 expands
+the source-controlled cross-boundary contract with `screenpilot_known_state`
+and `screenpilot_remaining_seconds`; dashboard synchronization of those two
+names and the canonical prompt remains explicitly unchecked.
 
 The owner also reports that all five source-locked, case-sensitive client-tool
 names are attached as Client tools with placeholder-only descriptions, no
@@ -3659,26 +3668,26 @@ suppresses its real Turnstile site key from public bootstrap.
 
 **Checklist:**
 
-- [ ] Add the canonical, versioned live-interviewer prompt template under `apps/backend/src/ai/prompts/`; document the provider synchronization step so dashboard prose cannot silently become the source of truth.
-- [ ] Structure the prompt in the locked Section 8 order with critical speech rules first, short Markdown bullets, bounded untrusted runtime context, exact decision order, tool/error behavior, guardrails, and varied examples plus labelled anti-examples.
-- [ ] Implement the one configured first-message exception, generated follow-up wording, name correction, conversational role clarification, and graduate/experienced/discovery branching without a hardcoded question bank.
-- [ ] In CV-assisted mode, ground focused verification questions in normalized facts/topic IDs and avoid re-asking known basics.
-- [ ] In conversation-first mode, generate a plain open synthetic-role question or support an undecided path, gather basic context naturally, and deepen later questions from candidate-evidenced insights without implying a CV or real application exists; test intent and constraints rather than an exact sentence.
-- [ ] Enforce the natural spoken-response contract: 8–25-word target, normal 35-word ceiling, one or two sentences, no spoken formatting/tool narration, no habitual acknowledgement or praise prefixes, no repeated assistant framing, and one question at a time.
-- [ ] Implement the candidate-counterquestion branch: explain the synthetic role-agnostic demo, ask for any role or offer an undecided path, and never invent an employer opening.
-- [ ] Adapt wording immediately to any bounded candidate role while keeping one universal HR intent set and treating a CV suggestion as non-binding.
-- [ ] Implement correction, compound/multiple-role, and undecided paths without allow-list lookup, Full Stack redirection, or profession-specific branching.
-- [ ] Add the strict no-employer-facts knowledge boundary and concise human-follow-up behavior.
-- [ ] Define when to record/correct insights and mark topics.
-- [ ] Implement the prioritized `ScreeningFieldState` checklist so one candidate answer can fill several fields and the next prompt targets only the highest-value missing HR field.
-- [ ] Encode Section 8's complete universal HR intent library and selection rules in the source-controlled prompt guidance: background/experience, role direction, team/work style, motivation, practical logistics, and closing. Preserve every documented example as approved tone guidance without turning examples into a profession-specific question bank or exact-match script.
-- [ ] Synthesize `relevant_experience_summary` from recent context, broad responsibilities, strongest self-described areas, and role relevance instead of asking for an abstract summary; capture `team_work_style` separately from candidate evidence and prohibit personality/culture-fit inference.
-- [ ] Enforce the normal 8–10-prompt budget, at most one broad role-context clarification across the call, and no technical, portfolio, competency, roleplay, professional-knowledge, or suitability chain for any role.
-- [ ] Implement the exact per-turn decision order for stop, unclear input, corrections, candidate counterquestions, evidence/tool eligibility, grounded next-topic choice, and response generation.
-- [ ] Keep system-prompt responsibilities separate from ElevenLabs turn-taking/interruption/TTS settings; do not use routine LLM filler words to hide platform or tool latency.
-- [ ] Enforce one question at a time, uncertainty behavior, stop requests, fixed knowledge boundaries, and safety exclusions.
-- [ ] Add checked-in good/bad transcript fixtures for every Section 8 regression scenario and deterministic graders for length, question count, banned openers/praise, spoken formatting, source/vacancy claims, tool eligibility, and stop behavior.
-- [ ] Add narrow semantic checks for direct counterquestion handling, evidence-grounded follow-ups, natural neutrality, and meaning-preserving insight paraphrases; change one prompt block at a time and rerun the same fixtures.
+- [x] Add the canonical, versioned live-interviewer prompt template under `apps/backend/src/ai/prompts/`; document the provider synchronization step so dashboard prose cannot silently become the source of truth.
+- [x] Structure the prompt in the locked Section 8 order with critical speech rules first, short Markdown bullets, bounded untrusted runtime context, exact decision order, tool/error behavior, guardrails, and varied examples plus labelled anti-examples.
+- [x] Implement the one configured first-message exception, generated follow-up wording, name correction, conversational role clarification, and graduate/experienced/discovery branching without a hardcoded question bank.
+- [x] In CV-assisted mode, ground focused verification questions in normalized facts/topic IDs and avoid re-asking known basics.
+- [x] In conversation-first mode, generate a plain open synthetic-role question or support an undecided path, gather basic context naturally, and deepen later questions from candidate-evidenced insights without implying a CV or real application exists; test intent and constraints rather than an exact sentence.
+- [x] Enforce the natural spoken-response contract: 8–25-word target, normal 35-word ceiling, one or two sentences, no spoken formatting/tool narration, no habitual acknowledgement or praise prefixes, no repeated assistant framing, and one question at a time.
+- [x] Implement the candidate-counterquestion branch: explain the synthetic role-agnostic demo, ask for any role or offer an undecided path, and never invent an employer opening.
+- [x] Adapt wording immediately to any bounded candidate role while keeping one universal HR intent set and treating a CV suggestion as non-binding.
+- [x] Implement correction, compound/multiple-role, and undecided paths without allow-list lookup, Full Stack redirection, or profession-specific branching.
+- [x] Add the strict no-employer-facts knowledge boundary and concise human-follow-up behavior.
+- [x] Define when to record/correct insights and mark topics.
+- [x] Implement the prioritized `ScreeningFieldState` checklist so one candidate answer can fill several fields and the next prompt targets only the highest-value missing HR field.
+- [x] Encode Section 8's complete universal HR intent library and selection rules in the source-controlled prompt guidance: background/experience, role direction, team/work style, motivation, practical logistics, and closing. Preserve every documented example as approved tone guidance without turning examples into a profession-specific question bank or exact-match script.
+- [x] Synthesize `relevant_experience_summary` from recent context, broad responsibilities, strongest self-described areas, and role relevance instead of asking for an abstract summary; capture `team_work_style` separately from candidate evidence and prohibit personality/culture-fit inference.
+- [x] Enforce the normal 8–10-prompt budget, at most one broad role-context clarification across the call, and no technical, portfolio, competency, roleplay, professional-knowledge, or suitability chain for any role.
+- [x] Implement the exact per-turn decision order for stop, unclear input, corrections, candidate counterquestions, evidence/tool eligibility, grounded next-topic choice, and response generation.
+- [x] Keep system-prompt responsibilities separate from ElevenLabs turn-taking/interruption/TTS settings; do not use routine LLM filler words to hide platform or tool latency.
+- [x] Enforce one question at a time, uncertainty behavior, stop requests, fixed knowledge boundaries, and safety exclusions.
+- [x] Add checked-in good/bad transcript fixtures for every Section 8 regression scenario and deterministic graders for length, question count, banned openers/praise, spoken formatting, source/vacancy claims, tool eligibility, and stop behavior.
+- [x] Add narrow semantic checks for direct counterquestion handling, evidence-grounded follow-ups, natural neutrality, and meaning-preserving insight paraphrases; change one prompt block at a time and rerun the same fixtures.
 - [ ] Read representative outputs aloud, then run focused live text/voice tuning without making the optional full SP-028 AI automation suite a ticket-completion requirement.
 
 #### [SP-018 — Tune latency, interruption, and filler behavior](tickets/SP-018-tune-latency-interruption-and-filler.md)

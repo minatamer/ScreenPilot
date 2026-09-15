@@ -482,7 +482,16 @@ export function demoSessionReducer(
       return { ...state, stage: "preflight", failure: undefined };
     case "VOICE_CONNECTING":
       assertStage(state, event.type, ["ready"]);
-      return { ...state, stage: "connecting", voice: { status: "connecting" } };
+      return {
+        ...state,
+        stage: "connecting",
+        voice: {
+          status: "connecting",
+          ...(state.voice?.startedAt
+            ? { startedAt: state.voice.startedAt }
+            : {}),
+        },
+      };
     case "VOICE_CONNECT_CANCELLED":
       assertStage(state, event.type, ["connecting"]);
       return {

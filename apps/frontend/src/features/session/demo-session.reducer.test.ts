@@ -363,6 +363,28 @@ describe("demoSessionReducer", () => {
     expect(retry.failure).toBeUndefined();
   });
 
+  it("preserves the original start time when a preflight retry reconnects", () => {
+    const startedAt = "2026-09-15T10:00:00.000Z";
+    const ready = demoSessionReducer(
+      {
+        ...conversationPreflightState(),
+        voice: {
+          status: "failed",
+          startedAt,
+          endedAt: "2026-09-15T10:01:00.000Z",
+          endReason: "The connection was interrupted.",
+        },
+      },
+      { type: "PREFLIGHT_READY" },
+    );
+
+    const reconnecting = demoSessionReducer(ready, {
+      type: "VOICE_CONNECTING",
+    });
+
+    expect(reconnecting.voice).toEqual({ status: "connecting", startedAt });
+  });
+
   it("starts a fresh browser-session window after clear", () => {
     const cleared = demoSessionReducer(conversationPreflightState(), {
       type: "CLEAR_SESSION",

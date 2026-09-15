@@ -1,7 +1,10 @@
 import { StrictMode } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
+import {
+  VOICE_AGENT_POLICY_VERSION,
+  type VoiceMetadata,
+} from "@screenpilot/contracts/api/voice-token";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
@@ -36,7 +39,11 @@ function FakeSessionBridge({
       data-authorization={authorization ? "present" : "cleared"}
       data-conversation-id={expectedConversationId}
       data-entry-mode={String(dynamicVariables.screenpilot_entry_mode)}
+      data-known-state={String(dynamicVariables.screenpilot_known_state)}
       data-policy={String(dynamicVariables.screenpilot_policy_version)}
+      data-remaining-seconds={String(
+        dynamicVariables.screenpilot_remaining_seconds,
+      )}
       data-testid="fake-session-bridge"
       data-tools={Object.keys(clientTools).join(",")}
     >
@@ -112,7 +119,11 @@ describe("VoiceConnectionStage", () => {
     expect(bridge).toHaveAttribute("data-authorization", "present");
     expect(bridge).toHaveAttribute("data-conversation-id", "conversation-014");
     expect(bridge).toHaveAttribute("data-entry-mode", "conversation_first");
-    expect(bridge).toHaveAttribute("data-policy", "sp014-connection-v1");
+    expect(bridge.getAttribute("data-known-state")).toContain(
+      "KNOWN_SCREENING_STATE",
+    );
+    expect(bridge).toHaveAttribute("data-policy", VOICE_AGENT_POLICY_VERSION);
+    expect(bridge).toHaveAttribute("data-remaining-seconds", "480");
     expect(bridge).toHaveAttribute(
       "data-tools",
       "recordInsight,correctInsight,markTopic,recordCandidateQuestion,requestFollowup",

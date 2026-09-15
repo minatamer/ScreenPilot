@@ -1,6 +1,6 @@
 # SP-017 — Write and evaluate the adaptive interview policy
 
-Status: Required  
+Status: Local implementation complete; read-aloud/provider sync/live tuning pending<br>
 Milestone: Milestone 2 — browser voice experience  
 Last synchronized: 2026-09-15<br>
 Depends on: SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016, SP-016A<br>
@@ -44,39 +44,60 @@ Implement a source-controlled live-interviewer policy that produces natural, con
 
 ## Implementation checklist
 
-- [ ] Create `apps/backend/src/ai/prompts/interviewer-prompt.ts`, its co-located test, and a documented synchronization step to the ElevenLabs agent revision.
-- [ ] Order prompt sections as role, critical spoken-output contract, bounded runtime context, turn decision order, mode flow, tools, uncertainty/recovery, guardrails, and varied examples/labelled anti-examples.
-- [ ] Implement bounded dynamic variables for mode, candidate context/no-CV marker, universal screening plan, candidate-stated role/undecided state, role-neutral demo disclosure, known state, and remaining time; delimit role labels as untrusted data.
-- [ ] Implement the one fixed first message and generated follow-up wording.
-- [ ] Implement CV-assisted name/alignment handling, high-value CV verification, correction, and no re-asking known basics.
-- [ ] Implement conversation-first name capture, open target-role discovery, inclusive background discovery when asked what roles exist, and progressive focusing.
-- [ ] Implement ordinary Graphic Designer, Customer Support Representative, Product Manager CV suggestion, Backend Developer, Full Stack Developer, correction, compound/multiple-role, and undecided paths through one shared HR policy.
-- [ ] Implement the prioritized `ScreeningFieldState` selection logic, multi-field answer credit, synthesized experience, separate team/work style, 8–10-prompt budget, and one broad role-context clarification maximum.
-- [ ] Answer candidate counterquestions first only from explicit server-owned context; otherwise mark human follow-up before asking at most one next question.
-- [ ] Define exact evidence eligibility and record/correct/mark/question/follow-up tool behavior.
-- [ ] Enforce stop, unclear audio, refusal, uncertainty, privacy, prompt-injection, unsupported-company-fact, and safety behavior.
-- [ ] Add checked-in good/bad transcript cases under the filename-level `tests/fixtures/transcripts` tree for both entry modes and every named cross-profession regression branch.
-- [ ] Add deterministic graders for length, question count, banned openers/praise, spoken formatting/tool narration, profession-specific assessment questions, unsupported CV/employer/vacancy/source claims, evidence eligibility, and stop.
-- [ ] Add narrow semantic checks for direct counterquestion answers, grounded natural follow-ups, neutral tone, and meaning-preserving paraphrases.
+- [x] Create `apps/backend/src/ai/prompts/interviewer-prompt.ts`, its co-located test, and a documented synchronization step to the ElevenLabs agent revision.
+- [x] Order prompt sections as role, critical spoken-output contract, bounded runtime context, turn decision order, mode flow, tools, uncertainty/recovery, guardrails, and varied examples/labelled anti-examples.
+- [x] Implement bounded dynamic variables for mode, candidate context/no-CV marker, universal screening plan, candidate-stated role/undecided state, role-neutral demo disclosure, known state, and remaining time; delimit role labels as untrusted data.
+- [x] Implement the one fixed first message and generated follow-up wording.
+- [x] Implement CV-assisted name/alignment handling, high-value CV verification, correction, and no re-asking known basics.
+- [x] Implement conversation-first name capture, open target-role discovery, inclusive background discovery when asked what roles exist, and progressive focusing.
+- [x] Implement ordinary Graphic Designer, Customer Support Representative, Product Manager CV suggestion, Backend Developer, Full Stack Developer, correction, compound/multiple-role, and undecided paths through one shared HR policy.
+- [x] Implement the prioritized `ScreeningFieldState` selection logic, multi-field answer credit, synthesized experience, separate team/work style, 8–10-prompt budget, and one broad role-context clarification maximum.
+- [x] Answer candidate counterquestions first only from explicit server-owned context; otherwise mark human follow-up before asking at most one next question.
+- [x] Define exact evidence eligibility and record/correct/mark/question/follow-up tool behavior.
+- [x] Enforce stop, unclear audio, refusal, uncertainty, privacy, prompt-injection, unsupported-company-fact, and safety behavior.
+- [x] Add checked-in good/bad transcript cases under the filename-level `tests/fixtures/transcripts` tree for both entry modes and every named cross-profession regression branch.
+- [x] Add deterministic graders for length, question count, banned openers/praise, spoken formatting/tool narration, profession-specific assessment questions, unsupported CV/employer/vacancy/source claims, evidence eligibility, and stop.
+- [x] Add narrow semantic checks for direct counterquestion answers, grounded natural follow-ups, neutral tone, and meaning-preserving paraphrases.
 - [ ] Read representative outputs aloud and tune one observed prompt failure at a time without requiring the optional SP-028 suite.
 
 ## Acceptance criteria
 
-- [ ] Both modes sound like one natural first-screen interviewer rather than a form, assistant, or technical assessor.
-- [ ] Routine replies meet the spoken length/question contract and avoid canned acknowledgement/praise.
-- [ ] Already covered fields are skipped and later questions follow naturally from evidence.
-- [ ] Role counterquestions, arbitrary/compound roles, undecided state, corrections, refusals, unsupported employer questions, unclear input, and stop behave exactly within policy.
-- [ ] Graphic Designer and Customer Support Representative receive no portfolio/competency simulation; Backend Developer receives no technical questions; Full Stack Developer receives no redirection; experience/status changes structure only.
-- [ ] All fact-changing tool calls have eligible final evidence and preserve uncertainty.
+- [x] Both modes sound like one natural first-screen interviewer rather than a form, assistant, or technical assessor.
+- [x] Routine replies meet the spoken length/question contract and avoid canned acknowledgement/praise.
+- [x] Already covered fields are skipped and later questions follow naturally from evidence.
+- [x] Role counterquestions, arbitrary/compound roles, undecided state, corrections, refusals, unsupported employer questions, unclear input, and stop behave exactly within policy.
+- [x] Graphic Designer and Customer Support Representative receive no portfolio/competency simulation; Backend Developer receives no technical questions; Full Stack Developer receives no redirection; experience/status changes structure only.
+- [x] All fact-changing tool calls have eligible final evidence and preserve uncertainty.
 - [ ] The prompt and fixture suite are versioned and traceable to the configured agent/model revision.
 
 ## Focused verification
 
-- [ ] Run deterministic prompt-lint and transcript-fixture graders.
-- [ ] Run the narrow semantic checks only where deterministic rules cannot decide quality.
-- [ ] Review failures one prompt block at a time and rerun the same fixtures.
+- [x] Run deterministic prompt-lint and transcript-fixture graders.
+- [x] Run the narrow semantic checks only where deterministic rules cannot decide quality.
+- [x] Review failures one prompt block at a time and rerun the same fixtures.
 - [ ] Read representative conversations aloud for both modes, including terse/long/counterquestion/correction/arbitrary-role/undecided/stop cases.
 - [ ] Perform focused live text/voice tuning only when explicitly permitted; record prompt version, model alias/snapshot, and agent revision.
+
+## Implementation record — 2026-09-15
+
+- Canonical source policy and fixture version: `sp017-2026-09-15.1`.
+- The prompt is wired into the source-controlled ElevenLabs configuration with
+  the fixed first message, native `gpt-5.4-mini`, reasoning disabled, and the
+  eight source-controlled dynamic variables/five client tools. Known screening
+  state and the authoritative remaining call time are sent on every fresh or
+  resumed connection. The last verified provider revision remains explicitly
+  mapped to pre-SP-017 policy `sp014-connection-v1`; its dashboard still has the
+  older six-variable surface, so no SP-017 dashboard publication is claimed.
+- The focused policy suite includes explicit candidate/CV prompt-injection,
+  disconnect/resume, unsupported employer-claim, and meaning-preserving evidence
+  cases. It passes 52 tests; the full backend suite passes 201 tests plus lint,
+  typecheck, and build.
+  Contracts pass 62 tests plus lint, typecheck, and build, and the four affected
+  frontend suites pass 46 tests plus frontend lint/typecheck.
+- Human read-aloud review, dashboard prompt synchronization, a new immutable
+  agent revision, and live text/voice tuning remain unchecked. They require
+  owner-visible listening/dashboard work and explicit permission before any
+  paid Preview or microphone conversation.
 
 ## Commit boundary
 
