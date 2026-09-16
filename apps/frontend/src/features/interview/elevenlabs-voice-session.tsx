@@ -12,9 +12,29 @@ import { VOICE_VAD_SPEECH_PROBABILITY_THRESHOLD } from "@screenpilot/contracts/i
 import { useCallback, useEffect, useRef } from "react";
 
 import { isStaticLatencyFiller } from "./latency-filler-policy";
+import {
+  MAX_LIVE_CAPTION_CHARACTERS,
+  MAX_NORMALIZED_FINAL_EVENTS,
+} from "./normalize-voice-event";
 import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
 
 type MessagePayload = Parameters<NonNullable<HookCallbacks["onMessage"]>>[0];
+type AgentChatResponsePartPayload = Parameters<
+  NonNullable<HookCallbacks["onAgentChatResponsePart"]>
+>[0];
+
+function retainBoundedEventId(eventIds: Set<number>, eventId: number) {
+  if (eventIds.has(eventId)) {
+    return;
+  }
+  if (eventIds.size >= MAX_NORMALIZED_FINAL_EVENTS) {
+    const oldestEventId = eventIds.values().next().value;
+    if (oldestEventId !== undefined) {
+      eventIds.delete(oldestEventId);
+    }
+  }
+  eventIds.add(eventId);
+}
 
 function VoiceSessionStarter({
   authorization,
@@ -129,6 +149,8 @@ export function ElevenLabsVoiceSession({
   const audioStartedRef = useRef(false);
   const candidateSpeechActiveRef = useRef(false);
   const terminationRef = useRef<(() => void) | null>(null);
+  const partialAgentMessagesRef = useRef(new Map<number, string>());
+  const finalizedAgentMessageIdsRef = useRef(new Set<number>());
 
   const handleConnect = useCallback(
     ({ conversationId }: { conversationId: string }) => {
@@ -192,6 +214,16 @@ export function ElevenLabsVoiceSession({
         onEvent({ type: "latency_filler" });
         return;
       }
+      if (message.role === "agent" && message.event_id !== undefined) {
+        if (finalizedAgentMessageIdsRef.current.has(message.event_id)) {
+          return;
+        }
+        partialAgentMessagesRef.current.delete(message.event_id);
+        retainBoundedEventId(
+          finalizedAgentMessageIdsRef.current,
+          message.event_id,
+        );
+      }
       onEvent({
         type: "message",
         ...(message.event_id === undefined
@@ -200,6 +232,66 @@ export function ElevenLabsVoiceSession({
         speaker: message.role === "user" ? "candidate" : "interviewer",
         stability: "final",
         text: message.message,
+      });
+    },
+    [onEvent],
+  );
+  const handleAgentChatResponsePart = useCallback(
+    (part: AgentChatResponsePartPayload) => {
+      const { event_id: eventId, text, type } = part;
+      if (type === "start") {
+        finalizedAgentMessageIdsRef.current.delete(eventId);
+        if (
+          !partialAgentMessagesRef.current.has(eventId) &&
+          partialAgentMessagesRef.current.size >= MAX_NORMALIZED_FINAL_EVENTS
+        ) {
+          const oldestEventId = partialAgentMessagesRef.current
+            .keys()
+            .next().value;
+          if (oldestEventId !== undefined) {
+            partialAgentMessagesRef.current.delete(oldestEventId);
+          }
+        }
+        partialAgentMessagesRef.current.set(eventId, "");
+        return;
+      }
+      if (finalizedAgentMessageIdsRef.current.has(eventId)) {
+        return;
+      }
+      const currentText = partialAgentMessagesRef.current.get(eventId) ?? "";
+      if (type === "delta") {
+        const accumulatedText = `${currentText}${text}`.slice(
+          0,
+          MAX_LIVE_CAPTION_CHARACTERS,
+        );
+        partialAgentMessagesRef.current.set(eventId, accumulatedText);
+        if (accumulatedText.trim()) {
+          onEvent({
+            type: "message",
+            eventId,
+            speaker: "interviewer",
+            stability: "tentative",
+            text: accumulatedText,
+          });
+        }
+        return;
+      }
+      partialAgentMessagesRef.current.delete(eventId);
+      if (!currentText.trim()) {
+        return;
+      }
+      retainBoundedEventId(finalizedAgentMessageIdsRef.current, eventId);
+      if (isStaticLatencyFiller(currentText)) {
+        audioStartedRef.current = false;
+        onEvent({ type: "latency_filler" });
+        return;
+      }
+      onEvent({
+        type: "message",
+        eventId,
+        speaker: "interviewer",
+        stability: "final",
+        text: currentText,
       });
     },
     [onEvent],
@@ -260,6 +352,7 @@ export function ElevenLabsVoiceSession({
     <ConversationProvider
       clientTools={clientTools}
       isMuted={isMuted}
+      onAgentChatResponsePart={handleAgentChatResponsePart}
       onAudio={handleAudio}
       onConnect={handleConnect}
       onDisconnect={handleDisconnect}

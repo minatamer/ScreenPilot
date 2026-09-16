@@ -80,24 +80,44 @@ Implement a source-controlled live-interviewer policy that produces natural, con
 
 ## Implementation record — 2026-09-15
 
-- Canonical source policy and fixture version: `sp017-2026-09-15.1`.
+- Canonical source policy and fixture version: `sp017-2026-09-16.1`. This
+  no-spend closure revision supersedes `sp017-2026-09-15.1` only by requiring
+  the built-in `end_call` system tool after a brief spoken close; the adaptive
+  HR scope, evidence rules, and eight runtime variables are unchanged.
 - The prompt is wired into the source-controlled ElevenLabs configuration with
   the fixed first message, native `gpt-5.4-mini`, reasoning disabled, and the
   eight source-controlled dynamic variables/five client tools. Known screening
   state and the authoritative remaining call time are sent on every fresh or
-  resumed connection. The last verified provider revision remains explicitly
-  mapped to pre-SP-017 policy `sp014-connection-v1`; its dashboard still has the
-  older six-variable surface, so no SP-017 dashboard publication is claimed.
+  resumed connection. The owner-confirmed published provider revision is mapped
+  to policy `sp017-2026-09-16.1` in source.
 - The focused policy suite includes explicit candidate/CV prompt-injection,
   disconnect/resume, unsupported employer-claim, and meaning-preserving evidence
   cases. It passes 52 tests; the full backend suite passes 201 tests plus lint,
   typecheck, and build.
   Contracts pass 62 tests plus lint, typecheck, and build, and the four affected
   frontend suites pass 46 tests plus frontend lint/typecheck.
-- Human read-aloud review, dashboard prompt synchronization, a new immutable
-  agent revision, and live text/voice tuning remain unchecked. They require
-  owner-visible listening/dashboard work and explicit permission before any
-  paid Preview or microphone conversation.
+- SP-018A deployment preparation now makes the five client-tool dashboard
+  descriptions, required parameters, enums, bounds, and Wait-for-response
+  behavior explicit in `VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS`. This source
+  contract does not by itself prove dashboard synchronization or a provider
+  callback; those remained pending at this preparation checkpoint and were
+  resolved later by the owner-confirmed publication recorded below.
+- On 2026-09-16, the owner reported completing publication to ScreenPilot/Main
+  after the review diff showed the complete rendered policy replacement, all
+  eight dynamic variables with synthetic placeholders, and `vad_score` added to
+  the existing client-event stream. The five final client-tool contracts were
+  saved separately as workspace-level resources; because their IDs stayed
+  attached, their contents were absent from the branch publish diff. The
+  provider UI exposes bounds only through parameter descriptions, while the
+  browser Zod schemas enforce them at runtime. The supplied
+  `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` value is a branch ID and must not be
+  recorded as the immutable agent revision.
+- The owner later confirmed publication of the exact closure prompt, complete
+  client-event set including `agent_chat_response_part`, and sole `end_call`
+  system tool without Preview. Immutable revision
+  `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in source. Human
+  read-aloud review, provider callback behavior, and live text/voice tuning
+  remain SP-018A owner-observation items.
 
 ## Commit boundary
 

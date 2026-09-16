@@ -1,5 +1,4 @@
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
-import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-plan";
 
 import type { BackendConfig } from "../config/backend-config.schema.js";
 import type { ChallengeVerifier } from "../use-cases/ports/challenge-verifier.js";
@@ -17,7 +16,7 @@ import { FakeTurnstileVerifier } from "./turnstile/fake-turnstile-verifier.js";
 
 export type ProviderAdapters = Readonly<{
   challengeVerifier: ChallengeVerifier;
-  cvAnalyzer: CvAnalyzer<NormalizedCv, ScreeningPlan>;
+  cvAnalyzer: CvAnalyzer<NormalizedCv>;
   interviewSummarizer: InterviewSummarizer;
   voiceTokenProvider: VoiceTokenProvider;
 }>;

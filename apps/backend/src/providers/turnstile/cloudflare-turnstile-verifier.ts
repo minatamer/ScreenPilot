@@ -9,6 +9,40 @@ import type {
 const MAXIMUM_SITEVERIFY_RESPONSE_BYTES = 16_384;
 const MAXIMUM_TURNSTILE_TOKEN_CHARACTERS = 2_048;
 
+type TurnstileVerificationFailureCategory =
+  | "fetch_or_abort_failure"
+  | "http_non_success"
+  | "response_body_empty"
+  | "response_body_invalid"
+  | "response_body_oversized"
+  | "response_json_invalid"
+  | "response_schema_mismatch";
+
+type SiteverifyResponseBodyFailureCategory = Extract<
+  TurnstileVerificationFailureCategory,
+  "response_body_empty" | "response_body_invalid" | "response_body_oversized"
+>;
+
+type TurnstileResponseSchemaMismatchCategory =
+  | "action"
+  | "cdata"
+  | "challenge_timestamp"
+  | "error_codes"
+  | "hostname"
+  | "metadata"
+  | "success"
+  | "unclassified";
+
+class SiteverifyResponseBodyError extends Error {
+  readonly category: SiteverifyResponseBodyFailureCategory;
+
+  constructor(category: SiteverifyResponseBodyFailureCategory) {
+    super("The Siteverify response body could not be read safely.");
+    this.name = "SiteverifyResponseBodyError";
+    this.category = category;
+  }
+}
+
 const turnstileErrorCodeSchema = z
   .string()
   .trim()
@@ -16,7 +50,7 @@ const turnstileErrorCodeSchema = z
   .max(64)
   .regex(/^[a-z0-9-]+$/i);
 
-const siteverifyResponseSchema = z.strictObject({
+const siteverifyResponseSchema = z.object({
   action: z
     .string()
     .regex(/^[a-z0-9_-]{0,32}$/i)
@@ -26,12 +60,36 @@ const siteverifyResponseSchema = z.strictObject({
   "error-codes": z.array(turnstileErrorCodeSchema).max(16).optional(),
   hostname: z.string().trim().min(1).max(253).optional(),
   metadata: z
-    .strictObject({
+    .object({
       ephemeral_id: z.string().trim().min(1).max(256).optional(),
     })
     .optional(),
   success: z.boolean(),
 });
+
+function classifySchemaMismatch(
+  error: z.ZodError,
+): TurnstileResponseSchemaMismatchCategory {
+  const fields = new Set(error.issues.map((issue) => issue.path[0]));
+  const categoryByField = [
+    ["success", "success"],
+    ["action", "action"],
+    ["cdata", "cdata"],
+    ["challenge_ts", "challenge_timestamp"],
+    ["error-codes", "error_codes"],
+    ["hostname", "hostname"],
+    ["metadata", "metadata"],
+  ] as const satisfies readonly (readonly [
+    string,
+    TurnstileResponseSchemaMismatchCategory,
+  ])[];
+  for (const [field, category] of categoryByField) {
+    if (fields.has(field)) {
+      return category;
+    }
+  }
+  return "unclassified";
+}
 
 async function readBoundedSiteverifyResponse(response: Response) {
   const declaredLength = response.headers.get("content-length");
@@ -41,10 +99,10 @@ async function readBoundedSiteverifyResponse(response: Response) {
     Number(declaredLength) > MAXIMUM_SITEVERIFY_RESPONSE_BYTES
   ) {
     await response.body?.cancel();
-    throw new TurnstileVerificationError();
+    throw new SiteverifyResponseBodyError("response_body_oversized");
   }
   if (response.body === null) {
-    return "";
+    throw new SiteverifyResponseBodyError("response_body_empty");
   }
 
   const reader = response.body.getReader();
@@ -55,12 +113,12 @@ async function readBoundedSiteverifyResponse(response: Response) {
     while (!streamResult.done) {
       const chunk: unknown = streamResult.value;
       if (!(chunk instanceof Uint8Array)) {
-        throw new TurnstileVerificationError();
+        throw new SiteverifyResponseBodyError("response_body_invalid");
       }
       byteCount += chunk.byteLength;
       if (byteCount > MAXIMUM_SITEVERIFY_RESPONSE_BYTES) {
         await reader.cancel();
-        throw new TurnstileVerificationError();
+        throw new SiteverifyResponseBodyError("response_body_oversized");
       }
       chunks.push(chunk);
       streamResult = await reader.read();
@@ -75,24 +133,50 @@ async function readBoundedSiteverifyResponse(response: Response) {
     body.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(body);
+  if (byteCount === 0) {
+    throw new SiteverifyResponseBodyError("response_body_empty");
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(body);
+  } catch {
+    throw new SiteverifyResponseBodyError("response_body_invalid");
+  }
 }
 
 export class TurnstileVerificationError extends Error {
   readonly code = "TURNSTILE_UNAVAILABLE";
+  readonly category: TurnstileVerificationFailureCategory;
+  readonly durationMs: number;
+  readonly httpStatus?: number;
+  readonly schemaMismatchCategory?: TurnstileResponseSchemaMismatchCategory;
   readonly retryable = true;
 
-  constructor(cause?: unknown) {
+  constructor(input: {
+    category: TurnstileVerificationFailureCategory;
+    cause?: unknown;
+    durationMs: number;
+    httpStatus?: number;
+    schemaMismatchCategory?: TurnstileResponseSchemaMismatchCategory;
+  }) {
     super(
       "Challenge verification is temporarily unavailable. Try again.",
-      cause === undefined ? undefined : { cause },
+      input.cause === undefined ? undefined : { cause: input.cause },
     );
     this.name = "TurnstileVerificationError";
+    this.category = input.category;
+    this.durationMs = input.durationMs;
+    if (input.httpStatus !== undefined) {
+      this.httpStatus = input.httpStatus;
+    }
+    if (input.schemaMismatchCategory !== undefined) {
+      this.schemaMismatchCategory = input.schemaMismatchCategory;
+    }
   }
 }
 
 export type CloudflareTurnstileVerifierOptions = Readonly<{
   allowedHostnames: readonly string[];
+  clockMilliseconds?: () => number;
   fetchImplementation?: typeof fetch;
   secretKey: string;
   timeoutMs: number;
@@ -101,6 +185,7 @@ export type CloudflareTurnstileVerifierOptions = Readonly<{
 
 export class CloudflareTurnstileVerifier implements ChallengeVerifier {
   readonly #allowedHostnames: ReadonlySet<string>;
+  readonly #clockMilliseconds: () => number;
   readonly #fetchImplementation: typeof fetch;
   readonly #secretKey: string;
   readonly #timeoutMs: number;
@@ -118,10 +203,37 @@ export class CloudflareTurnstileVerifier implements ChallengeVerifier {
     this.#allowedHostnames = new Set(
       options.allowedHostnames.map((hostname) => hostname.toLowerCase()),
     );
+    this.#clockMilliseconds = options.clockMilliseconds ?? Date.now;
     this.#fetchImplementation = options.fetchImplementation ?? fetch;
     this.#secretKey = options.secretKey;
     this.#timeoutMs = options.timeoutMs;
     this.#verificationUrl = options.verificationUrl;
+  }
+
+  #createVerificationError(
+    category: TurnstileVerificationFailureCategory,
+    startedAt: number,
+    input: {
+      cause?: unknown;
+      httpStatus?: number;
+      schemaMismatchCategory?: TurnstileResponseSchemaMismatchCategory;
+    } = {},
+  ): TurnstileVerificationError {
+    const elapsed = this.#clockMilliseconds() - startedAt;
+    const durationMs = Number.isFinite(elapsed)
+      ? Math.max(0, Math.round(elapsed))
+      : 0;
+    return new TurnstileVerificationError({
+      category,
+      durationMs,
+      ...(input.cause === undefined ? {} : { cause: input.cause }),
+      ...(input.httpStatus === undefined
+        ? {}
+        : { httpStatus: input.httpStatus }),
+      ...(input.schemaMismatchCategory === undefined
+        ? {}
+        : { schemaMismatchCategory: input.schemaMismatchCategory }),
+    });
   }
 
   async verifyChallenge(
@@ -144,6 +256,7 @@ export class CloudflareTurnstileVerifier implements ChallengeVerifier {
     const requestSignal = signal
       ? AbortSignal.any([signal, timeoutSignal])
       : timeoutSignal;
+    const startedAt = this.#clockMilliseconds();
 
     try {
       const response = await this.#fetchImplementation(this.#verificationUrl, {
@@ -158,13 +271,39 @@ export class CloudflareTurnstileVerifier implements ChallengeVerifier {
         signal: requestSignal,
       });
       if (!response.ok) {
-        throw new TurnstileVerificationError();
+        throw this.#createVerificationError("http_non_success", startedAt, {
+          httpStatus: response.status,
+        });
       }
 
       const responseText = await readBoundedSiteverifyResponse(response);
-      const parsedResponse = siteverifyResponseSchema.parse(
-        JSON.parse(responseText),
-      );
+      if (responseText.trim().length === 0) {
+        throw this.#createVerificationError("response_body_empty", startedAt);
+      }
+      let responseJson: unknown;
+      try {
+        responseJson = JSON.parse(responseText);
+      } catch (error: unknown) {
+        throw this.#createVerificationError(
+          "response_json_invalid",
+          startedAt,
+          { cause: error },
+        );
+      }
+      const parsedResponseResult =
+        siteverifyResponseSchema.safeParse(responseJson);
+      if (!parsedResponseResult.success) {
+        throw this.#createVerificationError(
+          "response_schema_mismatch",
+          startedAt,
+          {
+            schemaMismatchCategory: classifySchemaMismatch(
+              parsedResponseResult.error,
+            ),
+          },
+        );
+      }
+      const parsedResponse = parsedResponseResult.data;
       const action = parsedResponse.action ?? null;
       const hostname = parsedResponse.hostname?.toLowerCase() ?? null;
       const errorCodes = parsedResponse["error-codes"] ?? [];
@@ -193,7 +332,14 @@ export class CloudflareTurnstileVerifier implements ChallengeVerifier {
       if (error instanceof TurnstileVerificationError) {
         throw error;
       }
-      throw new TurnstileVerificationError(error);
+      if (error instanceof SiteverifyResponseBodyError) {
+        throw this.#createVerificationError(error.category, startedAt, {
+          cause: error,
+        });
+      }
+      throw this.#createVerificationError("fetch_or_abort_failure", startedAt, {
+        cause: error,
+      });
     }
   }
 }

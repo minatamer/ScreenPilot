@@ -35,9 +35,14 @@ function successfulResponse(output: unknown = { result: "ok" }) {
   });
 }
 
-function createClient(fetchImplementation: typeof fetch, timeoutMs = 100) {
+function createClient(
+  fetchImplementation: typeof fetch,
+  timeoutMs = 100,
+  clockMilliseconds: () => number = Date.now,
+) {
   return new OpenAiHttpClient({
     apiKey: API_KEY,
+    clockMilliseconds,
     fetchImplementation,
     model: "gpt-5.4-mini",
     reasoning: "none",
@@ -61,10 +66,19 @@ describe("OpenAiHttpClient", () => {
   it("sends one locked stateless structured Responses request", async () => {
     const fetchImplementation = vi.fn<typeof fetch>();
     fetchImplementation.mockResolvedValue(successfulResponse());
+    const clockMilliseconds = vi
+      .fn<() => number>()
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(114);
 
     await expect(
-      createClient(fetchImplementation).createStructuredResponse(request()),
+      createClient(
+        fetchImplementation,
+        100,
+        clockMilliseconds,
+      ).createStructuredResponse(request()),
     ).resolves.toEqual({
+      durationMs: 14,
       output: { result: "ok" },
       usage: {
         cachedInputTokens: 20,
@@ -118,30 +132,143 @@ describe("OpenAiHttpClient", () => {
       createClient(fetchImplementation).createStructuredResponse(request());
     await expect(operation).rejects.toBeInstanceOf(OpenAiStructuredOutputError);
     await expect(operation).rejects.toMatchObject({
+      category: "structured_output_invalid",
       usage: {
         cachedInputTokens: 20,
         inputTokens: 120,
         outputTokens: 30,
       },
+      validationPaths: ["result"],
+      validationRuleIds: ["schema_invalid_value"],
     });
   });
 
+  it("classifies a completed refusal without exposing refusal text", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>();
+    fetchImplementation.mockResolvedValue(
+      response({
+        output: [
+          {
+            content: [
+              { refusal: "private refusal explanation", type: "refusal" },
+            ],
+            type: "message",
+          },
+        ],
+        status: "completed",
+        usage: {
+          input_tokens: 120,
+          input_tokens_details: { cached_tokens: 20 },
+          output_tokens: 30,
+        },
+      }),
+    );
+
+    const failure = await createClient(fetchImplementation)
+      .createStructuredResponse(request())
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(OpenAiRequestError);
+    expect(failure).toMatchObject({ category: "response_refusal" });
+    expect(String(failure)).not.toContain("private refusal explanation");
+  });
+
   it.each([
-    ["HTTP failure", response({ private: "provider body" }, 503)],
-    ["invalid envelope", response({ status: "completed" })],
+    [
+      "HTTP failure",
+      response({ private: "provider body" }, 503),
+      "http_non_success",
+      503,
+    ],
+    [
+      "empty response body",
+      new Response(null, { status: 200 }),
+      "response_body_empty",
+      undefined,
+    ],
+    [
+      "invalid response body",
+      new Response(new Uint8Array([0xc3, 0x28]), { status: 200 }),
+      "response_body_invalid",
+      undefined,
+    ],
+    [
+      "invalid JSON",
+      new Response("not-json", { status: 200 }),
+      "response_json_invalid",
+      undefined,
+    ],
+    [
+      "incomplete response",
+      response({ status: "incomplete" }),
+      "response_incomplete",
+      undefined,
+    ],
+    [
+      "failed response",
+      response({ status: "failed" }),
+      "response_failed",
+      undefined,
+    ],
+    [
+      "unexpected response status",
+      response({ status: "queued" }),
+      "response_status_unexpected",
+      undefined,
+    ],
+    [
+      "invalid envelope",
+      response({ status: "completed" }),
+      "response_schema_mismatch",
+      undefined,
+    ],
     [
       "oversized response",
       response({ output: [], padding: "x".repeat(1_048_577) }),
+      "response_body_oversized",
+      undefined,
     ],
-  ])("fails closed for %s", async (_label, providerResponse) => {
-    const fetchImplementation = vi.fn<typeof fetch>();
-    fetchImplementation.mockResolvedValue(providerResponse);
+  ] as const)(
+    "fails closed for %s with content-safe diagnostics",
+    async (_label, providerResponse, category, httpStatus) => {
+      const fetchImplementation = vi.fn<typeof fetch>();
+      fetchImplementation.mockResolvedValue(providerResponse);
+      const clockMilliseconds = vi
+        .fn<() => number>()
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(114);
 
-    const operation =
-      createClient(fetchImplementation).createStructuredResponse(request());
-    await expect(operation).rejects.toBeInstanceOf(OpenAiRequestError);
-    await expect(operation).rejects.not.toThrow(API_KEY);
-    await expect(operation).rejects.not.toThrow("provider body");
+      const failure = await createClient(
+        fetchImplementation,
+        100,
+        clockMilliseconds,
+      )
+        .createStructuredResponse(request())
+        .catch((error: unknown) => error);
+      expect(failure).toBeInstanceOf(OpenAiRequestError);
+      expect(failure).toMatchObject({
+        category,
+        durationMs: 14,
+        ...(httpStatus === undefined ? {} : { httpStatus }),
+      });
+      expect(String(failure)).not.toContain(API_KEY);
+      expect(String(failure)).not.toContain("provider body");
+    },
+  );
+
+  it("categorizes a fetch failure without exposing its cause", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>();
+    fetchImplementation.mockRejectedValue(
+      new TypeError("private fetch detail"),
+    );
+
+    const failure = await createClient(fetchImplementation)
+      .createStructuredResponse(request())
+      .catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(OpenAiRequestError);
+    expect(failure).toMatchObject({ category: "fetch_failure" });
+    expect(String(failure)).not.toContain("private fetch detail");
   });
 
   it("aborts a timed-out provider request", async () => {
@@ -159,9 +286,11 @@ describe("OpenAiHttpClient", () => {
         }),
     );
 
-    await expect(
-      createClient(fetchImplementation, 5).createStructuredResponse(request()),
-    ).rejects.toBeInstanceOf(OpenAiRequestError);
+    const failure = await createClient(fetchImplementation, 5)
+      .createStructuredResponse(request())
+      .catch((error: unknown) => error);
+    expect(failure).toBeInstanceOf(OpenAiRequestError);
+    expect(failure).toMatchObject({ category: "request_timeout" });
     expect(fetchImplementation).toHaveBeenCalledOnce();
   });
 });

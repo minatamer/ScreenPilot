@@ -3,7 +3,7 @@ import { z } from "zod";
 import { publicRoleNeutralDemoContextSchema } from "../interview/demo-context.ts";
 import { publicRuntimeConfigSchema } from "./public-runtime-config.ts";
 
-export const bootstrapResponseSchema = publicRuntimeConfigSchema.extend({
+export const bootstrapResponseSchema = publicRuntimeConfigSchema.safeExtend({
   demoContext: publicRoleNeutralDemoContextSchema,
 });
 

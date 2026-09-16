@@ -105,6 +105,48 @@ describe("normalizeVoiceEvent", () => {
     expect(duplicate).toBeNull();
   });
 
+  it("keeps candidate and interviewer messages that share a provider event ID", () => {
+    const [candidate, interviewer, duplicateInterviewer] = normalizeMessages([
+      {
+        type: "message",
+        eventId: 5,
+        speaker: "candidate",
+        stability: "final",
+        text: "I am available next month.",
+      },
+      {
+        type: "message",
+        eventId: 5,
+        speaker: "interviewer",
+        stability: "final",
+        text: "What work arrangement would you prefer?",
+      },
+      {
+        type: "message",
+        eventId: 5,
+        speaker: "interviewer",
+        stability: "final",
+        text: "Duplicate interviewer callback.",
+      },
+    ]);
+
+    expect(candidate).toMatchObject({
+      transcriptTurn: {
+        id: "voice-candidate-5",
+        speaker: "candidate",
+      },
+      type: "message",
+    });
+    expect(interviewer).toMatchObject({
+      transcriptTurn: {
+        id: "voice-interviewer-5",
+        speaker: "interviewer",
+      },
+      type: "message",
+    });
+    expect(duplicateInterviewer).toBeNull();
+  });
+
   it("does not regress a finalized caption with a late tentative callback", () => {
     const [final, lateTentative, unidentifiedTentative] = normalizeMessages([
       {

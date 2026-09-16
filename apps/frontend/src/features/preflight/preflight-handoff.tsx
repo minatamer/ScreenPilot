@@ -8,6 +8,7 @@ import {
   TURNSTILE_ACTIONS,
   type ExecuteTurnstileChallenge,
 } from "@/features/abuse-protection/turnstile-client";
+import { ProviderOperationsUnavailable } from "@/features/session/provider-operations-unavailable";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
@@ -37,6 +38,7 @@ interface PreflightHandoffProps {
   onNotReady: () => void;
   onReady: () => void;
   onStartAuthorized?: ((turnstileToken: string) => void) | undefined;
+  providerOperationsEnabled: boolean;
   rolePreference?: RolePreference | undefined;
   siteKey: string;
   stage: PreflightStage;
@@ -130,7 +132,26 @@ function PreflightFact({
   );
 }
 
-export function PreflightHandoff({
+export function PreflightHandoff(props: PreflightHandoffProps) {
+  if (!props.providerOperationsEnabled) {
+    return (
+      <ProviderOperationsUnavailable
+        actionLabel={
+          props.entryMode === "cv_assisted"
+            ? "Back to interview plan"
+            : "Change starting option"
+        }
+        description="External actions are disabled for this safety check. ScreenPilot will not request microphone access, run a start challenge, or open a voice connection."
+        onAction={props.onBack}
+        title="Voice interview is unavailable right now."
+      />
+    );
+  }
+
+  return <EnabledPreflightHandoff {...props} />;
+}
+
+function EnabledPreflightHandoff({
   entryMode,
   executeChallenge,
   interviewGrant,

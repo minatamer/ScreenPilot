@@ -1,5 +1,5 @@
 {
-  "fixtureVersion": "sp017-2026-09-15.1",
+  "fixtureVersion": "sp017-2026-09-16.1",
   "id": "cv-assisted-focused-correction",
   "entryMode": "cv_assisted",
   "initialMessage": "Hi, what's your name?",

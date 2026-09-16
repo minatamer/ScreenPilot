@@ -2,13 +2,14 @@ import {
   TURNSTILE_ACTIONS,
   type TurnstileAction,
 } from "@screenpilot/contracts/abuse-protection/turnstile-action";
+import { PUBLIC_PROVIDER_MODES } from "@screenpilot/contracts/api/public-runtime-config";
 
 export { TURNSTILE_ACTIONS, type TurnstileAction };
 
 export const APP_ENVIRONMENTS = ["local", "test", "production"] as const;
 export type AppEnvironment = (typeof APP_ENVIRONMENTS)[number];
 
-export const PROVIDER_MODES = ["fake", "live"] as const;
+export const PROVIDER_MODES = PUBLIC_PROVIDER_MODES;
 export type ProviderMode = (typeof PROVIDER_MODES)[number];
 
 export const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses";

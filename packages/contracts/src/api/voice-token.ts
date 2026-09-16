@@ -29,7 +29,7 @@ export const VOICE_CLIENT_TOOL_NAMES = [
   "requestFollowup",
 ] as const;
 
-export const VOICE_AGENT_POLICY_VERSION = "sp017-2026-09-15.1" as const;
+export const VOICE_AGENT_POLICY_VERSION = "sp017-2026-09-16.1" as const;
 
 export const voiceMetadataSchema = z.strictObject({
   conversationId: z.string().trim().min(1).max(256).optional(),

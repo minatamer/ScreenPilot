@@ -5,8 +5,10 @@ import {
   type ProviderUsage,
 } from "@screenpilot/contracts/api/cv-analysis";
 import { cvAnalysisOutputSchema } from "@screenpilot/contracts/ai/cv-analysis-output";
+import { normalizedCvSchema } from "@screenpilot/contracts/interview/normalized-cv";
 
 import { TURNSTILE_ACTIONS } from "../config/provider-mode.js";
+import { createCvAssistedPlan } from "../demo/cv-assisted-plan.js";
 import {
   hashInterviewGrantValue,
   type InterviewGrantService,
@@ -15,7 +17,7 @@ import type { ChallengeVerifier } from "./ports/challenge-verifier.js";
 import type { CvAnalyzer } from "./ports/cv-analyzer.js";
 import { UseCaseError } from "./use-case-error.js";
 
-const CV_ANALYSIS_PLAN_VERSION = "2026-09-11.3";
+const CV_ANALYSIS_PLAN_VERSION = "2026-09-16.1";
 const OPENAI_INPUT_COST_PER_MILLION_TOKENS = 0.75;
 const OPENAI_CACHED_INPUT_COST_PER_MILLION_TOKENS = 0.075;
 const OPENAI_OUTPUT_COST_PER_MILLION_TOKENS = 4.5;
@@ -75,13 +77,11 @@ function validateHeadline(cvText: string, headline: string): boolean {
   );
 }
 
-function validateProviderOutput(
-  cvText: string,
-  normalizedCv: unknown,
-  screeningPlan: unknown,
-) {
+function validateProviderOutput(cvText: string, normalizedCv: unknown) {
+  const cv = normalizedCvSchema.parse(normalizedCv);
+  const screeningPlan = createCvAssistedPlan(cv);
   const output = cvAnalysisOutputSchema.parse({
-    cv: normalizedCv,
+    cv,
     plan: screeningPlan,
   });
 
@@ -211,7 +211,6 @@ export function createAnalyzeCv(input: {
       output = validateProviderOutput(
         request.cvText,
         providerResult.normalizedCv,
-        providerResult.screeningPlan,
       );
       usage = {
         ...providerResult.usage,

@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createApp, type AppSecuritySecrets } from "../../app.js";
 import { loadBackendConfig } from "../../config/load-backend-config.js";
+import { ElevenLabsRequestError } from "../../providers/elevenlabs/elevenlabs-client.js";
 import type { ProviderAdapters } from "../../providers/provider-adapters.js";
 import { createBackendLogger } from "../middleware/request-logging.js";
 
@@ -307,5 +308,65 @@ describe("POST /v1/voice/token", () => {
     expect(logs).not.toContain(input.turnstileToken);
     expect(logs).not.toContain("short-lived-conversation-token");
     expect(logs).not.toContain("conversation-014");
+  });
+
+  it("logs only content-safe ElevenLabs diagnostics through the use-case boundary", async () => {
+    const destination = new PassThrough();
+    destination.setEncoding("utf8");
+    const logChunks: string[] = [];
+    destination.on("data", (chunk: string) => logChunks.push(chunk));
+    const config = fakeConfig({ APP_ENV: "local" });
+    const providers = providerSpies();
+    const privateCause = "PRIVATE ELEVENLABS FAILURE DETAIL";
+    providers.createVoiceToken.mockRejectedValueOnce(
+      new ElevenLabsRequestError({
+        category: "http_non_success",
+        cause: new Error(privateCause),
+        durationMs: 742,
+        httpStatus: 403,
+      }),
+    );
+    const { app } = createTestApp(providers, {
+      config,
+      logger: createBackendLogger(config, destination),
+    });
+    const agent = request.agent(app);
+    const input = tokenRequest(await prepareGrant(agent));
+    const result = await agent
+      .post("/v1/voice/token")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect(503);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    const publicError = apiErrorSchema.parse(result.body).error;
+    expect(publicError).toEqual({
+      code: "PROVIDER_UNAVAILABLE",
+      message:
+        "The secure voice connection is temporarily unavailable. Try again.",
+      requestId: publicError.requestId,
+      retryable: true,
+    });
+    const logEntries = logChunks
+      .join("")
+      .trim()
+      .split("\n")
+      .map((entry) => JSON.parse(entry) as Record<string, unknown>);
+    expect(
+      logEntries.find((entry) => entry["provider"] === "elevenlabs"),
+    ).toMatchObject({
+      code: "PROVIDER_UNAVAILABLE",
+      msg: "request_failed",
+      provider: "elevenlabs",
+      providerDurationMs: 742,
+      providerFailureCategory: "http_non_success",
+      providerHttpStatus: 403,
+      requestId: publicError.requestId,
+    });
+    const logs = logChunks.join("");
+    expect(logs).not.toContain(privateCause);
+    expect(logs).not.toContain(input.interviewGrant);
+    expect(logs).not.toContain(input.turnstileToken);
+    expect(providers.createVoiceToken).toHaveBeenCalledOnce();
   });
 });

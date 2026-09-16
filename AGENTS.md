@@ -2,6 +2,15 @@
 
 These instructions apply to the entire repository. The implementation authority is `docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`; work from the relevant `docs/tickets/SP-*.md` packet and update both when a material architecture or product decision changes.
 
+## Canonical local app startup
+
+- When the owner asks to run or restart the local frontend or backend for live-provider testing, run **both applications outside the restricted sandbox with unrestricted network access**. Sandboxed execution remains the default for deterministic tests and CI, not for these long-lived local app processes.
+- Before launching an app, stop its prior process and confirm its port has no stale listener. Use port `3000` for the frontend and `3001` for the backend.
+- From the repository root, build and start the backend with `corepack pnpm build:backend` followed by `corepack pnpm start:backend:local`. Wait for `/health/live` and `/health/ready` to return `200` before testing through the frontend.
+- From the repository root, build and start the frontend with `corepack pnpm build:frontend` followed by `corepack pnpm --filter @screenpilot/frontend start`.
+- The backend start script loads the ignored `apps/backend/.env.local` through Node's built-in `--env-file` support. Next.js loads the ignored `apps/frontend/.env.local`. Never copy environment values into the shell command, source code, logs, or documentation.
+- For Codex-managed Windows launches, keep the long-lived processes detached and hidden, capture stdout and stderr separately in ignored local `.log` files, and report their paths and process IDs. Do not mistake an attached execution wrapper closing for an application failure.
+
 ## Scope and privacy
 
 - ScreenPilot is a stateless, privacy-minded AI-assisted screening demo. It supports recruiter judgment and never makes an automated hiring decision.
@@ -10,6 +19,13 @@ These instructions apply to the entire repository. The implementation authority 
 - Treat each committed `.env.example` as the safe, readable schema for its corresponding ignored local environment file. Never read `.env.local` after the owner has entered secrets. For environment questions or changes, inspect and update `.env.example` first, keep credentials and user-owned identifiers blank, then tell the owner which matching entries to update manually in `.env.local`; never claim local values were verified.
 - Provider secrets stay backend-only. Browser code calls relative `/v1` endpoints and never receives OpenAI or ElevenLabs credentials.
 - Default development and CI must be deterministic, fake, and unable to spend provider credits unless a later ticket and the user explicitly authorize live testing.
+- Every automated test runner must explicitly override its process to
+  `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false` before test modules load,
+  regardless of the owner's current local runtime settings. Tests must never
+  load `.env.local` or connect to an already-running local application or live
+  provider. A test may construct a synthetic in-memory live configuration only
+  to verify validation or fail-closed behavior, with network access still
+  denied.
 - OpenAI input/output sharing may be enabled only for the selected ScreenPilot API project during owner-controlled live testing that uses exclusively synthetic candidate data. Local execution is not a privacy boundary. Before any real CV, real candidate detail, or public use, stop and warn the owner to disable sharing and verify the disabled dashboard state; never enable sharing for all projects.
 - Treat public `docs/` as source-controlled project documentation. Keep deliberate private notes/exports only in the narrow paths excluded by `.gitignore`.
 - Do not stage, commit, push, or rewrite Git history unless the user explicitly asks for that Git action.

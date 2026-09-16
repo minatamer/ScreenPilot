@@ -97,6 +97,7 @@ function CvStageHarness({
         setFailure(undefined);
       }}
       onReturnToChoices={vi.fn()}
+      providerOperationsEnabled
       requestIdFactory={() => "00000000-0000-4000-8000-000000000012"}
       runtimeConfig={TEST_PUBLIC_RUNTIME_CONFIG}
       stage={stage}
@@ -111,6 +112,47 @@ describe("CvStage", () => {
   beforeEach(() => {
     mockedExtractPdfText.mockReset();
     mockedFetchSampleCvFile.mockReset();
+  });
+
+  it("fails closed before CV extraction, Turnstile, or analysis", () => {
+    const executeChallenge = vi.fn<ExecuteTurnstileChallenge>();
+    const analyze = vi.fn<NonNullable<CvStageHarnessProps["analyze"]>>();
+    const onReturnToChoices = vi.fn();
+
+    render(
+      <CvStage
+        analyze={analyze}
+        executeChallenge={executeChallenge}
+        onChooseAnotherCv={vi.fn()}
+        onExtractionStarted={vi.fn()}
+        onExtractionSucceeded={vi.fn()}
+        onFailure={vi.fn()}
+        onPrepared={vi.fn()}
+        onRetry={vi.fn()}
+        onReturnToChoices={onReturnToChoices}
+        providerOperationsEnabled={false}
+        runtimeConfig={{
+          ...TEST_PUBLIC_RUNTIME_CONFIG,
+          providerMode: "live",
+        }}
+        stage="awaiting_cv"
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "CV analysis is unavailable right now.",
+      }),
+    ).toBeVisible();
+    expect(screen.queryByLabelText("Choose PDF file")).not.toBeInTheDocument();
+    expect(executeChallenge).not.toHaveBeenCalled();
+    expect(analyze).not.toHaveBeenCalled();
+    expect(mockedExtractPdfText).not.toHaveBeenCalled();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Change starting option" }),
+    );
+    expect(onReturnToChoices).toHaveBeenCalledOnce();
   });
 
   it("offers accessible picker, privacy, limits, sample, and role-neutral recovery", () => {
@@ -199,6 +241,43 @@ describe("CvStage", () => {
       expect.any(AbortSignal),
     );
     expect(screen.queryByText(extractedText)).not.toBeInTheDocument();
+  });
+
+  it("shows a theme loading indicator while provider analysis is in flight", async () => {
+    mockedExtractPdfText.mockResolvedValue(extractedResult);
+    const analyze = vi.fn<NonNullable<CvStageHarnessProps["analyze"]>>(
+      (_input, signal) =>
+        new Promise((_resolve, reject) => {
+          signal.addEventListener(
+            "abort",
+            () => {
+              reject(new DOMException("Aborted", "AbortError"));
+            },
+            { once: true },
+          );
+        }),
+    );
+
+    render(
+      <CvStageHarness
+        analyze={analyze}
+        executeChallenge={() => Promise.resolve("one-time-token")}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText("Choose PDF file"), {
+      target: { files: [syntheticPdf()] },
+    });
+
+    const heading = await screen.findByRole("heading", {
+      name: "Checking CV details",
+    });
+    expect(heading.closest(".sp-card")).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByTestId("cv-analysis-spinner")).toHaveAttribute(
+      "aria-hidden",
+      "true",
+    );
+    expect(screen.getByText("CV analysis in progress")).toBeVisible();
   });
 
   it("sends the bundled sample through the identical extraction path", async () => {

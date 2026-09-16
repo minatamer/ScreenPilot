@@ -6,6 +6,10 @@ import { useCallback, useEffect, useState } from "react";
 
 import type { PrepareInterviewResponse } from "@screenpilot/contracts/api/interview-preparation";
 import type { AnalyzeCvResponse } from "@screenpilot/contracts/api/cv-analysis";
+import {
+  areInteractiveProviderOperationsEnabled,
+  areLiveProviderOperationsEnabled,
+} from "@screenpilot/contracts/api/public-runtime-config";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
 import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
@@ -25,10 +29,12 @@ import type {
   DemoStage,
   SessionFailure,
 } from "@/features/session/demo-session.types";
+import { ProviderOperationsUnavailable } from "@/features/session/provider-operations-unavailable";
 import { useDemoSession } from "@/features/session/use-demo-session";
 import { AppShell } from "@/shared/ui/app-shell";
 import { Button } from "@/shared/ui/button";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
+import { ErrorPanel } from "@/shared/ui/error-panel";
 import { PageContainer } from "@/shared/ui/layout";
 import { SiteHeader } from "@/shared/ui/site-header";
 import { StageIndicator } from "@/shared/ui/stage-indicator";
@@ -94,7 +100,17 @@ export function DemoExperience() {
   const [performanceCollector] = useState(() =>
     createVoicePerformanceCollector(performanceTracker),
   );
-  useDemoBootstrap();
+  const { retryRuntimeConfig, runtimeConfigStatus } = useDemoBootstrap();
+  const providerOperationsEnabled = Boolean(
+    runtimeConfigStatus === "ready" &&
+    state.runtimeConfig &&
+    areInteractiveProviderOperationsEnabled(state.runtimeConfig),
+  );
+  const liveProviderOperationsEnabled = Boolean(
+    runtimeConfigStatus === "ready" &&
+    state.runtimeConfig &&
+    areLiveProviderOperationsEnabled(state.runtimeConfig),
+  );
 
   useEffect(() => {
     if (state.stage === "cleared") {
@@ -137,12 +153,20 @@ export function DemoExperience() {
     [dispatch],
   );
   const selectEntryMode = (entryMode: EntryMode) => {
+    if (entryMode === "cv_assisted" && !providerOperationsEnabled) {
+      return;
+    }
     dispatch({ type: "SELECT_ENTRY_MODE", entryMode });
   };
   const returnHomeAfterClear = () => {
     clearSession();
     router.replace("/");
   };
+  const showRuntimeConfigFailure =
+    runtimeConfigStatus === "failed" &&
+    state.stage !== "empty" &&
+    state.stage !== "bootstrapping" &&
+    state.stage !== "cleared";
 
   let stageContent;
   if (
@@ -185,7 +209,10 @@ export function DemoExperience() {
           pretitle="Choose how to start"
           title="Bring a CV, or start with a conversation."
         />
-        <EntryModeChooser onSelect={selectEntryMode} />
+        <EntryModeChooser
+          cvAssistedEnabled={providerOperationsEnabled}
+          onSelect={selectEntryMode}
+        />
       </div>
     );
   } else if (
@@ -213,6 +240,7 @@ export function DemoExperience() {
             dispatch({ type: "RETRY" });
           }}
           onReturnToChoices={startOver}
+          providerOperationsEnabled={providerOperationsEnabled}
           restoreNotice={state.restoreNotice}
           runtimeConfig={state.runtimeConfig}
           stage={state.stage}
@@ -282,6 +310,9 @@ export function DemoExperience() {
           dispatch({ type: "PREFLIGHT_READY" });
         }}
         onStartAuthorized={(turnstileToken) => {
+          if (!providerOperationsEnabled) {
+            return;
+          }
           setVoiceStartRequest({
             interviewGrant,
             turnstileToken,
@@ -291,6 +322,7 @@ export function DemoExperience() {
         {...(state.rolePreference
           ? { rolePreference: state.rolePreference }
           : {})}
+        providerOperationsEnabled={providerOperationsEnabled}
         siteKey={state.runtimeConfig.abuseProtection.siteKey}
         stage={state.stage}
       />
@@ -313,7 +345,7 @@ export function DemoExperience() {
             : "CV_GRANT_EXPIRED",
       });
     };
-    stageContent = (
+    stageContent = providerOperationsEnabled ? (
       <VoiceConnectionStage
         {...(state.cv ? { cv: state.cv } : {})}
         demoContext={state.demoContext}
@@ -367,7 +399,7 @@ export function DemoExperience() {
           dispatch({ type: "SET_TOPIC_PROGRESS", progress });
         }}
         insights={state.insights}
-        liveVoiceEnabled={state.runtimeConfig.paidVoiceEnabled}
+        liveVoiceEnabled={liveProviderOperationsEnabled}
         plan={state.screeningPlan}
         performanceCollector={performanceCollector}
         performanceTracker={performanceTracker}
@@ -381,6 +413,13 @@ export function DemoExperience() {
         startRequest={voiceStartRequest}
         topicProgress={state.topicProgress}
         transcript={state.transcript}
+      />
+    ) : (
+      <ProviderOperationsUnavailable
+        actionLabel="Change starting option"
+        description="External actions are disabled for this safety check. No voice token, provider client, or voice connection has started."
+        onAction={startOver}
+        title="Voice interview is unavailable right now."
       />
     );
   } else {
@@ -439,7 +478,24 @@ export function DemoExperience() {
                 stages={DEMO_PROGRESS_STAGES}
               />
             </div>
-            <div className="sp-demo-workspace__task">{stageContent}</div>
+            <div className="sp-demo-workspace__task">
+              {showRuntimeConfigFailure ? (
+                <ErrorPanel
+                  actions={
+                    <Button onClick={retryRuntimeConfig} variant="secondary">
+                      Retry safety check
+                    </Button>
+                  }
+                  title="The safety check could not refresh"
+                >
+                  <p>
+                    Provider actions remain disabled until ScreenPilot confirms
+                    the current session settings.
+                  </p>
+                </ErrorPanel>
+              ) : null}
+              {stageContent}
+            </div>
           </section>
         </PageContainer>
       </main>

@@ -193,7 +193,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ["apps/backend/src/**/*.test.ts"],
+    files: ["apps/backend/src/**/*.test.ts", "apps/backend/src/test/**/*.ts"],
     rules: {
       "import-x/no-extraneous-dependencies": [
         "error",

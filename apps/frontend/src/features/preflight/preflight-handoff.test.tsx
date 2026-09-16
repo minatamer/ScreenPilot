@@ -58,6 +58,7 @@ function props(overrides: Partial<PreflightProps> = {}): PreflightProps {
     onGrantExpired: vi.fn(),
     onNotReady: vi.fn(),
     onReady: vi.fn(),
+    providerOperationsEnabled: true,
     siteKey: "",
     stage: "preflight",
     turnstileClientReady: true,
@@ -84,6 +85,49 @@ describe("shared voice preflight", () => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     window.sessionStorage.clear();
+  });
+
+  it("fails closed before microphone, Turnstile, or voice authorization", () => {
+    const microphone = microphoneHarness();
+    const executeChallenge = vi.fn<ExecuteTurnstileChallenge>();
+    const onStartAuthorized = vi.fn();
+    const onBack = vi.fn();
+
+    render(
+      <PreflightHandoff
+        {...props({
+          executeChallenge,
+          microphoneMonitor: microphone.openMicrophoneMonitor,
+          onBack,
+          onStartAuthorized,
+          providerOperationsEnabled: false,
+        })}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", {
+        name: "Voice interview is unavailable right now.",
+      }),
+    ).toBeVisible();
+    expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Check microphone" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Start interview" }),
+    ).not.toBeInTheDocument();
+    expect(microphone.openMicrophoneMonitor).not.toHaveBeenCalled();
+    expect(executeChallenge).not.toHaveBeenCalled();
+    expect(onStartAuthorized).not.toHaveBeenCalled();
+    expect(
+      document.querySelector('script[src*="challenges.cloudflare.com"]'),
+    ).toBeNull();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Change starting option" }),
+    );
+    expect(onBack).toHaveBeenCalledOnce();
   });
 
   it("shows two plain-language cards with unchecked consent and requests nothing automatically", () => {

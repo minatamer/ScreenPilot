@@ -547,6 +547,10 @@ describe("source-controlled interviewer prompt", () => {
       "candidate's bounded role label is synthetic context",
     );
     expect(INTERVIEWER_SYSTEM_PROMPT).toContain("Never conduct technical");
+    expect(INTERVIEWER_SYSTEM_PROMPT).toContain(
+      "close briefly and call end_call immediately",
+    );
+    expect(INTERVIEWER_SYSTEM_PROMPT).toContain("then call end_call");
   });
 
   it("stays below the initial static prompt budget without a tokenizer dependency", () => {

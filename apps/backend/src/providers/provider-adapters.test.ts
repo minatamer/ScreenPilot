@@ -58,12 +58,11 @@ describe("provider adapter composition", () => {
     });
 
     expect(secondCvResult).not.toEqual(firstCvResult);
-    expect(firstCvResult.screeningPlan.entryMode).toBe("cv_assisted");
-    expect(firstCvResult.screeningPlan.roleClarification).toMatchObject({
-      suggestedRole: "Frontend Developer",
+    expect(firstCvResult.normalizedCv.suggestedRole).toMatchObject({
+      label: "Frontend Developer",
     });
-    expect(secondCvResult.screeningPlan.roleClarification).toMatchObject({
-      suggestedRole: "Backend Developer",
+    expect(secondCvResult.normalizedCv.suggestedRole).toMatchObject({
+      label: "Backend Developer",
     });
     expect(JSON.stringify(summaryResult)).not.toContain(privateCandidateText);
     expect(firstCvResult.usage).toMatchObject({

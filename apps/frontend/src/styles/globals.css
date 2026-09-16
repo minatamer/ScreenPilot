@@ -2628,6 +2628,24 @@ h3 {
   margin: 0;
 }
 
+.sp-cv-analysis__status {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-2);
+}
+
+.sp-cv-analysis__spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+  border: 2px solid rgb(242 107 91 / 24%);
+  border-top-color: var(--sp-color-coral-300);
+  border-right-color: var(--sp-color-coral-500);
+  border-radius: 50%;
+  animation: sp-spin 800ms linear infinite;
+  box-shadow: 0 0 0.75rem rgb(242 107 91 / 16%);
+}
+
 .sp-cv-analysis__copy h2 {
   margin-top: var(--sp-space-2);
   color: var(--sp-color-dark-text);
@@ -3581,6 +3599,13 @@ h3 {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 1ms !important;
+  }
+
+  /* This is a functional busy indicator, so retain a slower rotation while
+     decorative motion remains collapsed. */
+  .sp-cv-analysis__spinner {
+    animation-duration: 1600ms !important;
+    animation-iteration-count: infinite !important;
   }
 
   .sp-button:hover:not(:disabled) {

@@ -56,6 +56,11 @@ export type DemoSessionEvent =
       demoContext: PublicRoleNeutralDemoContext;
       runtimeConfig: PublicRuntimeConfig;
     }>
+  | Readonly<{
+      type: "RUNTIME_CONFIG_REFRESHED";
+      demoContext: PublicRoleNeutralDemoContext;
+      runtimeConfig: PublicRuntimeConfig;
+    }>
   | Readonly<{ type: "SELECT_ENTRY_MODE"; entryMode: EntryMode }>
   | Readonly<{ type: "CV_EXTRACTION_STARTED" }>
   | Readonly<{ type: "CV_EXTRACTION_SUCCEEDED" }>
@@ -364,6 +369,32 @@ export function demoSessionReducer(
           failure: undefined,
         };
       }
+    case "RUNTIME_CONFIG_REFRESHED": {
+      if (
+        state.stage === "empty" ||
+        state.stage === "bootstrapping" ||
+        state.stage === "cleared"
+      ) {
+        throw new InvalidSessionTransitionError(state.stage, event.type);
+      }
+      const parsedDemoContext = publicRoleNeutralDemoContextSchema.safeParse(
+        event.demoContext,
+      );
+      const parsedRuntimeConfig = publicRuntimeConfigSchema.safeParse(
+        event.runtimeConfig,
+      );
+      if (!parsedDemoContext.success) {
+        throw new TypeError("The role-neutral demo disclosure is invalid.");
+      }
+      if (!parsedRuntimeConfig.success) {
+        throw new TypeError("The public demo configuration is invalid.");
+      }
+      return {
+        ...state,
+        demoContext: parsedDemoContext.data,
+        runtimeConfig: parsedRuntimeConfig.data,
+      };
+    }
     case "SELECT_ENTRY_MODE":
       assertStage(state, event.type, ["choosing_entry_mode"]);
       return {

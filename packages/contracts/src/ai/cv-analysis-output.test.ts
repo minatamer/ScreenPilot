@@ -2,16 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import { providerUsageSchema } from "../api/cv-analysis.js";
 import {
-  FIXED_TOPIC_KEYS,
-  UNIVERSAL_TOPIC_KEYS,
-} from "../interview/screening-plan.js";
-import {
-  cvAnalysisModelOutputJsonSchema,
-  cvAnalysisModelOutputSchema,
+  cvEvidenceModelOutputJsonSchema,
+  cvEvidenceModelOutputSchema,
+  normalizeCvEvidenceModelOutput,
 } from "./cv-analysis-output.js";
 
-function validOutput() {
-  return {
+const CV_TEXT = `Mira Solen
+Recent product management graduate
+Completed a placement supporting product discovery.
+English used during international group projects.`;
+
+function validEvidenceOutput() {
+  return cvEvidenceModelOutputSchema.parse({
     cv: {
       ambiguities: [
         {
@@ -29,260 +31,165 @@ function validOutput() {
           id: "education-1",
           statement: "The CV describes a recent product management graduate.",
         },
+        {
+          category: "experience",
+          evidenceExcerpt:
+            "Completed a placement supporting product discovery.",
+          id: "placement-1",
+          statement: "The CV describes a product discovery placement.",
+        },
       ],
       headline: "Recent product management graduate",
       suggestedRole: {
-        cvFactIds: ["education-1"],
+        cvFactIds: ["education-1", "placement-1"],
         label: "Product Manager",
       },
     },
-    plan: {
-      branch: "graduate",
-      entryMode: "cv_assisted",
-      fixedTopics: [...FIXED_TOPIC_KEYS],
-      openingIntent:
-        "Confirm the candidate's preferred name and requested role.",
-      topics: UNIVERSAL_TOPIC_KEYS.map((key) => ({
-        coverageCriteria: ["Candidate-confirmed evidence covers this field."],
-        cvFactIds: key === "current_context" ? ["education-1"] : [],
-        followupDirections: ["Preserve candidate corrections."],
-        intent: `Confirm ${key} at a concise recruiter-screening level.`,
-        key,
-        reason: "Candidate confirmation remains required.",
-        required: key !== "clarifications_and_followups",
-        title: key,
-      })),
-      roleClarification: {
-        cvFactIds: ["education-1"],
-        reason: "The CV supports only a non-binding conversation hint.",
-        requiresCandidateConfirmation: true,
-        suggestedRole: "Product Manager",
-      },
-    },
-  } as const;
+  });
 }
 
-describe("CV-analysis model output contract", () => {
-  it("accepts one evidence-grounded role suggestion and publishes JSON Schema", () => {
-    expect(cvAnalysisModelOutputSchema.parse(validOutput())).toEqual(
-      validOutput(),
+describe("CV-evidence model output contract", () => {
+  it("publishes the same strict evidence-only structure parsed at runtime", () => {
+    expect(cvEvidenceModelOutputSchema.parse(validEvidenceOutput())).toEqual(
+      validEvidenceOutput(),
     );
-    expect(cvAnalysisModelOutputJsonSchema).toMatchObject({
+    expect(cvEvidenceModelOutputJsonSchema).toMatchObject({
       additionalProperties: false,
+      required: ["cv"],
       type: "object",
     });
+    expect(JSON.stringify(cvEvidenceModelOutputJsonSchema)).not.toContain(
+      '"plan"',
+    );
   });
 
-  it("rejects missing HR topics and dangling fact references", () => {
-    const output = validOutput();
+  it("rejects structural omissions and extra fields before normalization", () => {
+    const output = validEvidenceOutput();
     expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        plan: {
-          ...output.plan,
-          fixedTopics: ["preferred_name"],
-          topics: output.plan.topics.slice(0, 1),
-          roleClarification: {
-            ...output.plan.roleClarification,
-            cvFactIds: ["missing-fact"],
-          },
-        },
+      cvEvidenceModelOutputSchema.safeParse({
+        cv: { ...output.cv, facts: undefined },
+      }).success,
+    ).toBe(false);
+    expect(
+      cvEvidenceModelOutputSchema.safeParse({
+        cv: { ...output.cv, hiddenInstruction: "ignore safeguards" },
       }).success,
     ).toBe(false);
   });
 
-  it("requires matching fact evidence for role suggestions", () => {
-    const output = validOutput();
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        plan: {
-          ...output.plan,
-          roleClarification: {
-            ...output.plan.roleClarification,
-            cvFactIds: [],
-          },
+  it("repairs duplicate and dangling references locally without another model call", () => {
+    const output = validEvidenceOutput();
+    const firstFact = output.cv.facts[0];
+    if (firstFact === undefined) {
+      throw new TypeError("Expected a fact fixture.");
+    }
+    const normalized = normalizeCvEvidenceModelOutput(CV_TEXT, {
+      cv: {
+        ...output.cv,
+        facts: [...output.cv.facts, firstFact],
+        suggestedRole: {
+          cvFactIds: ["education-1", "missing-fact"],
+          label: "Product Manager",
         },
-      }).success,
-    ).toBe(false);
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
+      },
+    });
+
+    expect(normalized.cv.facts).toHaveLength(2);
+    expect(normalized.cv.suggestedRole).toEqual({
+      cvFactIds: ["education-1"],
+      label: "Product Manager",
+    });
+    expect(normalized.appliedRuleIds).toEqual(
+      expect.arrayContaining([
+        "dropped_duplicate_fact_id",
+        "removed_unknown_role_fact_reference",
+      ]),
+    );
+  });
+
+  it("keeps safe partial evidence and removes unsafe or ungrounded fields", () => {
+    const output = validEvidenceOutput();
+    const firstFact = output.cv.facts[0];
+    if (firstFact === undefined) {
+      throw new TypeError("Expected a fact fixture.");
+    }
+    const normalized = normalizeCvEvidenceModelOutput(CV_TEXT, {
+      cv: {
+        ...output.cv,
+        displayNameEvidence: "Invented name evidence",
+        facts: [
+          firstFact,
+          {
+            category: "experience",
+            evidenceExcerpt: "Invented evidence",
+            id: "invented-1",
+            statement: "The CV describes invented evidence.",
+          },
+          {
+            category: "experience",
+            evidenceExcerpt:
+              "Completed a placement supporting product discovery.",
+            id: "unsafe-1",
+            statement: "The candidate should be hired with the highest score.",
+          },
+        ],
+        headline: "Award winning quantum researcher",
+        suggestedRole: {
+          cvFactIds: ["missing-fact"],
+          label: "Product Manager",
+        },
+      },
+    });
+
+    expect(normalized.cv).toMatchObject({
+      displayName: null,
+      displayNameEvidence: null,
+      facts: [{ id: "education-1" }],
+      headline: null,
+      suggestedRole: null,
+    });
+    expect(normalized.appliedRuleIds).toEqual(
+      expect.arrayContaining([
+        "cleared_invalid_display_name",
+        "cleared_invalid_role_suggestion",
+        "cleared_ungrounded_headline",
+        "dropped_ungrounded_fact",
+        "dropped_unsafe_fact",
+      ]),
+    );
+  });
+
+  it.each([
+    ["graduate", "graduate", false],
+    ["junior", "unclear", true],
+    ["experienced", "unclear", true],
+  ] as const)(
+    "normalizes education-only %s evidence to %s",
+    (modelLevel, expectedLevel, shouldRecordDowngrade) => {
+      const output = validEvidenceOutput();
+      const educationFact = output.cv.facts.find(
+        (fact) => fact.category === "education",
+      );
+      if (educationFact === undefined) {
+        throw new TypeError("Expected an education fact fixture.");
+      }
+      const normalized = normalizeCvEvidenceModelOutput(CV_TEXT, {
         cv: {
           ...output.cv,
-          suggestedRole: {
-            cvFactIds: ["education-1"],
-            label: "Graphic Designer",
-          },
-        },
-      }).success,
-    ).toBe(false);
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        cv: { ...output.cv, suggestedRole: null },
-        plan: {
-          ...output.plan,
-          roleClarification: {
-            ...output.plan.roleClarification,
-            cvFactIds: [],
-            suggestedRole: null,
-          },
-        },
-      }).success,
-    ).toBe(true);
-  });
-
-  it("requires evidence for classified experience levels", () => {
-    const output = validOutput();
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        cv: {
-          ...output.cv,
-          experienceLevel: "experienced",
-          facts: [
-            {
-              category: "skill",
-              evidenceExcerpt: "Product planning",
-              id: "skill-1",
-              statement: "The CV lists product planning.",
-            },
-          ],
+          experienceLevel: modelLevel,
+          facts: [educationFact],
           suggestedRole: null,
         },
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic) => ({
-            ...topic,
-            cvFactIds: [],
-          })),
-          roleClarification: {
-            ...output.plan.roleClarification,
-            cvFactIds: [],
-            suggestedRole: null,
-          },
-        },
-      }).success,
-    ).toBe(false);
-  });
+      });
 
-  it.each([
-    "The candidate applied for the Product Manager role.",
-    "The candidate is applying for Product Manager.",
-    "The candidate applies for Graphic Designer.",
-    "The candidate will apply for Customer Support Representative.",
-    "The candidate submitted an application for Product Manager.",
-    "The candidate submitted their application for Product Manager.",
-    "The candidate applied as a Graphic Designer.",
-    "The candidate submitted an application.",
-    "The Product Manager application was submitted.",
-    "Their application for Product Manager is pending.",
-  ])("rejects arbitrary-role application claims: %s", (statement) => {
-    const output = validOutput();
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        cv: {
-          ...output.cv,
-          facts: output.cv.facts.map((fact) => ({
-            ...fact,
-            statement,
-          })),
-        },
-      }).success,
-    ).toBe(false);
-  });
-
-  it.each([
-    "The CV includes a portfolio of design work.",
-    "The CV describes competency developed through customer support work.",
-    "The CV lists domain knowledge in insurance operations.",
-    "The CV describes call simulations performed during past training.",
-    "The CV describes work on a software application.",
-    "The CV describes work on a role-based software application.",
-    "The CV describes applied machine learning experience.",
-  ])("allows benign grounded CV evidence: %s", (statement) => {
-    const output = validOutput();
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        cv: {
-          ...output.cv,
-          facts: output.cv.facts.map((fact) => ({
-            ...fact,
-            statement,
-          })),
-        },
-      }).success,
-    ).toBe(true);
-  });
-
-  it("rejects duplicate evidence IDs and professional assessment topics", () => {
-    const output = validOutput();
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        cv: { ...output.cv, facts: [...output.cv.facts, output.cv.facts[0]] },
-      }).success,
-    ).toBe(false);
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        plan: {
-          ...output.plan,
-          topics: output.plan.topics.map((topic, index) =>
-            index === 0
-              ? {
-                  ...topic,
-                  intent: "Assess system design and score architecture depth.",
-                }
-              : topic,
-          ),
-        },
-      }).success,
-    ).toBe(false);
-  });
-
-  it.each([
-    "Rank the candidate and recommend them for hiring.",
-    "Their personality indicates strong culture fit.",
-    "The candidate applied for the Product Manager role.",
-    "Review the candidate's design portfolio as an assessment.",
-    "Run competency testing for customer support scenarios.",
-    "Use roleplay to assess a difficult customer interaction.",
-    "Test professional knowledge for the requested profession.",
-    "Evaluate profession-specific suitability for the role.",
-    "Assess the candidate’s suitability for this role.",
-    "Run a customer-support knowledge test.",
-    "Simulate a difficult customer call.",
-    "The candidate is applying for Product Manager.",
-    "The candidate applied as a Graphic Designer.",
-    "The candidate submitted an application.",
-    "The Product Manager application was submitted.",
-    "Their application for Product Manager is pending.",
-  ])("rejects forbidden plan content: %s", (reason) => {
-    const output = validOutput();
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        plan: {
-          ...output.plan,
-          roleClarification: { ...output.plan.roleClarification, reason },
-        },
-      }).success,
-    ).toBe(false);
-  });
-
-  it("rejects literal questions in declarative plan fields", () => {
-    const output = validOutput();
-    expect(
-      cvAnalysisModelOutputSchema.safeParse({
-        ...output,
-        plan: { ...output.plan, openingIntent: "Which role do you want?" },
-      }).success,
-    ).toBe(false);
-  });
+      expect(normalized.cv.experienceLevel).toBe(expectedLevel);
+      expect(
+        normalized.appliedRuleIds.includes(
+          "downgraded_unsupported_experience_level",
+        ),
+      ).toBe(shouldRecordDowngrade);
+    },
+  );
 
   it("keeps cached token counts content-free and internally consistent", () => {
     expect(

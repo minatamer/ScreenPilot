@@ -5,6 +5,12 @@ import {
 import type { ErrorRequestHandler, RequestHandler } from "express";
 import { z } from "zod";
 
+import { ElevenLabsRequestError } from "../providers/elevenlabs/elevenlabs-client.js";
+import {
+  OpenAiRequestError,
+  OpenAiStructuredOutputError,
+} from "../providers/openai/openai-client.js";
+import { OpenAiCvValidationError } from "../providers/openai/openai-cv-analyzer.js";
 import { TurnstileVerificationError } from "../providers/turnstile/cloudflare-turnstile-verifier.js";
 import { InterviewGrantError } from "../security/interview-grant.js";
 import { UseCaseError } from "../use-cases/use-case-error.js";
@@ -23,6 +29,69 @@ type MappedApiError = Readonly<{
   body: ApiError;
   status: number;
 }>;
+
+type ProviderDiagnostic = Readonly<{
+  provider: "elevenlabs" | "openai" | "turnstile";
+  providerDurationMs: number;
+  providerFailureCategory: string;
+  providerHttpStatus?: number;
+  providerSchemaMismatchCategory?: string;
+  providerValidationPaths?: readonly string[];
+  providerValidationRuleIds?: readonly string[];
+}>;
+
+function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
+  const providerError = error instanceof UseCaseError ? error.cause : error;
+  if (providerError instanceof TurnstileVerificationError) {
+    return {
+      provider: "turnstile",
+      providerDurationMs: providerError.durationMs,
+      providerFailureCategory: providerError.category,
+      ...(providerError.httpStatus === undefined
+        ? {}
+        : { providerHttpStatus: providerError.httpStatus }),
+      ...(providerError.schemaMismatchCategory === undefined
+        ? {}
+        : {
+            providerSchemaMismatchCategory:
+              providerError.schemaMismatchCategory,
+          }),
+    };
+  }
+  if (
+    providerError instanceof OpenAiRequestError ||
+    providerError instanceof OpenAiStructuredOutputError ||
+    providerError instanceof OpenAiCvValidationError
+  ) {
+    return {
+      provider: "openai",
+      providerDurationMs: providerError.durationMs,
+      providerFailureCategory: providerError.category,
+      ...(providerError instanceof OpenAiRequestError &&
+      providerError.httpStatus !== undefined
+        ? { providerHttpStatus: providerError.httpStatus }
+        : {}),
+      ...(providerError instanceof OpenAiStructuredOutputError ||
+      providerError instanceof OpenAiCvValidationError
+        ? {
+            providerValidationPaths: providerError.validationPaths,
+            providerValidationRuleIds: providerError.validationRuleIds,
+          }
+        : {}),
+    };
+  }
+  if (providerError instanceof ElevenLabsRequestError) {
+    return {
+      provider: "elevenlabs",
+      providerDurationMs: providerError.durationMs,
+      providerFailureCategory: providerError.category,
+      ...(providerError.httpStatus === undefined
+        ? {}
+        : { providerHttpStatus: providerError.httpStatus }),
+    };
+  }
+  return null;
+}
 
 function createMappedError(
   requestId: string,
@@ -171,8 +240,13 @@ export const terminalErrorHandler: ErrorRequestHandler = (
       String(mapped.body.error.retryAfterSeconds),
     );
   }
+  const providerDiagnostic = createProviderDiagnostic(error);
   request.log.error(
-    { code: mapped.body.error.code, requestId: mapped.body.error.requestId },
+    {
+      code: mapped.body.error.code,
+      requestId: mapped.body.error.requestId,
+      ...(providerDiagnostic ?? {}),
+    },
     "request_failed",
   );
   response.status(mapped.status).json(mapped.body);

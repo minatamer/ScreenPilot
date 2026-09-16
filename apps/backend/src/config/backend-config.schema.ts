@@ -411,13 +411,14 @@ export const createBackendConfigCandidate = (
       appearance: LOCKED_PROVIDER_SETTINGS.turnstileAppearance,
       provider: LOCKED_PROVIDER_SETTINGS.turnstileProvider,
       siteKey:
-        environment.PROVIDER_MODE === "live"
+        environment.PROVIDER_MODE === "live" && environment.PAID_DEMO_ENABLED
           ? environment.TURNSTILE_SITE_KEY
           : "",
     },
     limits: PUBLIC_RUNTIME_LIMITS,
-    paidVoiceEnabled: environment.PAID_DEMO_ENABLED,
+    paidOperationsEnabled: environment.PAID_DEMO_ENABLED,
     privacyNoticeVersion: "2026-08-31",
+    providerMode: environment.PROVIDER_MODE,
   },
   security: {
     anonymousCookieSecret: environment.ANONYMOUS_COOKIE_SECRET || null,

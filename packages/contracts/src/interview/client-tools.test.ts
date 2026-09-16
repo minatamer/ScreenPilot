@@ -5,11 +5,14 @@ import { containsUnsupportedAssessmentOrSensitiveInference } from "./assessment-
 import {
   correctInsightArgumentsSchema,
   markTopicArgumentsSchema,
+  RECORDABLE_INSIGHT_CATEGORIES,
   recordCandidateQuestionArgumentsSchema,
   recordInsightArgumentsSchema,
   requestFollowupArgumentsSchema,
+  VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
   voiceClientToolArgumentsSchemas,
 } from "./client-tools.js";
+import { UNIVERSAL_TOPIC_KEYS } from "./screening-plan.js";
 
 describe("SP-016 voice client-tool arguments", () => {
   it("accepts the five strict, bounded tool shapes", () => {
@@ -49,6 +52,32 @@ describe("SP-016 voice client-tool arguments", () => {
     ).toMatchObject({
       reason: "A recruiter should confirm the onboarding details.",
     });
+  });
+
+  it("keeps the dashboard contract complete and response-aware", () => {
+    expect(Object.keys(VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS)).toEqual([
+      ...VOICE_CLIENT_TOOL_NAMES,
+    ]);
+    for (const definition of Object.values(
+      VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
+    )) {
+      expect(definition).toMatchObject({
+        dynamicVariableAssignments: false,
+        responseMock: false,
+        waitForResponse: true,
+      });
+      expect(
+        Object.values(definition.parameters).every(({ required }) => required),
+      ).toBe(true);
+    }
+    expect(
+      VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS.recordInsight.parameters.category
+        .enumValues,
+    ).toEqual(RECORDABLE_INSIGHT_CATEGORIES);
+    expect(
+      VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS.markTopic.parameters.topicKey
+        .enumValues,
+    ).toEqual(UNIVERSAL_TOPIC_KEYS);
   });
 
   it.each([

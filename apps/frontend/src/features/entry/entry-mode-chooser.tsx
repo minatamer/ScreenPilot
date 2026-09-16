@@ -5,6 +5,7 @@ import { EntryModeBadge } from "@/shared/ui/entry-mode-badge";
 import { EntryModeCard } from "@/shared/ui/entry-mode-card";
 
 type EntryModeChooserProps = Readonly<{
+  cvAssistedEnabled?: boolean;
   disabled?: boolean;
   onSelect: (entryMode: EntryMode) => void;
 }>;
@@ -47,6 +48,7 @@ function ConversationIcon() {
 }
 
 export function EntryModeChooser({
+  cvAssistedEnabled = true,
   disabled = false,
   onSelect,
 }: EntryModeChooserProps) {
@@ -55,16 +57,26 @@ export function EntryModeChooser({
       <EntryModeCard
         actions={
           <Button
-            disabled={disabled}
+            disabled={disabled || !cvAssistedEnabled}
             onClick={() => {
               onSelect("cv_assisted");
             }}
           >
-            Use a CV
+            {cvAssistedEnabled ? "Use a CV" : "CV analysis unavailable"}
           </Button>
         }
-        badge={<EntryModeBadge>More tailored questions</EntryModeBadge>}
-        description="Bring a CV for more focused follow-up questions. It stays in this tab."
+        badge={
+          <EntryModeBadge>
+            {cvAssistedEnabled
+              ? "More tailored questions"
+              : "Paused for this safety check"}
+          </EntryModeBadge>
+        }
+        description={
+          cvAssistedEnabled
+            ? "Bring a CV for more focused follow-up questions. It stays in this tab."
+            : "CV selection and analysis stay disabled while external actions are paused."
+        }
         icon={<DocumentIcon />}
         title="Use a CV"
       />

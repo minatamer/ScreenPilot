@@ -81,10 +81,14 @@ describe("loadBackendConfig", () => {
     expect(config.publicRuntime.abuseProtection.siteKey).toBe("");
   });
 
-  it("projects the Turnstile site key only in live provider mode", () => {
+  it("projects the Turnstile site key only when paid live mode is enabled", () => {
     const fakeConfig = loadBackendConfig({
       ...fakeEnvironment,
       TURNSTILE_SITE_KEY: "configured-local-site-key",
+    });
+    const paidDisabledLiveConfig = loadBackendConfig({
+      ...liveEnvironment,
+      PAID_DEMO_ENABLED: "false",
     });
     const liveConfig = loadBackendConfig(liveEnvironment);
 
@@ -92,9 +96,20 @@ describe("loadBackendConfig", () => {
       "configured-local-site-key",
     );
     expect(fakeConfig.publicRuntime.abuseProtection.siteKey).toBe("");
+    expect(paidDisabledLiveConfig.publicRuntime.abuseProtection.siteKey).toBe(
+      "",
+    );
+    expect(paidDisabledLiveConfig.publicRuntime).toMatchObject({
+      paidOperationsEnabled: false,
+      providerMode: "live",
+    });
     expect(liveConfig.publicRuntime.abuseProtection.siteKey).toBe(
       liveEnvironment.TURNSTILE_SITE_KEY,
     );
+    expect(liveConfig.publicRuntime).toMatchObject({
+      paidOperationsEnabled: true,
+      providerMode: "live",
+    });
   });
 
   it.each(publishedTurnstileTestSiteKeys)(
@@ -218,8 +233,9 @@ describe("loadBackendConfig", () => {
     expect(Object.keys(config.publicRuntime).sort()).toEqual([
       "abuseProtection",
       "limits",
-      "paidVoiceEnabled",
+      "paidOperationsEnabled",
       "privacyNoticeVersion",
+      "providerMode",
     ]);
   });
 });

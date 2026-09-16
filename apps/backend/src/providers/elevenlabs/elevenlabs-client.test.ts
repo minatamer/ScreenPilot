@@ -9,10 +9,15 @@ const AGENT_ID = "screenpilot-test-agent";
 const API_KEY = "not-a-real-elevenlabs-key";
 const TOKEN_URL = "https://elevenlabs.invalid/v1/conversation/token";
 
-function createClient(fetchImplementation: typeof fetch, timeoutMs = 100) {
+function createClient(
+  fetchImplementation: typeof fetch,
+  timeoutMs = 100,
+  clockMilliseconds: () => number = Date.now,
+) {
   return new ElevenLabsHttpClient({
     agentId: AGENT_ID,
     apiKey: API_KEY,
+    clockMilliseconds,
     fetchImplementation,
     timeoutMs,
     tokenUrl: TOKEN_URL,
@@ -71,11 +76,35 @@ describe("ElevenLabsHttpClient", () => {
   });
 
   it.each([
-    ["provider rejection", jsonResponse({ private: "failure" }, 401)],
-    ["invalid JSON", new Response("not-json", { status: 200 })],
+    [
+      "provider rejection",
+      jsonResponse({ private: "failure" }, 401),
+      "http_non_success",
+      401,
+    ],
+    [
+      "empty response body",
+      new Response(null, { status: 200 }),
+      "response_body_empty",
+      undefined,
+    ],
+    [
+      "invalid response body",
+      new Response(new Uint8Array([0xc3, 0x28]), { status: 200 }),
+      "response_body_invalid",
+      undefined,
+    ],
+    [
+      "invalid JSON",
+      new Response("not-json", { status: 200 }),
+      "response_json_invalid",
+      undefined,
+    ],
     [
       "invalid shape",
       jsonResponse({ token: "missing-conversation-identifier" }),
+      "response_schema_mismatch",
+      undefined,
     ],
     [
       "declared oversized response",
@@ -84,20 +113,63 @@ describe("ElevenLabsHttpClient", () => {
         200,
         { "content-length": "20000" },
       ),
+      "response_body_oversized",
+      undefined,
     ],
-  ])("maps %s to a safe retryable error", async (_label, response) => {
-    const providerFetch = vi.fn<typeof fetch>().mockResolvedValue(response);
+  ] as const)(
+    "maps %s to a safe retryable error",
+    async (_label, response, category, httpStatus) => {
+      const providerFetch = vi.fn<typeof fetch>().mockResolvedValue(response);
+      const clockMilliseconds = vi
+        .fn<() => number>()
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(114);
 
-    const failure = await createClient(providerFetch)
+      const failure = await createClient(providerFetch, 100, clockMilliseconds)
+        .createConversationToken({ agentId: AGENT_ID })
+        .catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(ElevenLabsRequestError);
+      expect(failure).toMatchObject({
+        category,
+        code: "PROVIDER_UNAVAILABLE",
+        durationMs: 14,
+        ...(httpStatus === undefined ? {} : { httpStatus }),
+        retryable: true,
+      });
+      expect(String(failure)).not.toContain("private");
+    },
+  );
+
+  it("categorizes fetch failure and timeout without exposing their causes", async () => {
+    const fetchFailure = vi.fn<typeof fetch>();
+    fetchFailure.mockRejectedValue(new TypeError("private fetch detail"));
+    const failure = await createClient(fetchFailure)
       .createConversationToken({ agentId: AGENT_ID })
       .catch((error: unknown) => error);
-
     expect(failure).toBeInstanceOf(ElevenLabsRequestError);
-    expect(failure).toMatchObject({
-      code: "PROVIDER_UNAVAILABLE",
-      retryable: true,
-    });
-    expect(String(failure)).not.toContain("private");
+    expect(failure).toMatchObject({ category: "fetch_failure" });
+    expect(String(failure)).not.toContain("private fetch detail");
+
+    const timedOutFetch = vi.fn<typeof fetch>();
+    timedOutFetch.mockImplementation(
+      (_url, init) =>
+        new Promise((_resolve, reject) => {
+          init?.signal?.addEventListener(
+            "abort",
+            () => {
+              reject(new Error("private timeout detail"));
+            },
+            { once: true },
+          );
+        }),
+    );
+    const timeoutFailure = await createClient(timedOutFetch, 5)
+      .createConversationToken({ agentId: AGENT_ID })
+      .catch((error: unknown) => error);
+    expect(timeoutFailure).toBeInstanceOf(ElevenLabsRequestError);
+    expect(timeoutFailure).toMatchObject({ category: "request_timeout" });
+    expect(String(timeoutFailure)).not.toContain("private timeout detail");
   });
 
   it("preserves caller cancellation instead of converting it to a provider error", async () => {

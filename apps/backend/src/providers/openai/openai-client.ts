@@ -5,6 +5,36 @@ import { OPENAI_RESPONSES_URL } from "../../config/provider-mode.js";
 const MAXIMUM_OPENAI_RESPONSE_BYTES = 1_048_576;
 const MAXIMUM_STRUCTURED_OUTPUT_CHARACTERS = 250_000;
 
+type OpenAiFailureCategory =
+  | "fetch_failure"
+  | "http_non_success"
+  | "request_timeout"
+  | "response_body_empty"
+  | "response_body_invalid"
+  | "response_body_oversized"
+  | "response_failed"
+  | "response_incomplete"
+  | "response_json_invalid"
+  | "response_refusal"
+  | "response_schema_mismatch"
+  | "response_status_unexpected"
+  | "structured_output_invalid";
+
+type OpenAiResponseBodyFailureCategory = Extract<
+  OpenAiFailureCategory,
+  "response_body_empty" | "response_body_invalid" | "response_body_oversized"
+>;
+
+class OpenAiResponseBodyError extends Error {
+  readonly category: OpenAiResponseBodyFailureCategory;
+
+  constructor(category: OpenAiResponseBodyFailureCategory) {
+    super("The OpenAI response body could not be read safely.");
+    this.name = "OpenAiResponseBodyError";
+    this.category = category;
+  }
+}
+
 export type OpenAiUsage = Readonly<{
   cachedInputTokens: number;
   inputTokens: number;
@@ -21,33 +51,59 @@ export type OpenAiStructuredResponseRequest<TOutput> = Readonly<{
 }>;
 
 export type OpenAiStructuredResponse<TOutput> = Readonly<{
+  durationMs: number;
   output: TOutput;
   usage: OpenAiUsage;
 }>;
 
 export class OpenAiRequestError extends Error {
   readonly code = "PROVIDER_UNAVAILABLE";
+  readonly category: Exclude<
+    OpenAiFailureCategory,
+    "structured_output_invalid"
+  >;
+  readonly durationMs: number;
+  readonly httpStatus?: number;
   readonly retryable = true;
 
-  constructor(cause?: unknown) {
+  constructor(input: {
+    category: Exclude<OpenAiFailureCategory, "structured_output_invalid">;
+    cause?: unknown;
+    durationMs: number;
+    httpStatus?: number;
+  }) {
     super(
       "CV analysis is temporarily unavailable. Try again.",
-      cause === undefined ? undefined : { cause },
+      input.cause === undefined ? undefined : { cause: input.cause },
     );
     this.name = "OpenAiRequestError";
+    this.category = input.category;
+    this.durationMs = input.durationMs;
+    if (input.httpStatus !== undefined) {
+      this.httpStatus = input.httpStatus;
+    }
   }
 }
 
 export class OpenAiStructuredOutputError extends Error {
+  readonly category = "structured_output_invalid";
+  readonly durationMs: number;
   readonly usage: OpenAiUsage;
+  readonly validationPaths: readonly string[];
+  readonly validationRuleIds: readonly string[];
 
-  constructor(usage: OpenAiUsage, cause?: unknown) {
-    super(
-      "The CV analysis response did not match the required structure.",
-      cause === undefined ? undefined : { cause },
-    );
+  constructor(input: {
+    durationMs: number;
+    usage: OpenAiUsage;
+    validationPaths?: readonly string[];
+    validationRuleIds?: readonly string[];
+  }) {
+    super("The CV analysis response did not match the required structure.");
     this.name = "OpenAiStructuredOutputError";
-    this.usage = usage;
+    this.durationMs = input.durationMs;
+    this.usage = input.usage;
+    this.validationPaths = input.validationPaths ?? [];
+    this.validationRuleIds = input.validationRuleIds ?? [];
   }
 }
 
@@ -91,6 +147,53 @@ const outputTextPartSchema = z.object({
   type: z.literal("output_text"),
 });
 
+const outputRefusalPartSchema = z.object({
+  refusal: z.string(),
+  type: z.literal("refusal"),
+});
+
+function containsRefusal(output: readonly unknown[]): boolean {
+  return output.some((outputItem) => {
+    const message = outputMessageSchema.safeParse(outputItem);
+    return (
+      message.success &&
+      message.data.content.some(
+        (contentPart) => outputRefusalPartSchema.safeParse(contentPart).success,
+      )
+    );
+  });
+}
+
+function structuredOutputDiagnostic(error: unknown): Readonly<{
+  validationPaths: readonly string[];
+  validationRuleIds: readonly string[];
+}> {
+  if (error instanceof SyntaxError) {
+    return {
+      validationPaths: ["$"],
+      validationRuleIds: ["output_json_invalid"],
+    };
+  }
+  if (error instanceof z.ZodError) {
+    return {
+      validationPaths: [
+        ...new Set(
+          error.issues.map((issue) =>
+            issue.path.length === 0 ? "$" : issue.path.join("."),
+          ),
+        ),
+      ].slice(0, 16),
+      validationRuleIds: [
+        ...new Set(error.issues.map((issue) => `schema_${issue.code}`)),
+      ].slice(0, 16),
+    };
+  }
+  return {
+    validationPaths: ["output"],
+    validationRuleIds: ["output_text_invalid"],
+  };
+}
+
 async function readBoundedResponse(response: Response): Promise<string> {
   const declaredLength = response.headers.get("content-length");
   if (
@@ -99,10 +202,10 @@ async function readBoundedResponse(response: Response): Promise<string> {
     Number(declaredLength) > MAXIMUM_OPENAI_RESPONSE_BYTES
   ) {
     await response.body?.cancel();
-    throw new OpenAiRequestError();
+    throw new OpenAiResponseBodyError("response_body_oversized");
   }
   if (response.body === null) {
-    throw new OpenAiRequestError();
+    throw new OpenAiResponseBodyError("response_body_empty");
   }
 
   const reader = response.body.getReader();
@@ -113,12 +216,12 @@ async function readBoundedResponse(response: Response): Promise<string> {
     while (!streamResult.done) {
       const chunk: unknown = streamResult.value;
       if (!(chunk instanceof Uint8Array)) {
-        throw new OpenAiRequestError();
+        throw new OpenAiResponseBodyError("response_body_invalid");
       }
       byteCount += chunk.byteLength;
       if (byteCount > MAXIMUM_OPENAI_RESPONSE_BYTES) {
         await reader.cancel();
-        throw new OpenAiRequestError();
+        throw new OpenAiResponseBodyError("response_body_oversized");
       }
       chunks.push(chunk);
       streamResult = await reader.read();
@@ -133,7 +236,14 @@ async function readBoundedResponse(response: Response): Promise<string> {
     body.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(body);
+  if (byteCount === 0) {
+    throw new OpenAiResponseBodyError("response_body_empty");
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(body);
+  } catch {
+    throw new OpenAiResponseBodyError("response_body_invalid");
+  }
 }
 
 function extractOutputText(output: readonly unknown[]): string {
@@ -162,6 +272,7 @@ function extractOutputText(output: readonly unknown[]): string {
 
 export type OpenAiHttpClientOptions = Readonly<{
   apiKey: string;
+  clockMilliseconds?: () => number;
   fetchImplementation?: typeof fetch;
   model: "gpt-5.4-mini";
   reasoning: "none";
@@ -172,6 +283,7 @@ export type OpenAiHttpClientOptions = Readonly<{
 
 export class OpenAiHttpClient implements OpenAiClient {
   readonly #apiKey: string;
+  readonly #clockMilliseconds: () => number;
   readonly #fetchImplementation: typeof fetch;
   readonly #model: "gpt-5.4-mini";
   readonly #reasoning: "none";
@@ -184,12 +296,33 @@ export class OpenAiHttpClient implements OpenAiClient {
       throw new TypeError("Live OpenAI requests require an API key.");
     }
     this.#apiKey = options.apiKey;
+    this.#clockMilliseconds = options.clockMilliseconds ?? Date.now;
     this.#fetchImplementation = options.fetchImplementation ?? fetch;
     this.#model = options.model;
     this.#reasoning = options.reasoning;
     this.#responsesUrl = options.responsesUrl ?? OPENAI_RESPONSES_URL;
     this.#store = options.store;
     this.#timeoutMs = options.timeoutMs;
+  }
+
+  #durationSince(startedAt: number): number {
+    const elapsed = this.#clockMilliseconds() - startedAt;
+    return Number.isFinite(elapsed) ? Math.max(0, Math.round(elapsed)) : 0;
+  }
+
+  #createRequestError(
+    category: Exclude<OpenAiFailureCategory, "structured_output_invalid">,
+    startedAt: number,
+    input: { cause?: unknown; httpStatus?: number } = {},
+  ): OpenAiRequestError {
+    return new OpenAiRequestError({
+      category,
+      durationMs: this.#durationSince(startedAt),
+      ...(input.cause === undefined ? {} : { cause: input.cause }),
+      ...(input.httpStatus === undefined
+        ? {}
+        : { httpStatus: input.httpStatus }),
+    });
   }
 
   async createStructuredResponse<TOutput>(
@@ -200,6 +333,7 @@ export class OpenAiHttpClient implements OpenAiClient {
     const requestSignal = request.signal
       ? AbortSignal.any([request.signal, timeoutSignal])
       : timeoutSignal;
+    const startedAt = this.#clockMilliseconds();
 
     try {
       const response = await this.#fetchImplementation(this.#responsesUrl, {
@@ -230,13 +364,40 @@ export class OpenAiHttpClient implements OpenAiClient {
       });
       if (!response.ok) {
         await response.body?.cancel();
-        throw new OpenAiRequestError();
+        throw this.#createRequestError("http_non_success", startedAt, {
+          httpStatus: response.status,
+        });
       }
 
       const responseText = await readBoundedResponse(response);
-      const parsedResponse = openAiResponseSchema.parse(
-        JSON.parse(responseText),
-      );
+      let responseJson: unknown;
+      try {
+        responseJson = JSON.parse(responseText);
+      } catch (error: unknown) {
+        throw this.#createRequestError("response_json_invalid", startedAt, {
+          cause: error,
+        });
+      }
+      const responseStatus = z
+        .object({ status: z.string() })
+        .safeParse(responseJson);
+      if (
+        responseStatus.success &&
+        responseStatus.data.status !== "completed"
+      ) {
+        const category =
+          responseStatus.data.status === "incomplete"
+            ? "response_incomplete"
+            : responseStatus.data.status === "failed"
+              ? "response_failed"
+              : "response_status_unexpected";
+        throw this.#createRequestError(category, startedAt);
+      }
+      const parsedResponseResult = openAiResponseSchema.safeParse(responseJson);
+      if (!parsedResponseResult.success) {
+        throw this.#createRequestError("response_schema_mismatch", startedAt);
+      }
+      const parsedResponse = parsedResponseResult.data;
       const usage: OpenAiUsage = {
         cachedInputTokens:
           parsedResponse.usage.input_tokens_details.cached_tokens,
@@ -244,14 +405,25 @@ export class OpenAiHttpClient implements OpenAiClient {
         outputTokens: parsedResponse.usage.output_tokens,
       };
 
+      if (containsRefusal(parsedResponse.output)) {
+        throw this.#createRequestError("response_refusal", startedAt);
+      }
+
       try {
         const outputText = extractOutputText(parsedResponse.output);
         return {
+          durationMs: this.#durationSince(startedAt),
           output: request.parseOutput(JSON.parse(outputText)),
           usage,
         };
       } catch (error: unknown) {
-        throw new OpenAiStructuredOutputError(usage, error);
+        const diagnostic = structuredOutputDiagnostic(error);
+        throw new OpenAiStructuredOutputError({
+          durationMs: this.#durationSince(startedAt),
+          usage,
+          validationPaths: diagnostic.validationPaths,
+          validationRuleIds: diagnostic.validationRuleIds,
+        });
       }
     } catch (error: unknown) {
       if (
@@ -260,8 +432,20 @@ export class OpenAiHttpClient implements OpenAiClient {
       ) {
         throw error;
       }
+      if (error instanceof OpenAiResponseBodyError) {
+        throw this.#createRequestError(error.category, startedAt, {
+          cause: error,
+        });
+      }
       request.signal?.throwIfAborted();
-      throw new OpenAiRequestError(error);
+      if (timeoutSignal.aborted) {
+        throw this.#createRequestError("request_timeout", startedAt, {
+          cause: error,
+        });
+      }
+      throw this.#createRequestError("fetch_failure", startedAt, {
+        cause: error,
+      });
     }
   }
 }

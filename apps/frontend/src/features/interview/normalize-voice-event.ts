@@ -29,7 +29,7 @@ export type NormalizedVoiceEvent =
       }>);
 
 export type VoiceEventNormalizerState = Readonly<{
-  finalizedProviderSequences: readonly number[];
+  finalizedProviderMessages: readonly string[];
   lastIdlessFinalFingerprint: string | null;
   latestCaptionSequence: number | null;
   nextFallbackSequence: number;
@@ -44,13 +44,17 @@ export type VoiceEventNormalizationResult = Readonly<{
 
 export function createVoiceEventNormalizerState(): VoiceEventNormalizerState {
   return {
-    finalizedProviderSequences: [],
+    finalizedProviderMessages: [],
     lastIdlessFinalFingerprint: null,
     latestCaptionSequence: null,
     nextFallbackSequence: 0,
     seenFinalTurnIds: [],
     transcriptCharacters: 0,
   };
+}
+
+function providerMessageKey(speaker: VoiceSessionSpeaker, sequence: number) {
+  return `${speaker}:${String(sequence)}`;
 }
 
 function boundCaptionText(text: string) {
@@ -124,10 +128,15 @@ export function normalizeVoiceEvent(
   }
 
   const providerSequence = validProviderSequence(event.eventId);
+  const providerKey =
+    providerSequence === undefined
+      ? undefined
+      : providerMessageKey(event.speaker, providerSequence);
   if (event.stability === "tentative") {
     if (
       providerSequence === undefined ||
-      state.finalizedProviderSequences.includes(providerSequence) ||
+      providerKey === undefined ||
+      state.finalizedProviderMessages.includes(providerKey) ||
       (state.latestCaptionSequence !== null &&
         providerSequence < state.latestCaptionSequence)
     ) {
@@ -147,8 +156,8 @@ export function normalizeVoiceEvent(
   }
 
   if (
-    providerSequence !== undefined &&
-    state.finalizedProviderSequences.includes(providerSequence)
+    providerKey !== undefined &&
+    state.finalizedProviderMessages.includes(providerKey)
   ) {
     return { event: null, state };
   }
@@ -209,10 +218,10 @@ export function normalizeVoiceEvent(
       transcriptTurn,
     },
     state: {
-      finalizedProviderSequences:
-        providerSequence === undefined
-          ? state.finalizedProviderSequences
-          : [...state.finalizedProviderSequences, providerSequence],
+      finalizedProviderMessages:
+        providerKey === undefined
+          ? state.finalizedProviderMessages
+          : [...state.finalizedProviderMessages, providerKey],
       lastIdlessFinalFingerprint: idlessFingerprint,
       latestCaptionSequence: shouldDisplayCaption
         ? resolvedSequence.sequence

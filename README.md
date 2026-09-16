@@ -82,24 +82,44 @@ No provider credentials are required for the default fake mode.
 
 ## Run locally
 
-Build and start the backend with the ignored local environment file:
+> **Local runtime rule:** run both long-lived application processes outside any
+> restricted sandbox, with unrestricted network access. This is required even
+> when the frontend and backend are started separately: the frontend must reach
+> the local API/provider browser endpoints, and a live backend must reach
+> Turnstile, OpenAI, and ElevenLabs. Automated tests remain sandboxed,
+> fake-provider, paid-disabled, and network-denied.
+
+Stop the previous frontend and backend processes first so ports `3000` and
+`3001` have no stale listeners. Then use two terminals from the repository root.
+
+Terminal 1 — build and start the backend with the ignored local environment
+file:
 
 ```bash
-pnpm build:backend
-pnpm start:backend:local
+corepack pnpm build:backend
+corepack pnpm start:backend:local
 ```
 
 `start:backend:local` uses Node's built-in `--env-file` support to load
 `apps/backend/.env.local` into the backend process. The production `start`
 script remains environment-injection only and never depends on a local file.
 
-Start the Next.js application in another terminal:
+Wait for the backend to report that it is listening on port `3001`.
+
+Terminal 2 — build and start the production-like Next.js application:
 
 ```bash
-pnpm dev:frontend
+corepack pnpm build:frontend
+corepack pnpm --filter @screenpilot/frontend start
 ```
 
-Then open [http://localhost:3000](http://localhost:3000).
+Next.js loads `apps/frontend/.env.local` automatically. Then open
+[http://localhost:3000/demo](http://localhost:3000/demo).
+
+For an edit/watch loop, `corepack pnpm dev:frontend` may replace the frontend
+build/start pair. The canonical clean verification run remains build then start
+for both applications, outside the sandbox and with unrestricted network
+access. Never place environment values in startup commands.
 
 When editing backend modules, the backend workspace can compile changes in
 TypeScript watch mode in an additional terminal. Restart the local backend

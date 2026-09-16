@@ -4,6 +4,31 @@ import { ELEVENLABS_CONVERSATION_TOKEN_URL } from "../../config/provider-mode.js
 
 const MAXIMUM_ELEVENLABS_RESPONSE_BYTES = 16_384;
 
+type ElevenLabsFailureCategory =
+  | "fetch_failure"
+  | "http_non_success"
+  | "request_timeout"
+  | "response_body_empty"
+  | "response_body_invalid"
+  | "response_body_oversized"
+  | "response_json_invalid"
+  | "response_schema_mismatch";
+
+type ElevenLabsResponseBodyFailureCategory = Extract<
+  ElevenLabsFailureCategory,
+  "response_body_empty" | "response_body_invalid" | "response_body_oversized"
+>;
+
+class ElevenLabsResponseBodyError extends Error {
+  readonly category: ElevenLabsResponseBodyFailureCategory;
+
+  constructor(category: ElevenLabsResponseBodyFailureCategory) {
+    super("The ElevenLabs response body could not be read safely.");
+    this.name = "ElevenLabsResponseBodyError";
+    this.category = category;
+  }
+}
+
 export type ElevenLabsConversationTokenRequest = Readonly<{
   agentId: string;
   signal?: AbortSignal;
@@ -27,14 +52,27 @@ const conversationTokenResponseSchema = z.object({
 
 export class ElevenLabsRequestError extends Error {
   readonly code = "PROVIDER_UNAVAILABLE";
+  readonly category: ElevenLabsFailureCategory;
+  readonly durationMs: number;
+  readonly httpStatus?: number;
   readonly retryable = true;
 
-  constructor(cause?: unknown) {
+  constructor(input: {
+    category: ElevenLabsFailureCategory;
+    cause?: unknown;
+    durationMs: number;
+    httpStatus?: number;
+  }) {
     super(
       "The secure voice connection is temporarily unavailable. Try again.",
-      cause === undefined ? undefined : { cause },
+      input.cause === undefined ? undefined : { cause: input.cause },
     );
     this.name = "ElevenLabsRequestError";
+    this.category = input.category;
+    this.durationMs = input.durationMs;
+    if (input.httpStatus !== undefined) {
+      this.httpStatus = input.httpStatus;
+    }
   }
 }
 
@@ -46,10 +84,10 @@ async function readBoundedResponse(response: Response): Promise<string> {
     Number(declaredLength) > MAXIMUM_ELEVENLABS_RESPONSE_BYTES
   ) {
     await response.body?.cancel();
-    throw new ElevenLabsRequestError();
+    throw new ElevenLabsResponseBodyError("response_body_oversized");
   }
   if (response.body === null) {
-    throw new ElevenLabsRequestError();
+    throw new ElevenLabsResponseBodyError("response_body_empty");
   }
 
   const reader = response.body.getReader();
@@ -60,12 +98,12 @@ async function readBoundedResponse(response: Response): Promise<string> {
     while (!streamResult.done) {
       const chunk: unknown = streamResult.value;
       if (!(chunk instanceof Uint8Array)) {
-        throw new ElevenLabsRequestError();
+        throw new ElevenLabsResponseBodyError("response_body_invalid");
       }
       byteCount += chunk.byteLength;
       if (byteCount > MAXIMUM_ELEVENLABS_RESPONSE_BYTES) {
         await reader.cancel();
-        throw new ElevenLabsRequestError();
+        throw new ElevenLabsResponseBodyError("response_body_oversized");
       }
       chunks.push(chunk);
       streamResult = await reader.read();
@@ -80,12 +118,20 @@ async function readBoundedResponse(response: Response): Promise<string> {
     body.set(chunk, offset);
     offset += chunk.byteLength;
   }
-  return new TextDecoder().decode(body);
+  if (byteCount === 0) {
+    throw new ElevenLabsResponseBodyError("response_body_empty");
+  }
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(body);
+  } catch {
+    throw new ElevenLabsResponseBodyError("response_body_invalid");
+  }
 }
 
 export type ElevenLabsHttpClientOptions = Readonly<{
   agentId: string;
   apiKey: string;
+  clockMilliseconds?: () => number;
   fetchImplementation?: typeof fetch;
   timeoutMs: number;
   tokenUrl?: string;
@@ -94,6 +140,7 @@ export type ElevenLabsHttpClientOptions = Readonly<{
 export class ElevenLabsHttpClient implements ElevenLabsClient {
   readonly #agentId: string;
   readonly #apiKey: string;
+  readonly #clockMilliseconds: () => number;
   readonly #fetchImplementation: typeof fetch;
   readonly #timeoutMs: number;
   readonly #tokenUrl: string;
@@ -107,9 +154,29 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
     }
     this.#agentId = options.agentId;
     this.#apiKey = options.apiKey;
+    this.#clockMilliseconds = options.clockMilliseconds ?? Date.now;
     this.#fetchImplementation = options.fetchImplementation ?? fetch;
     this.#timeoutMs = options.timeoutMs;
     this.#tokenUrl = options.tokenUrl ?? ELEVENLABS_CONVERSATION_TOKEN_URL;
+  }
+
+  #createRequestError(
+    category: ElevenLabsFailureCategory,
+    startedAt: number,
+    input: { cause?: unknown; httpStatus?: number } = {},
+  ): ElevenLabsRequestError {
+    const elapsed = this.#clockMilliseconds() - startedAt;
+    const durationMs = Number.isFinite(elapsed)
+      ? Math.max(0, Math.round(elapsed))
+      : 0;
+    return new ElevenLabsRequestError({
+      category,
+      durationMs,
+      ...(input.cause === undefined ? {} : { cause: input.cause }),
+      ...(input.httpStatus === undefined
+        ? {}
+        : { httpStatus: input.httpStatus }),
+    });
   }
 
   async createConversationToken(
@@ -123,6 +190,7 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
     const requestSignal = request.signal
       ? AbortSignal.any([request.signal, timeoutSignal])
       : timeoutSignal;
+    const startedAt = this.#clockMilliseconds();
     const tokenUrl = new URL(this.#tokenUrl);
     tokenUrl.searchParams.set("agent_id", this.#agentId);
 
@@ -137,11 +205,25 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
       });
       if (!response.ok) {
         await response.body?.cancel();
-        throw new ElevenLabsRequestError();
+        throw this.#createRequestError("http_non_success", startedAt, {
+          httpStatus: response.status,
+        });
       }
-      const parsed = conversationTokenResponseSchema.parse(
-        JSON.parse(await readBoundedResponse(response)),
-      );
+      const responseText = await readBoundedResponse(response);
+      let responseJson: unknown;
+      try {
+        responseJson = JSON.parse(responseText);
+      } catch (error: unknown) {
+        throw this.#createRequestError("response_json_invalid", startedAt, {
+          cause: error,
+        });
+      }
+      const parsedResult =
+        conversationTokenResponseSchema.safeParse(responseJson);
+      if (!parsedResult.success) {
+        throw this.#createRequestError("response_schema_mismatch", startedAt);
+      }
+      const parsed = parsedResult.data;
       return {
         conversationId: parsed.conversation_id,
         conversationToken: parsed.token,
@@ -150,8 +232,20 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
       if (error instanceof ElevenLabsRequestError) {
         throw error;
       }
+      if (error instanceof ElevenLabsResponseBodyError) {
+        throw this.#createRequestError(error.category, startedAt, {
+          cause: error,
+        });
+      }
       request.signal?.throwIfAborted();
-      throw new ElevenLabsRequestError(error);
+      if (timeoutSignal.aborted) {
+        throw this.#createRequestError("request_timeout", startedAt, {
+          cause: error,
+        });
+      }
+      throw this.#createRequestError("fetch_failure", startedAt, {
+        cause: error,
+      });
     }
   }
 }

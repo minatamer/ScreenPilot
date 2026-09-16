@@ -224,4 +224,67 @@ describe("ElevenLabsVoiceSession", () => {
 
     expect(sdk.endSession).toHaveBeenCalledOnce();
   });
+
+  it("maps typed streaming agent text to tentative and final Pilot captions", async () => {
+    const onEvent = vi.fn<(event: VoiceSessionEvent) => void>();
+    render(<ElevenLabsVoiceSession {...props({ onEvent })} />);
+    await waitFor(() => {
+      expect(sdk.startSession).toHaveBeenCalledOnce();
+    });
+
+    emitProviderCallback("onConnect", {
+      conversationId: "conversation-014",
+    });
+    emitProviderCallback("onAgentChatResponsePart", {
+      event_id: 12,
+      text: "",
+      type: "start",
+    });
+    emitProviderCallback("onAgentChatResponsePart", {
+      event_id: 12,
+      text: "What work ",
+      type: "delta",
+    });
+    emitProviderCallback("onAgentChatResponsePart", {
+      event_id: 12,
+      text: "arrangement do you prefer?",
+      type: "delta",
+    });
+    emitProviderCallback("onAgentChatResponsePart", {
+      event_id: 12,
+      text: "",
+      type: "stop",
+    });
+    emitProviderCallback("onMessage", {
+      event_id: 12,
+      message: "What work arrangement do you prefer?",
+      role: "agent",
+      source: "ai",
+    });
+
+    expect(onEvent.mock.calls.map(([event]) => event)).toEqual([
+      { type: "connected", conversationId: "conversation-014" },
+      {
+        type: "message",
+        eventId: 12,
+        speaker: "interviewer",
+        stability: "tentative",
+        text: "What work ",
+      },
+      {
+        type: "message",
+        eventId: 12,
+        speaker: "interviewer",
+        stability: "tentative",
+        text: "What work arrangement do you prefer?",
+      },
+      {
+        type: "message",
+        eventId: 12,
+        speaker: "interviewer",
+        stability: "final",
+        text: "What work arrangement do you prefer?",
+      },
+    ]);
+  });
 });

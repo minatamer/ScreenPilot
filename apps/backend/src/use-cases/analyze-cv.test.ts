@@ -113,7 +113,7 @@ describe("analyzeCv", () => {
         cvAnalysisHash: hashInterviewGrantValue(frontend.cv),
         entryMode: "cv_assisted",
         planHash: hashInterviewGrantValue(frontend.plan),
-        planVersion: "2026-09-11.3",
+        planVersion: "2026-09-16.1",
       }),
     ).toMatchObject({ entryMode: "cv_assisted" });
   });
@@ -382,31 +382,9 @@ describe("analyzeCv", () => {
       "PROVIDER_UNAVAILABLE",
     );
 
-    const unsupportedRoleHintAnalyzer: CvAnalyzer = {
-      analyzeCv: () =>
-        Promise.resolve({
-          ...valid,
-          screeningPlan: {
-            ...valid.screeningPlan,
-            roleClarification: {
-              ...valid.screeningPlan.roleClarification,
-              cvFactIds: [],
-            },
-          },
-        }),
-    };
-    await expectUseCaseError(
-      createUseCase({ analyzer: unsupportedRoleHintAnalyzer })(
-        requestFor(cvText),
-        ANONYMOUS_SESSION_ID,
-      ),
-      "PROVIDER_UNAVAILABLE",
-    );
-
     const skillFacts = valid.normalizedCv.facts.filter(
       (fact) => fact.category === "skill",
     );
-    const skillFactIds = new Set(skillFacts.map((fact) => fact.id));
     const unsupportedExperienceLevelAnalyzer: CvAnalyzer = {
       analyzeCv: () =>
         Promise.resolve({
@@ -415,21 +393,6 @@ describe("analyzeCv", () => {
             ...valid.normalizedCv,
             experienceLevel: "experienced",
             facts: skillFacts,
-          },
-          screeningPlan: {
-            ...valid.screeningPlan,
-            topics: valid.screeningPlan.topics.map((topic) => ({
-              ...topic,
-              cvFactIds: topic.cvFactIds.filter((factId) =>
-                skillFactIds.has(factId),
-              ),
-            })),
-            roleClarification: {
-              ...valid.screeningPlan.roleClarification,
-              cvFactIds: valid.screeningPlan.roleClarification.cvFactIds.filter(
-                (factId) => skillFactIds.has(factId),
-              ),
-            },
           },
         }),
     };

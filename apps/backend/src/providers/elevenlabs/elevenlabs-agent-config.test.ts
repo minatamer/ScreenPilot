@@ -3,10 +3,12 @@ import {
   VOICE_CLIENT_TOOL_NAMES,
   VOICE_DYNAMIC_VARIABLE_KEYS,
 } from "@screenpilot/contracts/api/voice-token";
+import { VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS } from "@screenpilot/contracts/interview/client-tools";
 import { VOICE_STATIC_FILLER_MESSAGE } from "@screenpilot/contracts/interview/voice-performance-policy";
 import { describe, expect, it } from "vitest";
 
 import {
+  ELEVENLABS_END_CALL_TOOL_DESCRIPTION,
   ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
   ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING,
   SCREENPILOT_ELEVENLABS_AGENT_CONFIG,
@@ -19,10 +21,19 @@ import {
 describe("source-controlled ElevenLabs agent configuration", () => {
   it("locks the approved model, transport behavior, privacy, and duration", () => {
     expect(SCREENPILOT_ELEVENLABS_AGENT_CONFIG).toMatchObject({
-      agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr",
-      agentRevisionPolicyVersion: "sp014-connection-v1",
+      agentRevisionId: "agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4",
+      agentRevisionPolicyVersion: "sp017-2026-09-16.1",
+      clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
       conversation: {
-        clientEvents: ["vad_score"],
+        clientEvents: [
+          "audio",
+          "interruption",
+          "user_transcript",
+          "agent_response",
+          "agent_response_correction",
+          "agent_chat_response_part",
+          "vad_score",
+        ],
         firstMessage: INTERVIEWER_FIRST_MESSAGE,
         interruptionsEnabled: true,
         maxDurationSeconds: 480,
@@ -51,6 +62,13 @@ describe("source-controlled ElevenLabs agent configuration", () => {
       },
       platform: "elevenagents",
       policyVersion: VOICE_AGENT_POLICY_VERSION,
+      systemTools: {
+        endCall: {
+          description: ELEVENLABS_END_CALL_TOOL_DESCRIPTION,
+          name: "end_call",
+          type: "system",
+        },
+      },
       systemPrompt: INTERVIEWER_SYSTEM_PROMPT,
       privateAgent: true,
       privacy: { audioSaving: false, transcriptRetentionDays: 0 },
@@ -60,7 +78,7 @@ describe("source-controlled ElevenLabs agent configuration", () => {
       voiceIdEnvironmentVariable: "ELEVENLABS_VOICE_ID",
     });
     expect(ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING).toBe(160);
-    expect(ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION).not.toBe(
+    expect(ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION).toBe(
       VOICE_AGENT_POLICY_VERSION,
     );
   });

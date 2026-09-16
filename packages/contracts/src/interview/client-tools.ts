@@ -28,6 +28,23 @@ export const CLIENT_TOOL_TOPIC_STATUSES = [
 
 export const UNDECIDED_ROLE_VALUE = "Undecided" as const;
 
+type DashboardClientToolParameter = Readonly<{
+  description: string;
+  enumValues?: readonly string[];
+  maximumCharacters?: number;
+  minimumCharacters?: number;
+  required: true;
+  type: "string";
+}>;
+
+type DashboardClientToolDefinition = Readonly<{
+  description: string;
+  dynamicVariableAssignments: false;
+  parameters: Readonly<Record<string, DashboardClientToolParameter>>;
+  responseMock: false;
+  waitForResponse: true;
+}>;
+
 export function isUndecidedRoleValue(value: string): boolean {
   return value.trim().toLocaleLowerCase() === "undecided";
 }
@@ -82,6 +99,138 @@ export const voiceClientToolArgumentsSchemas = Object.freeze({
   recordCandidateQuestion: recordCandidateQuestionArgumentsSchema,
   requestFollowup: requestFollowupArgumentsSchema,
 } satisfies Readonly<Record<VoiceClientToolName, z.ZodType>>);
+
+export const VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS = Object.freeze({
+  recordInsight: {
+    description:
+      "Create or confirm one local insight from explicit evidence in the latest eligible final candidate answer. Use Candidate in conversation-first and CV + Candidate only to confirm existing CV evidence. Never send a transcript ID.",
+    dynamicVariableAssignments: false,
+    parameters: {
+      category: {
+        description:
+          "Insight category supported by the latest final candidate answer.",
+        enumValues: RECORDABLE_INSIGHT_CATEGORIES,
+        required: true,
+        type: "string",
+      },
+      label: {
+        description: "Short neutral display label, from 1 to 120 characters.",
+        maximumCharacters: 120,
+        minimumCharacters: 1,
+        required: true,
+        type: "string",
+      },
+      value: {
+        description:
+          'Explicit candidate fact or safe paraphrase, from 1 to 600 characters. preferred_name and role_preference are limited to 120 characters; use exactly "Undecided" only when the candidate explicitly remains undecided.',
+        maximumCharacters: 600,
+        minimumCharacters: 1,
+        required: true,
+        type: "string",
+      },
+      source: {
+        description:
+          "Evidence provenance. conversation-first requires Candidate. Use CV + Candidate only to confirm existing CV evidence; never create live CV-only evidence.",
+        enumValues: INSIGHT_SOURCES,
+        required: true,
+        type: "string",
+      },
+    },
+    responseMock: false,
+    waitForResponse: true,
+  },
+  correctInsight: {
+    description:
+      "Replace an existing local insight only when the latest eligible final candidate answer explicitly corrects it. Use the existing browser-provided cardId and do not duplicate the change with recordInsight.",
+    dynamicVariableAssignments: false,
+    parameters: {
+      cardId: {
+        description:
+          "Existing local insight-card identifier, from 1 to 64 characters. This is not a transcript-turn identifier.",
+        maximumCharacters: 64,
+        minimumCharacters: 1,
+        required: true,
+        type: "string",
+      },
+      value: {
+        description:
+          "Corrected neutral fact, from 1 to 600 characters. A preferred name or role preference remains limited to 120 characters.",
+        maximumCharacters: 600,
+        minimumCharacters: 1,
+        required: true,
+        type: "string",
+      },
+      reason: {
+        description:
+          "Neutral evidence-based correction reason, from 1 to 500 characters; never include a hiring judgment.",
+        maximumCharacters: 500,
+        minimumCharacters: 1,
+        required: true,
+        type: "string",
+      },
+    },
+    responseMock: false,
+    waitForResponse: true,
+  },
+  markTopic: {
+    description:
+      "Update one universal screening topic only after the latest eligible final candidate answer covers it, declines it, or genuinely leaves it needing clarification. Never infer coverage from silence.",
+    dynamicVariableAssignments: false,
+    parameters: {
+      topicKey: {
+        description: "Universal HR topic whose local progress should change.",
+        enumValues: UNIVERSAL_TOPIC_KEYS,
+        required: true,
+        type: "string",
+      },
+      status: {
+        description:
+          "Evidence-supported topic state: in progress, covered, skipped after an explicit decline, or needing clarification.",
+        enumValues: CLIENT_TOOL_TOPIC_STATUSES,
+        required: true,
+        type: "string",
+      },
+    },
+    responseMock: false,
+    waitForResponse: true,
+  },
+  recordCandidateQuestion: {
+    description:
+      "Record the latest eligible final candidate question as local evidence. Use only when the candidate actually asked the question.",
+    dynamicVariableAssignments: false,
+    parameters: {
+      question: {
+        description:
+          "Latest final candidate question, from 1 to 600 characters.",
+        maximumCharacters: 600,
+        minimumCharacters: 1,
+        required: true,
+        type: "string",
+      },
+    },
+    responseMock: false,
+    waitForResponse: true,
+  },
+  requestFollowup: {
+    description:
+      "Create a local human-follow-up item for a real unresolved contradiction, missing logistical fact, safety concern, or unsupported employer or vacancy question. Do not use it for routine gaps or hiring judgments.",
+    dynamicVariableAssignments: false,
+    parameters: {
+      reason: {
+        description:
+          "Neutral evidence-based reason for human follow-up, from 1 to 500 characters.",
+        maximumCharacters: 500,
+        minimumCharacters: 1,
+        required: true,
+        type: "string",
+      },
+    },
+    responseMock: false,
+    waitForResponse: true,
+  },
+} satisfies Readonly<
+  Record<VoiceClientToolName, DashboardClientToolDefinition>
+>);
 
 export type RecordInsightArguments = z.infer<
   typeof recordInsightArgumentsSchema

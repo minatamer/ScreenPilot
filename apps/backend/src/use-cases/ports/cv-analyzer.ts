@@ -2,12 +2,9 @@ export type CvAnalyzerInput = Readonly<{
   cvText: string;
 }>;
 
-export type CvAnalyzerResult<
-  TNormalizedCv = unknown,
-  TScreeningPlan = unknown,
-> = Readonly<{
+export type CvAnalyzerResult<TNormalizedCv = unknown> = Readonly<{
   normalizedCv: TNormalizedCv;
-  screeningPlan: TScreeningPlan;
+  appliedRepairRuleIds?: readonly string[];
   usage: Readonly<{
     cachedInputTokens: number;
     inputTokens: number;
@@ -15,9 +12,9 @@ export type CvAnalyzerResult<
   }>;
 }>;
 
-export interface CvAnalyzer<TNormalizedCv = unknown, TScreeningPlan = unknown> {
+export interface CvAnalyzer<TNormalizedCv = unknown> {
   analyzeCv(
     input: CvAnalyzerInput,
     signal?: AbortSignal,
-  ): Promise<CvAnalyzerResult<TNormalizedCv, TScreeningPlan>>;
+  ): Promise<CvAnalyzerResult<TNormalizedCv>>;
 }

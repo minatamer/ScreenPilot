@@ -17,6 +17,11 @@ import {
   createProviderAdapters,
   type ProviderAdapters,
 } from "../../providers/provider-adapters.js";
+import {
+  OpenAiRequestError,
+  OpenAiStructuredOutputError,
+} from "../../providers/openai/openai-client.js";
+import { TurnstileVerificationError } from "../../providers/turnstile/cloudflare-turnstile-verifier.js";
 import { FAKE_TURNSTILE_PASS_TOKEN } from "../../providers/turnstile/fake-turnstile-verifier.js";
 
 const ALLOWED_ORIGIN = "http://localhost:3000";
@@ -299,5 +304,210 @@ describe("POST /v1/cv/analyze", () => {
     expect(logs).not.toContain(input.cvText);
     expect(logs).not.toContain(input.turnstileToken);
     expect(logs).not.toContain("Tala Venn");
+  });
+
+  it("logs only content-safe Turnstile diagnostics without changing the API error", async () => {
+    const config = loadBackendConfig({
+      APP_ENV: "local",
+      PAID_DEMO_ENABLED: "false",
+      PROVIDER_MODE: "fake",
+    });
+    const destination = new PassThrough();
+    destination.setEncoding("utf8");
+    const logChunks: string[] = [];
+    destination.on("data", (chunk: string) => logChunks.push(chunk));
+    const providers = providerSpies();
+    const privateCause = "PRIVATE SITEVERIFY FAILURE DETAIL";
+    const verifyChallenge = vi.fn(() =>
+      Promise.reject(
+        new TurnstileVerificationError({
+          category: "response_schema_mismatch",
+          cause: new Error(privateCause),
+          durationMs: 614,
+          schemaMismatchCategory: "success",
+        }),
+      ),
+    );
+    const app = createApp({
+      clock: () => FIXED_NOW,
+      config,
+      idGenerator: randomUUID,
+      logger: createBackendLogger(config, destination),
+      providerAdapters: {
+        ...providers.adapters,
+        challengeVerifier: { verifyChallenge },
+      },
+      securitySecrets: SECURITY_SECRETS,
+    });
+    const agent = request.agent(app);
+    await agent.get("/v1/demo/bootstrap").expect(200);
+    const input = await validRequest();
+    const result = await agent
+      .post("/v1/cv/analyze")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect(503);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    const publicError = apiErrorSchema.parse(result.body).error;
+    expect(publicError).toEqual({
+      code: "TURNSTILE_UNAVAILABLE",
+      message: "Challenge verification is temporarily unavailable. Try again.",
+      requestId: publicError.requestId,
+      retryable: true,
+    });
+    const logEntries = logChunks
+      .join("")
+      .trim()
+      .split("\n")
+      .map((entry) => JSON.parse(entry) as Record<string, unknown>);
+    expect(
+      logEntries.find(
+        (entry) => entry["providerFailureCategory"] !== undefined,
+      ),
+    ).toMatchObject({
+      code: "TURNSTILE_UNAVAILABLE",
+      msg: "request_failed",
+      provider: "turnstile",
+      providerDurationMs: 614,
+      providerFailureCategory: "response_schema_mismatch",
+      providerSchemaMismatchCategory: "success",
+      requestId: publicError.requestId,
+    });
+    const logs = logChunks.join("");
+    expect(logs).not.toContain(privateCause);
+    expect(logs).not.toContain(input.cvText);
+    expect(logs).not.toContain(input.turnstileToken);
+    expect(providers.analyzeCv).not.toHaveBeenCalled();
+  });
+
+  it("logs only content-safe OpenAI diagnostics through the use-case boundary", async () => {
+    const config = loadBackendConfig({
+      APP_ENV: "local",
+      PAID_DEMO_ENABLED: "false",
+      PROVIDER_MODE: "fake",
+    });
+    const destination = new PassThrough();
+    destination.setEncoding("utf8");
+    const logChunks: string[] = [];
+    destination.on("data", (chunk: string) => logChunks.push(chunk));
+    const providers = providerSpies();
+    const privateCause = "PRIVATE OPENAI FAILURE DETAIL";
+    providers.analyzeCv.mockRejectedValueOnce(
+      new OpenAiRequestError({
+        category: "http_non_success",
+        cause: new Error(privateCause),
+        durationMs: 22_100,
+        httpStatus: 429,
+      }),
+    );
+    const app = createApp({
+      clock: () => FIXED_NOW,
+      config,
+      idGenerator: randomUUID,
+      logger: createBackendLogger(config, destination),
+      providerAdapters: providers.adapters,
+      securitySecrets: SECURITY_SECRETS,
+    });
+    const agent = request.agent(app);
+    await agent.get("/v1/demo/bootstrap").expect(200);
+    const input = await validRequest();
+    const result = await agent
+      .post("/v1/cv/analyze")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect(503);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    const publicError = apiErrorSchema.parse(result.body).error;
+    expect(publicError).toEqual({
+      code: "PROVIDER_UNAVAILABLE",
+      message: "CV analysis is temporarily unavailable. Try again.",
+      requestId: publicError.requestId,
+      retryable: true,
+    });
+    const logEntries = logChunks
+      .join("")
+      .trim()
+      .split("\n")
+      .map((entry) => JSON.parse(entry) as Record<string, unknown>);
+    expect(
+      logEntries.find((entry) => entry["provider"] === "openai"),
+    ).toMatchObject({
+      code: "PROVIDER_UNAVAILABLE",
+      msg: "request_failed",
+      provider: "openai",
+      providerDurationMs: 22_100,
+      providerFailureCategory: "http_non_success",
+      providerHttpStatus: 429,
+      requestId: publicError.requestId,
+    });
+    const logs = logChunks.join("");
+    expect(logs).not.toContain(privateCause);
+    expect(logs).not.toContain(input.cvText);
+    expect(logs).not.toContain(input.turnstileToken);
+    expect(providers.analyzeCv).toHaveBeenCalledOnce();
+  });
+
+  it("logs structured-output rule IDs and paths without generated values", async () => {
+    const config = loadBackendConfig({
+      APP_ENV: "local",
+      PAID_DEMO_ENABLED: "false",
+      PROVIDER_MODE: "fake",
+    });
+    const destination = new PassThrough();
+    destination.setEncoding("utf8");
+    const logChunks: string[] = [];
+    destination.on("data", (chunk: string) => logChunks.push(chunk));
+    const providers = providerSpies();
+    const privateGeneratedValue = "PRIVATE GENERATED PROVIDER VALUE";
+    providers.analyzeCv.mockRejectedValueOnce(
+      new OpenAiStructuredOutputError({
+        durationMs: 12_460,
+        usage: {
+          cachedInputTokens: 0,
+          inputTokens: 400,
+          outputTokens: 200,
+        },
+        validationPaths: ["cv.facts.0.category"],
+        validationRuleIds: ["schema_invalid_value"],
+      }),
+    );
+    const app = createApp({
+      clock: () => FIXED_NOW,
+      config,
+      idGenerator: randomUUID,
+      logger: createBackendLogger(config, destination),
+      providerAdapters: providers.adapters,
+      securitySecrets: SECURITY_SECRETS,
+    });
+    const agent = request.agent(app);
+    await agent.get("/v1/demo/bootstrap").expect(200);
+    const input = await validRequest();
+    await agent
+      .post("/v1/cv/analyze")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect(503);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    const logEntries = logChunks
+      .join("")
+      .trim()
+      .split("\n")
+      .map((entry) => JSON.parse(entry) as Record<string, unknown>);
+    expect(
+      logEntries.find((entry) => entry["provider"] === "openai"),
+    ).toMatchObject({
+      provider: "openai",
+      providerDurationMs: 12_460,
+      providerFailureCategory: "structured_output_invalid",
+      providerValidationPaths: ["cv.facts.0.category"],
+      providerValidationRuleIds: ["schema_invalid_value"],
+    });
+    const logs = logChunks.join("");
+    expect(logs).not.toContain(privateGeneratedValue);
+    expect(logs).not.toContain(input.cvText);
+    expect(providers.analyzeCv).toHaveBeenCalledOnce();
   });
 });

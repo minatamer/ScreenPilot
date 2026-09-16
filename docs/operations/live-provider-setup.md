@@ -145,6 +145,42 @@ itself make a network request. The fixes above make loading the populated local
 file safe in fake mode, but they do not authorize the still-unchecked live-mode
 readiness or provider tests.
 
+### Canonical local startup — no stale processes
+
+Run both long-lived applications outside any restricted execution sandbox with
+unrestricted network access. This is required for both processes, not only the
+backend: the frontend must reach the local API and provider-owned browser
+endpoints, while a live backend must reach Turnstile, OpenAI, and ElevenLabs.
+This operational exception does not apply to tests or CI, which remain
+fake-provider, paid-disabled, network-denied, and unable to spend credits.
+
+1. Stop the previous frontend and backend processes and confirm ports `3000`
+   and `3001` have no stale listeners.
+2. In terminal 1 at the repository root, run:
+
+   ```powershell
+   corepack pnpm build:backend
+   corepack pnpm start:backend:local
+   ```
+
+   The second command deliberately loads the ignored
+   `apps/backend/.env.local`; never put its values on the command line. Wait for
+   port `3001` to be listening before continuing.
+3. In terminal 2 at the repository root, run:
+
+   ```powershell
+   corepack pnpm build:frontend
+   corepack pnpm --filter @screenpilot/frontend start
+   ```
+
+   Next.js loads `apps/frontend/.env.local` automatically. Open
+   `http://localhost:3000/demo` after port `3000` is ready.
+
+For frontend editing only, `corepack pnpm dev:frontend` may replace the
+frontend build/start pair. A clean live-provider verification always uses the
+production-like build/start pair above for both apps. Restart after any backend
+build so the process cannot retain stale compiled modules or environment state.
+
 Do not place a literal value in this guide. Record only redacted evidence such
 as a key name, last four characters, creation date, expiry, permission summary,
 and where it is stored.
@@ -156,6 +192,14 @@ and where it is stored.
 The backend uses the OpenAI Responses API directly for non-voice provider work.
 The repository locks this path to `gpt-5.4-mini` with reasoning `none` and
 `store: false`. The key is never sent to ElevenLabs or to the browser.
+
+For CV analysis, one accepted user action sends exactly one evidence-only
+Structured Outputs request. The backend applies safe normalization and builds
+the universal screening plan locally; it never sends an automatic paid repair
+request. A visible Retry analysis action is a new request and requires a fresh
+Turnstile token. Provider diagnostics contain only fixed categories, validation
+rule IDs, field paths, duration, usage, and optional HTTP status—not CV text,
+generated values, response bodies, or raw causes.
 
 ### 2. Account and billing prerequisites
 
@@ -350,7 +394,7 @@ deployment action, keep the agent private and do not expose a public channel.
 Record the active version ID after the locked configuration is saved.
 
 The owner compared the saved private agent against the locked matrix and
-published Main on 2026-09-14. The verified immutable version is recorded as
+published Main on 2026-09-14. The initially verified immutable version was recorded as
 `agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr"` in the source target.
 This value came from the dashboard's version history and was not guessed from
 an agent ID.
@@ -369,7 +413,7 @@ control; do not improvise a different behavior.
 | --- | --- |
 | Product and template | ElevenAgents (`elevenagents`), one private Blank agent |
 | First message | `Hi, what's your name?` |
-| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts` at policy version `sp017-2026-09-15.1` |
+| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts` at policy version `sp017-2026-09-16.1` |
 | Language | English only |
 | Native LLM | GPT-5.4 Mini (`gpt-5.4-mini`) through ElevenLabs |
 | Reasoning | None / reasoning budget 0 |
@@ -382,8 +426,9 @@ control; do not improvise a different behavior.
 | Turn eagerness | Normal |
 | Take turn after silence | 12 seconds |
 | Interruptions | Enabled |
-| Client events | `vad_score` enabled; ScreenPilot treats scores ≥0.5 as candidate speech and uses the speaking-to-not-speaking transition as the TTFA start boundary |
-| Soft timeout | Source target `sp018-2026-09-15.1`: disabled pending deployed evidence; if measurement warrants activation, exactly 1.5 seconds, static `Mm-hm…`, one maximum per generation, no alternate/randomized messages, no LLM-generated message, and disabled before the first user message |
+| Client events | Exactly `audio`, `interruption`, `user_transcript`, `agent_response`, `agent_response_correction`, `agent_chat_response_part`, and `vad_score`; typed streaming parts drive Pilot captions, final events drive local turns, and VAD scores ≥0.5 define candidate speech |
+| System tools | Enable only **End conversation** (`end_call`) with the source-controlled completion description; every other system tool remains off |
+| Soft timeout | Source target `sp018-2026-09-16.1`: disabled pending deployed evidence; if measurement warrants activation, exactly 1.5 seconds, static `Mm-hm…`, one maximum per generation, no alternate/randomized messages, no LLM-generated message, and disabled before the first user message |
 | Maximum conversation duration | 480 seconds |
 | Transport | Private browser WebRTC with a backend-issued conversation token |
 | Save audio | Off |
@@ -471,12 +516,52 @@ Create exactly these five client tools, preserving case and spelling:
 - `recordCandidateQuestion`
 - `requestFollowup`
 
-Tool names and parameters are case-sensitive. SP-016 owns their final
-descriptions, schemas, client handlers, timeout behavior, and response behavior.
-For SP-014A, create only enough placeholder configuration to preserve the exact
-names without inventing the deferred contract. Do not create server tools,
-webhooks, code tools, MCP tools, or system tools:
+Tool names and parameters are case-sensitive. The exact dashboard descriptions,
+parameter descriptions, required flags, enums, and character bounds are
+source-controlled in
+`packages/contracts/src/interview/client-tools.ts` as
+`VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS`. They are paired with the executable
+Zod schemas and must be copied without paraphrasing.
+
+| Tool | Required parameters |
+| --- | --- |
+| `recordInsight` | `category`: string enum of the 12 `RECORDABLE_INSIGHT_CATEGORIES`; `label`: string, 1–120 characters; `value`: string, 1–600 characters with the documented 120-character identity limit; `source`: string enum `CV`, `Candidate`, `CV + Candidate` |
+| `correctInsight` | `cardId`: string, 1–64 characters; `value`: string, 1–600 characters with the documented 120-character identity limit; `reason`: string, 1–500 characters |
+| `markTopic` | `topicKey`: string enum of the 12 `UNIVERSAL_TOPIC_KEYS`; `status`: string enum `in_progress`, `covered`, `skipped`, `needs_clarification` |
+| `recordCandidateQuestion` | `question`: string, 1–600 characters |
+| `requestFollowup` | `reason`: string, 1–500 characters |
+
+For every tool:
+
+- make every listed parameter required;
+- enable **Wait for response** so the agent receives the browser handler's
+  `Applied:` or `Rejected:` result;
+- copy every character bound verbatim into its parameter description. The
+  current ElevenLabs client-tool editor exposes string type, required status,
+  description, and enum values but no separate minimum/maximum-character
+  controls. Do not invent unsupported JSON fields; ScreenPilot's matching Zod
+  schemas remain the runtime enforcement boundary for those bounds;
+- leave dynamic-variable assignments and response mocks absent; and
+- do not enable a tool-call sound or allow a tool call to bypass the normal
+  interruption policy.
+
+Client tools are workspace-level resources and each tool's **Save** action
+persists independently from an agent-branch publication. When the same tool IDs
+remain attached to Main, description or parameter edits may therefore be absent
+from the branch publish diff. Reopen and compare all five saved tools with
+`VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS` after publication before claiming
+dashboard synchronization.
+
+Do not create server tools, webhooks, code tools, MCP tools, or any system tool
+except the single built-in **End conversation** tool described below:
 [client tools](https://elevenlabs.io/docs/eleven-agents/customization/tools/client-tools).
+
+Enable **End conversation** and keep its tool name as `end_call`. Use the exact
+description from `SCREENPILOT_ELEVENLABS_AGENT_CONFIG.systemTools.endCall`.
+This is the provider-owned terminal signal after ScreenPilot's spoken close;
+the browser maps the SDK's typed agent disconnect into its existing one-time
+Review transition. Do not add phrase matching in browser code. Keep language
+detection, transfer, skip-turn, state update, DTMF, and voicemail tools off.
 
 ### 8. Advanced-settings audit
 
@@ -494,6 +579,7 @@ not applicable, or deferred to a named later ticket.
 | Channel behavior | Provider default for WebRTC; channel tuning deferred to SP-018 |
 | Languages | English only; additional languages and automatic multilingual expansion disabled |
 | Language-detection system tool | Disabled because the agent is English only |
+| End-conversation system tool | Enabled as the sole system tool, with the exact source-controlled `end_call` description |
 | LLM model | Native GPT-5.4 Mini; configured now |
 | Reasoning | None / budget 0; configured now |
 | Maximum output | 160 tokens; configured now |
@@ -516,9 +602,9 @@ not applicable, or deferred to a named later ticket.
 | Idle prompts or extra timeout messages | Provider default or off; do not add unapproved behavior |
 | Dynamic variables | Exact eight names; configured with synthetic placeholders |
 | Secret dynamic variables and overrides | None; disabled |
-| Client tools | Exact five names; detailed schema and handlers deferred to SP-016 |
-| Tool-call sounds, tool interruption, wait-for-response, and response behavior | Off or provider default; final behavior deferred to SP-016 and SP-018 |
-| Server, webhook, code, MCP, system, or integration tools | Disabled or not applicable |
+| Client tools | Exact five names, source-controlled descriptions, required parameters, enums, and bounds from `VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS` |
+| Tool-call sounds, tool interruption, wait-for-response, and response behavior | Wait for response enabled for all five so `Applied:`/`Rejected:` reaches the agent; dynamic assignments and response mocks absent; sounds off; normal interruption policy retained |
+| Server, webhook, code, MCP, or integration tools | Disabled or not applicable; no additional system tools |
 | Knowledge base / RAG | Disabled or empty |
 | Workflows, branches, sub-agents, transfer rules | Disabled or not applicable |
 | Evaluation criteria, post-call analysis, data collection, sentiment | Disabled or empty |
@@ -623,7 +709,9 @@ Before any live conversation:
 - Confirm the selected voice ID matches the environment value.
 - Confirm audio saving is off, retention is 0, backup LLM is off, and debug is
   off.
-- Confirm the exact eight dynamic variables and five client-tool names.
+- Confirm the exact eight dynamic variables and all five client-tool
+  descriptions, required parameters, enums, bounds, and Wait-for-response
+  settings.
 - Record the agent version ID and a redacted key permission summary.
 - Keep `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`.
 
@@ -798,9 +886,11 @@ state, not a payment method, account identifier, key, or billing screenshot:
   purchase, or paid overage is enabled at this stage.
 - [x] The owner reports that the `ScreenPilot local backend` user key was
   created with a 30-day expiry, a 2,500-credit quota, restricted access, only
-  `ElevenAgents: Read`, no IP allow-list, and automatic leak disabling enabled,
+  `ElevenAgents: Write`, no IP allow-list, and automatic leak disabling enabled,
   then saved as `ELEVENLABS_API_KEY` in the ignored backend environment file.
-  The key value was never shared with or read by the coding agent.
+  The key began with Read access and was raised to Write during the authorized
+  2026-09-16 token test; the key value was never shared with or read by the
+  coding agent.
 - [x] The owner reports that the existing private agent now requires signed
   authentication; all client overrides are off; initiation and post-call
   webhooks are off; the daily call limit is 5; the concurrent call limit is 1;
@@ -860,15 +950,41 @@ state, not a payment method, account identifier, key, or billing screenshot:
 - [x] The single private ScreenPilot agent is configured against the locked
   matrix; its agent and voice identifiers are populated only in the ignored
   backend environment file, and immutable version
-  `agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` is recorded in source. The existing
+  `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in source. The existing
   default agent was reused rather than creating a duplicate.
-- [ ] SP-017 policy `sp017-2026-09-15.1`, including
+- [x] SP-017 policy `sp017-2026-09-16.1`, including
   `screenpilot_known_state` and `screenpilot_remaining_seconds`, is synchronized
-  to ScreenPilot/Main and its new immutable agent revision is recorded. Until
-  this is performed,
-  source identifies `agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` with
-  `agentRevisionPolicyVersion: "sp014-connection-v1"` as the last verified
-  pre-SP-017 deployment; no Preview conversation is authorized by this item.
+  to ScreenPilot/Main; the five placeholder tools are replaced with the exact
+  source-controlled schemas and Wait-for-response behavior; and the new
+  immutable agent revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded
+  with the matching policy version. No Preview conversation is claimed by this
+  item.
+- [x] Owner-reported publication checkpoint on 2026-09-16: the publish review
+  targeted ScreenPilot/Main and showed the complete rendered SP-017 prompt
+  replacement, both added runtime variables (`screenpilot_known_state` and
+  `screenpilot_remaining_seconds`) with synthetic placeholders, and `vad_score`
+  added to the existing client-event stream. The owner then completed the
+  publish action. All five client tools had already been saved separately as
+  workspace-level resources with the source-controlled descriptions, required
+  parameters, enums, and Wait-for-response enabled, so their unchanged tool IDs
+  did not produce a branch-diff entry. Character bounds are present in parameter
+  descriptions because the current dashboard does not expose separate
+  min/max-character controls; browser Zod schemas enforce them at runtime.
+  Dynamic-variable assignments and response mocks remain absent, and system
+  tools remain disabled. The supplied
+  `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` value identifies Main's branch, not an
+  immutable published revision. The later owner-confirmed publication supplied
+  immutable revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4`, now recorded in
+  source. No Preview or live result is claimed by this checkpoint.
+- [x] Post-live-defect synchronization: add
+  `agent_chat_response_part` to the existing client-event set, enable the sole
+  built-in **End conversation** system tool with the exact source-controlled
+  description, replace the prompt with policy `sp017-2026-09-16.1`, publish
+  only Main, and record immutable revision
+  `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4`. This dashboard
+  update requires no Preview or paid conversation. The earlier publication
+  checkpoint intentionally records the pre-correction state where system tools
+  were still disabled.
 - [x] The owner created the free `ScreenPilot local live` Turnstile widget in
   Managed mode with only `localhost` authorized and pre-clearance off. No
   Cloudflare zone, Worker, proxy, WAF rule, API token, paid plan, or Spin setup
@@ -903,39 +1019,117 @@ SP-018A executes this phase before any paid CV or voice operation.
 
 - [x] Correct the SP-009 backend local-start path so it deliberately loads the
   ignored backend environment file without printing it.
-- [x] Make the SP-003/SP-012 public Turnstile site-key projection mode-aware so
-  fake mode cannot load a real widget while the backend uses fake verification.
+- [x] Make the SP-003/SP-012 public Turnstile site-key projection
+  capability-aware so fake mode and paid-disabled live mode cannot load a real
+  widget. The browser must also suppress CV, microphone, token, SDK, and WebRTC
+  controls until paid live operations are explicitly enabled.
 - [x] With `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`, targeted
   deterministic checks still pass.
-- [ ] The owner temporarily selects `PROVIDER_MODE=live` while keeping
+- [x] The owner selected `PROVIDER_MODE=live` while keeping
   `PAID_DEMO_ENABLED=false`, then confirms startup accepts only the complete
   credential group and paid routes remain disabled.
-- [ ] The owner returns to `PROVIDER_MODE=fake` after the configuration check.
-- [ ] No provider request, credit spend, microphone access, or WebRTC connection
-  occurs during this phase.
+- [x] Deterministic public-projection coverage confirms bootstrap returns
+  `providerMode: "live"`, `paidOperationsEnabled: false`, and an empty Turnstile
+  site key. The owner-visible run confirmed CV analysis is unavailable and voice
+  preflight does not render microphone or Start controls.
+- [x] Owner-visible paid-disabled UI checkpoint on 2026-09-16: with the owner-
+  confirmed `PROVIDER_MODE=live` and `PAID_DEMO_ENABLED=false`, `/demo` loaded,
+  the CV path displayed **Paused for this safety check** with a disabled **CV
+  analysis unavailable** action, and conversation-first preparation reached
+  preflight where **Voice interview is unavailable right now** replaced the
+  microphone and Start controls. This visual evidence does not by itself prove
+  the exact bootstrap payload, route-gate ordering, browser network silence, or
+  zero provider-account usage; those checks remain open below.
+- [x] Restored-session regression coverage confirms a resumable tab revalidates
+  bootstrap before any provider control becomes available; Strict Mode aborts,
+  stale responses, stage transitions, and explicit retry cannot reuse an older
+  persisted capability state to authorize a provider action.
+- [x] The owner retains exclusive control of both switches and keeps the current
+  `PROVIDER_MODE=live`, `PAID_DEMO_ENABLED=false` state until intentionally
+  opening the bounded paid window. The final post-test restoration to fake/false
+  remains required by SP-018A.
+- [x] The no-spend phase is accepted as closed by the combined backend
+  provider-spy tests, frontend fail-closed/network-denial tests, restored-session
+  tests, startup evidence, and owner-visible browser confirmation. No paid
+  capability was exposed and no provider, Turnstile, microphone, SDK, or WebRTC
+  operation was intentionally initiated.
+
+Implementation evidence on 2026-09-16: Node 24 deterministic suites passed 66
+contract, 203 backend, and 229 frontend tests. Every package test runner forces
+its isolated process to `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`
+before modules load and disables `.env.local` loading, regardless of local
+runtime settings; backend/frontend safety tests assert those values and deny
+unexpected application `fetch` calls.
+All typechecks/builds and repository lint passed. Startup-only checks observed
+ports 3001 and 3000 listening, stopped both,
+and made no HTTP request or browser interaction. The later owner-visible browser
+checkpoint confirms the intended paid-disabled CV and preflight composition.
+Together, the public-projection, provider-spy, network-denial, restored-session,
+startup, and owner-visible evidence closes Phase D without requiring another
+manual repetition of the same paid-disabled flow. This does not authorize the
+coding agent to change either switch or begin a provider operation.
 
 ### Phase E: owner-authorized live provider and dashboard checks
 
 SP-018A executes the CV-analysis and voice portions with synthetic data. The
 summary item remains deferred to SP-020/SP-021.
 
-- [ ] The owner explicitly authorizes the paid smoke test.
+- [x] The owner explicitly authorizes the paid smoke test.
 - [ ] Synthetic CV analysis makes at most one bounded direct OpenAI operation
   and is checked for cost and `store: false` behavior during SP-018A.
 - [ ] After SP-020/SP-021, synthetic summary makes at most one bounded direct
   OpenAI operation and is checked for cost and `store: false` behavior.
 - [ ] The owner verifies real Turnstile success, action and hostname validation,
   expiration, and replay rejection.
-- [ ] The owner verifies one private ElevenLabs token issuance and one WebRTC
+- [x] The owner verifies one private ElevenLabs token issuance and one WebRTC
   connection.
 - [ ] ElevenLabs audio saving, zero-day retention, version ID, usage, and cost
   evidence are manually reviewed.
 - [ ] `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake` are restored immediately
   after the bounded test.
 
+Live CV checkpoint on 2026-09-16: the owner-authorized paid run completed the
+checked-in synthetic sample's full CV-assisted preparation path through browser
+PDF extraction, real `cv_analyze` Turnstile verification, one bounded GPT-5.4
+Mini evidence operation, deterministic universal-plan construction, combined
+validation, and plan-preview rendering. The visible role suggestion and three
+evidence cards matched the source-controlled expected fixture. The composite
+usage/cost item above remains unchecked until provider-dashboard cost evidence
+is reviewed; this checkpoint does not claim voice, negative Turnstile cases,
+cleanup, or safety-switch restoration.
+
+Live voice checkpoint on 2026-09-16: one owner-triggered Start passed the real
+`voice_token` challenge, returned one successful backend token response, and
+established one private ElevenLabs WebRTC session. The content-free backend log
+recorded status `200` and a 1,054 ms route duration. The intended microphone and
+level meter were visible, the synthetic two-way CV-assisted conversation was
+intelligible, and four candidate-derived insight notes rendered. This is a
+partial pass: Pilot-side captions were absent, and a verbal agent close did not
+end the provider session or move the reducer into the existing scrubbed Review
+placeholder. Both are blocking defects; no claim is made for all runtime
+variables, both entry modes, all five tools, performance, provider cost/usage,
+cleanup, or safety-switch restoration.
+
+Deterministic voice-defect correction on 2026-09-16: Pilot-caption loss was
+traced to global numeric provider-ID deduplication. Final message identity is
+now speaker-scoped, and the bridge consumes the SDK's typed
+`onAgentChatResponsePart` stream for bounded tentative/final Pilot captions.
+Automatic completion now uses ElevenLabs' built-in `end_call` system tool and
+the SDK's typed `reason: "agent"` disconnect; browser farewell phrase matching
+is explicitly prohibited. The existing one-time agent-disconnect reducer path
+enters the scrubbed Review placeholder. Focused regression tests cover the two
+defects without a provider operation. The two live acceptance observations stay
+unchecked until a future owner-observed call happens naturally; another paid
+call is not required solely to repeat this fix.
+
+The owner confirmed the corrected Main configuration was published without a
+Preview or paid conversation. Immutable revision
+`agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in the source-controlled
+provider target with policy `sp017-2026-09-16.1`.
+
 ### Phase F: owner microphone and real-conversation checks
 
-- [ ] The owner grants microphone permission in the intended browser.
+- [x] The owner grants microphone permission in the intended browser.
 - [ ] The owner confirms the intended input-device label and responsive level
   meter, including select/retry behavior.
 - [ ] The owner confirms the first message is audible and candidate speech is

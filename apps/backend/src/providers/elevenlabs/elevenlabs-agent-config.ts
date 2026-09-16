@@ -4,6 +4,7 @@ import {
   VOICE_CLIENT_TOOL_NAMES,
   VOICE_DYNAMIC_VARIABLE_KEYS,
 } from "@screenpilot/contracts/api/voice-token";
+import { VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS } from "@screenpilot/contracts/interview/client-tools";
 import {
   VOICE_MAX_FILLERS_PER_TURN,
   VOICE_STATIC_FILLER_MESSAGE,
@@ -16,18 +17,29 @@ import {
   INTERVIEWER_SYSTEM_PROMPT,
 } from "../../ai/prompts/interviewer-prompt.js";
 
-export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp018-2026-09-15.1";
+export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp018-2026-09-16.1";
 export const ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING = 160;
+export const ELEVENLABS_END_CALL_TOOL_DESCRIPTION =
+  "End the conversation immediately after ScreenPilot's brief closing sentence when screening is complete, the final candidate-question opportunity is resolved or declined, or the candidate asks to stop. Never wait for another user turn after closing.";
 export const ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION =
-  "sp014-connection-v1";
+  "sp017-2026-09-16.1";
 
 export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   agentConfigVersion: ELEVENLABS_AGENT_CONFIG_VERSION,
-  agentRevisionId: "agtvrsn_3001m2fxwb6ce0nva1gweerevkqr",
+  agentRevisionId: "agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4",
   agentRevisionPolicyVersion: ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
   clientTools: VOICE_CLIENT_TOOL_NAMES,
+  clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
   conversation: {
-    clientEvents: ["vad_score"],
+    clientEvents: [
+      "audio",
+      "interruption",
+      "user_transcript",
+      "agent_response",
+      "agent_response_correction",
+      "agent_chat_response_part",
+      "vad_score",
+    ],
     firstMessage: INTERVIEWER_FIRST_MESSAGE,
     interruptionsEnabled: true,
     maxDurationSeconds: PUBLIC_RUNTIME_LIMITS.callSeconds,
@@ -57,6 +69,13 @@ export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   },
   platform: LOCKED_PROVIDER_SETTINGS.elevenLabsAgentPlatform,
   policyVersion: VOICE_AGENT_POLICY_VERSION,
+  systemTools: {
+    endCall: {
+      description: ELEVENLABS_END_CALL_TOOL_DESCRIPTION,
+      name: "end_call",
+      type: "system",
+    },
+  },
   systemPrompt: INTERVIEWER_SYSTEM_PROMPT,
   privateAgent: true,
   privacy: {

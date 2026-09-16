@@ -9,6 +9,7 @@ import type {
   SessionFailure,
   SessionRestoreNotice,
 } from "@/features/session/demo-session.types";
+import { ProviderOperationsUnavailable } from "@/features/session/provider-operations-unavailable";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
@@ -36,6 +37,7 @@ type CvStageProps = Readonly<{
   onPrepared: (response: AnalyzeCvResponse) => void;
   onRetry: () => void;
   onReturnToChoices: () => void;
+  providerOperationsEnabled: boolean;
   requestIdFactory?: () => string;
   restoreNotice?: SessionRestoreNotice | undefined;
   runtimeConfig: PublicRuntimeConfig;
@@ -49,7 +51,22 @@ function formattedFileSize(size: number): string {
   return `${(size / (1_024 * 1_024)).toFixed(2)} MB`;
 }
 
-export function CvStage({
+export function CvStage(props: CvStageProps) {
+  if (!props.providerOperationsEnabled) {
+    return (
+      <ProviderOperationsUnavailable
+        actionLabel="Change starting option"
+        description="External actions are disabled for this safety check. No CV challenge or analysis request has started."
+        onAction={props.onReturnToChoices}
+        title="CV analysis is unavailable right now."
+      />
+    );
+  }
+
+  return <EnabledCvStage {...props} />;
+}
+
+function EnabledCvStage({
   analyze,
   executeChallenge,
   failure,
@@ -198,6 +215,7 @@ export function CvStage({
 
       {state.status === "analyzing" ? (
         <Card
+          aria-busy="true"
           aria-live="polite"
           className="sp-cv-analysis"
           data-phase={state.phase}
@@ -205,7 +223,14 @@ export function CvStage({
         >
           <AnalysisVisual />
           <div className="sp-cv-analysis__copy">
-            <p className="sp-cv-ready__status">CV analysis in progress</p>
+            <div className="sp-cv-analysis__status">
+              <span
+                aria-hidden="true"
+                className="sp-cv-analysis__spinner"
+                data-testid="cv-analysis-spinner"
+              />
+              <p className="sp-cv-ready__status">CV analysis in progress</p>
+            </div>
             <h2>
               {state.phase === "checking"
                 ? "Checking CV details"

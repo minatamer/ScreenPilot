@@ -1,10 +1,12 @@
 import {
+  act,
   fireEvent,
   render,
   screen,
   waitFor,
   within,
 } from "@testing-library/react";
+import { StrictMode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { FAKE_TURNSTILE_TOKEN } from "@/features/abuse-protection/turnstile-client";
@@ -12,12 +14,17 @@ import {
   extractPdfText,
   type ExtractedPdfText,
 } from "@/features/cv/extract-pdf-text";
-import { DemoSessionProvider } from "@/features/session/demo-session-provider";
+import {
+  DemoSessionContext,
+  DemoSessionProvider,
+} from "@/features/session/demo-session-provider";
+import { createInitialDemoSessionState } from "@/features/session/demo-session.reducer";
 import { SESSION_STORAGE_KEY } from "@/features/session/session-storage";
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
 import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
 
 import { DemoExperience } from "./demo-experience";
+import { useDemoBootstrap } from "./use-demo-bootstrap";
 
 const router = vi.hoisted(() => ({
   push: vi.fn(),
@@ -55,6 +62,31 @@ function jsonResponse(body: unknown, status = 200): Response {
   });
 }
 
+function deferred<Value>() {
+  let resolvePromise: ((value: Value | PromiseLike<Value>) => void) | undefined;
+  let rejectPromise: ((reason?: unknown) => void) | undefined;
+  const promise = new Promise<Value>((resolve, reject) => {
+    resolvePromise = resolve;
+    rejectPromise = reject;
+  });
+
+  return {
+    promise,
+    reject(reason?: unknown) {
+      if (!rejectPromise) {
+        throw new Error("Deferred promise is not initialized.");
+      }
+      rejectPromise(reason);
+    },
+    resolve(value: Value) {
+      if (!resolvePromise) {
+        throw new Error("Deferred promise is not initialized.");
+      }
+      resolvePromise(value);
+    },
+  };
+}
+
 function requestUrl(input: Parameters<typeof fetch>[0]): string {
   if (typeof input === "string") {
     return input;
@@ -84,13 +116,32 @@ function bootstrapResponse() {
       pdfBytes: 5_242_880,
       pdfPages: 8,
     },
-    paidVoiceEnabled: false,
+    paidOperationsEnabled: false,
     privacyNoticeVersion: "2026-09-11",
+    providerMode: "fake",
     demoContext: {
       kind: "role_agnostic_first_stage_hr_screen",
       roleAvailability: "candidate_selected_synthetic_session_vacancy",
       employerFactsAvailable: false,
     },
+  } as const;
+}
+
+function paidDisabledLiveBootstrapResponse() {
+  return {
+    ...bootstrapResponse(),
+    providerMode: "live",
+  } as const;
+}
+
+function paidEnabledLiveBootstrapResponse() {
+  return {
+    ...paidDisabledLiveBootstrapResponse(),
+    abuseProtection: {
+      ...paidDisabledLiveBootstrapResponse().abuseProtection,
+      siteKey: "stale-public-site-key",
+    },
+    paidOperationsEnabled: true,
   } as const;
 }
 
@@ -102,6 +153,39 @@ function preparedResponse() {
   };
 }
 
+function storeRestoredPreflightSession(): void {
+  const staleBootstrap = paidEnabledLiveBootstrapResponse();
+  const { demoContext, ...runtimeConfig } = staleBootstrap;
+  const preparation = preparedResponse();
+  const now = Date.now();
+  window.sessionStorage.setItem(
+    SESSION_STORAGE_KEY,
+    JSON.stringify({
+      schemaVersion: 3,
+      stage: "preflight",
+      entryMode: "conversation_first",
+      createdAt: new Date(now - 1_000).toISOString(),
+      expiresAt: new Date(now + 60 * 60 * 1_000).toISOString(),
+      runtimeConfig,
+      demoContext,
+      screeningPlan: preparation.plan,
+      interviewGrant: preparation.interviewGrant,
+      interviewGrantExpiresAt: preparation.expiresAt,
+      transcript: [],
+      insights: [],
+      topicProgress: [],
+    }),
+  );
+}
+
+function RestoredBootstrapStatus() {
+  const { runtimeConfigStatus } = useDemoBootstrap();
+
+  return (
+    <output aria-label="Runtime config status">{runtimeConfigStatus}</output>
+  );
+}
+
 describe("DemoExperience preparation paths", () => {
   beforeEach(() => {
     vi.mocked(extractPdfText).mockReset();
@@ -111,6 +195,264 @@ describe("DemoExperience preparation paths", () => {
     vi.unstubAllGlobals();
     vi.clearAllMocks();
     window.sessionStorage.clear();
+  });
+
+  it("keeps live paid-disabled CV and voice actions unavailable", async () => {
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      if (url === "/v1/demo/bootstrap") {
+        return Promise.resolve(
+          jsonResponse(paidDisabledLiveBootstrapResponse()),
+        );
+      }
+      if (url === "/v1/interview/prepare") {
+        return Promise.resolve(jsonResponse(preparedResponse()));
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "CV analysis unavailable" }),
+    ).toBeDisabled();
+    expect(screen.queryByLabelText("Choose PDF file")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Start without a CV" }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Voice interview is unavailable right now.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Check microphone" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Start interview" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading the private voice client.")).toBeNull();
+    expect(
+      document.querySelector('script[src*="challenges.cloudflare.com"]'),
+    ).toBeNull();
+    expect(browserFetch.mock.calls.map(([input]) => requestUrl(input))).toEqual(
+      ["/v1/demo/bootstrap", "/v1/interview/prepare"],
+    );
+  });
+
+  it("replaces a Strict Mode-aborted restore refresh and ignores its stale response", async () => {
+    const staleBootstrap = paidEnabledLiveBootstrapResponse();
+    const { demoContext, ...runtimeConfig } = staleBootstrap;
+    const preparation = preparedResponse();
+    const dispatch = vi.fn();
+    const staleResponse = deferred<Response>();
+    const freshResponse = deferred<Response>();
+    const requestSignals: AbortSignal[] = [];
+    const browserFetch = vi.fn<typeof fetch>((input, options) => {
+      const url = requestUrl(input);
+      if (url !== "/v1/demo/bootstrap") {
+        return Promise.reject(new Error(`Unexpected request: ${url}`));
+      }
+      if (!(options?.signal instanceof AbortSignal)) {
+        return Promise.reject(new Error("Expected a bootstrap abort signal."));
+      }
+      requestSignals.push(options.signal);
+      return requestSignals.length === 1
+        ? staleResponse.promise
+        : freshResponse.promise;
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <StrictMode>
+        <DemoSessionContext.Provider
+          value={{
+            state: {
+              ...createInitialDemoSessionState(),
+              hydrationStatus: "ready",
+              stage: "preflight",
+              entryMode: "conversation_first",
+              createdAt: new Date(Date.now() - 1_000).toISOString(),
+              expiresAt: new Date(Date.now() + 60 * 60 * 1_000).toISOString(),
+              runtimeConfig,
+              demoContext,
+              screeningPlan: preparation.plan,
+              interviewGrant: preparation.interviewGrant,
+              interviewGrantExpiresAt: preparation.expiresAt,
+            },
+            dispatch,
+            completeInterview: vi.fn(),
+            clearSession: vi.fn(),
+            startOver: vi.fn(),
+            storageStatus: "idle",
+          }}
+        >
+          <RestoredBootstrapStatus />
+        </DemoSessionContext.Provider>
+      </StrictMode>,
+    );
+
+    await waitFor(() => {
+      expect(browserFetch).toHaveBeenCalledTimes(2);
+    });
+    expect(requestSignals[0]?.aborted).toBe(true);
+    expect(requestSignals[1]?.aborted).toBe(false);
+    expect(screen.getByLabelText("Runtime config status")).toHaveTextContent(
+      "pending",
+    );
+
+    await act(async () => {
+      staleResponse.resolve(jsonResponse(paidEnabledLiveBootstrapResponse()));
+      await Promise.resolve();
+    });
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Runtime config status")).toHaveTextContent(
+      "pending",
+    );
+
+    await act(async () => {
+      freshResponse.resolve(jsonResponse(bootstrapResponse()));
+      await Promise.resolve();
+    });
+    expect(
+      await screen.findByLabelText("Runtime config status"),
+    ).toHaveTextContent("ready");
+    expect(dispatch).toHaveBeenCalledOnce();
+    expect(dispatch).toHaveBeenCalledWith({
+      type: "RUNTIME_CONFIG_REFRESHED",
+      demoContext: bootstrapResponse().demoContext,
+      runtimeConfig: {
+        abuseProtection: bootstrapResponse().abuseProtection,
+        limits: bootstrapResponse().limits,
+        paidOperationsEnabled: false,
+        privacyNoticeVersion: bootstrapResponse().privacyNoticeVersion,
+        providerMode: "fake",
+      },
+    });
+  });
+
+  it("keeps one restore refresh authoritative across a stage transition", async () => {
+    storeRestoredPreflightSession();
+    const currentResponse = deferred<Response>();
+    let requestSignal: AbortSignal | undefined;
+    const browserFetch = vi.fn<typeof fetch>((input, options) => {
+      const url = requestUrl(input);
+      if (url !== "/v1/demo/bootstrap") {
+        return Promise.reject(new Error(`Unexpected request: ${url}`));
+      }
+      requestSignal = options?.signal ?? undefined;
+      return currentResponse.promise;
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Voice interview is unavailable right now.",
+      }),
+    ).toBeVisible();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Change starting option" }),
+    );
+    expect(
+      await screen.findByRole("heading", {
+        name: "Bring a CV, or start with a conversation.",
+      }),
+    ).toBeVisible();
+    expect(requestSignal?.aborted).toBe(false);
+    expect(browserFetch).toHaveBeenCalledOnce();
+
+    await act(async () => {
+      currentResponse.resolve(jsonResponse(bootstrapResponse()));
+      await Promise.resolve();
+    });
+    expect(
+      await screen.findByRole("button", { name: "Use a CV" }),
+    ).toBeEnabled();
+    expect(browserFetch).toHaveBeenCalledOnce();
+  });
+
+  it("keeps a failed restore refresh closed until an explicit paid-disabled retry succeeds", async () => {
+    storeRestoredPreflightSession();
+    const retryResponse = deferred<Response>();
+    let bootstrapRequestCount = 0;
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      if (url !== "/v1/demo/bootstrap") {
+        return Promise.reject(new Error(`Unexpected request: ${url}`));
+      }
+      bootstrapRequestCount += 1;
+      return bootstrapRequestCount === 1
+        ? Promise.reject(new TypeError("Synthetic bootstrap outage."))
+        : retryResponse.promise;
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "The safety check could not refresh",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "Voice interview is unavailable right now.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Check microphone" }),
+    ).not.toBeInTheDocument();
+    expect(
+      document.querySelector('script[src*="challenges.cloudflare.com"]'),
+    ).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry safety check" }));
+    await waitFor(() => {
+      expect(browserFetch).toHaveBeenCalledTimes(2);
+    });
+    expect(
+      screen.queryByRole("heading", {
+        name: "The safety check could not refresh",
+      }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Check microphone" }),
+    ).not.toBeInTheDocument();
+
+    await act(async () => {
+      retryResponse.resolve(jsonResponse(paidDisabledLiveBootstrapResponse()));
+      await Promise.resolve();
+    });
+    expect(
+      screen.getByRole("heading", {
+        name: "Voice interview is unavailable right now.",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Check microphone" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Loading the private voice client.")).toBeNull();
+    expect(
+      document.querySelector('script[src*="challenges.cloudflare.com"]'),
+    ).toBeNull();
+    expect(browserFetch.mock.calls.map(([input]) => requestUrl(input))).toEqual(
+      ["/v1/demo/bootstrap", "/v1/demo/bootstrap"],
+    );
   });
 
   it("uses only bootstrap and deterministic preparation before shared preflight", async () => {

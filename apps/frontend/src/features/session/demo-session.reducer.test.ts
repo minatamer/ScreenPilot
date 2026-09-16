@@ -34,8 +34,9 @@ const runtimeConfig: PublicRuntimeConfig = {
     pdfBytes: 5_242_880,
     pdfPages: 8,
   },
-  paidVoiceEnabled: false,
+  paidOperationsEnabled: false,
   privacyNoticeVersion: "2026-09-11",
+  providerMode: "fake",
 };
 
 const demoContext: PublicRoleNeutralDemoContext = {

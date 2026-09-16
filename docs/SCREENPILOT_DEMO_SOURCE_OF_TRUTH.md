@@ -70,7 +70,7 @@ Do not add infrastructure merely because a production recruiting product would n
 | Live transcription | ElevenLabs Scribe v2 Realtime | Used for provisional/final speech text; it is not the interviewer LLM. |
 | Live TTS | ElevenLabs Flash v2.5 | Produces the interviewer voice. |
 | Interview intelligence | OpenAI GPT-5.4 mini through ElevenAgents | Writes the next question and invokes allow-listed browser client tools; reasoning effort is `none`. |
-| Preparation and summary intelligence | OpenAI GPT-5.4 mini for CV-assisted normalization/tailored planning and both-mode post-call summaries; server fixture for conversation-first preparation | Conversation-first avoids a pre-call model request; every direct OpenAI response uses `store: false`. |
+| Preparation and summary intelligence | OpenAI GPT-5.4 mini for bounded CV evidence extraction and both-mode post-call summaries; deterministic server-owned plan builders for both preparation modes | CV analysis performs one evidence-only model operation and builds the universal plan locally; conversation-first avoids a pre-call model request; every direct OpenAI response uses `store: false`. |
 | Recording | Disabled | ScreenPilot does not offer audio replay or save microphone audio. |
 | Provider retention | ElevenLabs audio saving off and transcript retention set to `0`; OpenAI Responses use `store: false` | Providers still process data; the UI must not promise that no third party ever handles it. |
 | Live insight persistence | Browser client tools only | Cards update locally; no webhook tool or server write occurs. |
@@ -255,10 +255,10 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Input state:** extracted text under the SP-010A role-neutral request contract; the public Turnstile integration is configured and ready.
 - **Visible behavior:** execute a managed Turnstile check immediately before the paid analysis request, showing an inline interaction only when Turnstile requires it; then show animated but honest analysis progress. No fabricated facts appear before the response validates.
 - **API:** `POST /v1/cv/analyze` with the bounded CV payload and one memory-only `turnstileToken`.
-- **Backend behavior:** verifies the single-use Turnstile token with Siteverify before calling OpenAI, treats CV text as untrusted data, calls GPT-5.4 mini once with structured output and `store: false`, validates the result, and returns normalized facts, evidence excerpts, an optional fact-linked non-binding bounded role suggestion, universal HR screening topics, and a short-lived signed `interviewGrant`.
+- **Backend behavior:** verifies the single-use Turnstile token with Siteverify before calling OpenAI, treats CV text as untrusted data, calls GPT-5.4 mini exactly once for bounded evidence-only structured output with `store: false`, applies safe deterministic normalization locally, builds the universal HR plan in source-controlled application code, validates the combined result, and returns normalized facts, evidence excerpts, an optional fact-linked non-binding bounded role suggestion, universal HR screening topics, and a short-lived signed `interviewGrant`.
 - **Browser behavior:** stores only the validated structured result and grant in `sessionStorage`; raw PDF and full extracted text are removed.
 - **Output state:** `plan_preview`.
-- **Failure:** an invalid, expired, duplicated, or temporarily unavailable Turnstile result offers a safe retry without calling OpenAI. Invalid model output is retried once inside the request; otherwise show Retry analysis while retaining only the extracted text in component memory.
+- **Failure:** an invalid, expired, duplicated, or temporarily unavailable Turnstile result offers a safe retry without calling OpenAI. A refusal, incomplete response, structurally invalid output, or response with no usable grounded facts fails after that one operation with content-safe rule IDs and field paths; no automatic paid repair occurs. Safe partial evidence is retained after local deduplication, grounding, reference, role-sync, and experience-classification repair. A user-selected Retry analysis is a new action with a fresh Turnstile token while the extracted text remains only in component memory.
 
 #### Stage 5A — plan preview
 
@@ -296,7 +296,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Visible behavior:** one **Start interview** button aligned at the lower right. Clicking it executes Turnstile in managed, interaction-only mode; a legitimate visitor normally moves directly into the connecting animation, while any required interaction appears inline without leaving preflight. This infrastructure detail is not narrated in candidate-facing copy.
 - **API:** `POST /v1/voice/token` verifies the signed grant and one memory-only `turnstileToken`, applies backend/provider capacity gates, and returns a short-lived private conversation token.
 - **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, role-neutral synthetic-demo disclosure, the universal screening plan, optional normalized CV/fact-linked role suggestion, candidate-stated role or undecided state, and registered client tools. All candidate content is bounded and delimited as untrusted data.
-- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. The real SDK bridge is lazy-loaded only when backend bootstrap exposes `paidVoiceEnabled: true`; a fake token can never reach ElevenLabs WebRTC.
+- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Bootstrap exposes the non-secret provider mode and paid-operation state. Fake mode keeps its deterministic CV/voice paths, while live mode exposes CV, microphone, Turnstile, token, SDK, and WebRTC controls only when `paidOperationsEnabled: true`. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
 - **Output state:** `interviewing` only after the SDK reports connected.
 - **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider. A terminal SDK error, rejected conversation identifier, or unrecoverable interruption ends the provider session once and unmounts the session bridge before recovery UI remains available.
 
@@ -305,9 +305,9 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Input state:** connected ElevenLabs conversation.
 - **Visible behavior:** agent voice area, listening/speaking status, elapsed time, live captions, insight board, mute, and End interview.
 - **Conversation behavior:** follows the entry-mode opening in Section 8, learns/confirms the candidate's role wording or undecided state, then covers high-level context/experience, collaboration preferences, motivation, location/work-arrangement preferences, availability, compensation expectations, relevant candidate-stated English use, candidate questions, human follow-ups, and close. CV claims are verified only when needed in CV-assisted mode; conversation-first discovers facts from answers. The selected profession never changes the interview into a technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
-- **Client events:** the installed ElevenLabs conversational SDK exposes completed user/agent messages through typed `onMessage` callbacks and no typed interim-transcript callback. Those completed messages update captions and create immutable local turns. The provider-neutral adapter retains a typed tentative-event boundary for deterministic fixtures or a future typed provider capability; tentative events remain caption-only. Never infer interim text by parsing untyped `onDebug` or `onIncomingEvent` payloads.
+- **Client events:** completed user/agent messages arrive through typed `onMessage` callbacks. The installed SDK also exposes typed `onAgentChatResponsePart` start/delta/stop callbacks; accumulated agent deltas update a tentative Pilot caption and the stop/final callback creates one final local turn. Final-provider deduplication is keyed by speaker plus event ID because the two speakers may reuse a numeric provider ID. Never infer text by parsing untyped `onDebug` or `onIncomingEvent` payloads.
 - **Client tools:** add/correct structured insight cards and topic status in browser state.
-- **Output state:** `ending` on agent completion, user End action, time limit, or unrecoverable disconnect.
+- **Output state:** `ending` on agent completion, user End action, time limit, or unrecoverable disconnect. Agent completion is a provider-owned terminal signal: after its brief spoken close the policy calls ElevenLabs' sole enabled `end_call` system tool, the SDK emits typed disconnect reason `agent`, and the existing reducer advances exactly once. Never infer completion by matching farewell wording.
 - **Failure:** brief reconnect attempt only while SDK supports it; otherwise preserve local transcript and proceed to partial review.
 
 #### Stage 9 — end and summarize
@@ -573,6 +573,14 @@ requestFollowup({ reason });
 ```
 
 All five are ElevenLabs client tools executed in the browser. `recordInsight` owns typed `preferred_name` and `role_preference` categories; when either is recorded or corrected, the reducer synchronizes `DemoSession.preferredName` or `DemoSession.rolePreference` from the same evidence. A conversation-first preferred name requires a final candidate turn. The agent does not invent browser turn IDs: after schema validation, the client handler attaches the latest eligible final candidate turn ID from local state. A fact-changing call with no eligible final candidate turn is rejected. Tool output never writes to the backend.
+
+`packages/contracts/src/interview/client-tools.ts` is also the exact dashboard
+deployment contract. `VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS` owns the five
+tool descriptions, parameter descriptions, required flags, enum values,
+character bounds, disabled dynamic-variable assignments, absent response
+mocks, and enabled Wait-for-response behavior. The dashboard copy must not be
+paraphrased: every tool waits for the browser's `Applied:` or `Rejected:` result
+before the agent continues.
 
 ---
 
@@ -1078,6 +1086,10 @@ observation.
 - Cloudflare Turnstile Free verification immediately before every provider-backed paid request: CV analysis, voice-token issuance, and post-call summary.
 - Best-effort bounded backend route/source limits on bootstrap, conversation preparation, CV analysis, voice token, and summary; counters are memory-only per instance and are not represented as durable identity enforcement.
 - Backend-configured paid-demo kill switch.
+- The same kill switch suppresses the public Turnstile site key and removes the
+  browser's CV, microphone, challenge, token, SDK, and WebRTC entry points while
+  live paid operations are disabled. Server-side route gates remain the final
+  authority.
 - Cloud Run maximum-instance/concurrency bounds plus provider account spend alerts/caps provide the hard financial ceiling that memory-only limits cannot guarantee.
 - Bounded prompt/context/output sizes.
 - Paid smoke tests never run in default CI.
@@ -1125,7 +1137,7 @@ type NormalizedCv = {
 };
 ```
 
-`displayName` and every other candidate value must be supported by the uploaded CV or be `null`/unclear. `suggestedRole`, when present, contains one bounded role label backed by at least one validated `cvFactId`; it is a non-binding conversation suggestion, not an application or vacancy claim. Application-claim validation is role-agnostic and covers `apply` inflections with `for`, `to`, or `as`; active or passive submitted-application wording with or without an explicit target; and candidate/applicant/possessive application wording such as a pending application for an arbitrary role. Assessment validation rejects general suitability evaluation, role/profession/domain knowledge tests, quizzes, exercises or assessments, and simulation/scenario/roleplay assessment directions. These checks remain context-sensitive: ordinary grounded CV evidence may mention a portfolio, competency, domain knowledge, past work/training simulations, applied machine learning, or software/role-based application terminology without being treated as an assessment or application claim. The model must not substitute sample-fixture values. No field may contain personality, emotion, honesty, accent, protected-trait inference, employability, score, hiring recommendation, portfolio review, competency testing, roleplay, professional-knowledge assessment, or profession-specific suitability assessment.
+The provider contract contains only this bounded evidence object; it does not ask the model to build a screening plan. The exact strict JSON Schema sent to OpenAI is generated from the same structural Zod schema that parses the response, with every field required and every object closed to unknown properties. `displayName` and every other candidate value must be supported by the uploaded CV or be `null`/unclear. `suggestedRole`, when present, contains one bounded role label backed by at least one validated `cvFactId`; it is a non-binding conversation suggestion, not an application or vacancy claim. Application-claim validation is role-agnostic and covers `apply` inflections with `for`, `to`, or `as`; active or passive submitted-application wording with or without an explicit target; and candidate/applicant/possessive application wording such as a pending application for an arbitrary role. Assessment validation rejects general suitability evaluation, role/profession/domain knowledge tests, quizzes, exercises or assessments, and simulation/scenario/roleplay assessment directions. These checks remain context-sensitive: ordinary grounded CV evidence may mention a portfolio, competency, domain knowledge, past work/training simulations, applied machine learning, or software/role-based application terminology without being treated as an assessment or application claim. The model must not substitute sample-fixture values. No field may contain personality, emotion, honesty, accent, protected-trait inference, employability, score, hiring recommendation, portfolio review, competency testing, roleplay, professional-knowledge assessment, or profession-specific suitability assessment.
 
 ### Screening-plan output
 
@@ -1167,6 +1179,12 @@ type ScreeningPlan = {
 ```
 
 The backend validates fact references and strips unsupported fields before returning it. Both prepared plan types expose each of the 12 universal `ScreeningFieldKey` topics exactly once. `fixedTopics` identifies the 11 ordinary required topics; `clarifications_and_followups` remains in `topics` with `required: false` so genuine contradictions, missing logistics, or unsupported employer/vacancy questions can be retained without forcing an unnecessary question. `openingIntent`, `intent`, `coverageCriteria`, and `followupDirections` describe what the conversation should learn and possible directions for a grounded follow-up; they never contain a sentence the live agent must recite. Every topic is universal rather than tied to a profession. `roleClarification.suggestedRole` is only a grounded CV-assisted conversation hint; it is always `null` for conversation-first, never mutates `DemoSession.rolePreference`, and cannot claim the candidate applied to a role or that a real vacancy exists.
+
+### Deterministic CV-assisted plan
+
+After the one evidence-extraction response passes structural parsing, the backend performs content-safe local normalization. It trims and normalizes bounded strings, keeps the first unique grounded fact ID, removes ungrounded or unsafe facts, clears invalid name/headline pairs, removes ungrounded ambiguity excerpts, downgrades unsupported experience classifications to `unclear`, and filters role references to known education, experience, project, or skill facts. These repairs never invent candidate content and never trigger another provider operation. At least one safe grounded fact is required; otherwise the route fails closed.
+
+The backend then constructs the complete CV-assisted `ScreeningPlan` deterministically from source-controlled universal topic templates. Experience evidence selects only the `graduate`, `experienced`, or `mixed` ordering branch; profession labels never add or remove topics. Topic fact links are selected by fixed category mappings, the role clarification is synchronized from the normalized evidence object, dangling references are impossible by construction, and the final combined CV/plan contract is validated before grant issuance. This separates provider structure validation, candidate-evidence semantics, and application-owned interview policy.
 
 ### Deterministic conversation-first plan
 
@@ -1697,6 +1715,14 @@ This is the authoritative credential contract for every implementation ticket. T
 - Commit only the two application-scoped `.env.example` templates. Every provider credential or user-owned identifier that has not been supplied is represented as an exactly blank assignment such as `OPENAI_API_KEY=`—never a plausible key, `your-key-here`, a value copied from the current machine, or a generated credential.
 - The user creates `apps/backend/.env.local` and `apps/frontend/.env.local` from the examples and fills them manually. Coding agents must not inspect unrelated shell profiles, credential stores, browser sessions, or provider dashboards to populate these files.
 - Default local development and all default CI use `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`. Fake mode accepts blank provider fields and makes no provider network call. `PROVIDER_MODE=live` and production validate the complete credential group at startup/readiness and fail closed; there is no silent live-to-fake fallback.
+- Every Vitest package configuration explicitly overrides its isolated test
+  process to `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false` before test
+  modules load, and disables Vite environment-directory loading so `.env.local`
+  is not imported by a test runner. This override is independent of the parent
+  shell and any already-running backend. Automated tests never attach to that
+  backend or inherit its live/paid setting; synthetic in-memory live
+  configurations are allowed only for validation and fail-closed assertions
+  while the test network boundary remains denied.
 - A ticket may complete its code, fake tests, and documentation while live values are blank. Its paid/live verification remains unchecked with the explicit blocker **waiting for user-supplied credentials and permission for paid testing**.
 - No usable OpenAI, ElevenLabs, Turnstile, signing, cookie, Google, registrar, or provider credential is ever committed. A browser-visible site key or non-secret deployment identifier may be deployed, but it remains blank in repository templates until the user selects the actual account/project/widget.
 - Provider secrets are backend-only. They never use a `NEXT_PUBLIC_` prefix, enter the frontend environment, pass through bootstrap, appear in browser storage, or become Docker build arguments.
@@ -1824,16 +1850,24 @@ The trace also found two activation defects, corrected together on 2026-09-14.
 First, the backend loader reads `process.env`, so a local-only start command now
 uses Node's built-in `--env-file` support to load
 `apps/backend/.env.local`; the production start path remains host-injected and
-file-independent. Second, fake mode still selects fake adapters and now also
-projects an empty public Turnstile site key even when the local file contains a
-real one. Live mode alone projects the configured site key. This keeps the
-populated local file compatible with deterministic, network-free fake mode.
+file-independent. Second, fake mode still selects fake adapters and projects an
+empty public Turnstile site key even when the local file contains a real one.
+Live mode also projects an empty site key while `PAID_DEMO_ENABLED=false`; only
+explicitly enabled paid live mode exposes it. This keeps the populated local
+file compatible with deterministic, network-free fake mode and makes the
+no-spend live-wiring phase fail closed in the browser as well as the backend.
 
 `PAID_DEMO_ENABLED=false` rejects the currently implemented CV-analysis and
-voice-token use cases before provider calls. `PROVIDER_MODE=live` validates and
-constructs the live clients but does not itself make a provider request. This
-audit and correction read no ignored credential file and made no live or paid
-call.
+voice-token use cases before provider calls. In live mode it also disables CV
+selection/analysis, microphone permission, both Turnstile actions, voice-token
+issuance, the ElevenLabs SDK bridge, and WebRTC in the browser. A restored tab
+cannot reuse an older capability state: provider controls stay disabled until a
+fresh bootstrap succeeds. Only the active refresh generation may apply a
+response; cleanup-aborted and stale responses are ignored, safe stage changes
+do not replace the current request, and a failed refresh requires an explicit
+fresh retry. `PROVIDER_MODE=live` validates and constructs the live clients but
+does not itself make a provider request. This audit and correction read no
+ignored credential file and made no live or paid call.
 
 The direct `OPENAI_API_KEY` is **not** copied into ElevenLabs for this plan. ElevenLabs documents that its natively integrated OpenAI models use ElevenLabs' internal provider credentials; [Custom LLM/BYOK](https://elevenlabs.io/docs/eleven-agents/customization/llm/custom-llm) is a separate path and remains out of scope. The app's OpenAI key is only for the backend CV-analysis and summary calls.
 
@@ -2171,14 +2205,15 @@ type BootstrapResponse = {
     siteKey: string;
     appearance: "interaction-only";
   };
-  paidVoiceEnabled: boolean;
+  providerMode: "fake" | "live";
+  paidOperationsEnabled: boolean;
   privacyNoticeVersion: string;
 };
 ```
 
 ### `POST /v1/cv/analyze`
 
-Purpose: normalize locally extracted CV text and generate the screening plan in one model request.
+Purpose: extract bounded evidence from locally extracted CV text in one model operation, normalize it locally, and generate the universal screening plan deterministically in application code.
 
 Controls:
 
@@ -2190,7 +2225,10 @@ Controls:
 - No vacancy catalogue or browser-supplied employer facts; any suggested role is bounded, evidence-linked, and non-binding.
 - Prompt-injection-safe developer instructions.
 - GPT-5.4 mini allow-list, reasoning `none`, structured output, `store: false`.
-- One internal retry for invalid structured output, not for every provider error.
+- The OpenAI schema is evidence-only and identical to the runtime structural parser; semantic policy is not hidden inside the provider JSON Schema.
+- Exactly one OpenAI operation per accepted user action. There is no automatic provider repair/retry; an explicit browser retry is a new action and requires a fresh Turnstile token.
+- Deterministic local normalization may remove unsafe, ungrounded, duplicate, or dangling evidence while preserving a usable safe subset. The server-owned plan builder synchronizes the role hint and universal topics without another model call.
+- Content-safe diagnostics record fixed validation rule IDs and field paths, never generated values, provider bodies, CV content, or raw causes.
 
 Returns `NormalizedCv`, `ScreeningPlan` with an optional non-binding evidence-linked role suggestion, `interviewGrant`, expiration, and coarse usage/cost metadata.
 
@@ -2287,7 +2325,7 @@ Required stable codes include `INVALID_ENTRY_MODE`, `INVALID_CV_TEXT`, `INTERVIE
 | Speech recognition | ElevenLabs Scribe v2 Realtime | Voice to provisional/final text. |
 | Live interviewer | OpenAI GPT-5.4 mini via ElevenAgents | Next utterance and allow-listed client-tool decisions. |
 | Speech synthesis | ElevenLabs Flash v2.5 | Text to streamed agent voice. |
-| CV analysis/tailored plan and summary | OpenAI GPT-5.4 mini via backend Responses API | Structured, stateless intelligence; CV analysis runs only in CV-assisted mode, while summary runs for both. |
+| CV evidence analysis and summary | OpenAI GPT-5.4 mini via backend Responses API | Structured, stateless intelligence; CV evidence extraction runs only in CV-assisted mode and the plan is built locally, while summary runs for both. |
 | Conversation-first plan | ScreenPilot backend fixture | Deterministic universal HR discovery/coverage with no profession-specific branch; no pre-call model charge. |
 | UI/session state | ScreenPilot frontend | Local transcript, insights, stages, and review. |
 
@@ -2950,7 +2988,8 @@ Perfect durable one-interview-per-person enforcement is impossible without persi
 | Browser extraction failure | Keep file in memory for retry; never upload the PDF as a hidden fallback. |
 | CV analysis timeout | Retry once manually; keep extracted text only while the component is mounted. |
 | Conversation-first preparation failure | Retry the deterministic endpoint or return to entry choices; never display AI-analysis copy or require a CV. |
-| Invalid AI schema | One bounded backend repair/retry, then a typed error. |
+| Invalid CV-evidence schema | Fail after the single paid operation with a typed, content-safe rule ID/path diagnostic; never issue an automatic paid repair. A user-selected retry is a new Turnstile-authorized action. |
+| Partially invalid CV evidence | Apply only source-controlled local removal, deduplication, grounding, reference, role-sync, and experience-classification repairs; continue when at least one safe grounded fact remains and never invent replacement content. |
 | Microphone denied | Show steps to retry and preserve the selected entry mode plus its prepared plan. |
 | Turnstile failure | Preserve the safe current state, reset only the action-specific widget/token, and retry without repeating valid preparation or contacting a paid provider prematurely. |
 | Rate/capacity limit | Explain which paid demo action is temporarily unavailable and when retry is allowed; do not call a provider or fake a result. |
@@ -3019,7 +3058,7 @@ Feature tickets add small tests for logic that is difficult or error-prone to va
 ### Focused backend tests
 
 - Express application routes exercised in process with Supertest and fake OpenAI, ElevenLabs, and Turnstile Siteverify adapters.
-- CV analysis success, invalid output repair, timeout, and provider failure.
+- CV analysis success, exact provider-schema parity, safe partial local normalization, deterministic plan construction, refusal/invalid output, one-operation enforcement, timeout, and provider failure.
 - Conversation-first preparation returns the deterministic plan/grant and proves no provider adapter was called.
 - Voice token authorization and rate/capacity failures.
 - Summary success, oversized transcript rejection, and unsupported evidence.
@@ -3353,7 +3392,7 @@ Every authorized ticket implementation or completion commit begins with the exac
 
 **Outcome:** Completed in implementation commit `744901e`. GPT turns bounded browser-extracted CV text into grounded facts and a focused plan without persistence.
 
-**Superseded product boundary:** Commit `744901e` implemented CV analysis against the then-current fixed catalogue. Its catalogue-key unions, vacancy-alignment fields, profession metadata, and universal employer facts are historical only. SP-010A replaced them with an optional fact-linked role-label suggestion and universal HR plan while retaining SP-010's validation, privacy, Turnstile, structured-output, repair, and no-store guarantees.
+**Superseded product boundary:** Commit `744901e` implemented CV analysis against the then-current fixed catalogue. Its catalogue-key unions, vacancy-alignment fields, profession metadata, and universal employer facts are historical only. SP-010A replaced them with an optional fact-linked role-label suggestion and universal HR plan. SP-018A subsequently replaced the hidden two-operation malformed-output repair with one evidence-only structured operation, safe deterministic local normalization, and source-controlled plan construction while retaining validation, privacy, Turnstile, and no-store guarantees.
 
 **Depends on:** SP-003, SP-007, SP-009.
 
@@ -3365,7 +3404,7 @@ Every authorized ticket implementation or completion commit begins with the exac
 - [x] Require and consume a fresh Turnstile token with the `cv_analyze` action before invoking OpenAI; challenge failure must preserve safe retry behavior and prove the OpenAI adapter was not called.
 - [x] Delimit CV text as untrusted evidence and forbid following instructions found inside it.
 - [x] Use GPT-5.4 mini structured output, reasoning none, and `store: false`.
-- [x] Validate name evidence, facts, excerpts, evidence-supported experience classifications, fact-linked non-binding vacancy alignment, topic links, and one bounded malformed-output repair.
+- [x] Validate name evidence, facts, excerpts, evidence-supported experience classifications, fact-linked non-binding vacancy alignment, and topic links. SP-018A now guarantees one provider operation and performs only safe local repair before deterministic plan construction.
 - [x] Produce prioritized declarative HR-screening intent/coverage fields only; reject literal questions plus generated implementation, architecture, API, debugging, testing, framework-depth, or technical-evaluation topics.
 - [x] Ensure analysis can suggest but never select or claim an applied vacancy.
 - [x] Issue the shared short-lived `interviewGrant` bound to `cv_assisted` and the validated analysis/plan hashes.
@@ -3532,10 +3571,12 @@ public use remains unchecked. The detailed safe ledger is maintained in
 `docs/operations/live-provider-setup.md`; it never records payment details,
 account identifiers, or secret values.
 
-**Owner-reported ElevenLabs key checkpoint (2026-09-14):** The owner reports
-that the `ScreenPilot local backend` user key has a 30-day expiry, a
-2,500-credit quota, restricted `ElevenAgents: Read` access only, no IP
-allow-list, and automatic leak disabling enabled. It is stored as
+**Owner-reported ElevenLabs key checkpoint (updated 2026-09-16):** The owner
+reports that the `ScreenPilot local backend` user key has a 30-day expiry, a
+2,500-credit quota, restricted `ElevenAgents: Write` access only, no IP
+allow-list, and automatic leak disabling enabled. The key was initially created
+with Read access on 2026-09-14 and raised to Write for the authorized live token
+test. It is stored as
 `ELEVENLABS_API_KEY` solely in the ignored backend environment file; the coding
 agent never read its value. The owner also reports that the existing private
 agent now uses signed authentication with every client override off; no
@@ -3588,8 +3629,9 @@ selected Bella voice ID was copied into `ELEVENLABS_VOICE_ID` in that same
 ignored file without sharing it with the coding agent. The reviewed
 configuration is now published to ScreenPilot/Main, owner-verified as Live at
 100% with no pending Draft marker. Immutable version
-`agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` is recorded as `agentRevisionId` in the
-source-controlled provider target. No Preview conversation has run.
+`agtvrsn_3001m2fxwb6ce0nva1gweerevkqr` was recorded for that checkpoint as
+`agentRevisionId` in the source-controlled provider target. No Preview
+conversation has run.
 
 **Owner-reported Turnstile checkpoint (2026-09-14):** The owner created the
 free `ScreenPilot local live` widget in Managed mode, restricted it to only
@@ -3668,6 +3710,28 @@ suppresses its real Turnstile site key from public bootstrap.
 - [ ] Test malformed calls, duplicates, corrections, and reduced motion.
 
 **Implementation evidence (2026-09-15):** strict shared schemas and one browser dispatcher now own the five client tools, attach only the latest eligible final candidate turn, preserve correction/evidence history, enforce mode/source and inference boundaries, and synchronize preferred name plus role preference through the canonical session reducer. One shared contract-level validator protects every model-authored visible insight field and CV-analysis description while leaving verbatim candidate questions untouched, and the frontend tool map is exhaustively keyed by the voice-token contract. Later same-value evidence preserves an existing Corrected state/reason, and the allow-listed persisted projection rejects name or role state that diverges from its insight card. CV-assisted mode seeds only validated facts; conversation-first remains Candidate-only and intentionally empty before final speech. The active interview uses one exhaustive category metadata map to compose the same local Insight Board data into a stable aligned order inside a height-matched, vertically scrollable desktop panel, a tablet grid, and a phone swipe rail with a restrained connector motif, evidence disclosure, correction/clarification/source states, topic progress, bounded animation, and a reduced-motion fallback. Deterministic Node 24 verification passes 3 contract files/59 tests, 12 focused frontend files/90 tests, both TypeScript projects, targeted lint/formatting, diff checks, and credential-free production builds for contracts/backend/frontend. A clean fake-mode runtime smoke check returned `200` for `/`, `/demo`, and direct/proxied bootstrap requests on `localhost:3000`/`3001`. Credential-free browser inspection passed at 390 × 844, 768 × 1024, 1120 × 800, 1440 × 900, and 1920 × 1080; published-agent callbacks remain credential-gated, and a real owner/browser reduced-motion preference-mode check remains pending.
+
+**SP-018A deployment preparation (2026-09-16):** the previously deferred
+dashboard descriptions and response behavior are now explicit beside the Zod
+schemas in `VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS`. The owner reports
+publishing the complete rendered SP-017 prompt, all eight synthetic variable
+defaults, and the `vad_score` client event to private Main after separately
+saving the five workspace-level client-tool contracts. The supplied
+`agtbrch_8401m2ar2j6nfshaa5wg31f0j654` identifies that branch, not an immutable
+agent version. Dashboard synchronization and provider callback verification
+remain unchecked until the published configuration and tools are re-read and
+the new `agtvrsn_…` identifier is recorded; no Preview or live provider path
+was used to establish this source contract. The no-spend boundary now withholds the
+public site key and removes CV/microphone/challenge/token/SDK/WebRTC controls in
+paid-disabled live mode; restored tabs must refresh bootstrap before provider
+controls can return. Network-denied Node 24 verification passed 66 contract,
+203 backend, and 229 frontend tests plus every typecheck/build and repository
+lint. All three Vitest configurations force their isolated processes to fake,
+paid-disabled mode before test modules load, independent of local runtime
+settings. Restored-session regressions cover Strict Mode abort/replacement, safe
+stage changes during refresh, stale-response rejection, and explicit retry into
+paid-disabled live mode. Startup-only checks opened and stopped the backend/frontend listeners
+without an HTTP request, browser load, provider operation, or paid action.
 
 **Future exploration note — replayable evidence audio (not demo scope):** After the core demo is complete, evaluate whether a card could offer a short candidate-audio excerpt linked to the same evidence turn. The current implementation must continue to use transcript evidence only, keep recording and ElevenLabs `Store Call Audio` disabled, and must not add a Play-audio control. Research both browser-local capture alongside WebRTC and the newly identified ElevenLabs-managed recording option. For ElevenLabs-managed audio, determine from current first-party documentation and a synthetic test how recordings are stored and protected, who can access them, plan/cost/residency implications, how retention `0`/scheduled deletion/ZRM/manual deletion interact, whether recordings can be retrieved through the dashboard or API and with which scope/format/URL lifetime, and whether recording/turn/segment/word or transcript start-and-end timestamps provide reliable interruption-safe evidence alignment. Any later proposal requires a separate owner-approved privacy/scope decision covering explicit recording consent and disclosure, candidate access/deletion handling, bounded excerpt authorization, mobile support, playback feedback/echo prevention, and guaranteed cleanup. Real candidate recording is prohibited until that decision and its product copy, tests, and operational controls are approved. This exploration is not an SP-016 acceptance criterion and cannot delay the ticket. The operational research checklist lives in `docs/operations/live-provider-setup.md`.
 
@@ -3768,12 +3832,63 @@ claimed by this verification.
 **Checklist:**
 
 - [ ] Complete repository, secret, dashboard, revision, retention, account, cap, and synthetic-data preconditions before a paid operation.
-- [ ] Boot with `PROVIDER_MODE=live` and `PAID_DEMO_ENABLED=false`; prove paid routes fail closed and no provider, Turnstile, microphone, or WebRTC operation occurs.
-- [ ] With explicit owner authorization, temporarily enable the paid gate and verify real Turnstile plus one bounded OpenAI CV-analysis operation.
+- [x] Boot with `PROVIDER_MODE=live` and `PAID_DEMO_ENABLED=false`; prove paid routes fail closed and no provider, Turnstile, microphone, or WebRTC operation occurs.
+- [x] With explicit owner authorization, temporarily enable the paid gate and verify real Turnstile plus one bounded OpenAI CV-analysis operation.
 - [ ] Verify private ElevenLabs token issuance, WebRTC voice, all eight runtime variables, both entry modes, adaptive HR behavior, five client tools, controls, and cleanup with synthetic data.
 - [ ] Collect the real 50-turn and 50-preparation content-free performance sample; treat every documented blocking threshold as a failure.
 - [ ] Review provider revision, retention, usage, and actual cost; immediately restore paid false/fake mode and record sanitized evidence only.
 - [ ] Do not call live summary, use real-person data, invite external testers, or claim public/release readiness.
+
+**No-spend gate evidence (2026-09-16):** deterministic public-bootstrap
+projection, backend provider-spy ordering, frontend fail-closed/network-denial
+coverage, restored-session request ownership, and startup checks were combined
+with the owner's live/paid-disabled browser confirmation. `/demo` loaded, CV
+analysis remained unavailable, conversation-first preparation reached preflight,
+and microphone/Start controls were absent. Phase D is accepted without another
+manual repetition. The owner retains exclusive control of both switches; no
+paid-provider test or permission to set `PAID_DEMO_ENABLED=true` is implied.
+
+**Live CV path evidence (2026-09-16):** after the owner opened the bounded paid
+window, the checked-in synthetic sample PDF completed browser extraction, a real
+`cv_analyze` Turnstile challenge, one bounded GPT-5.4 Mini evidence operation,
+deterministic server-side universal-plan construction, combined contract
+validation, and browser plan-preview rendering. The visible role suggestion and
+three evidence cards were cross-checked against the source-controlled expected
+fixture. This verifies only the live paid CV-assisted preparation slice; voice,
+negative Turnstile cases, provider usage/cost review, cleanup, and final safety-
+switch restoration remain open under SP-018A.
+
+**Live voice path evidence (2026-09-16):** one owner-triggered Start passed the
+real `voice_token` gate, produced one successful private token response, and
+established one ElevenLabs WebRTC session. The content-free backend request log
+recorded `POST /v1/voice/token` status `200` in 1,054 ms. The intended
+microphone/level meter, intelligible two-way synthetic CV-assisted audio, and
+four candidate-derived insight notes were observed. This is not full voice
+acceptance: candidate captions rendered but completed Pilot messages did not,
+and the agent's verbal close neither ended the provider session nor dispatched
+the canonical transition into the existing scrubbed Review placeholder. Those
+two defects, the second entry mode, complete client-tool/runtime-variable
+coverage, live performance samples, cleanup, provider usage/cost, and final
+safety-switch restoration remain open under SP-018A.
+
+**Live voice defect correction (2026-09-16, deterministic/no-spend):** the
+missing Pilot captions were traced to provider-event deduplication that used a
+global numeric ID even though local turn identity was already speaker-scoped.
+The normalizer now keys final provider messages by speaker plus event ID, and
+the live adapter additionally consumes ElevenLabs' typed
+`onAgentChatResponsePart` stream for bounded tentative-to-final Pilot captions.
+The closing defect is fixed through a provider-owned terminal contract rather
+than farewell-text matching: policy version `sp017-2026-09-16.1` calls the sole
+enabled built-in `end_call` system tool after its brief close, and the existing
+typed `reason: "agent"` disconnect path ends once and enters the scrubbed Review
+placeholder. Deterministic regressions cover shared cross-speaker event IDs,
+streamed Pilot text/finalization, duplicate final suppression, and agent-owned
+completion. No additional paid call is required for this correction record.
+The owner confirmed that the updated Main configuration was published without
+Preview at immutable revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4`, which is
+recorded in source with policy `sp017-2026-09-16.1`. Live behavior acceptance
+remains unchecked until a future owner-observed conversation supplies
+independent evidence.
 
 ### Milestone 3 — same-session review
 

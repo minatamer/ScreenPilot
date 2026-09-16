@@ -1,13 +1,5 @@
-import {
-  FIXED_TOPIC_KEYS,
-  UNIVERSAL_TOPIC_KEYS,
-} from "@screenpilot/contracts/interview/screening-plan";
 import { roleLabelSchema } from "@screenpilot/contracts/interview/demo-context";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
-import type {
-  ScreeningPlan,
-  ScreeningTopic,
-} from "@screenpilot/contracts/interview/screening-plan";
 
 import type {
   CvAnalyzer,
@@ -35,13 +27,13 @@ const fakeInterviewSummary: InterviewSummaryProviderResult<FakeInterviewSummary>
 
 export class FakeOpenAi
   implements
-    CvAnalyzer<NormalizedCv, ScreeningPlan>,
+    CvAnalyzer<NormalizedCv>,
     InterviewSummarizer<unknown, FakeInterviewSummary>
 {
   analyzeCv(
     input: CvAnalyzerInput,
     signal?: AbortSignal,
-  ): Promise<CvAnalyzerResult<NormalizedCv, ScreeningPlan>> {
+  ): Promise<CvAnalyzerResult<NormalizedCv>> {
     return Promise.resolve().then(() => {
       signal?.throwIfAborted();
       return createFakeCvAnalysis(input.cvText);
@@ -95,62 +87,6 @@ function extractDisplayName(cvText: string): string | null {
           /^[A-Z][A-Za-z'-]+(?: [A-Z][A-Za-z'-]+){1,2}$/.test(line),
       ) ?? null
   );
-}
-
-function topicTitle(key: (typeof UNIVERSAL_TOPIC_KEYS)[number]): string {
-  return key
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-}
-
-function createUniversalTopic(
-  key: (typeof UNIVERSAL_TOPIC_KEYS)[number],
-  cvFactIds: readonly string[],
-): ScreeningTopic {
-  const groundedFactIds = [
-    "current_context",
-    "relevant_experience_summary",
-  ].includes(key)
-    ? [...cvFactIds]
-    : [];
-  if (key === "clarifications_and_followups") {
-    return {
-      coverageCriteria: [
-        "A genuine unresolved item is recorded, or this topic remains not applicable.",
-      ],
-      cvFactIds: [],
-      followupDirections: [
-        "Retain unsupported employer or vacancy questions for human follow-up without inventing an answer.",
-        "Do not create a clarification merely to fill this optional topic.",
-      ],
-      intent:
-        "Record only a genuine contradiction, missing logistical detail, or unsupported employer or vacancy question requiring human follow-up.",
-      key,
-      reason:
-        "Human follow-up remains available without forcing another interview question.",
-      required: false,
-      title: topicTitle(key),
-    };
-  }
-
-  return {
-    coverageCriteria: [
-      `Candidate-confirmed evidence covers ${topicTitle(key).toLowerCase()}, or the candidate declines.`,
-    ],
-    cvFactIds: groundedFactIds,
-    followupDirections: [
-      "Use CV evidence to avoid repetition, then preserve any candidate correction.",
-    ],
-    intent: `Confirm the candidate's ${topicTitle(key).toLowerCase()} at a concise recruiter-screening level.`,
-    key,
-    reason:
-      groundedFactIds.length > 0
-        ? "The CV supplies provisional context that the candidate may confirm or correct."
-        : "This HR field still requires candidate confirmation or an explicit decline.",
-    required: true,
-    title: topicTitle(key),
-  };
 }
 
 function extractSuggestedRole(
@@ -210,9 +146,7 @@ function extractSuggestedRole(
   return null;
 }
 
-function createFakeCvAnalysis(
-  cvText: string,
-): CvAnalyzerResult<NormalizedCv, ScreeningPlan> {
+function createFakeCvAnalysis(cvText: string): CvAnalyzerResult<NormalizedCv> {
   const trustedText = trustedFixtureText(cvText);
   const displayName = extractDisplayName(trustedText);
   const experienceEvidence =
@@ -255,17 +189,6 @@ function createFakeCvAnalysis(
     });
   }
 
-  const factIds = facts.map((fact) => fact.id);
-  const branch =
-    experienceLevel === "graduate"
-      ? "graduate"
-      : experienceLevel === "experienced"
-        ? "experienced"
-        : "mixed";
-  const topics = UNIVERSAL_TOPIC_KEYS.map((key) =>
-    createUniversalTopic(key, factIds),
-  );
-
   return {
     normalizedCv: {
       ambiguities: [
@@ -286,23 +209,6 @@ function createFakeCvAnalysis(
               cvFactIds: ["role-direction-1"],
               label: suggestedRole.label,
             },
-    },
-    screeningPlan: {
-      branch,
-      entryMode: "cv_assisted",
-      fixedTopics: [...FIXED_TOPIC_KEYS],
-      openingIntent:
-        "Confirm the candidate's preferred name and requested role, then clarify only meaningful CV gaps.",
-      topics,
-      roleClarification: {
-        cvFactIds: suggestedRole === null ? [] : ["role-direction-1"],
-        reason:
-          suggestedRole === null
-            ? "The CV does not support one clear role hint; the candidate may provide a role label or remain undecided."
-            : "CV evidence provides a non-binding role direction that the candidate must confirm or correct.",
-        requiresCandidateConfirmation: true,
-        suggestedRole: suggestedRole?.label ?? null,
-      },
     },
     usage: {
       cachedInputTokens: 0,
