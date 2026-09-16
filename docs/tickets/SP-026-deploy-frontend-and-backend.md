@@ -2,7 +2,7 @@
 
 Status: Required release boundary  
 Milestone: Milestone 5 — deploy  
-Last synchronized: 2026-08-31  
+Last synchronized: 2026-09-16<br>
 Depends on: SP-022, SP-023, SP-025  
 Suggested commit: `SP-026: publish the stateless ScreenPilot demo`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -29,6 +29,12 @@ Extend the one GitHub Actions pipeline to build and deploy independently version
 - Create one free production Turnstile widget restricted to canonical apex/`www`; public site key is browser-safe, secret stays in Google Secret Manager.
 - SP-026 is the release boundary. SP-027 portfolio packaging and SP-028 extended automation are optional.
 - At low traffic, the two scale-to-zero services, Hosting traffic, five active secret versions, and small image repository may remain inside provider free quotas. Billing must still be enabled where required, and Artifact Registry storage/domain renewal are standing costs rather than per-flow AI charges.
+
+### Domain research checkpoint (2026-09-16)
+
+- `tryscreenpilot.com` is the preferred standalone candidate. The [ICANN registration-data lookup](https://lookup.icann.org/) returned no registry or registrar RDAP record when checked on 2026-09-16, but this does not reserve the name or guarantee availability; the owner's registrar checkout is authoritative immediately before manual purchase.
+- Current planning cost is approximately **$11–$15 USD per year before local tax, card conversion, or foreign-exchange fees**. [Porkbun's published pricing](https://porkbun.com/products/domains) listed a standard `.com` at **$11.08** for registration and renewal, while [Cloudflare Registrar](https://www.cloudflare.com/domains/) states that supported domains are sold and renewed at registry/ICANN cost without markup. Confirm that the exact name is non-premium and compare the final renewal total at both registrars before purchasing.
+- Do not set `PUBLIC_WEB_DOMAIN` or treat the candidate as final until the owner completes the purchase. Firebase-managed HTTPS and Cloudflare Turnstile remain separate **$0** services; registrar credentials, payment details, recovery codes, and account ownership information must not enter the repository.
 
 ## Manual production credential and identifier gate
 
