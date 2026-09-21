@@ -124,6 +124,15 @@ owner-approved SP-018A scope decision on 2026-09-21:
   validation, and non-destructive quota handling. Human 320 px/200% zoom and
   screen-reader approval remain in the later responsive/live gates; SP-020 is
   eligible now.
+- SP-020 is implemented and deterministically verified without credentials or
+  a provider call. The strict stateless summary route now validates the signed
+  grant, plan hash, provenance, local evidence graph, bounds, paid state,
+  injected admission decisions,
+  and fresh summary Turnstile action before GPT; its structured adapter permits
+  only one repair, returns content-free token usage, and fails closed on
+  unsupported citations or forbidden assessment/employer claims. SP-022 still
+  owns the production route/source rate and capacity limiter; the first
+  controlled real summary remains deferred to SP-021A and SP-021 is eligible.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

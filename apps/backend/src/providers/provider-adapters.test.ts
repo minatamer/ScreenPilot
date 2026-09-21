@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { loadBackendConfig } from "../config/load-backend-config.js";
-import {
-  createProviderAdapters,
-  MissingLiveProviderAdaptersError,
-} from "./provider-adapters.js";
+import { CONVERSATION_FIRST_PLAN } from "../demo/conversation-first-plan.js";
+import { createProviderAdapters } from "./provider-adapters.js";
+import type { InterviewSummaryInput } from "../use-cases/ports/interview-summarizer.js";
 import { OpenAiCvAnalyzer } from "./openai/openai-cv-analyzer.js";
+import { OpenAiInterviewSummarizer } from "./openai/openai-interview-summarizer.js";
 import { CloudflareTurnstileVerifier } from "./turnstile/cloudflare-turnstile-verifier.js";
 import { FAKE_TURNSTILE_PASS_TOKEN } from "./turnstile/fake-turnstile-verifier.js";
 import { ElevenLabsVoiceTokenProvider } from "./elevenlabs/elevenlabs-token-provider.js";
@@ -31,6 +31,36 @@ const liveConfig = loadBackendConfig({
   TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
 });
 
+const summaryInput: InterviewSummaryInput = {
+  entryMode: "conversation_first",
+  plan: CONVERSATION_FIRST_PLAN,
+  transcript: [
+    {
+      id: "turn-1",
+      sequence: 1,
+      speaker: "candidate",
+      status: "final",
+      text: "I am still deciding which direction to pursue.",
+      occurredAt: "2026-09-12T09:01:00.000Z",
+    },
+  ],
+  insights: [
+    {
+      id: "insight-role",
+      category: "role_preference",
+      label: "Requested role",
+      value: "Undecided",
+      source: "Candidate",
+      status: "confirmed",
+      evidenceTurnIds: ["turn-1"],
+      cvFactIds: [],
+      createdAt: "2026-09-12T09:01:00.000Z",
+      updatedAt: "2026-09-12T09:01:00.000Z",
+    },
+  ],
+  topicProgress: [],
+};
+
 describe("provider adapter composition", () => {
   it("exercises every fake with stable, content-safe results", async () => {
     const adapters = createProviderAdapters(fakeConfig);
@@ -44,11 +74,8 @@ describe("provider adapter composition", () => {
     const secondCvResult = await adapters.cvAnalyzer.analyzeCv({
       cvText: backendCvText,
     });
-    const summaryResult = await adapters.interviewSummarizer.summarizeInterview(
-      {
-        transcript: privateCandidateText,
-      },
-    );
+    const summaryResult =
+      await adapters.interviewSummarizer.summarizeInterview(summaryInput);
     const voiceResult = await adapters.voiceTokenProvider.createVoiceToken({
       requestId: "unit-test-request",
     });
@@ -110,7 +137,7 @@ describe("provider adapter composition", () => {
         ),
       () =>
         adapters.interviewSummarizer.summarizeInterview(
-          { transcript: "synthetic" },
+          summaryInput,
           abortController.signal,
         ),
       () =>
@@ -133,7 +160,7 @@ describe("provider adapter composition", () => {
     }
   });
 
-  it("composes only implemented real adapters in live mode", async () => {
+  it("composes only implemented real adapters in live mode", () => {
     const adapters = createProviderAdapters(liveConfig);
 
     expect(adapters.cvAnalyzer).toBeInstanceOf(OpenAiCvAnalyzer);
@@ -143,9 +170,9 @@ describe("provider adapter composition", () => {
     expect(adapters.voiceTokenProvider).toBeInstanceOf(
       ElevenLabsVoiceTokenProvider,
     );
-    await expect(
-      adapters.interviewSummarizer.summarizeInterview({}),
-    ).rejects.toBeInstanceOf(MissingLiveProviderAdaptersError);
+    expect(adapters.interviewSummarizer).toBeInstanceOf(
+      OpenAiInterviewSummarizer,
+    );
   });
 
   it("uses explicitly injected adapters in live mode", () => {

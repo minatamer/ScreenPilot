@@ -1,5 +1,10 @@
 import { roleLabelSchema } from "@screenpilot/contracts/interview/demo-context";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
+import { UNDECIDED_ROLE_VALUE } from "@screenpilot/contracts/interview/client-tools";
+import {
+  screeningSummarySchema,
+  type ScreeningSummary,
+} from "@screenpilot/contracts/interview/screening-summary";
 
 import type {
   CvAnalyzer,
@@ -8,27 +13,12 @@ import type {
 } from "../../use-cases/ports/cv-analyzer.js";
 import type {
   InterviewSummarizer,
+  InterviewSummaryInput,
   InterviewSummaryProviderResult,
 } from "../../use-cases/ports/interview-summarizer.js";
 
-export type FakeInterviewSummary = Readonly<{
-  fixture: true;
-  limitations: readonly ["No provider call was made."];
-}>;
-
-const fakeInterviewSummary: InterviewSummaryProviderResult<FakeInterviewSummary> =
-  Object.freeze({
-    summary: Object.freeze({
-      fixture: true,
-      limitations: Object.freeze(["No provider call was made."] as const),
-    }),
-    usage: Object.freeze({ inputTokens: 0, outputTokens: 0 }),
-  });
-
 export class FakeOpenAi
-  implements
-    CvAnalyzer<NormalizedCv>,
-    InterviewSummarizer<unknown, FakeInterviewSummary>
+  implements CvAnalyzer<NormalizedCv>, InterviewSummarizer
 {
   analyzeCv(
     input: CvAnalyzerInput,
@@ -41,14 +31,172 @@ export class FakeOpenAi
   }
 
   summarizeInterview(
-    _input: unknown,
+    input: InterviewSummaryInput,
     signal?: AbortSignal,
-  ): Promise<InterviewSummaryProviderResult<FakeInterviewSummary>> {
+  ): Promise<InterviewSummaryProviderResult> {
     return Promise.resolve().then(() => {
       signal?.throwIfAborted();
-      return fakeInterviewSummary;
+      const summary = createFakeInterviewSummary(input);
+      return {
+        summary,
+        usage: {
+          cachedInputTokens: 0,
+          inputTokens: Math.ceil(JSON.stringify(input).length / 4),
+          outputTokens: Math.ceil(JSON.stringify(summary).length / 4),
+        },
+      };
     });
   }
+}
+
+function latestCandidateInsight(
+  input: InterviewSummaryInput,
+  category: InterviewSummaryInput["insights"][number]["category"],
+) {
+  return input.insights.reduce<
+    InterviewSummaryInput["insights"][number] | undefined
+  >((latest, insight) => {
+    if (insight.category !== category || insight.source === "CV") {
+      return latest;
+    }
+    return latest === undefined || insight.updatedAt >= latest.updatedAt
+      ? insight
+      : latest;
+  }, undefined);
+}
+
+function genericFactStatement(
+  category: InterviewSummaryInput["insights"][number]["category"],
+): string | null {
+  const statements: Partial<
+    Record<InterviewSummaryInput["insights"][number]["category"], string>
+  > = {
+    current_context: "Candidate shared current or recent context.",
+    relevant_experience:
+      "Candidate described broad relevant experience for human review.",
+    responsibility: "Candidate described broad responsibilities.",
+    strongest_areas: "Candidate identified a self-described strongest area.",
+    team_work_style: "Candidate described a team or work-style preference.",
+    motivation: "Candidate described a next-role motivation or priority.",
+    location_work_arrangement:
+      "Candidate described a location or work-arrangement preference.",
+    english_use: "Candidate described where they use English.",
+  };
+  return statements[category] ?? null;
+}
+
+export function createFakeInterviewSummary(
+  input: InterviewSummaryInput,
+): ScreeningSummary {
+  const roleInsight = latestCandidateInsight(input, "role_preference");
+  const confirmedFacts = input.insights.flatMap((insight) => {
+    if (
+      insight.source === "CV" ||
+      insight.status === "needs_clarification" ||
+      insight.evidenceTurnIds.length === 0
+    ) {
+      return [];
+    }
+    const statement = genericFactStatement(insight.category);
+    return statement === null
+      ? []
+      : [{ evidenceTurnIds: insight.evidenceTurnIds, statement }];
+  });
+  const topicsCovered = input.topicProgress
+    .filter(
+      (progress) =>
+        progress.status === "covered" && progress.evidenceTurnIds.length > 0,
+    )
+    .map((progress) => ({
+      evidenceTurnIds: progress.evidenceTurnIds,
+      topicKey: progress.topicKey,
+    }));
+  const coveredKeys = new Set(topicsCovered.map((topic) => topic.topicKey));
+  const topicsNotCovered = input.plan.topics
+    .map((topic) => topic.key)
+    .filter((topicKey) => !coveredKeys.has(topicKey));
+  const compensationInsight = latestCandidateInsight(input, "compensation");
+  const availabilityInsight = latestCandidateInsight(input, "availability");
+
+  return screeningSummarySchema.parse({
+    overview:
+      "Local interview evidence was organized into cautious notes for human review.",
+    ...(roleInsight === undefined
+      ? {}
+      : {
+          rolePreference: {
+            evidenceTurnIds: roleInsight.evidenceTurnIds,
+            label:
+              roleInsight.value.toLocaleLowerCase("en") ===
+              UNDECIDED_ROLE_VALUE.toLocaleLowerCase("en")
+                ? null
+                : roleInsight.value,
+            status:
+              roleInsight.value.toLocaleLowerCase("en") ===
+              UNDECIDED_ROLE_VALUE.toLocaleLowerCase("en")
+                ? "undecided"
+                : "candidate_stated",
+          },
+        }),
+    confirmedFacts,
+    clarifications: input.insights
+      .filter(
+        (insight) =>
+          insight.category !== "follow_up_needed" &&
+          insight.source !== "CV" &&
+          insight.status === "needs_clarification",
+      )
+      .map((insight) => ({
+        evidenceTurnIds: insight.evidenceTurnIds,
+        statement: "Candidate context remains unclear and needs human review.",
+      })),
+    topicsCovered,
+    topicsNotCovered,
+    ...(compensationInsight === undefined
+      ? {}
+      : {
+          compensation: {
+            candidateStatement:
+              "Candidate provided, declined, or remained uncertain about compensation details.",
+            evidenceTurnIds: compensationInsight.evidenceTurnIds,
+          },
+        }),
+    ...(availabilityInsight === undefined
+      ? {}
+      : {
+          availability: {
+            candidateStatement:
+              "Candidate described availability or uncertainty for human review.",
+            evidenceTurnIds: availabilityInsight.evidenceTurnIds,
+          },
+        }),
+    communicationNotes: [],
+    candidateQuestions: input.insights
+      .filter(
+        (insight) =>
+          insight.category === "candidate_question" && insight.source !== "CV",
+      )
+      .map((insight) => ({
+        evidenceTurnIds: insight.evidenceTurnIds,
+        question: "Candidate asked a question for human review.",
+      })),
+    humanFollowups: input.insights
+      .filter(
+        (insight) =>
+          insight.category === "follow_up_needed" && insight.source !== "CV",
+      )
+      .map((insight) => ({
+        evidenceTurnIds: insight.evidenceTurnIds,
+        reason:
+          "Human follow-up is needed for an unanswered candidate question or unclear detail.",
+      })),
+    limitations: [
+      "These AI-organized notes require human review.",
+      ...(topicsNotCovered.length === 0
+        ? []
+        : ["Some planned topics were not covered in the local evidence."]),
+    ],
+  });
 }
 
 function trustedFixtureText(cvText: string): string {

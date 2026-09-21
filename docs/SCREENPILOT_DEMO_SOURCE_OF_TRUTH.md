@@ -349,7 +349,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 9 — end and summarize
 
 - **Input state:** local final transcript and insight state; no recording artifact is expected.
-- **Visible behavior:** execute a fresh managed Turnstile check, showing interaction only if required, then show **Organizing this conversation** with truthful progress.
+- **Visible behavior:** both manual and provider-owned automatic endings transform the existing live workspace in place. Voice/media resources are released immediately; independently of that cleanup, the right Insight Board fades and collapses while the left interview column expands and centers into a full-width evidence-map surface. Its central card shows **Organizing this conversation** with truthful progress while the retained insight cards settle into connected evidence nodes. Execute a fresh managed Turnstile check there, showing interaction only if required; the animation never delays the request or implies that a summary succeeded.
 - **API:** `POST /v1/interview/summary` sends the bounded local transcript, plan, insight cards, and a memory-only `turnstileToken`; after Siteverify succeeds, GPT-5.4 mini returns structured evidence-linked notes using `store: false`.
 - **Output state:** `review` with complete or partial summary.
 - **Failure:** Turnstile or summary failure preserves the transcript and cards; Retry summary obtains a fresh token and is allowed while the browser session exists.
@@ -357,7 +357,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 10 — local review and clear
 
 - **Input state:** transcript, plan, insight cards, and optional summary in browser session.
-- **Visible behavior:** entry-mode label, candidate-stated synthetic session role or undecided state, topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, transcript evidence, recruiter follow-ups, and limitations. Conversation-first review contains no CV source chips or claims of CV verification.
+- **Visible behavior:** the organizing surface resolves into review without a blank page replacement. Its central card becomes the summary overview and the connected retained insight nodes remain available around it. Selecting a node opens a stable detail containing the unambiguous preceding final Pilot question when available, the cited final candidate answer, an **Interview evidence** source/time label with transcript navigation, and all GPT-organized summary items whose evidence arrays cite that answer. Missing relationships are labelled unavailable rather than inferred. The complete review also includes the entry-mode label, candidate-stated synthetic session role or undecided state, topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, recruiter follow-ups, and limitations. Conversation-first review contains no CV source chips or claims of CV verification.
 - **Allowed actions:** return to transcript evidence, copy summary, optionally download a local JSON report, or **Clear session**.
 - **Mutation:** Clear removes ScreenPilot `sessionStorage` and in-memory candidate/interview state, then returns to landing. The content-free safety cookie expires automatically and is not presented as candidate data.
 - **Output state:** `cleared`.
@@ -1296,7 +1296,7 @@ type ScreeningSummary = {
 };
 ```
 
-The summary cannot add facts without local transcript evidence. It reports the candidate-authored role label or undecided state as synthetic session context and must not imply a real vacancy or application. Communication notes describe observable behavior such as “asked for clarification before answering,” never proficiency grades or personality labels.
+The summary cannot add facts without local transcript evidence. It reports the candidate-authored role label or undecided state as synthetic session context and must not imply a real vacancy or application. Communication notes describe observable behavior such as “asked for clarification before answering,” never proficiency grades or personality labels. Because `overview` and `limitations` carry no evidence arrays, they use a bounded server-owned catalogue of process-only language; candidate-specific statements are accepted only in fields that cite final candidate turns.
 
 ---
 
@@ -1876,12 +1876,12 @@ deferrals are:
 
 | Value | Runtime use | Implementation state |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | Backend-only Bearer credential for the Responses client. | SP-010 live CV analysis is wired. SP-020 has not been implemented, so the live summary adapter and route are intentionally unavailable. |
+| `OPENAI_API_KEY` | Backend-only Bearer credential for the Responses client. | SP-010 live CV analysis and SP-020 live summary generation are wired; both remain paid/Turnstile gated. |
 | `ELEVENLABS_API_KEY` | Backend-only `xi-api-key` credential for private conversation-token creation. | Wired by SP-014. |
 | `ELEVENLABS_AGENT_ID` | Server-owned ElevenLabs `agent_id` for the conversation-token request. | Wired by SP-014 and never accepted from the browser. |
 | `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018A supplied the initial smoke and SP-021A/SP-025 own remaining manual drift/live acceptance. |
 | `TURNSTILE_SITE_KEY` | Allow-listed bootstrap field used by the browser widget. | Wired by SP-003/SP-012 and public by design. |
-| `TURNSTILE_SECRET_KEY` | Backend Siteverify secret. | Wired by SP-009 for the current CV and voice gates; SP-020 will reuse it for summary. |
+| `TURNSTILE_SECRET_KEY` | Backend Siteverify secret. | Wired by SP-009 for CV and voice gates and reused by SP-020 for the `interview_summary` action. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | Exact backend comparison against Siteverify's hostname. | Wired by SP-009. |
 | `INTERVIEW_GRANT_SIGNING_SECRET` | HMAC issue/verify key for stateless interview grants. | Wired by SP-009. |
 | `ANONYMOUS_COOKIE_SECRET` | Express signed-cookie secret for the content-free anonymous session. | Wired by SP-009. |
@@ -2335,9 +2335,11 @@ Controls:
 - Verify `entryMode`, plan type, allowed source labels, and grant binding agree; reject `CV` evidence in conversation-first mode.
 - Treat all browser fields as untrusted.
 - GPT-5.4 mini, reasoning `none`, structured output, `store: false`.
+- Validate all returned candidate-turn citations, require available candidate-backed current-context/experience/team/question content, require distinct summary entries for the current-context, broad-experience, and team/work-style groups, enforce the covered/not-covered topic partition in both directions, and allow at most one repair for malformed or unsupported structured output.
+- Apply the paid-operation kill switch and any injected summary-admission denial before Turnstile/OpenAI. SP-020 provides this injected fail-closed boundary and its zero-provider-call tests; SP-022 owns the bounded TTL route/source limiter, capacity policy, and server wiring, so the current server default does not claim to rate-limit summary requests yet.
 - Never retrieve a provider conversation or recording.
 
-Returns `ScreeningSummary`, coarse usage, and limitations.
+Returns `ScreeningSummary`, provider-reported input/cached-input/output token counts with coarse estimated cost, and bounded process limitations. Successful responses use `Cache-Control: no-store`.
 
 ### Error envelope
 
@@ -2817,6 +2819,9 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 #### Review
 
 - Keep the shared Deep Ink/plum/coral workspace for completion and clarity; use calmer spacing, quieter borders, and restrained coral rather than returning to a light canvas.
+- Preserve spatial continuity when either end path fires: immediately release voice/media resources, then fade and collapse the right Insight Board as the left interview column expands and centers into the full review workspace. Use the same transition for manual and provider-owned automatic completion, with no blank interstitial or route-like page swap.
+- Turn that expanded surface into a deterministic evidence map. The central organizing card becomes the summary overview; every retained insight card becomes one connected node arranged around it on capable wide screens. This is not a graph engine: nodes are not draggable, zoomable, physics-driven, editable, or permitted to disappear off canvas.
+- Selecting a node keeps the map context visible and opens a stable detail with four explicitly separated layers: the nearest preceding final Pilot question only when the relationship is unambiguous, the cited final candidate answer, an **Interview evidence** subtitle carrying source/local time plus the SP-019 transcript link, and each GPT-summary item whose `evidenceTurnIds` contains that candidate turn. Show **Question unavailable**, **Evidence unavailable**, or **No related AI-organized note** when appropriate; never invent an association.
 - Top summary panel states that notes are AI-organized and require human interpretation.
 - Insight cards keep the same colors/labels used live.
 - Candidate evidence chips scroll and move keyboard focus to a stable final-turn anchor in the local transcript; the focused turn provides a return-to-card control. Missing, non-final, or non-candidate references render as unavailable evidence rather than being hidden or redirected.
@@ -2837,7 +2842,7 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - On mobile landing, the two entry cards stack with equal emphasis and complete explanatory copy; the first card's height or order must not make the second feel optional.
 - On mobile interview view: compact voice signal at the top, readable captions beneath it, sticky safe-area-aware mute/end controls, and a swipeable insight rail whose selected card expands into full evidence detail.
 - On mobile plan preview: CV facts and interview topics become linked stacked sections with visible source badges; no source relationship disappears merely because connector lines are reduced.
-- On mobile review: summary sections remain in the same logical order, evidence chips scroll to transcript turns, and transcript content is never hidden behind fixed controls.
+- On mobile review: the visual evidence map becomes a connected vertical sequence beneath the central overview card; tablets may use a bounded connected grid, while desktop/large-monitor layouts may place nodes around the center. Every width preserves the same node/detail semantics and logical order, evidence chips scroll to transcript turns, and transcript content is never hidden behind fixed controls or forced into horizontal page scrolling.
 - Any visible Turnstile fallback fits at 320 px without horizontal scrolling or clipped controls and retains an understandable retry state in portrait and landscape.
 - Use dynamic viewport units and safe-area insets so browser chrome, display cutouts, and virtual keyboards do not cover primary actions.
 - Treat browser content height as a first-class responsive input. At 768/820 px tablet widths and practical tablet/laptop browser viewports down through 1024 × 600, use fluid type/density and feature-owned inner scrolling for variable collections before allowing the outer document to grow. Preserve 14 px body text, 12 px metadata, 44 × 44 px targets, required disclosures, and keyboard escape from every inner scroll region. Error expansion, interactive Turnstile, 200% zoom, and virtual-keyboard states may fall back to natural page scrolling rather than clip content.
@@ -2854,9 +2859,10 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - Background atmosphere remains still; do not animate the full canvas or decorative gradient field.
 - Default transition: 180–240 ms.
 - Insight appearance: 320–450 ms with opacity, scale, and short connector draw.
+- End-to-review morph: after call controls become inert and media cleanup starts, fade/recede the right board over 240–320 ms, expand and center the left column over 320–450 ms, then settle retained cards into the evidence map with the existing insight opacity/connector language. Keep the whole transition bounded and allow summary/Turnstile work to proceed concurrently.
 - Correction: brief border/color morph, not shake.
 - Voice signal responds smoothly but avoids rapid flashing.
-- Reduced-motion mode removes automatic spatial travel and scaling. Essential voice-status bars may use slow opacity-only activity so the speaking party remains understandable. Same-page anchor navigation retains its native smooth-scroll fallback rather than running the custom timed journey.
+- Reduced-motion mode removes automatic spatial travel and scaling. The end-to-review morph becomes an immediate layout change with a short opacity-only state transition and already-drawn static connectors; no node or column travels, scales, or floats. Essential voice-status bars may use slow opacity-only activity so the speaking party remains understandable. Same-page anchor navigation retains its native smooth-scroll fallback rather than running the custom timed journey.
 - The landing product preview loops slowly through two three-topic boards: salary expectation, relevant experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It starts automatically without playback or topic-switching controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. Normal motion reveals both questions and answers one spoken word at a time inside fixed-height regions, waits for both complete lines, draws both evidence highlights together from left to right, and then creates the corresponding note. Speaker activity and board/card transitions stay on opacity/transform. Reduced motion keeps the same word-by-word timing through opacity-only entrances, removes spatial movement, resolves the highlight without a sweep, and limits voice activity to slow opacity changes.
 - Each newly spoken subtitle word mounts with a short fade-and-rise so the timing reads as speech rather than a whole-line replacement. The compact participant pane contains only the centered speaking illustration and its integrated waveform; it has no redundant lower identity/instruction strip. Preview note cards use only sequence, captured field, captured value, and a quiet completion dot—no “Interview note,” “Added from your answer,” “Waiting,” or “Listening for answer” filler copy.
 - The active-interview caption panel reuses that word-entry language for received Pilot turns, with a restrained caret for tentative Pilot text. Candidate turns use one short right-side chat-bubble entrance instead of per-word spatial motion. Reduced motion resolves Pilot caption words immediately, removes the candidate bubble entrance, and disables repeated waveform travel through the global motion preference contract.
@@ -2886,6 +2892,9 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - `InsightCard`
 - `ConnectionBanner`
 - `InterviewControls`
+- `ReviewTransition`
+- `EvidenceMap`
+- `EvidenceDetailPanel`
 - `TranscriptTimeline`
 - `EvidenceChip`
 - `SummarySection`
@@ -3982,7 +3991,7 @@ SP-021 review surface exist.
 
 #### [SP-020 — Generate the stateless post-call summary](tickets/SP-020-generate-stateless-post-call-summary.md)
 
-**Outcome:** GPT organizes local evidence into cautious recruiter-readable notes without saving it.
+**Outcome:** Completed locally on 2026-09-21. GPT organizes local evidence into cautious recruiter-readable notes without saving it; the first real summary remains deferred to SP-021A.
 
 **Depends on:** SP-009, SP-010, SP-010A, SP-017, SP-019.
 
@@ -3990,16 +3999,17 @@ SP-021 review surface exist.
 
 **Checklist:**
 
-- [ ] Implement `POST /v1/interview/summary` with strict limits and grant validation.
-- [ ] Require a fresh Turnstile token with the `interview_summary` action and validate it before invoking OpenAI; invalid/replayed challenge tests prove summary generation was not called.
-- [ ] Enforce entry-mode/plan/grant/source consistency and reject CV-sourced content in conversation-first summaries.
-- [ ] Use GPT-5.4 mini structured output, reasoning none, and `store: false`.
-- [ ] Require all factual claims to cite existing local turn IDs.
-- [ ] Report one candidate-stated role label or undecided state as synthetic session context; never claim a real vacancy/application or infer employer facts, job requirements, or professional suitability.
-- [ ] Produce distinct evidence-grounded notes for current/recent context, broad responsibilities/strongest areas, and candidate-stated team/work style when present; do not invent missing subfields or turn preferences into personality judgments.
-- [ ] Forbid scores, decisions, sentiment, personality, and unsupported proficiency labels.
-- [ ] Validate/repair one malformed output and return limitations.
-- [ ] Add success, partial, invalid-evidence, timeout, and fake-provider tests.
+- [x] Implement `POST /v1/interview/summary` with strict limits and grant validation.
+- [x] Require a fresh Turnstile token with the `interview_summary` action and validate it before invoking OpenAI; invalid/replayed challenge tests prove summary generation was not called.
+- [x] Enforce entry-mode/plan/grant/source consistency and reject CV-sourced content in conversation-first summaries.
+- [x] Use GPT-5.4 mini structured output, reasoning none, and `store: false`.
+- [x] Require all factual claims to cite existing local turn IDs.
+- [x] Report one candidate-stated role label or undecided state as synthetic session context; never claim a real vacancy/application or infer employer facts, job requirements, or professional suitability.
+- [x] Produce distinct evidence-grounded notes for current/recent context, broad responsibilities/strongest areas, and candidate-stated team/work style when present; do not invent missing subfields or turn preferences into personality judgments.
+- [x] Forbid scores, decisions, sentiment, personality, and unsupported proficiency labels.
+- [x] Validate/repair one malformed output and return limitations.
+- [x] Add success, partial, invalid-evidence, timeout, and fake-provider tests.
+- [x] Apply injected summary-admission denials before Turnstile/OpenAI and record that SP-022, not SP-020, owns the production route/source limiter and server wiring.
 
 #### [SP-021 — Build review, retry, and clear-session experience](tickets/SP-021-build-review-retry-and-clear-session.md)
 
@@ -4288,6 +4298,8 @@ deterministic final gate passes.
 ### Review
 
 - [ ] Same-session review works without provider artifact retrieval.
+- [ ] Manual and automatic endings transform the existing two-column interview into the same centered evidence-map review: voice/media cleanup is immediate, the right board fades/collapses, the left column expands, and retained insight nodes remain reachable without a blank page jump.
+- [ ] Each evidence-map node can disclose an unambiguous Pilot question, cited candidate answer, evidence metadata/link, and related evidence-citing summary notes, with explicit unavailable states and no invented links.
 - [ ] Review identifies the entry mode and accurately distinguishes CV-supported from candidate-only evidence.
 - [ ] Every summary fact links to a local transcript turn.
 - [ ] Partial transcripts and missing topics are labelled honestly.
@@ -4325,7 +4337,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Conversation-first path | Locked, equal priority with CV-assisted | Keep because it provides the fastest trial and demonstrates live adaptive discovery. Share preflight/interview/review components; do not let it become a separate app or a long manual form. |
 | Candidate-defined synthetic role | Locked, role-agnostic | Accept any bounded candidate-stated label as the synthetic vacancy for that browser session or continue undecided. Keep one universal HR screen; do not add an allow-list, classifier, vacancy CRUD, pre-call picker, profession-specific assessment, or inferred employer facts. |
 | Separate Express backend | In scope | Keep because it protects keys, uses a broadly recognized Node.js API stack, and demonstrates backend/API skill. Collapsing into Next.js route handlers is the largest remaining architectural simplification if schedule becomes tight. |
-| Real-time Insight Board | In scope with an aligned scrollable layout | Keep the cards; avoid a true mind-map/graph engine, draggable nodes, zoom, physics, or editable relationships. |
+| Real-time Insight Board and review evidence map | In scope with an aligned live stack and deterministic connected review composition | Keep the cards and the SP-021 in-place morph into a responsive mind-map-like evidence layout. Avoid a true graph engine, draggable nodes, zoom, physics, editable relationships, or inferred links. |
 | Five client tools | In scope | Keep only if all five are reliable. `recordInsight` and `correctInsight` are essential; topic/question/follow-up tools may be merged into one structured event tool. |
 | Full local transcript | In scope | Keep final text and evidence navigation; cut word-level timestamps, speaker audio alignment, search, and editing. |
 | GPT post-call summary | In scope | Keep because it completes the story. Do not add recruiter decisions, scoring, regeneration history, or multiple summary formats. |

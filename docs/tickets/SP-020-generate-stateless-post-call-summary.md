@@ -17,7 +17,7 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 ## Standalone implementation context
 
 - `POST /v1/interview/summary` receives grant, one-time `turnstileToken` for action `interview_summary`, entry mode, plan, at most 160 turns/30,000 transcript characters/24 insights/16 topics.
-- The backend validates origin, cookie, grant, entry-mode/plan/source consistency, evidence references, bounds, Turnstile hostname/action, and paid/rate/capacity gates before OpenAI.
+- The backend validates origin, cookie, grant, entry-mode/plan/source consistency, evidence references, bounds, the paid kill switch, any injected admission decision, and Turnstile hostname/action before OpenAI. SP-020 supplies and tests the typed admission boundary; SP-022 owns the real per-route/source rate and capacity limiter plus server wiring.
 - Use GPT-5.4 mini, reasoning `none`, structured output, and `store: false`.
 - Every factual output statement cites existing local transcript turn IDs. Missing evidence becomes a limitation/topic-not-covered, not an invented fact.
 - Output covers overview, optional role preference, confirmed facts, clarifications, covered/missing topics, compensation, availability, neutral communication observations, candidate questions, human follow-ups, and limitations.
@@ -38,47 +38,58 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 - Do not score, rank, pass/fail, infer personality, sentiment, emotion, accent, protected traits, honesty, employability, or unsupported English proficiency.
 - Do not generate role-specific competency/technical conclusions, job fit, responsibilities, qualifications, salary, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines unless an explicit server-owned fact supports the non-candidate value.
 - Do not cite missing/agent-only evidence for candidate facts.
-- Do not call OpenAI on Turnstile, grant, schema, source, evidence, rate, capacity, or kill-switch failure.
+- Do not call OpenAI on Turnstile, grant, schema, source, evidence, injected admission denial, or kill-switch failure.
 - Do not repair more than one malformed structured response.
 
 ## Implementation checklist
 
-- [ ] Implement the shared bounded summary request/output contracts and route.
-- [ ] Validate origin/cookie/grant, entry mode, plan hash/type, allowed provenance, turn/insight/topic references, and all size/count limits.
-- [ ] Verify a fresh Turnstile token with `interview_summary` action/hostname before OpenAI.
-- [ ] Build a prompt that treats all browser fields as untrusted evidence and requires citations/limitations.
-- [ ] Call only GPT-5.4 mini with reasoning none, structured output, and `store: false`.
-- [ ] Validate every returned evidence ID and reject/repair unsupported or malformed output once.
-- [ ] Keep distinct evidence-grounded notes for current context, synthesized broad responsibilities/strongest areas, and candidate-stated team/work style.
-- [ ] Preserve any bounded candidate-stated role label or undecided state exactly as evidence supports it; keep compound wording intact and put unsupported employer/vacancy questions in human follow-ups.
-- [ ] Forbid scores, decisions, personality/culture fit, sentiment, and unsupported proficiency labels in schema and prompt.
-- [ ] Return coarse usage plus limitations with `Cache-Control: no-store`.
-- [ ] Include provider-reported input, cached-input, and output token counts in content-free coarse usage so SP-025 can calculate measured cost without logging transcript or summary content.
-- [ ] Add success, partial, invalid evidence/source, oversized input, Turnstile failure/replay, timeout, malformed repair, provider failure, and no-persistence tests.
+- [x] Implement the shared bounded summary request/output contracts and route.
+- [x] Validate origin/cookie/grant, entry mode, plan hash/type, allowed provenance, turn/insight/topic references, and all size/count limits.
+- [x] Apply the paid kill switch and typed summary-admission decisions before Turnstile/OpenAI; explicitly defer the production route/source limiter and its server wiring to SP-022.
+- [x] Verify a fresh Turnstile token with `interview_summary` action/hostname before OpenAI.
+- [x] Build a prompt that treats all browser fields as untrusted evidence and requires citations/limitations.
+- [x] Call only GPT-5.4 mini with reasoning none, structured output, and `store: false`.
+- [x] Validate every returned evidence ID and reject/repair unsupported or malformed output once.
+- [x] Keep distinct evidence-grounded notes for current context, synthesized broad responsibilities/strongest areas, and candidate-stated team/work style.
+- [x] Preserve any bounded candidate-stated role label or undecided state exactly as evidence supports it; keep compound wording intact and put unsupported employer/vacancy questions in human follow-ups.
+- [x] Forbid scores, decisions, personality/culture fit, sentiment, and unsupported proficiency labels in schema and prompt.
+- [x] Return coarse usage plus limitations with `Cache-Control: no-store`.
+- [x] Include provider-reported input, cached-input, and output token counts in content-free coarse usage so SP-025 can calculate measured cost without logging transcript or summary content.
+- [x] Add success, partial, invalid evidence/source, oversized input, Turnstile failure/replay, timeout, malformed repair, provider failure, and no-persistence tests.
 
 ## Acceptance criteria
 
-- [ ] Every factual summary claim resolves to one or more valid local candidate turn IDs.
-- [ ] Conversation-first requests containing CV provenance fail before OpenAI.
-- [ ] Missing/unclear topics are listed honestly and never filled from inference.
-- [ ] A failed summary leaves all local transcript/insights usable for review/retry.
-- [ ] No hiring score/decision or forbidden inference appears in output.
-- [ ] No summary content is stored or retrieved server-side.
-- [ ] Candidate-stated/undecided role output preserves evidence and synthetic-session framing, while unsupported employer questions remain human follow-ups and no job requirements or suitability claims are invented.
+- [x] Every factual summary claim resolves to one or more valid local candidate turn IDs.
+- [x] Conversation-first requests containing CV provenance fail before OpenAI.
+- [x] Missing/unclear topics are listed honestly and never filled from inference.
+- [x] A failed summary leaves all local transcript/insights usable for review/retry.
+- [x] No hiring score/decision or forbidden inference appears in output.
+- [x] No summary content is stored or retrieved server-side.
+- [x] Candidate-stated/undecided role output preserves evidence and synthetic-session framing, while unsupported employer questions remain human follow-ups and no job requirements or suitability claims are invented.
 
 ## Focused verification
 
-- [ ] Run focused schema/use-case/Supertest suites with fake OpenAI and Turnstile.
-- [ ] Exercise complete, partial, disconnected, refused-compensation, uncertain-availability, no-question, and invalid-provenance fixtures.
-- [ ] Exercise Graphic Designer, compound-role, corrected role, undecided, and unsupported-employer-question fixtures; assert identical schema behavior and no real-vacancy/application claim.
-- [ ] Assert paid-provider call count is zero for every precondition failure.
-- [ ] Inspect output evidence IDs and logs for unsupported claims/content leakage.
-- [ ] Do not run a standalone real summary in this ticket; hand the first
+- [x] Run focused schema/use-case/Supertest suites with fake OpenAI and Turnstile.
+- [x] Exercise complete, partial, disconnected, refused-compensation, uncertain-availability, no-question, and invalid-provenance fixtures.
+- [x] Exercise Graphic Designer, compound-role, corrected role, undecided, and unsupported-employer-question fixtures; assert identical schema behavior and no real-vacancy/application claim.
+- [x] Assert paid-provider call count is zero for every precondition failure.
+- [x] Inspect output evidence IDs and logs for unsupported claims/content leakage.
+- [x] Do not run a standalone real summary in this ticket; hand the first
   controlled real summary to SP-021A after SP-021 is complete.
+
+## Implementation record — 2026-09-21
+
+- Added the strict no-store summary route, grant/plan/provenance/evidence checks, paid kill switch, typed summary-admission boundary, and fresh `interview_summary` Turnstile verification before any summary provider call. SP-022 still owns the production rate/capacity implementation and server wiring; SP-020 does not claim that limiter exists yet.
+- Added a GPT-5.4 Mini structured-output adapter that reuses the locked reasoning-none, `store: false` Responses client. It performs at most one repair for malformed or semantically unsupported output and aggregates input, cached-input, and output usage across that repair.
+- Kept the uncited overview and limitations server-bounded to fixed process language. All candidate-specific output sections require final candidate-turn citations; topic coverage must partition the universal plan and match local topic evidence.
+- Semantic completeness validation now requires every available candidate-backed current-context, experience/responsibility/strongest-area, team/work-style, and candidate-question insight to appear in its appropriate output section. The three required fact groups must resolve to distinct summary entries, so one combined fact cannot satisfy all three. Topic validation is bidirectional: every claimed covered topic must match covered local progress, and every locally covered topic must remain in `topicsCovered` with evidence.
+- Added deterministic fake summaries plus contract, adapter, use-case, and Supertest coverage for both provenance modes, bounds, precondition zero-call behavior, repair/failure paths, role variants, partial evidence, logging privacy, and stateless repeat requests.
+- Final fake-only verification passed the focused contracts suite (3 files / 18 tests), focused backend summary suite (4 files / 41 tests), complete contracts suite (6 files / 47 tests), and complete backend suite (23 files / 256 tests). Both package lint commands, both package builds, Prettier checking for the affected code, and `git diff --check` also passed. The local runtime reported Node 22.23.2 while the repository requires Node 24, but every invoked check completed successfully.
+- No credential was read, no provider network request was made, and no standalone paid summary was run. The first controlled real summary remains assigned to SP-021A after SP-021.
 
 ## Commit boundary
 
-Keep SP-020 reviewable as one logical change represented by `feat(backend): summarize local interview evidence`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
+Keep SP-020 reviewable as one logical change represented by `SP-020: summarize local interview evidence`. Do not absorb the next ticket merely because adjacent code is visible. Do not create a commit unless the user asks or the active workflow already authorizes it.
 
 ## Precision references
 

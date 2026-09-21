@@ -2,12 +2,14 @@ import { Router } from "express";
 
 import type { AnonymousSessionCookieOptions } from "../security/anonymous-session-cookie.js";
 import type { AnalyzeCv } from "../use-cases/analyze-cv.js";
+import type { GenerateInterviewSummary } from "../use-cases/generate-interview-summary.js";
 import type { PrepareConversationFirst } from "../use-cases/prepare-conversation-first.js";
 import type { CreateVoiceToken } from "../use-cases/create-voice-token.js";
 import { createBootstrapRoutes } from "./routes/bootstrap.routes.js";
 import { createCvAnalyzeRoutes } from "./routes/cv-analyze.routes.js";
 import { createHealthRoutes } from "./routes/health.routes.js";
 import { createInterviewPrepareRoutes } from "./routes/interview-prepare.routes.js";
+import { createInterviewSummaryRoutes } from "./routes/interview-summary.routes.js";
 import { createVoiceTokenRoutes } from "./routes/voice-token.routes.js";
 import type { BootstrapResponse } from "@screenpilot/contracts/api/bootstrap";
 
@@ -16,6 +18,7 @@ export function createApiRouter(input: {
   analyzeCv: AnalyzeCv;
   cookieOptions: AnonymousSessionCookieOptions;
   getDemoBootstrap: () => BootstrapResponse;
+  generateInterviewSummary: GenerateInterviewSummary;
   idGenerator: () => string;
   isReady: () => boolean;
   issueVoiceToken: CreateVoiceToken;
@@ -44,6 +47,13 @@ export function createApiRouter(input: {
     createInterviewPrepareRoutes({
       allowedOrigins: input.allowedOrigins,
       prepareConversationFirst: input.prepareConversationFirst,
+    }),
+  );
+  router.use(
+    "/v1/interview/summary",
+    createInterviewSummaryRoutes({
+      allowedOrigins: input.allowedOrigins,
+      generateInterviewSummary: input.generateInterviewSummary,
     }),
   );
   router.use(

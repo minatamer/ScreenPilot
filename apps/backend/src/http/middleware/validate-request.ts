@@ -11,6 +11,7 @@ export class RequestValidationError extends Error {
     | "INVALID_CV_TEXT"
     | "INVALID_ENTRY_MODE"
     | "INVALID_REQUEST"
+    | "INVALID_TRANSCRIPT"
     | "TURNSTILE_REQUIRED";
 
   constructor(
@@ -18,6 +19,7 @@ export class RequestValidationError extends Error {
       | "INVALID_CV_TEXT"
       | "INVALID_ENTRY_MODE"
       | "INVALID_REQUEST"
+      | "INVALID_TRANSCRIPT"
       | "TURNSTILE_REQUIRED",
   ) {
     const messages = {
@@ -25,6 +27,8 @@ export class RequestValidationError extends Error {
       INVALID_ENTRY_MODE:
         "Only conversation-first preparation is accepted here.",
       INVALID_REQUEST: "The request body is invalid.",
+      INVALID_TRANSCRIPT:
+        "The transcript or its evidence references are invalid.",
       TURNSTILE_REQUIRED: "Complete the anti-abuse check and try again.",
     } as const;
     super(messages[code]);
@@ -87,9 +91,13 @@ export function validateJsonBody<T>(
         ? "INVALID_ENTRY_MODE"
         : invalidFields.has("cvText")
           ? "INVALID_CV_TEXT"
-          : invalidFields.has("turnstileToken")
-            ? "TURNSTILE_REQUIRED"
-            : "INVALID_REQUEST";
+          : invalidFields.has("transcript") ||
+              invalidFields.has("insights") ||
+              invalidFields.has("topicProgress")
+            ? "INVALID_TRANSCRIPT"
+            : invalidFields.has("turnstileToken")
+              ? "TURNSTILE_REQUIRED"
+              : "INVALID_REQUEST";
       throw new RequestValidationError(code);
     }
     await handler(request, response, result.data);

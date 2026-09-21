@@ -11,6 +11,7 @@ import {
   OpenAiStructuredOutputError,
 } from "../providers/openai/openai-client.js";
 import { OpenAiCvValidationError } from "../providers/openai/openai-cv-analyzer.js";
+import { OpenAiSummaryValidationError } from "../providers/openai/openai-interview-summarizer.js";
 import { TurnstileVerificationError } from "../providers/turnstile/cloudflare-turnstile-verifier.js";
 import { InterviewGrantError } from "../security/interview-grant.js";
 import { UseCaseError } from "../use-cases/use-case-error.js";
@@ -61,7 +62,8 @@ function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
   if (
     providerError instanceof OpenAiRequestError ||
     providerError instanceof OpenAiStructuredOutputError ||
-    providerError instanceof OpenAiCvValidationError
+    providerError instanceof OpenAiCvValidationError ||
+    providerError instanceof OpenAiSummaryValidationError
   ) {
     return {
       provider: "openai",
@@ -72,7 +74,8 @@ function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
         ? { providerHttpStatus: providerError.httpStatus }
         : {}),
       ...(providerError instanceof OpenAiStructuredOutputError ||
-      providerError instanceof OpenAiCvValidationError
+      providerError instanceof OpenAiCvValidationError ||
+      providerError instanceof OpenAiSummaryValidationError
         ? {
             providerValidationPaths: providerError.validationPaths,
             providerValidationRuleIds: providerError.validationRuleIds,
@@ -163,6 +166,7 @@ function mapApiError(error: unknown, requestId: string): MappedApiError {
       PREPARATION_FAILED: 503,
       PROVIDER_UNAVAILABLE: 503,
       RATE_LIMITED: 429,
+      SUMMARY_FAILED: 503,
       TURNSTILE_REJECTED: 403,
       VOICE_DISABLED: 503,
     } as const;

@@ -23,6 +23,8 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - Conversation-first review is Candidate-only and contains no CV source chips or CV-verification language.
 - CV-assisted review may distinguish CV, Candidate, and CV + Candidate while candidate corrections win.
 - Summary failure still shows transcript and insight cards and offers Retry with a fresh Turnstile token.
+- Both a manual **End interview** action and the provider-owned automatic ending use the same in-place transition from the live two-column workspace into review: the right Insight Board fades and collapses, while the left interview column expands and centers to become the full-width organizing/review surface. Media teardown and local evidence finalization happen immediately and never wait for the animation.
+- The expanded surface resolves into a bounded evidence map rather than a second unrelated page. A central **Organizing this conversation** card becomes the summary overview when ready, and the collected insight cards reappear as connected evidence nodes around it. Selecting a node opens its detail without losing the map and shows the associated Pilot question when it can be resolved unambiguously, the candidate answer, an **Interview evidence** subtitle with source/time and transcript navigation, and every GPT-summary item that cites that candidate turn. Missing prompt, evidence, or summary relationships are labelled unavailable instead of inferred.
 - Clear session removes all ScreenPilot browser-held session content and returns to landing.
 - Copy summary is in scope. Local JSON download remains a final-scope decision and is the first optional cut.
 - Review retains SP-011A's centralized Deep Ink/plum/coral `/demo` workspace. Calmer spacing and quieter borders distinguish completion; no white/Warm White page, card, transcript, or summary surface is reintroduced.
@@ -40,11 +42,15 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - Do not clear local evidence merely because Turnstile or summary generation fails.
 - Do not add scores, rankings, sentiment, personality, English rating, or pass/fail UI.
 - Do not treat Clear session as an ordinary primary action beside Copy; keep it visibly separated and deliberate.
+- Do not turn the evidence map into a graph editor: no dragging, zooming, physics simulation, editable relationships, hidden off-canvas nodes, or newly inferred links. It is one deterministic responsive composition of the existing bounded insight, transcript, and summary data.
 
 ## Implementation checklist
 
 - [ ] Execute/reset the shared managed Turnstile gate for `interview_summary` inside the organizing state.
 - [ ] Call the summary endpoint with bounded local state and retain transcript/insights throughout pending/failure/retry.
+- [ ] Implement one end-transition path for manual and automatic completion: disable ended-call controls and release voice/media resources immediately, fade/collapse the right Insight Board, expand/center the left interview column, and preserve the visible local evidence while summary work begins concurrently.
+- [ ] Recompose the expanded column into a responsive evidence map with a central organizing/overview card, deterministic connector lines, and one node per retained insight card; use stable keys and the existing insight categories rather than duplicating or regenerating evidence.
+- [ ] Make every evidence node a keyboard-operable disclosure. Its detail presents the nearest preceding final Pilot turn only when that question-to-answer relationship is unambiguous, the cited final candidate answer, an **Interview evidence** source/time label and SP-019 transcript link, and all summary entries whose `evidenceTurnIds` include that answer; render explicit unavailable states for every missing relationship.
 - [ ] Build responsive review overview, role preference, confirmed facts, clarifications, topics covered/not covered, compensation, availability, communication notes, candidate questions, follow-ups, and limitations.
 - [ ] Present unsupported employer/vacancy questions as human follow-up and never fill missing job facts from the role label.
 - [ ] Show mode badge and enforce correct source/provenance language for both modes.
@@ -53,11 +59,15 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - [ ] Implement Retry summary with a fresh token, Copy summary, and deliberate **Clear & exit** confirmation/action that follows the shared route/session contract.
 - [ ] Decide and document whether local JSON download earns its complexity; omit it if not clearly useful.
 - [ ] Clear all ScreenPilot session keys/content UI and release remaining in-memory candidate data.
-- [ ] Test complete/partial/no-summary, Turnstile failure, summary failure/retry, evidence navigation, mode provenance, copy, clear, refresh, and responsive behavior.
+- [ ] Preserve the evidence-map hierarchy at every width: desktop/large-monitor nodes may surround the center card, tablets use a bounded connected grid, and phones/200% zoom use a connected vertical sequence with no hidden content or horizontal page scrolling.
+- [ ] Respect reduced motion with an immediate structural reflow plus a short opacity-only state change; do not spatially move, scale, orbit, or float nodes when reduced motion is enabled.
+- [ ] Test manual and automatic endings, complete/partial/no-summary, Turnstile failure, summary failure/retry, node expansion, question/answer/summary association, unavailable relationships, evidence navigation, mode provenance, copy, clear, refresh, reduced motion, and responsive behavior.
 
 ## Acceptance criteria
 
 - [ ] Both entry modes finish in one coherent review implementation with correct provenance.
+- [ ] Manual and automatic endings visibly transform the existing interview workspace into the same review surface without a blank page jump, delaying media cleanup, duplicating evidence, or leaving live controls operable.
+- [ ] The evidence map keeps every retained insight reachable and its expanded detail distinguishes the Pilot question, candidate answer, local evidence metadata, and related GPT-organized notes without inventing a relationship.
 - [ ] Every displayed summary fact can navigate to evidence or is clearly marked unavailable/limited.
 - [ ] Summary/Turnstile failure never destroys transcript or insight review.
 - [ ] No hiring recommendation or forbidden score/inference appears.
@@ -68,10 +78,10 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 ## Focused verification
 
 - [ ] Run focused review/state/Turnstile/copy/clear component tests.
-- [ ] Manually exercise full, partial disconnect, summary failure/retry, challenge failure/retry, broken evidence, no candidate questions, and both modes.
+- [ ] Manually exercise manual and provider-owned automatic ending, full, partial disconnect, summary failure/retry, challenge failure/retry, broken evidence, no candidate questions, and both modes.
 - [ ] Review arbitrary-role, compound-role, corrected-role, undecided, and unsupported-employer-question fixtures and verify human-follow-up presentation.
 - [ ] Inspect storage before/after Clear session and after refresh.
-- [ ] Check keyboard/focus flow, evidence scrolling, long text, 200% zoom, mobile portrait/landscape, and large-monitor widths.
+- [ ] Check keyboard/focus flow through the evidence map and its expanded detail, evidence scrolling, long text, reduced motion, 200% zoom, mobile portrait/landscape, and large-monitor widths.
 - [ ] If JSON download is retained, inspect it for only local bounded structured data and no secrets/raw CV/audio.
 - [ ] Hand both entry modes and the exact fake-verified summary/retry/evidence
   matrix to SP-021A for the consolidated live window; do not claim live review

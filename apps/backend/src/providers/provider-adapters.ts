@@ -11,6 +11,7 @@ import { FakeElevenLabs } from "./elevenlabs/fake-elevenlabs.js";
 import { FakeOpenAi } from "./openai/fake-openai.js";
 import { OpenAiHttpClient } from "./openai/openai-client.js";
 import { OpenAiCvAnalyzer } from "./openai/openai-cv-analyzer.js";
+import { OpenAiInterviewSummarizer } from "./openai/openai-interview-summarizer.js";
 import { CloudflareTurnstileVerifier } from "./turnstile/cloudflare-turnstile-verifier.js";
 import { FakeTurnstileVerifier } from "./turnstile/fake-turnstile-verifier.js";
 
@@ -50,13 +51,6 @@ const createFakeProviderAdapters = (): ProviderAdapters => {
   });
 };
 
-const createUnavailableLiveAdapters = () => ({
-  interviewSummarizer: {
-    summarizeInterview: () =>
-      Promise.reject(new MissingLiveProviderAdaptersError("OpenAI summary")),
-  },
-});
-
 const createLiveProviderAdapters = (
   config: BackendConfig,
 ): ProviderAdapters => {
@@ -83,7 +77,7 @@ const createLiveProviderAdapters = (
       verificationUrl: config.providers.turnstile.verificationUrl,
     }),
     cvAnalyzer: new OpenAiCvAnalyzer(openAiClient),
-    ...createUnavailableLiveAdapters(),
+    interviewSummarizer: new OpenAiInterviewSummarizer(openAiClient),
     voiceTokenProvider: new ElevenLabsVoiceTokenProvider({
       agentId: elevenLabsAgentId,
       client: elevenLabsClient,

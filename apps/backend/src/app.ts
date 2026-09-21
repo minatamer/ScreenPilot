@@ -30,6 +30,10 @@ import {
   createVoiceToken,
   type VoiceTokenAdmission,
 } from "./use-cases/create-voice-token.js";
+import {
+  createGenerateInterviewSummary,
+  type InterviewSummaryAdmission,
+} from "./use-cases/generate-interview-summary.js";
 
 export type AppSecuritySecrets = Readonly<{
   anonymousCookieSecret: string;
@@ -45,6 +49,7 @@ export type CreateAppOptions = Readonly<{
   logger?: Logger;
   providerAdapters: ProviderAdapters;
   securitySecrets?: AppSecuritySecrets;
+  summaryAdmission?: InterviewSummaryAdmission;
   voiceTokenAdmission?: VoiceTokenAdmission;
 }>;
 
@@ -123,6 +128,14 @@ export function createApp(options: CreateAppOptions): Express {
     provider: options.providerAdapters.voiceTokenProvider,
     verifier: options.providerAdapters.challengeVerifier,
   });
+  const generateInterviewSummary = createGenerateInterviewSummary({
+    admission: options.summaryAdmission ?? (() => "allowed"),
+    enabled:
+      parsedConfig.providerMode === "fake" || parsedConfig.paidDemoEnabled,
+    grantService,
+    summarizer: options.providerAdapters.interviewSummarizer,
+    verifier: options.providerAdapters.challengeVerifier,
+  });
   const app = express();
 
   app.disable("x-powered-by");
@@ -157,6 +170,7 @@ export function createApp(options: CreateAppOptions): Express {
         ttlSeconds: parsedConfig.limits.anonymousCookieTtlSeconds,
       }),
       getDemoBootstrap,
+      generateInterviewSummary,
       idGenerator,
       issueVoiceToken,
       isReady: () =>

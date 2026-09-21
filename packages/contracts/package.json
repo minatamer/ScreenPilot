@@ -14,6 +14,11 @@
       "development": "./src/ai/cv-analysis-output.ts",
       "default": "./dist/ai/cv-analysis-output.js"
     },
+    "./ai/summary-output": {
+      "types": "./src/ai/summary-output.ts",
+      "development": "./src/ai/summary-output.ts",
+      "default": "./dist/ai/summary-output.js"
+    },
     "./api/bootstrap": {
       "types": "./src/api/bootstrap.ts",
       "development": "./src/api/bootstrap.ts",

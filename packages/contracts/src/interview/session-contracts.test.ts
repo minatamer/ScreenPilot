@@ -157,7 +157,8 @@ describe("SP-006 cross-boundary contracts", () => {
 
   it("reports candidate-stated or undecided role state without vacancy keys", () => {
     const summary = {
-      overview: "Candidate evidence was organized for human review.",
+      overview:
+        "Local interview evidence was organized into cautious notes for human review.",
       rolePreference: {
         label: null,
         status: "undecided",
@@ -170,7 +171,7 @@ describe("SP-006 cross-boundary contracts", () => {
       communicationNotes: [],
       candidateQuestions: [],
       humanFollowups: [],
-      limitations: ["The demo does not make hiring decisions."],
+      limitations: ["These AI-organized notes require human review."],
     } as const;
 
     expect(screeningSummarySchema.parse(summary)).toEqual(summary);

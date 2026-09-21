@@ -15,12 +15,10 @@ import {
 } from "../security/interview-grant.js";
 import type { ChallengeVerifier } from "./ports/challenge-verifier.js";
 import type { CvAnalyzer } from "./ports/cv-analyzer.js";
+import { estimateOpenAiCostUsd } from "./openai-usage-cost.js";
 import { UseCaseError } from "./use-case-error.js";
 
 const CV_ANALYSIS_PLAN_VERSION = "2026-09-16.1";
-const OPENAI_INPUT_COST_PER_MILLION_TOKENS = 0.75;
-const OPENAI_CACHED_INPUT_COST_PER_MILLION_TOKENS = 0.075;
-const OPENAI_OUTPUT_COST_PER_MILLION_TOKENS = 4.5;
 
 export type CvAnalysisAdmissionDecision =
   "allowed" | "capacity_reached" | "rate_limited";
@@ -117,23 +115,6 @@ function validateProviderOutput(cvText: string, normalizedCv: unknown) {
   return output;
 }
 
-function estimatedCostUsd(usage: {
-  cachedInputTokens: number;
-  inputTokens: number;
-  outputTokens: number;
-}): number {
-  if (usage.cachedInputTokens > usage.inputTokens) {
-    throw new TypeError("Cached input tokens exceed total input tokens.");
-  }
-  const uncachedInputTokens = usage.inputTokens - usage.cachedInputTokens;
-  const cost =
-    (uncachedInputTokens / 1_000_000) * OPENAI_INPUT_COST_PER_MILLION_TOKENS +
-    (usage.cachedInputTokens / 1_000_000) *
-      OPENAI_CACHED_INPUT_COST_PER_MILLION_TOKENS +
-    (usage.outputTokens / 1_000_000) * OPENAI_OUTPUT_COST_PER_MILLION_TOKENS;
-  return Number(cost.toFixed(8));
-}
-
 export function createAnalyzeCv(input: {
   admission: CvAnalysisAdmission;
   analyzer: CvAnalyzer;
@@ -214,7 +195,7 @@ export function createAnalyzeCv(input: {
       );
       usage = {
         ...providerResult.usage,
-        estimatedCostUsd: estimatedCostUsd(providerResult.usage),
+        estimatedCostUsd: estimateOpenAiCostUsd(providerResult.usage),
       };
     } catch (error: unknown) {
       throw new UseCaseError(

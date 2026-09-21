@@ -111,21 +111,21 @@ unrelated safety limits.
 | `RATE_LIMIT_VOICE_TOKEN_REQUESTS` | `3` | Preserves the strict voice-token request ceiling. |
 | `RATE_LIMIT_SUMMARY_REQUESTS` | `10` | Preserves the existing summary request ceiling. |
 
-### Runtime wiring audit (2026-09-14)
+### Runtime wiring audit (updated 2026-09-21)
 
 This audit traces the committed variable names only. It did not open or read
 either ignored `.env.local` file and did not contact a provider.
 
 | Environment value | Current code consumer | Current state / ticket ownership |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | The live backend adapter passes it to the OpenAI Responses client as a Bearer credential. | Live CV analysis is implemented by SP-010. The live post-call summarizer and summary route do not exist yet; SP-020 owns them, and the current live summarizer intentionally fails closed. |
+| `OPENAI_API_KEY` | The live backend adapter passes it to the OpenAI Responses client as a Bearer credential. | Live CV analysis is implemented by SP-010 and live post-call summary generation is implemented by SP-020. Both remain paid/Turnstile gated, and the first controlled real summary stays deferred to SP-021A. |
 | `ELEVENLABS_API_KEY` | The live backend client sends it only in the server-side `xi-api-key` header when requesting a private conversation token. | Implemented by SP-014; no browser exposure. |
 | `ELEVENLABS_AGENT_ID` | The live token client binds it into the ElevenLabs `agent_id` request and rejects a mismatched requested agent. | Implemented by SP-014; it is not accepted from the browser. |
 | `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. SP-018A supplied the initial smoke; SP-021A/SP-025 own remaining manual/deployed-agent drift acceptance. |
 | `TURNSTILE_SITE_KEY` | Copied into the allow-listed public bootstrap response, then passed to the frontend Turnstile widget. | Implemented by SP-003/SP-012. This is the only provider value in this group that is public by design. |
-| `TURNSTILE_SECRET_KEY` | The backend sends it to Cloudflare Siteverify in the form body. | Implemented by SP-009 and used before the current CV-analysis and voice-token provider calls. SP-020 will reuse it for summary. |
+| `TURNSTILE_SECRET_KEY` | The backend sends it to Cloudflare Siteverify in the form body. | Implemented by SP-009 and used before CV-analysis, voice-token, and SP-020 summary provider calls with route-specific actions. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | The backend compares Siteverify's returned hostname against this exact allow-list. | Implemented by SP-009; `localhost` is the current local-only value. |
-| `INTERVIEW_GRANT_SIGNING_SECRET` | The backend HMAC-signs and verifies short-lived stateless interview grants. | Implemented by SP-009 and used by preparation, CV analysis, and voice-token authorization. |
+| `INTERVIEW_GRANT_SIGNING_SECRET` | The backend HMAC-signs and verifies short-lived stateless interview grants. | Implemented by SP-009 and used by preparation, CV analysis, voice-token authorization, and SP-020 summary plan binding. |
 | `ANONYMOUS_COOKIE_SECRET` | Express `cookie-parser` verifies the signed, HttpOnly, content-free anonymous-session cookie and signs replacements. | Implemented by SP-009 and used by bootstrap plus protected routes. |
 
 The audit found two activation defects, both corrected on 2026-09-14:
