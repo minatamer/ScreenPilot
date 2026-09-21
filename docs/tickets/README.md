@@ -1,7 +1,7 @@
 # ScreenPilot standalone ticket index
 
 Status: execution-packet index  
-Last synchronized: 2026-09-15<br>
+Last synchronized: 2026-09-21<br>
 Parent source of truth: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
 
 ---
@@ -76,7 +76,8 @@ If a dependency is missing or materially different, stop at that boundary and re
 
 ## Ordered ticket index
 
-Current implementation progress, reconciled against code and Git history on 2026-09-14:
+Current implementation progress, reconciled against code, Git history, and the
+owner-approved SP-018A scope decision on 2026-09-21:
 
 - SP-001 through SP-005 are completed, reviewed, revised, and represented by their documented implementation commits.
 - SP-004's earlier direction is represented by `6f94d0a`; the approved Deep Ink + Warm Coral revision supersedes it for implementation.
@@ -93,11 +94,11 @@ Current implementation progress, reconciled against code and Git history on 2026
 - SP-013 is completed, verified for its non-hardware boundary, and represented by implementation commit `d5338cb`; real microphone/device checks remain owner-only.
 - SP-014 is completed, validated after its fake-mode and terminal-session cleanup corrections, and represented by implementation commit `9075c7d`; real ElevenLabs, Turnstile, retention-dashboard, and microphone verification remains credential-gated.
 - SP-014A is completed as documentation-only work. Its consolidated runbook covers every non-deployment OpenAI, ElevenLabs, Turnstile, local-secret, spend, rotation, and manual-verification step without requesting credentials or making a paid call; owner account setup and live/microphone checks remain explicitly pending.
-- SP-015 is implemented and deterministically verified without a live provider; its active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018A after SP-018 implements the measurement/runtime controls.
+- SP-015 is implemented and deterministically verified. SP-018A supplied the initial active-session smoke; its remaining responsive, reduced-motion, callback, cleanup, and post-fix observations move unchanged to the consolidated SP-021A gate after review exists.
 - SP-015A's owner-directed landing and `/demo` UI/UX implementation is represented by commit `cab2990`. Motion, illustration, CTA, responsive alignment, preflight hierarchy, the shared stage-heading primitive, typography tokens, and spacing rhythm have focused deterministic coverage; consolidated owner visual acceptance and remaining whole-flow/manual checks stay tracked in that packet.
 - SP-016 is implemented, locally verified without credentials or paid calls, and represented by commit `13fc434`. Its schemas, five-tool dispatcher, evidence validation, correction-history preservation, CV seeding, strict session synchronization, aligned height-matched Insight Board, responsive connector treatment, and safety cases have focused coverage; published-agent callbacks and an owner/browser reduced-motion visual check remain explicitly pending.
-- SP-016A is implemented and locally verified. Every currently reachable `/demo` step fits practical tablet and laptop browser viewports through height-aware density, responsive composition, concise copy, bottom-anchored action footers, and bounded inner scrolling; the final compact-anchor evidence uses the real `/demo` flow from asserted top-of-page state, reduced motion is computed and checked, and the production build ran in a zero-local-environment snapshot. The fake-mode End interview path now enters a reducer-owned, scrubbed, non-persistable placeholder stage. Owner visual acceptance and the ticket commit remain pending.
-- SP-017 is locally implemented and verified at policy version `sp017-2026-09-16.1`. Its source-controlled prompt, eight-variable provider-config wiring, bounded reconnect state/time context, good/bad transcript fixtures, strengthened 52-test deterministic/semantic policy suite, and synchronization runbook are complete without a provider call. The 2026-09-16 closure revision adds only the provider-owned `end_call` requirement after a brief spoken close. The owner confirmed publication of the new prompt, complete client-event set including `agent_chat_response_part`, and sole End conversation system tool to ScreenPilot/Main without Preview. Immutable revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in source; live behavior remains an SP-018A owner-observation item.
+- SP-016A is implemented, locally verified, and represented by commit `08ff846`. Every currently reachable `/demo` step fits practical tablet and laptop browser viewports through height-aware density, responsive composition, concise copy, bottom-anchored action footers, and bounded inner scrolling; the final compact-anchor evidence uses the real `/demo` flow from asserted top-of-page state, reduced motion is computed and checked, and the production build ran in a zero-local-environment snapshot. The fake-mode End interview path now enters a reducer-owned, scrubbed, non-persistable placeholder stage. Remaining owner/live observations are carried by the consolidated live-validation gate.
+- SP-017 is locally implemented and verified at policy version `sp017-2026-09-16.1`. Its source-controlled prompt, eight-variable provider-config wiring, bounded reconnect state/time context, good/bad transcript fixtures, strengthened 52-test deterministic/semantic policy suite, and synchronization runbook are complete without a provider call. The 2026-09-16 closure revision adds only the provider-owned `end_call` requirement after a brief spoken close. The owner confirmed publication of the new prompt, complete client-event set including `agent_chat_response_part`, and sole End conversation system tool to ScreenPilot/Main without Preview. Immutable revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in source; remaining live behavior observation moves to SP-021A after the complete review flow exists.
 - SP-018 is implemented and deterministically verified; SP-018A's no-spend
   caption/termination correction advances the provider-config target to
   `sp018-2026-09-16.1`. Its bounded content-free timing tracker, source-labelled
@@ -105,6 +106,17 @@ Current implementation progress, reconciled against code and Git history on 2026
   substantive-audio/filler separation, filler review limits, card-render boundary,
   and exact eight-minute stop are complete without a live call. Empirical
   provider tuning and all credentialed/live acceptance remain outside SP-018.
+- SP-018A is finalized by explicit owner scope decision and represented by
+  commit `3add8d1`. Its bounded live smoke proved one synthetic CV analysis and
+  one private CV-assisted WebRTC interview; the two defects found in that run
+  were corrected and deterministically verified. The owner accepted that
+  evidence as sufficient to unlock SP-019 and confirmed the local runtime is
+  restored to `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake`. Post-fix live
+  observation, the second entry mode, complete tool/runtime-variable coverage,
+  the 50-turn and 50-preparation samples, cleanup/privacy inspection, and
+  provider revision/retention/usage/cost review remain explicitly unchecked and
+  move intact to required SP-021A after SP-021. No public/release readiness is
+  claimed by this closure.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
@@ -137,26 +149,30 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-019 | [Finalize transcript and evidence navigation](SP-019-finalize-transcript-and-evidence-navigation.md) | SP-015, SP-016, SP-018A | Required |
 | SP-020 | [Generate stateless post-call summary](SP-020-generate-stateless-post-call-summary.md) | SP-009, SP-010, SP-010A, SP-017, SP-019 | Required |
 | SP-021 | [Build review, retry, and Clear session](SP-021-build-review-retry-and-clear-session.md) | SP-005, SP-006, SP-010A, SP-019, SP-020 | Required |
+| SP-021A | [Validate the complete live demo flow](SP-021A-validate-complete-live-demo-flow.md) | SP-018A, SP-019, SP-020, SP-021 | Required |
 | SP-022 | [Add public abuse and spend controls](SP-022-add-public-abuse-and-spend-controls.md) | SP-003, SP-009, SP-010, SP-014, SP-020, SP-021 | Required |
 | SP-023 | [Harden privacy, headers, and logging](SP-023-harden-privacy-headers-and-logging.md) | SP-006, SP-009, SP-010, SP-014, SP-020 | Required |
 | SP-024 | [Harden accessibility, responsiveness, and performance](SP-024-harden-accessibility-responsiveness-and-performance.md) | SP-005, SP-011, SP-012, SP-013, SP-016, SP-016A, SP-021 | Required |
-| SP-025 | [Complete focused manual release QA](SP-025-complete-focused-manual-release-qa.md) | SP-010A, SP-017, SP-018, SP-018A, SP-021, SP-022, SP-023, SP-024 | Required |
-| SP-026 | [Deploy frontend and backend](SP-026-deploy-frontend-and-backend.md) | SP-022, SP-023, SP-025 | Required |
-| SP-027 | [Optionally produce portfolio materials](SP-027-optionally-produce-portfolio-materials.md) | SP-018, SP-018A, SP-021, SP-025, SP-026 | Optional |
+| SP-025 | [Complete focused manual release QA](SP-025-complete-focused-manual-release-qa.md) | SP-010A, SP-017, SP-018, SP-021A, SP-022, SP-023, SP-024 | Required |
+| SP-025A | [Audit release-candidate code and ticket completion](SP-025A-audit-release-candidate-code-and-ticket-completion.md) | SP-025 | Required |
+| SP-026 | [Deploy frontend and backend](SP-026-deploy-frontend-and-backend.md) | SP-022, SP-023, SP-025A | Required |
+| SP-027 | [Optionally produce portfolio materials](SP-027-optionally-produce-portfolio-materials.md) | SP-018, SP-021A, SP-025A, SP-026 | Optional |
 | SP-028 | [Optionally add extended automation](SP-028-optionally-add-extended-automation.md) | SP-010A, SP-026 | Optional |
 
 ## Milestone boundaries
 
 - Milestone 0: SP-001 through SP-005 — repository, quality, configuration, and visual foundations.
 - Milestone 1: SP-006 through SP-012, including SP-010A and SP-011A — disposable state, the role-neutral migration, the modern entry shell, and both preparation paths.
-- Milestone 2: SP-013 through SP-018A, including SP-014A and SP-015A — shared preflight, provider setup, real-time voice, owner-reviewed UI polish, insights, policy, latency controls, and controlled live CV/voice verification.
-- Milestone 3: SP-019 through SP-021 — transcript evidence, summary, and local review.
-- Milestone 4: SP-022 through SP-025 — public-demo hardening and focused release approval.
+- Milestone 2: SP-013 through SP-018A, including SP-014A and SP-015A — shared preflight, provider setup, real-time voice, owner-reviewed UI polish, insights, policy, latency controls, and the bounded live CV/voice compatibility smoke.
+- Milestone 3: SP-019 through SP-021A — transcript evidence, summary, local review, and one consolidated complete-flow live validation.
+- Milestone 4: SP-022 through SP-025A — public-demo hardening, focused release approval, and the final repository/ticket audit.
 - Milestone 5: SP-026 — deployment.
 - Milestone 6: SP-027 — optional portfolio packaging.
 - Milestone 7: SP-028 — optional extended automation.
 
-SP-026 is the required release boundary. SP-027 and SP-028 do not block it.
+SP-025A is the final required pre-deployment audit gate. SP-026 is the required
+deployment/release boundary, and it may deploy only the exact candidate audited
+by SP-025A. SP-027 and SP-028 do not block it.
 
 ## Initial implementation runway
 

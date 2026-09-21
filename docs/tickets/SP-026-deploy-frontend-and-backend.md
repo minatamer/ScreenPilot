@@ -2,8 +2,8 @@
 
 Status: Required release boundary  
 Milestone: Milestone 5 — deploy  
-Last synchronized: 2026-09-16<br>
-Depends on: SP-022, SP-023, SP-025  
+Last synchronized: 2026-09-21<br>
+Depends on: SP-022, SP-023, SP-025A<br>
 Suggested commit: `SP-026: publish the stateless ScreenPilot demo`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -12,7 +12,10 @@ Ticket index: [`README.md`](README.md)
 
 ## Objective
 
-Extend the one GitHub Actions pipeline to build and deploy independently versioned frontend/backend Cloud Run services behind one low-cost Firebase Hosting custom HTTPS domain with keyless identity, secrets, abuse controls, smoke checks, and rollback.
+Deploy the exact SP-025A-audited candidate by extending the one GitHub Actions
+pipeline to build independently versioned frontend/backend Cloud Run services
+behind one low-cost Firebase Hosting custom HTTPS domain with keyless identity,
+secrets, abuse controls, smoke checks, and rollback.
 
 ## Standalone implementation context
 
@@ -28,6 +31,10 @@ Extend the one GitHub Actions pipeline to build and deploy independently version
 - If Cloudflare manages DNS, Firebase records remain DNS-only permanently. Do not enable the proxy, Bot Fight Mode, paid WAF, or a second CDN.
 - Create one free production Turnstile widget restricted to canonical apex/`www`; public site key is browser-safe, secret stays in Google Secret Manager.
 - SP-026 is the release boundary. SP-027 portfolio packaging and SP-028 extended automation are optional.
+- SP-025A is the final pre-deployment code/ticket audit. Its ledger and complete
+  deterministic gate must identify the exact candidate entering this ticket.
+  Do not deploy a materially changed candidate without re-running the affected
+  SP-025A audit and verification.
 - At low traffic, the two scale-to-zero services, Hosting traffic, five active secret versions, and small image repository may remain inside provider free quotas. Billing must still be enabled where required, and Artifact Registry storage/domain renewal are standing costs rather than per-flow AI charges.
 
 ### Domain research checkpoint (2026-09-16)
@@ -53,9 +60,14 @@ Extend the one GitHub Actions pipeline to build and deploy independently version
 - Do not use long-lived Google service-account keys.
 - Do not automate real paid provider flows or add a production Turnstile bypass to smoke tests.
 - Do not expose direct service URLs, candidate content, secrets, or raw build arguments in UI/metadata/images/logs.
+- Do not waive, bypass, or reinterpret an unresolved SP-025A finding, blocker,
+  unchecked requirement, or candidate-identity mismatch.
 
 ## Implementation checklist
 
+- [ ] Confirm the current Git/worktree candidate exactly matches the SP-025A
+  audit ledger and final-gate evidence before any authentication, build/push, or
+  deployment action.
 - [ ] Extend the existing workflow with ordered `needs` dependencies and branch conditions while preserving the SP-002 quality job.
 - [ ] Configure minimal GitHub permissions and repository/branch-restricted OIDC → Workload Identity Federation.
 - [ ] Create a least-privilege deployment service account and protected GitHub `production` environment variables.
@@ -78,6 +90,8 @@ Extend the one GitHub Actions pipeline to build and deploy independently version
 
 ## Acceptance criteria
 
+- [ ] The deployed source exactly matches the candidate closed by SP-025A; any
+  material post-audit change was re-audited before deployment.
 - [ ] A green `main` commit deploys the exact same SHA to both independently restartable services; pull requests cannot authenticate/deploy.
 - [ ] The canonical HTTPS domain serves frontend routes and same-origin `/v1` backend routes; `www` redirects without a loop.
 - [ ] Managed certificate, first-party safety cookie, refresh routing, CSP/CORS/origin, and Turnstile hostname/actions work.
@@ -105,6 +119,7 @@ Keep SP-026 reviewable as one logical change represented by `chore(deploy): publ
 
 ## Precision references
 
+- [Final release-candidate audit](SP-025A-audit-release-candidate-code-and-ticket-completion.md)
 - [Unified GitHub Actions pipeline](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#unified-github-actions--google-cloud-pipeline)
 - [Complete custom-domain and HTTPS guide](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#cheapest-custom-domain-and-https-guide)
 - [Repository stack and service names](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#11-frontendbackend-architecture)
@@ -115,4 +130,9 @@ Keep SP-026 reviewable as one logical change represented by `chore(deploy): publ
 
 ## Completion handoff
 
-Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
+Report the exact SP-025A-audited candidate deployed, files changed, targeted
+checks and manual states verified, any deliberate deviation from this packet,
+and every unchecked item with its blocker. If deployment preparation materially
+changes audited product code/configuration, stop and re-run the affected SP-025A
+audit before continuing. Update the parent source of truth and every affected
+packet when a material product or architecture decision changes.

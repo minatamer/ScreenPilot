@@ -2,6 +2,7 @@
 
 **Ticket:** SP-014A<br>
 **Last verified against first-party documentation:** 2026-09-14<br>
+**Last synchronized with ticket sequencing:** 2026-09-21<br>
 **Scope:** local setup and live-provider readiness only
 
 This is the single owner runbook for preparing ScreenPilot's credentialed local
@@ -120,7 +121,7 @@ either ignored `.env.local` file and did not contact a provider.
 | `OPENAI_API_KEY` | The live backend adapter passes it to the OpenAI Responses client as a Bearer credential. | Live CV analysis is implemented by SP-010. The live post-call summarizer and summary route do not exist yet; SP-020 owns them, and the current live summarizer intentionally fails closed. |
 | `ELEVENLABS_API_KEY` | The live backend client sends it only in the server-side `xi-api-key` header when requesting a private conversation token. | Implemented by SP-014; no browser exposure. |
 | `ELEVENLABS_AGENT_ID` | The live token client binds it into the ElevenLabs `agent_id` request and rejects a mismatched requested agent. | Implemented by SP-014; it is not accepted from the browser. |
-| `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. It is a manual/deployed-agent drift check for SP-018A/SP-025, not a missing provider-call parameter. |
+| `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. SP-018A supplied the initial smoke; SP-021A/SP-025 own remaining manual/deployed-agent drift acceptance. |
 | `TURNSTILE_SITE_KEY` | Copied into the allow-listed public bootstrap response, then passed to the frontend Turnstile widget. | Implemented by SP-003/SP-012. This is the only provider value in this group that is public by design. |
 | `TURNSTILE_SECRET_KEY` | The backend sends it to Cloudflare Siteverify in the form body. | Implemented by SP-009 and used before the current CV-analysis and voice-token provider calls. SP-020 will reuse it for summary. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | The backend compares Siteverify's returned hostname against this exact allow-list. | Implemented by SP-009; `localhost` is the current local-only value. |
@@ -608,7 +609,7 @@ not applicable, or deferred to a named later ticket.
 | Knowledge base / RAG | Disabled or empty |
 | Workflows, branches, sub-agents, transfer rules | Disabled or not applicable |
 | Evaluation criteria, post-call analysis, data collection, sentiment | Disabled or empty |
-| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation is deferred to SP-017, deterministic timing behavior to SP-018, and controlled live tuning to SP-018A |
+| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation belongs to SP-017 and deterministic timing behavior to SP-018. SP-018A completed the bounded initial smoke; SP-021A owns the remaining consolidated complete-flow validation and representative live sample. |
 | Initiation and post-call webhooks | Disabled |
 | Experiments, traffic splits, alternate versions | Disabled; one active Main version |
 | Server-to-client and client-to-server events | Only events required by the private WebRTC bridge and exact client tools; normalization and handlers are deferred to SP-015 and SP-016 |
@@ -1015,7 +1016,8 @@ state, not a payment method, account identifier, key, or billing screenshot:
 
 ### Phase D: safe configuration readiness
 
-SP-018A executes this phase before any paid CV or voice operation.
+SP-018A executed this phase before its paid CV and voice smoke. SP-021A repeats
+the fail-closed checkpoint before its later consolidated paid window.
 
 - [x] Correct the SP-009 backend local-start path so it deliberately loads the
   ignored backend environment file without printing it.
@@ -1044,10 +1046,13 @@ SP-018A executes this phase before any paid CV or voice operation.
   bootstrap before any provider control becomes available; Strict Mode aborts,
   stale responses, stage transitions, and explicit retry cannot reuse an older
   persisted capability state to authorize a provider action.
-- [x] The owner retains exclusive control of both switches and keeps the current
-  `PROVIDER_MODE=live`, `PAID_DEMO_ENABLED=false` state until intentionally
-  opening the bounded paid window. The final post-test restoration to fake/false
-  remains required by SP-018A.
+- [x] At the historical no-spend checkpoint, the owner retained exclusive
+  control of both switches and kept `PROVIDER_MODE=live` with
+  `PAID_DEMO_ENABLED=false` until intentionally opening the bounded SP-018A paid
+  window. After that smoke, the owner confirmed the current restored state is
+  `PROVIDER_MODE=fake` with `PAID_DEMO_ENABLED=false`. SP-021A must repeat the
+  fail-closed live/false checkpoint before its future paid window and restore
+  fake/false afterward.
 - [x] The no-spend phase is accepted as closed by the combined backend
   provider-spy tests, frontend fail-closed/network-denial tests, restored-session
   tests, startup evidence, and owner-visible browser confirmation. No paid
@@ -1071,22 +1076,27 @@ coding agent to change either switch or begin a provider operation.
 
 ### Phase E: owner-authorized live provider and dashboard checks
 
-SP-018A executes the CV-analysis and voice portions with synthetic data. The
-summary item remains deferred to SP-020/SP-021.
+SP-018A executed the bounded CV-analysis and initial voice portions with
+synthetic data. By owner decision on 2026-09-21, every unperformed full-flow
+item below remains unchecked and moves to SP-021A after SP-019 through SP-021.
+The first live summary belongs to that consolidated window.
 
 - [x] The owner explicitly authorizes the paid smoke test.
 - [ ] Synthetic CV analysis makes at most one bounded direct OpenAI operation
   and is checked for cost and `store: false` behavior during SP-018A.
-- [ ] After SP-020/SP-021, synthetic summary makes at most one bounded direct
-  OpenAI operation and is checked for cost and `store: false` behavior.
+- [ ] During SP-021A, synthetic summary makes at most one bounded direct OpenAI
+  operation per authorized complete flow and is checked for cost and
+  `store: false` behavior.
 - [ ] The owner verifies real Turnstile success, action and hostname validation,
   expiration, and replay rejection.
 - [x] The owner verifies one private ElevenLabs token issuance and one WebRTC
   connection.
 - [ ] ElevenLabs audio saving, zero-day retention, version ID, usage, and cost
   evidence are manually reviewed.
-- [ ] `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake` are restored immediately
-  after the bounded test.
+- [x] The owner confirms `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake` are
+  restored after the bounded test. The coding agent did not inspect either
+  ignored local environment file; SP-021A still owns post-window restart/fake-
+  flow verification for its future consolidated run.
 
 Live CV checkpoint on 2026-09-16: the owner-authorized paid run completed the
 checked-in synthetic sample's full CV-assisted preparation path through browser
@@ -1096,7 +1106,7 @@ validation, and plan-preview rendering. The visible role suggestion and three
 evidence cards matched the source-controlled expected fixture. The composite
 usage/cost item above remains unchecked until provider-dashboard cost evidence
 is reviewed; this checkpoint does not claim voice, negative Turnstile cases,
-cleanup, or safety-switch restoration.
+cleanup. Safety-switch restoration is confirmed separately above.
 
 Live voice checkpoint on 2026-09-16: one owner-triggered Start passed the real
 `voice_token` challenge, returned one successful backend token response, and
@@ -1108,7 +1118,7 @@ partial pass: Pilot-side captions were absent, and a verbal agent close did not
 end the provider session or move the reducer into the existing scrubbed Review
 placeholder. Both are blocking defects; no claim is made for all runtime
 variables, both entry modes, all five tools, performance, provider cost/usage,
-cleanup, or safety-switch restoration.
+cleanup. Safety-switch restoration is confirmed separately above.
 
 Deterministic voice-defect correction on 2026-09-16: Pilot-caption loss was
 traced to global numeric provider-ID deduplication. Final message identity is
@@ -1119,7 +1129,7 @@ the SDK's typed `reason: "agent"` disconnect; browser farewell phrase matching
 is explicitly prohibited. The existing one-time agent-disconnect reducer path
 enters the scrubbed Review placeholder. Focused regression tests cover the two
 defects without a provider operation. The two live acceptance observations stay
-unchecked until a future owner-observed call happens naturally; another paid
+unchecked until SP-021A's owner-observed complete flow; another partial paid
 call is not required solely to repeat this fix.
 
 The owner confirmed the corrected Main configuration was published without a
@@ -1128,6 +1138,10 @@ Preview or paid conversation. Immutable revision
 provider target with policy `sp017-2026-09-16.1`.
 
 ### Phase F: owner microphone and real-conversation checks
+
+SP-021A owns every unchecked Phase F observation during the consolidated
+complete-flow window. SP-025 reuses current evidence unless later changes
+invalidate it.
 
 - [x] The owner grants microphone permission in the intended browser.
 - [ ] The owner confirms the intended input-device label and responsive level

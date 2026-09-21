@@ -2,7 +2,7 @@
 
 Status: Complete<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-15<br>
+Last synchronized: 2026-09-21<br>
 Depends on: SP-014, SP-015, SP-017  
 Suggested commit: `SP-018: enforce conversational latency gates`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -12,7 +12,7 @@ Ticket index: [`README.md`](README.md)
 
 ## Objective
 
-Implement and deterministically verify the content-free instrumentation and runtime controls needed to tune latency, interruption, visual waiting states, the single allowed filler, and the eight-minute cap. SP-018A owns activation of live providers and the representative live measurement sample.
+Implement and deterministically verify the content-free instrumentation and runtime controls needed to tune latency, interruption, visual waiting states, the single allowed filler, and the eight-minute cap. SP-018A supplied the initial bounded live smoke; SP-021A owns the transferred representative live measurement sample after the complete review flow exists.
 
 ## Standalone implementation context
 
@@ -24,15 +24,15 @@ Implement and deterministically verify the content-free instrumentation and runt
 - Conversation-first preparation p95 target is ≤500 ms and blocks above 1,000 ms.
 - Latency UI: 0–800 ms visual state only; 800–1,500 ms adds **Reviewing your answer…**; above 1,500 ms may play one static **“Mm-hm…”** soft-timeout filler.
 - At most one filler per turn; more than three per interview or fillers on consecutive turns fail review. The filler is non-evaluative and never GPT-generated.
-- Produce content-free measurement IDs, aggregation, and threshold reporting that SP-018A can use for at least 50 representative live turns and 50 preparation requests across desktop/mobile and normal/throttled profiles.
+- Produce content-free measurement IDs, aggregation, and threshold reporting that SP-021A can use for at least 50 representative live turns and 50 preparation requests across desktop/mobile and normal/throttled profiles.
 - Complete SP-015's deliberately deferred active-session browser checks for captions, speaking/listening/reconnect states, mute, End, hard stop, keyboard operation, reduced motion, and sticky safe-area controls across the responsive reference anchors.
 
 ## Manual credential gate
 
 - Instrumentation, aggregation, filler limits, and fake timing tests need no credential. Complete them first with the fake voice path.
-- This ticket does not activate a live provider or request a credential. The required live sample reuses SP-014's ElevenLabs key/agent/voice and Turnstile group only under SP-018A's explicit preconditions and paid-test authorization.
+- This ticket does not activate a live provider or request a credential. The transferred live sample reuses SP-014's ElevenLabs key/agent/voice and Turnstile group only under SP-021A's explicit preconditions and paid-test authorization.
 - Do not fabricate live measurements or tune release thresholds against fake latency. Fake traces validate boundaries and deterministic state behavior only.
-- Fake traces do not complete SP-015's deferred manual interaction and visual checks; SP-018A owns those controlled active-session checks.
+- Fake traces do not complete SP-015's deferred manual interaction and visual checks; SP-021A owns the remaining controlled active-session checks after the initial SP-018A smoke.
 
 ## Scope boundaries
 
@@ -50,30 +50,30 @@ Implement and deterministically verify the content-free instrumentation and runt
 - [x] Implement the approved visual latency stages with reduced-motion behavior.
 - [x] Implement exactly one static soft-timeout filler path and ensure it does not stop TTFA measurement.
 - [x] Enforce per-turn, consecutive-turn, per-interview filler limits and the eight-minute hard stop.
-- [x] Provide repeatable content-free aggregation and threshold output for the 50-turn and 50-preparation live sample owned by SP-018A.
+- [x] Provide repeatable content-free aggregation and threshold output for the 50-turn and 50-preparation live sample transferred to SP-021A.
 - [x] Document the exact metric boundaries, exclusion rules, device/network profile fields, provider-revision field, and outlier representation without candidate content.
-- [x] Encode release-blocking thresholds as failures so SP-018A cannot approve a failing live sample by weakening the gate.
+- [x] Encode release-blocking thresholds as failures so SP-021A cannot approve a failing live sample by weakening the gate.
 
 ## Acceptance criteria
 
 - [x] All required metric boundaries and content-free aggregation are deterministically verified without content logging.
-- [x] SP-018A can collect and evaluate the representative live sample without changing application code or metric definitions during the run.
-- [x] Interruption-to-audio-stop is measured through the provider listening callback and exceeding the documented gate blocks the report; SP-018A owns audible overlap verification.
+- [x] SP-021A can collect and evaluate the representative live sample without changing application code or metric definitions during the run.
+- [x] Interruption-to-audio-stop is measured through the provider listening callback and exceeding the documented gate blocks the report; SP-021A owns audible overlap verification.
 - [x] Fillers are accepted only after the threshold; repeated, consecutive, or excess observations fail local review; filler events never enter captions or evidence.
 - [x] The deterministic call path ends reliably at eight minutes and produces the existing partial-review handoff when necessary.
-- [x] Fake and live batches cannot be combined in one report, and report metadata retains its source; SP-018A owns dated live evidence and any portfolio claim.
+- [x] Fake and live batches cannot be combined in one report, and report metadata retains its source; SP-021A owns the transferred dated live evidence and any portfolio claim.
 
 ## Focused verification
 
 - [x] Run focused timer/filler/hard-stop unit tests.
 - [x] Use deterministic delayed provider/event fixtures for every latency threshold boundary.
-- [x] Run deterministic delayed provider/event fixtures across every threshold boundary and verify the content-free result format expected by SP-018A.
+- [x] Run deterministic delayed provider/event fixtures across every threshold boundary and verify the content-free result format expected by SP-021A.
 - [x] Inspect the measurement model and diagnostics projection to confirm no candidate text, CV, transcript, insight value, provider payload, credential, or token is captured or uploaded.
-- [x] Hand the active-session captions, speaking/listening/reconnect states, mute, End, hard stop, keyboard, sticky safe-area, interruption, slow-turn, cancellation, disconnect, and reduced-motion matrix to SP-018A for live execution.
+- [x] Hand the active-session captions, speaking/listening/reconnect states, mute, End, hard stop, keyboard, sticky safe-area, interruption, slow-turn, cancellation, disconnect, and reduced-motion matrix to SP-021A for the remaining live execution.
 
 ## Commit boundary
 
-Keep SP-018 reviewable as one logical change represented by `SP-018: enforce conversational latency gates`. Do not absorb SP-018A's credentialed live execution merely because the instrumentation is available. Do not create a commit unless the user asks or the active workflow already authorizes it.
+Keep SP-018 reviewable as one logical change represented by `SP-018: enforce conversational latency gates`. Do not absorb SP-021A's credentialed complete-flow execution merely because the instrumentation is available. Do not create a commit unless the user asks or the active workflow already authorizes it.
 
 ## Implementation record — 2026-09-15
 
@@ -103,14 +103,14 @@ Keep SP-018 reviewable as one logical change represented by `SP-018: enforce con
   provider reports listening; either callback order produces one sample.
 - Provider target `sp018-2026-09-15.1` contains one static 1.5-second soft
   timeout, one maximum per generation, no alternate/randomized messages, and no
-  LLM-generated filler. It stays disabled until SP-018A's deployed evidence
+  LLM-generated filler. It stays disabled until SP-021A's consolidated deployed evidence
   warrants activation. Early, repeated-turn, consecutive-turn, and fourth
   filler observations fail local review. The exact eight-minute deadline remains
   anchored to the original session start across reconnect authorization/setup;
   an exhausted budget skips the provider request and interrupts locally.
 - Deterministic focused coverage exercises preparation, connection, TTFA,
   interruption, card render, visual stages, filler exclusion/limits, aggregate
-  thresholds, fake/live report separation, and hard stop. SP-018A owns provider
+  thresholds, fake/live report separation, and hard stop. SP-021A owns remaining provider
   synchronization, paid activation, the 50-turn/50-preparation live sample,
   audible interruption/overlap, active microphone, device/responsive matrix,
   live reduced motion, cleanup, retention, usage, cost, and sanitized evidence;
@@ -119,7 +119,7 @@ Keep SP-018 reviewable as one logical change represented by `SP-018: enforce con
   typechecks, all 221 frontend tests, all 201 backend tests, all 62 contract
   tests, and a final focused 3-file/24-test collector and UI integration run.
   No production build, active microphone, live voice, provider synchronization,
-  paid call, or SP-018A sample is claimed by this verification.
+  paid call, or transferred SP-021A sample is claimed by this verification.
 
 ## Precision references
 
@@ -129,7 +129,8 @@ Keep SP-018 reviewable as one logical change represented by `SP-018: enforce con
 - [Cost controls](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#cost-controls)
 - [Credential acquisition and paid live-test gate](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup)
 - [SP-018A controlled live verification](SP-018A-verify-live-cv-and-voice-integrations.md)
+- [SP-021A complete-flow live validation](SP-021A-validate-complete-live-demo-flow.md)
 
 ## Completion handoff
 
-Report the files changed, targeted deterministic checks, measurement boundaries, and every unchecked item with its blocker. Do not claim live-provider acceptance from this ticket; SP-018A owns the provider/dashboard preflight, paid activation, live sample, and sanitized evidence. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
+Report the files changed, targeted deterministic checks, measurement boundaries, and every unchecked item with its blocker. Do not claim live-provider acceptance from this ticket; SP-018A records the bounded initial smoke and SP-021A owns the transferred complete-flow sample and sanitized evidence. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.

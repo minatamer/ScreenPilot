@@ -1,8 +1,8 @@
 # SP-017 — Write and evaluate the adaptive interview policy
 
-Status: Local implementation complete; read-aloud/provider sync/live tuning pending<br>
+Status: Local implementation and provider sync complete; remaining live observation deferred to SP-021A<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-15<br>
+Last synchronized: 2026-09-21<br>
 Depends on: SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016, SP-016A<br>
 Suggested commit: `SP-017: implement the screening conversation policy`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -116,8 +116,8 @@ Implement a source-controlled live-interviewer policy that produces natural, con
   client-event set including `agent_chat_response_part`, and sole `end_call`
   system tool without Preview. Immutable revision
   `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in source. Human
-  read-aloud review, provider callback behavior, and live text/voice tuning
-  remain SP-018A owner-observation items.
+  read-aloud review, provider callback behavior, and live text/voice tuning not
+  completed by the bounded SP-018A smoke remain SP-021A owner-observation items.
 
 ## Commit boundary
 

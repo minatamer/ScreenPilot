@@ -2,8 +2,8 @@
 
 Status: Optional; cannot block release  
 Milestone: Milestone 6 — optional portfolio packaging  
-Last synchronized: 2026-08-26  
-Depends on: SP-018, SP-018A, SP-021, SP-025, SP-026<br>
+Last synchronized: 2026-09-21<br>
+Depends on: SP-018, SP-021A, SP-025A, SP-026<br>
 Suggested commit: `SP-027: prepare the ScreenPilot portfolio release`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)

@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-09-11<br>
+Last synchronized: 2026-09-21<br>
 Depends on: SP-009, SP-010, SP-010A, SP-017, SP-019<br>
 Suggested commit: `SP-020: summarize local interview evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -30,7 +30,7 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 
 - A real summary needs the same user-supplied backend `OPENAI_API_KEY`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `TURNSTILE_ALLOWED_HOSTNAMES` group documented in SP-010. Keep all blank in the committed template.
 - Obtain the OpenAI key and Turnstile pair from the official dashboard guides linked in the parent [credential guide](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup); store both secrets only in the ignored backend file or production Secret Manager.
-- Fake OpenAI/Turnstile covers route, evidence, repair, rejection, and no-persistence tests. When values are blank, no live fallback is allowed and the one controlled real summary remains unchecked until the user permits paid testing.
+- Fake OpenAI/Turnstile covers route, evidence, repair, rejection, and no-persistence tests. When values are blank, no live fallback is allowed. The first controlled real summary is deliberately deferred to SP-021A so it validates the complete product rather than creating a standalone pre-review charge.
 
 ## Scope boundaries
 
@@ -73,7 +73,8 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 - [ ] Exercise Graphic Designer, compound-role, corrected role, undecided, and unsupported-employer-question fixtures; assert identical schema behavior and no real-vacancy/application claim.
 - [ ] Assert paid-provider call count is zero for every precondition failure.
 - [ ] Inspect output evidence IDs and logs for unsupported claims/content leakage.
-- [ ] Run one controlled real summary only when paid testing is explicitly permitted.
+- [ ] Do not run a standalone real summary in this ticket; hand the first
+  controlled real summary to SP-021A after SP-021 is complete.
 
 ## Commit boundary
 

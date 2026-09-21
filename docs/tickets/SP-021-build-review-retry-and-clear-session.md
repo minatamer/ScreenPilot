@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-09-11<br>
+Last synchronized: 2026-09-21<br>
 Depends on: SP-005, SP-006, SP-010A, SP-019, SP-020<br>
 Suggested commit: `SP-021: complete disposable session review`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -30,7 +30,7 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 ## Manual credential gate
 
 - This frontend ticket receives the public `TURNSTILE_SITE_KEY` through bootstrap and never receives OpenAI or Turnstile secrets.
-- Reuse SP-020's fake challenge and fake summary responses while backend credential fields are blank. A real summary/retry walkthrough requires the user-filled backend OpenAI/Turnstile group and explicit paid-test permission.
+- Reuse SP-020's fake challenge and fake summary responses while backend credential fields are blank. Do not run a standalone paid summary/retry walkthrough in this ticket; SP-021A owns the first real complete-flow validation after this implementation is deterministically complete.
 - Do not add provider keys to `apps/frontend/.env.local`. If live values are missing, complete all local review/retry/clear behavior and leave only the real-host provider walkthrough unchecked.
 
 ## Scope boundaries
@@ -73,6 +73,9 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - [ ] Inspect storage before/after Clear session and after refresh.
 - [ ] Check keyboard/focus flow, evidence scrolling, long text, 200% zoom, mobile portrait/landscape, and large-monitor widths.
 - [ ] If JSON download is retained, inspect it for only local bounded structured data and no secrets/raw CV/audio.
+- [ ] Hand both entry modes and the exact fake-verified summary/retry/evidence
+  matrix to SP-021A for the consolidated live window; do not claim live review
+  acceptance here.
 
 ## Commit boundary
 

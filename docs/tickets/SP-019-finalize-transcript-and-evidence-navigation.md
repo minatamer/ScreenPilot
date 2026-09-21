@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-08-26  
+Last synchronized: 2026-09-21<br>
 Depends on: SP-015, SP-016, SP-018A<br>
 Suggested commit: `SP-019: link local transcript evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -21,6 +21,9 @@ Turn bounded final local turns into an accessible review timeline and let insigh
 - The transcript is stored only in the current tab's bounded `sessionStorage` and may be incomplete after disconnect.
 - Evidence navigation must work with keyboard/focus and long transcripts on desktop and mobile.
 - The review is not a recording, certified transcript, searchable archive, editable case file, or provider conversation lookup.
+- SP-018A is finalized by explicit owner scope decision after the bounded live
+  CV/voice smoke. Its exact unchecked full-flow ledger moves to SP-021A, so no
+  additional paid provider run blocks this ticket.
 - Conversation-first evidence is Candidate-only; CV-assisted may distinguish CV, Candidate, and CV + Candidate on cards.
 - Transcript and evidence navigation remain inside SP-011A's centralized dark `/demo` workspace with the same inert stage status, compact context band, home/exit behavior, and natural page-scroll fallback for long content; review does not switch to a white document shell.
 

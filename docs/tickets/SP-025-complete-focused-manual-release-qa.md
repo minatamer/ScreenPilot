@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
-Last synchronized: 2026-09-14<br>
-Depends on: SP-010A, SP-017, SP-018, SP-018A, SP-021, SP-022, SP-023, SP-024<br>
+Last synchronized: 2026-09-21<br>
+Depends on: SP-010A, SP-017, SP-018, SP-021A, SP-022, SP-023, SP-024<br>
 Suggested commit: `SP-025: complete focused demo release checks`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -18,7 +18,9 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 
 - Manual approval is intentionally primary. SP-028 remains optional and cannot block release.
 - Run the smallest relevant targeted checks while investigating; run the full quick gate once at this release boundary.
-- One controlled live ElevenLabs/OpenAI smoke interview is required per entry mode, with explicit permission/cost awareness.
+- Current SP-021A evidence supplies the controlled live flow for each entry mode.
+  Repeat a paid flow here only when a later code, provider, configuration,
+  hostname, or release-candidate change invalidates that evidence.
 - The pre-measurement reserve is $0.80 per standard eight-minute flow or $1.40 if burst is deliberately enabled. The base estimate is about $0.70, but release evidence must use the provider dashboards rather than restating the estimate as measured fact.
 - All complete paths must be reviewed on phone, tablet, compact laptop, laptop/desktop, large monitor, and intermediate drag-resized widths.
 - Release requires measured latency gates, privacy/retention alignment, Turnstile recovery, provider failures, and natural HR-only conversation.
@@ -28,7 +30,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - Run all unpaid/fake release checks before asking for live values. The controlled live pass needs the complete user-supplied OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit permission to incur provider charges.
 - Confirm both local `.env.local` paths are ignored and absent from `git status` before the user fills the backend file. Never record secret values in the manual matrix, defect evidence, screenshots, network exports, or provider-revision notes.
 - Before any real candidate content, external tester, or public release, explicitly warn the owner if OpenAI input/output sharing is enabled, require `Organization settings > Data controls > Share inputs and outputs with OpenAI` to be **Disabled**, and record only the project name, disabled state, and verification date. Localhost and `store: false` do not waive this gate.
-- If credentials, account balance, production widget, or paid-test permission are unavailable, do not fake a live pass. Record every unpaid result, mark the two live smoke interviews/real-host challenges blocked, and withhold release approval until the manual gate is satisfied.
+- If credentials, account balance, production widget, or paid-test permission are unavailable when SP-021A evidence must be refreshed, do not fake a live pass. Record every unpaid result, mark the invalidated live evidence blocked, and withhold release approval until the manual gate is satisfied.
 
 ## Scope boundaries
 
@@ -37,6 +39,10 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - Do not use real applicant data or publish unmeasured latency/cost claims.
 - Do not make uncontrolled repeated paid calls.
 - Do not turn QA fixes into unrelated refactors or adjacent ticket scope.
+- Do not absorb SP-025A's repository-wide code/ticket reconciliation, duplicate
+  and dead-code audit, dependency review, lifecycle audit, or final exact-
+  candidate deterministic gate. Hand the manually approved candidate to that
+  required audit.
 
 ## Implementation checklist
 
@@ -57,7 +63,9 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Verify normal 8–10-prompt HR coverage, multi-field answer credit, one broad role-context clarification maximum, and zero technical, portfolio, competency, roleplay, professional-knowledge, or suitability chains.
 - [ ] Verify unsupported employer/vacancy questions become human follow-up without blocking completion and that no selected role invents responsibilities, qualifications, salary, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines.
 - [ ] Run the smallest targeted release-critical unit/backend checks, then the complete fast default commands once.
-- [ ] Run one controlled live smoke interview per entry mode and record provider revision, date, measured behavior, and cost.
+- [ ] Review SP-021A's controlled live flow for each entry mode and record its
+  provider revision, date, measured behavior, and cost; repeat only evidence
+  invalidated by later release-candidate or provider/configuration changes.
 - [ ] Create `docs/operations/full-flow-cost-baseline.md` from a blank sanitized template and record each flow's date, mode, revision, connection duration, direct OpenAI usage, ElevenLabs standard/burst minute charge, live-LLM Detailed costs, credits/free minutes applied, infrastructure overage, and total.
 - [ ] Run at least three complete flows before publishing a portfolio unit-cost claim; compare estimated versus actual totals and explain any variance greater than 20%.
 - [ ] Record, fix, and retest every release-blocking functional, responsive, privacy, security, latency, and provider issue.
@@ -66,11 +74,14 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 
 - [ ] Every required Section 18 manual scenario has a recorded pass across the relevant responsive matrix.
 - [ ] The complete quick gate passes once on the release candidate.
-- [ ] Both controlled live entry-mode smokes pass without retention/privacy/scope drift.
+- [ ] Current controlled live evidence for both entry modes passes without
+  retention/privacy/scope drift, whether reused from SP-021A or narrowly rerun
+  because later changes invalidated it.
 - [ ] No release-blocking conversation, latency, evidence, Turnstile, responsive, accessibility, privacy, or provider defect remains.
 - [ ] Every required role-neutral scenario proves one universal HR screen, no allow-list/redirection, no profession-specific assessment, and no invented employer/vacancy fact.
 - [ ] Any non-blocking known limitation is documented honestly and does not contradict definition of done.
-- [ ] SP-026 can deploy the exact approved release candidate.
+- [ ] SP-025A receives the exact approved release candidate and complete manual
+  evidence; SP-026 remains blocked until the repository/ticket audit closes.
 
 ## Focused verification
 
@@ -81,6 +92,9 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Verify OpenAI input/output sharing is disabled before any real-data or public run; block release if the dashboard state cannot be confirmed.
 - [ ] Verify the cost file contains no CV/transcript text, candidate identity, API key, account ID, Turnstile token, or secret-bearing billing screenshot.
 - [ ] Obtain explicit user approval of the release candidate and unresolved non-blocking limitations.
+- [ ] Hand the exact approved candidate, manual matrix, current SP-021A evidence,
+  cost baseline, fixed defects, and every remaining limitation/blocker to
+  SP-025A without treating this manual pass as the repository-wide final audit.
 
 ## Commit boundary
 
@@ -97,4 +111,4 @@ Keep SP-025 reviewable as one logical change represented by `test: complete focu
 
 ## Completion handoff
 
-Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.
+Report the files changed, targeted checks and manual states verified, any deliberate deviation from this packet, and every unchecked item with its blocker. Identify the exact candidate and evidence handed to SP-025A; SP-026 remains blocked until that audit closes. If implementation changes a material product or architecture decision, update the parent source of truth and every affected packet before declaring completion.

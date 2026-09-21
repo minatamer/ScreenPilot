@@ -1,8 +1,8 @@
 # SP-018A — Verify live CV and voice integrations
 
-Status: Required<br>
+Status: Finalized by owner-approved bounded live smoke; deferred evidence moved to SP-021A<br>
 Milestone: Milestone 2 — browser voice experience<br>
-Last synchronized: 2026-09-16<br>
+Last synchronized: 2026-09-21<br>
 Depends on: SP-014A, SP-018<br>
 Suggested commit: `SP-018A: verify live CV and voice integrations`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -13,11 +13,10 @@ Ticket index: [`README.md`](README.md)
 ## Objective
 
 Safely activate the already-implemented live provider paths with owner-supplied
-credentials and exclusively synthetic candidate data, then verify real
-Turnstile, OpenAI CV analysis, private ElevenLabs WebRTC voice, adaptive
-conversation behavior, client tools, latency, interruption, filler, cleanup,
-privacy, usage, and cost before implementation continues into same-session
-review.
+credentials and exclusively synthetic candidate data. Establish a bounded live
+CV and private-voice compatibility checkpoint before same-session review work,
+while preserving every unperformed full-flow, performance, privacy, usage, and
+cost item for the consolidated SP-021A validation window.
 
 ## Why this ticket exists
 
@@ -26,14 +25,15 @@ review.
   prove real model behavior, tool selection, STT/TTS quality, WebRTC behavior,
   provider latency, interruption, or dashboard/source synchronization.
 - SP-018 owns content-free instrumentation and the runtime behavior being
-  measured. This packet owns the first controlled live feedback loop and the
-  representative performance sample.
+  measured. This packet owns the completed initial bounded live feedback loop;
+  SP-021A owns the transferred representative performance sample during the
+  consolidated complete-flow validation.
 - SP-020 owns the live OpenAI summary route and SP-021 owns the browser
   summary/review/retry experience. Do not call or simulate a live summary in
   this ticket.
 - This is a local, owner-controlled engineering test, not public-demo approval.
-  SP-022 through SP-025 still own public abuse controls, privacy hardening, and
-  release QA.
+  SP-022 through SP-025A still own public abuse controls, privacy hardening,
+  release QA, and the final repository/ticket audit.
 
 ## Absolute data and credential boundary
 
@@ -498,8 +498,9 @@ authorizes it.
   evidence cards were cross-checked against the source-controlled expected-text
   fixture without copying their content into this record. This passes the two
   checked live-CV items above; it does not verify role correction, negative
-  Turnstile cases, provider-dashboard usage/cost, voice, cleanup, or restoration
-  of the safety switches, which remain unchecked.
+  Turnstile cases, provider-dashboard usage/cost, voice, or cleanup, which remain
+  unchecked and transfer to SP-021A. The owner later confirmed both safety
+  switches were restored, as recorded in the closure decision below.
 - The subsequent owner-triggered Start completed a real `voice_token`
   Turnstile check and private ElevenLabs token exchange. The content-free
   backend request log recorded one successful `POST /v1/voice/token` response
@@ -510,7 +511,9 @@ authorizes it.
   appeared without a duplicate connection. This passes only the first two
   token/WebRTC items above; browser-memory inspection, all eight runtime
   variables, both entry modes, every client tool, performance sampling,
-  provider usage/cost, cleanup, and safety-switch restoration remain unchecked.
+  provider usage/cost, and cleanup remain unchecked and transfer to SP-021A.
+  The owner later confirmed both safety switches were restored, as recorded in
+  the closure decision below.
 - The same live conversation exposed two blocking defects. Candidate captions
   rendered, but completed Pilot messages never appeared in the left-side
   caption log, so the caption acceptance item remains unchecked. After the
@@ -544,6 +547,31 @@ authorizes it.
   recorded in the source-controlled provider target with matching policy
   version `sp017-2026-09-16.1`.
 
+## Owner-approved closure and deferred evidence — 2026-09-21
+
+- The owner accepts the completed bounded live smoke as sufficient SP-018A
+  evidence: a real synthetic CV analysis and one real private CV-assisted voice
+  interview worked and felt good before the caption and automatic-ending defects
+  were found.
+- The caption and provider-owned ending corrections remain deterministically
+  verified but not re-observed live. Their checklist items remain unchecked.
+- The second entry mode, all eight runtime variables, all five client tools,
+  negative/replay Turnstile behavior, the 50-turn and 50-preparation samples,
+  complete cleanup/privacy inspection, and provider revision/retention/usage/cost
+  review remain unchecked. They move intact to the required SP-021A packet; this
+  closure does not represent them as passed.
+- The owner explicitly chose not to pay for another partial interview-only run
+  before summary and review exist. SP-021A consolidates the next paid window
+  after SP-021 so it validates both complete entry modes through interview,
+  summary, evidence-linked review, retry behavior, cleanup, and cost.
+- The owner explicitly confirms the current local runtime is restored to
+  `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake`. The coding agent did not
+  read or inspect either ignored local environment file. Restart/fake-flow
+  verification remains part of SP-021A's close-window checklist.
+- SP-018A is finalized for dependency ordering on this bounded, explicitly
+  scoped evidence. SP-019 is eligible now. Public/release readiness remains
+  blocked by SP-021A and the later hardening/release tickets.
+
 ## Precision references
 
 - [Authoritative live-provider setup runbook](../operations/live-provider-setup.md)
@@ -555,9 +583,9 @@ authorizes it.
 
 ## Completion handoff
 
-Report every precondition checked, each synthetic live scenario run, provider
-operation counts, sanitized timing/cost/retention evidence, files changed,
-focused deterministic checks, immediate-stop event, and unchecked item with its
-blocker. Explicitly confirm both safety switches were restored. Never include
-credentials, tokens, candidate content, raw provider payloads, real audio, or a
-secret-bearing screenshot in the handoff.
+The closure handoff must distinguish the bounded evidence completed here from
+the exact unchecked ledger transferred to SP-021A. It records the owner's
+confirmation that both switches are restored without claiming the ignored files
+were inspected or that fake mode was re-run. Never include credentials, tokens,
+candidate content, raw provider payloads, real audio, or a secret-bearing
+screenshot.

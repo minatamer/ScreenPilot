@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-09-15<br>
+Last revised: 2026-09-21<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -21,6 +21,42 @@ There is no role allow-list, unavailable-vacancy flow, forced role choice, role-
 One shared role-label boundary trims and Unicode-normalizes candidate/CV role text, requires 1–120 characters after normalization, rejects control characters and bidi overrides, and treats the result only as delimited untrusted data. A role label can shape natural phrasing but cannot change tools, safety policy, knowledge, or interview type.
 
 SP-010A completed the required contract/content migration locally on 2026-09-11. The removed fixed-catalogue code is historical state and must not be reintroduced by SP-011 or later tickets.
+
+### 2026-09-21 consolidated live-validation sequencing
+
+The owner accepts SP-018A's bounded synthetic live CV analysis and private
+CV-assisted voice interview as sufficient to unlock same-session review work.
+That smoke found missing Pilot captions and a missing provider-owned automatic
+end; both were fixed and deterministically verified afterward, but were
+deliberately not re-observed through another partial paid run. No unperformed
+SP-018A item is converted into a pass.
+
+SP-019 through SP-021 proceed in fake-first mode without another paid provider
+operation. Required SP-021A then runs the next owner-authorized paid window
+after the complete product exists, covering both entry modes through corrected
+voice behavior, summary, evidence-linked review, retry behavior, cleanup,
+provider usage/cost, and the retained performance ledger. SP-025 reuses current
+SP-021A live evidence and repeats only evidence invalidated by later code,
+provider, configuration, hostname, or release-candidate changes. SP-021A remains
+a required pre-release gate through SP-025; this sequencing reduces duplicate
+provider spend without weakening or misreporting acceptance evidence.
+
+### 2026-09-21 final release-candidate audit gate
+
+Required SP-025A runs after the focused manual release pass and before any
+deployment work. It reconciles every required prior ticket against its packet,
+acceptance evidence, deferred items, dependencies, commits, current code, and
+this source of truth; a ticket-named commit alone never proves completion. It
+then performs the repository-wide architecture, duplication/dead-code,
+lifecycle, privacy/security, contract/state/API, dependency, documentation, and
+deterministic final-gate audit, fixes every material finding, and records an
+honest per-ticket ledger.
+
+SP-025A does not repeat SP-024's complete layout/device pass or SP-025's manual
+product matrix except to validate a concrete audit correction. It makes no paid
+provider call and performs no deployment. SP-026 depends on SP-025A and may
+deploy only the exact audited candidate; any material later change invalidates
+the affected audit evidence and requires the smallest relevant re-audit.
 
 ### Authority order
 
@@ -1648,7 +1684,8 @@ screen-pilot/
    ├─ assets/
    │  └─ screenpilot-active-interview-concept.png # SP-004
    ├─ operations/
-   │  └─ full-flow-cost-baseline.md              # SP-025; sanitized measured usage/cost only
+   │  ├─ full-flow-cost-baseline.md              # SP-025; sanitized measured usage/cost only
+   │  └─ release-candidate-audit.md               # SP-025A; per-ticket/finding/final-gate ledger
    └─ tickets/
       ├─ README.md
       └─ SP-001-...md through SP-028-...md
@@ -1839,7 +1876,7 @@ deferrals are:
 | `OPENAI_API_KEY` | Backend-only Bearer credential for the Responses client. | SP-010 live CV analysis is wired. SP-020 has not been implemented, so the live summary adapter and route are intentionally unavailable. |
 | `ELEVENLABS_API_KEY` | Backend-only `xi-api-key` credential for private conversation-token creation. | Wired by SP-014. |
 | `ELEVENLABS_AGENT_ID` | Server-owned ElevenLabs `agent_id` for the conversation-token request. | Wired by SP-014 and never accepted from the browser. |
-| `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018A/SP-025 own manual drift/live acceptance. |
+| `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018A supplied the initial smoke and SP-021A/SP-025 own remaining manual drift/live acceptance. |
 | `TURNSTILE_SITE_KEY` | Allow-listed bootstrap field used by the browser widget. | Wired by SP-003/SP-012 and public by design. |
 | `TURNSTILE_SECRET_KEY` | Backend Siteverify secret. | Wired by SP-009 for the current CV and voice gates; SP-020 will reuse it for summary. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | Exact backend comparison against Siteverify's hostname. | Wired by SP-009. |
@@ -1890,10 +1927,12 @@ Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIR
 | SP-013 / SP-014 | Turnstile pair plus ElevenLabs key/agent/voice for real voice start | Fake challenge/token/session paths remain the default. |
 | SP-014A | Current first-party OpenAI, ElevenLabs, and Turnstile documentation only; no dashboard login, account mutation, or credential | Consolidates all non-deployment provider, key, local-secret, spend, rotation, and verification guidance while values stay blank. |
 | SP-015 / SP-016 | The published SP-014 agent/session for live callbacks and client tools; no new key | Fake event traces and tool calls complete local work. |
-| SP-017 / SP-018 / SP-018A | Published ElevenLabs agent/account access for sync and controlled live evaluation | Source prompt, fixtures, and deterministic timing logic remain testable; SP-018A live tuning stays unchecked. |
-| SP-020 / SP-021 | OpenAI key plus Turnstile pair for real summary/retry | Fake summary and challenge paths complete automated work. |
+| SP-017 / SP-018 / SP-018A | Published ElevenLabs agent/account access for sync and controlled live evaluation | Source prompt, fixtures, and deterministic timing logic remain testable; SP-018A supplied the bounded smoke and transfers its exact unchecked live ledger. |
+| SP-020 / SP-021 | None required for implementation; do not run a standalone paid summary/retry walkthrough | Fake summary and challenge paths complete automated work; the first real summary/review belongs to SP-021A. |
+| SP-021A | All local OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit owner authorization and a pre-agreed cap | Consolidates the transferred SP-018A evidence with both complete entry modes after review exists; deterministic checks remain isolated in fake/paid-disabled mode. |
 | SP-022 / SP-023 | Provider dashboard access for caps, retention, and secret audits | Rejection ordering, redaction, and scanning use fakes. |
-| SP-025 | All live provider values and explicit paid-test permission | Unpaid release checks run first; live acceptance blocks honestly. |
+| SP-025 | Dashboard access and, only when SP-021A evidence was invalidated, all live provider values plus explicit paid-test permission | Unpaid release checks run first; current SP-021A evidence is reused and only invalidated evidence is narrowly refreshed. |
+| SP-025A | No credential or live account access; tracked repository, ticket, Git, dependency, and deterministic-build evidence only | Runs with explicit fake/paid-disabled test isolation, never reads `.env.local`, and makes no provider call. |
 | SP-026 | All production secrets, non-secret Google/Firebase/domain identifiers, and dashboard access | Pipeline/config can be validated without values; production deploy blocks at the manual gate. |
 
 ### Stack
@@ -3139,7 +3178,7 @@ pnpm test:unit
 pnpm build
 ```
 
-These are the small core gates, but they still do not all need to run after every ticket. Run the smallest relevant subset during feature work and the complete fast set once before deployment/release.
+These are the small core gates, but they still do not all need to run after every ticket. Run the smallest relevant subset during feature work. SP-025 runs its release check after the manual matrix; SP-025A reruns the complete deterministic set on the exact audited candidate after fixing any final findings and before deployment.
 
 ### Optional extended commands
 
@@ -3164,7 +3203,9 @@ Extended commands are manual/opt-in. They are never attached to every commit or 
 - One ticket normally produces one reviewable commit.
 - A ticket is incomplete until its visible success/error states receive a focused manual check and any genuinely relevant targeted logic tests pass.
 - Do not run the complete repository, Playwright, integration, or AI-eval suites after each ticket unless the user explicitly requests it.
-- Run the complete fast gate once at milestone/release boundaries; optional SP-028 owns comprehensive automation.
+- Run the complete fast gate at the documented milestone/release boundaries;
+  SP-025A owns the final exact-candidate deterministic pass, while optional
+  SP-028 owns comprehensive browser/AI automation.
 - Keep paid provider calls behind explicit environment flags and out of default CI.
 - Update this source of truth when a material scope or architecture decision changes.
 
@@ -3666,7 +3707,7 @@ suppresses its real Turnstile site key from public bootstrap.
 - [x] Prevent refresh auto-reconnect and preserve partial local evidence.
 - [x] Test fake normal, interruption, duplicate, stale/out-of-order control events, disconnect, and time-limit traces.
 
-**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. Active-session browser, responsive, reduced-motion, microphone, and paid/live callback checks are deliberately deferred to SP-018A after SP-018 implements the measurement/runtime controls.
+**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. SP-018A supplied the initial active-session smoke; its unperformed responsive, reduced-motion, callback, cleanup, and post-fix observations move unchanged to the consolidated SP-021A live gate after review exists.
 
 #### [SP-015A — Polish the landing and demo flow after visual review](tickets/SP-015A-polish-landing-and-demo-flow-after-visual-review.md)
 
@@ -3801,7 +3842,7 @@ without an HTTP request, browser load, provider operation, or paid action.
 - [x] Implement visual latency stages and one static soft-timeout filler.
 - [x] Enforce filler frequency rules and 8-minute hard stop.
 - [x] Provide repeatable content-free aggregation for 50 live turns plus 50 conversation-preparation requests across desktop/mobile and normal/throttled profiles.
-- [x] Encode documented release thresholds as failures; SP-018A owns the live sample and must not weaken them.
+- [x] Encode documented release thresholds as failures; SP-021A owns the deferred live sample and must not weaken them.
 
 **Implementation evidence (2026-09-15):** Browser-only instrumentation now
 covers every named boundary, emits bounded content-free samples, and exposes an
@@ -3823,7 +3864,7 @@ claimed by this verification.
 
 #### [SP-018A — Verify live CV and voice integrations](tickets/SP-018A-verify-live-cv-and-voice-integrations.md)
 
-**Outcome:** Owner-authorized synthetic testing proves the live CV and private voice paths, provider/dashboard synchronization, conversation behavior, client tools, performance gates, privacy, cleanup, usage, and cost before same-session review work begins.
+**Outcome:** Finalized by owner decision after a bounded synthetic live smoke proved the real CV-analysis path and one private CV-assisted voice interview. The two defects found were fixed and deterministically verified. Every unperformed full-flow, post-fix observation, tool/runtime-variable, performance, privacy, cleanup, usage, and cost item remains unchecked and transfers to required SP-021A after the review flow exists.
 
 **Depends on:** SP-014A, SP-018.
 
@@ -3856,7 +3897,8 @@ validation, and browser plan-preview rendering. The visible role suggestion and
 three evidence cards were cross-checked against the source-controlled expected
 fixture. This verifies only the live paid CV-assisted preparation slice; voice,
 negative Turnstile cases, provider usage/cost review, cleanup, and final safety-
-switch restoration remain open under SP-018A.
+switch restoration remained open at that checkpoint. The owner later confirmed
+both switches were restored; the other unchecked items transfer to SP-021A.
 
 **Live voice path evidence (2026-09-16):** one owner-triggered Start passed the
 real `voice_token` gate, produced one successful private token response, and
@@ -3869,7 +3911,9 @@ and the agent's verbal close neither ended the provider session nor dispatched
 the canonical transition into the existing scrubbed Review placeholder. Those
 two defects, the second entry mode, complete client-tool/runtime-variable
 coverage, live performance samples, cleanup, provider usage/cost, and final
-safety-switch restoration remain open under SP-018A.
+safety-switch restoration remained open at that checkpoint. The owner later
+confirmed both switches were restored; the other unchecked items transfer to
+SP-021A.
 
 **Live voice defect correction (2026-09-16, deterministic/no-spend):** the
 missing Pilot captions were traced to provider-event deduplication that used a
@@ -3889,6 +3933,19 @@ Preview at immutable revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4`, which is
 recorded in source with policy `sp017-2026-09-16.1`. Live behavior acceptance
 remains unchecked until a future owner-observed conversation supplies
 independent evidence.
+
+**Owner-approved closure and transfer (2026-09-21):** the owner accepted the
+bounded live CV/voice smoke as sufficient to begin SP-019 and intentionally
+declined another paid partial interview before summary and review exist. The
+caption/automatic-end fixes remain deterministically verified but not re-
+observed live. The second entry mode, all eight runtime variables, all five
+client tools, the 50-turn and 50-preparation samples, full cleanup/privacy
+inspection, and provider revision/retention/usage/cost review remain unchecked
+and move intact to SP-021A. The owner explicitly confirms the local runtime is
+restored to `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake`; the coding agent
+did not inspect either ignored environment file. This is a dependency-ordering
+closure, not a claim that the deferred evidence passed or that the demo is
+release-ready.
 
 ### Milestone 3 — same-session review
 
@@ -3949,6 +4006,36 @@ independent evidence.
 - [ ] Decide during final scope review whether local JSON download earns its complexity.
 - [ ] Clearly label AI-organized notes and no hiring recommendation.
 - [ ] Verify clearing removes all ScreenPilot session keys and content UI.
+
+#### [SP-021A — Validate the complete live demo flow](tickets/SP-021A-validate-complete-live-demo-flow.md)
+
+**Outcome:** One consolidated, owner-authorized paid window validates both
+entry modes through corrected voice behavior, summary, evidence-linked review,
+retry behavior, cleanup, provider evidence, and retained performance sampling
+after the entire same-session product exists.
+
+**Depends on:** SP-018A, SP-019, SP-020, SP-021.
+
+**Suggested commit:** `SP-021A: validate the complete live demo flow`
+
+**Checklist:**
+
+- [ ] Reconcile the exact unchecked SP-018A ledger without converting any
+  unperformed item into a pass.
+- [ ] Run one bounded synthetic CV-assisted complete flow and one bounded
+  synthetic conversation-first complete flow through summary and review.
+- [ ] Independently observe the corrected Pilot captions and provider-owned
+  automatic ending after their deterministic SP-018A fixes.
+- [ ] Verify all eight runtime variables, all five client tools, mode-specific
+  provenance, evidence navigation, retry behavior, Clear & exit, and cleanup.
+- [ ] Collect the deferred 50 free preparation measurements and 50 eligible live
+  turns under a pre-agreed cap; report actual sample size and leave an incomplete
+  target unchecked and SP-021A open rather than weakening thresholds or
+  inventing evidence.
+- [ ] Review provider revision, retention/audio state, operation counts, coarse
+  usage, and actual cost with sanitized evidence only.
+- [ ] Restore paid false/fake mode, reverify the smallest affected deterministic
+  paths, and record every unperformed item with its blocker.
 
 ### Milestone 4 — public-demo hardening
 
@@ -4016,7 +4103,7 @@ independent evidence.
 
 **Outcome:** The complete demo is manually approved across phone, tablet, compact-laptop, laptop/desktop, and large-monitor layouts and passes the fast essential checks without requiring the extended automation suite.
 
-**Depends on:** SP-010A, SP-017, SP-018, SP-018A, SP-021, SP-022, SP-023, SP-024.
+**Depends on:** SP-010A, SP-017, SP-018, SP-021A, SP-022, SP-023, SP-024.
 
 **Suggested commit:** `SP-025: complete focused demo release checks`
 
@@ -4029,10 +4116,51 @@ independent evidence.
 - [ ] Manually verify both modes remain role-agnostic HR screens: prioritized fields, multi-field answer credit, normal 8–10-prompt budget, at most one broad role-context clarification, and zero profession-specific assessment chains.
 - [ ] Run the smallest targeted unit/backend checks for release-critical logic.
 - [ ] Run the complete fast default command set once.
-- [ ] Run one controlled live ElevenLabs/OpenAI smoke interview per entry mode.
+- [ ] Review and reuse current SP-021A live evidence for both entry modes; repeat
+  a paid flow only when a later code, provider, configuration, hostname, or
+  release-candidate change invalidates that evidence.
 - [ ] Create `docs/operations/full-flow-cost-baseline.md`; reconcile direct OpenAI usage, ElevenLabs connected minutes/live-LLM Detailed costs, free allowances, and infrastructure overages without candidate/account/secret content, and explain estimate variance above 20%.
 - [ ] Manually verify real production-hostname Turnstile checks for CV analysis, voice start, and summary plus recovery from one forced/replayed challenge failure without losing local candidate state.
 - [ ] Record and resolve release-blocking functional, responsive, privacy, and provider issues.
+
+#### [SP-025A — Audit release-candidate code and ticket completion](tickets/SP-025A-audit-release-candidate-code-and-ticket-completion.md)
+
+**Outcome:** The exact pre-deployment candidate is reconciled against every
+required prior ticket, Git history, current implementation, and this source of
+truth; every material code-quality, architecture, documentation, lifecycle,
+privacy/security, dependency, or incomplete-ticket issue is fixed and the full
+deterministic final gate passes.
+
+**Depends on:** SP-025.
+
+**Suggested commit:** `SP-025A: audit release candidate`
+
+**Checklist:**
+
+- [ ] Produce `docs/operations/release-candidate-audit.md` with one honest entry
+  per required prior ticket: status, commits, implementation/docs evidence,
+  verification, explicit deferral destination/rationale, blockers, and limits.
+- [ ] Prove `frontend -> contracts <- backend`, one reducer workflow authority,
+  allow-listed browser persistence, stateless backend composition, and no
+  provider/Node/application concerns leaking into contracts.
+- [ ] Audit and fix material duplication, dead/obsolete code, unused exports and
+  dependencies, stale flags/TODOs, unsafe casts/diagnostics, swallowed errors,
+  provider-call duplication, and high-frequency/bundle-sensitive waste.
+- [ ] Audit cleanup and abort ownership for listeners, timers, requests, object
+  URLs, microphone/media tracks, SDK subscriptions, voice sessions, retries,
+  stale results, terminal transitions, and Clear & exit.
+- [ ] Audit tracked secrets/content, blank environment examples, backend-only
+  provider secrets, bounded contracts/APIs, error/log redaction, persistence,
+  role-neutral policy, evidence links, reducer transitions, operations docs,
+  and test-runner fake/paid-disabled isolation.
+- [ ] Fix every material finding in its owning boundary and add the smallest
+  focused regression coverage.
+- [ ] Run formatting, lint, all typechecks/unit tests/production builds,
+  dependency/security audit, architecture validation, tracked-secret and ignore
+  checks, unused/dead-code review, `git diff --check`, and final scope review on
+  the exact candidate without reading `.env.local` or making a provider call.
+- [ ] Leave every unperformed/manual/live/external check explicitly deferred or
+  blocked; never use a ticket-named commit as completion evidence by itself.
 
 ### Milestone 5 — deploy
 
@@ -4040,7 +4168,7 @@ independent evidence.
 
 **Outcome:** A green GitHub Actions pipeline securely publishes two independently deployable stateless Cloud Run services behind one low-cost custom HTTPS domain with secrets and abuse controls.
 
-**Depends on:** SP-022, SP-023, SP-025.
+**Depends on:** SP-022, SP-023, SP-025A.
 
 **Suggested commit:** `SP-026: publish the stateless ScreenPilot demo`
 
@@ -4071,7 +4199,7 @@ independent evidence.
 
 **Release status:** Optional. SP-026 completes the releasable deployed demo; SP-027 cannot block deployment, release approval, or any later optional work.
 
-**Depends on:** SP-018, SP-018A, SP-021, SP-025, SP-026.
+**Depends on:** SP-018, SP-021A, SP-025A, SP-026.
 
 **Suggested commit:** `SP-027: prepare the ScreenPilot portfolio release`
 
@@ -4158,11 +4286,16 @@ independent evidence.
 - [x] The single paired desktop/mobile active-interview ImageGen concept is approved, reconciled into the explicit design rules, and not expanded into a screen catalogue.
 - [x] Shared React components apply the approved visual language consistently from small phones through large monitors without parallel device-specific themes.
 - [ ] Fast essential checks pass once before release, and the Section 18 manual acceptance sheet is approved across every responsive size band and representative intermediate widths.
+- [ ] SP-025A's per-ticket audit ledger reconciles every required prior ticket,
+  every material finding is fixed or explicitly blocks deployment, and the full
+  deterministic gate passes on the exact candidate SP-026 will deploy.
 - [ ] One GitHub `ci.yml` gates pull requests/main with unpaid fast checks, then uses keyless Workload Identity Federation to build and deploy the exact green `main` commit to both Cloud Run services before production smoke verification.
 - [ ] The manually selected custom domain stays under the renewal-price guardrail, Firebase Hosting serves valid managed HTTPS, apex/`www` canonicalization works, and same-origin `/v1` requests reach the backend without exposing direct service URLs to visitors.
 - [ ] Optional SP-027 portfolio packaging is explicitly not required for deployment or release approval.
 - [ ] Optional SP-028 automation is explicitly not required for deployment or release approval.
-- [ ] One controlled live smoke run per entry mode passes.
+- [ ] Current SP-021A controlled live evidence for both entry modes passes; any
+  evidence invalidated by later release-candidate or provider/configuration
+  changes is narrowly rerun before approval.
 - [ ] Full phone, tablet, laptop/desktop, and large-monitor flows plus keyboard, reduced-motion, orientation, safe-area, intermediate resizing, and provider failure paths are verified.
 - [ ] Cloudflare Turnstile Free, best-effort backend route/source limits, Cloud Run/provider caps, and the paid-demo kill switch work without a database, paid WAF, or Cloudflare proxy.
 

@@ -1,8 +1,8 @@
 # SP-015 — Normalize live events, captions, and controls
 
-Status: Implementation complete; live/manual interaction verification deferred to SP-018A<br>
+Status: Implementation complete; remaining live/manual interaction verification deferred to SP-021A<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-14<br>
+Last synchronized: 2026-09-21<br>
 Depends on: SP-006, SP-014  
 Suggested commit: `SP-015: normalize local conversation events`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -28,7 +28,7 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 
 - This ticket introduces no new key. Callback normalization, captions, controls, transcript bounds, and recovery tests use checked-in fake ElevenLabs event traces.
 - A live SDK verification reuses SP-014's user-filled ElevenLabs/Turnstile group and private agent. No provider secret enters the frontend; it receives only the short-lived conversation token.
-- The owner has deliberately deferred active-session browser interaction, responsive, reduced-motion, microphone, and real callback verification to SP-018A after SP-018 implements the measurement/runtime controls. Complete every fake/event-state acceptance item here without treating fake coverage as manual or live verification.
+- SP-018A supplied the initial owner-controlled live CV-assisted voice smoke. Its unperformed active-session browser interaction, responsive, reduced-motion, complete callback, cleanup, and post-fix observations move unchanged to SP-021A after summary/review exists. Complete every fake/event-state acceptance item here without treating fake coverage as manual or live verification.
 
 ## Scope boundaries
 
@@ -63,7 +63,7 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 ## Focused verification
 
 - [x] Run focused event-adapter/reducer/component tests with deterministic SDK fixtures.
-- [ ] Manually simulate listening, speaking, interruption, mute, End, reconnect, disconnect, and hard stop; deterministic automated traces pass, while active-session manual verification is deliberately deferred to SP-018A.
+- [ ] Manually verify listening, speaking, interruption, mute, End, reconnect, disconnect, and hard stop; deterministic automated traces pass, while the remaining active-session evidence is deliberately deferred to SP-021A.
 - [x] Inspect deterministic `sessionStorage` and logging behavior to confirm tentative text/raw events/audio are absent; the fake browser reached preflight with no console warnings/errors. Active-session browser inspection is deferred to SP-018.
 - [ ] Check long captions, keyboard control, reduced motion, mobile portrait/landscape, and sticky safe-area controls in the running browser; component coverage and responsive CSS are in place, while active-session visual verification is deliberately deferred to SP-018.
 
