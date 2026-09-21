@@ -424,6 +424,43 @@ describe("demoSessionReducer", () => {
     ).toThrow("Only final transcript turns");
   });
 
+  it("validates each final turn and rejects evidence beyond the character bound", () => {
+    let state = conversationPreflightState();
+    for (let sequence = 0; sequence < 7; sequence += 1) {
+      state = demoSessionReducer(state, {
+        type: "ADD_FINAL_TRANSCRIPT_TURN",
+        turn: {
+          ...finalCandidateTurn,
+          id: `bounded-turn-${String(sequence)}`,
+          sequence,
+          text: "x".repeat(4_000),
+        },
+      });
+    }
+
+    expect(() =>
+      demoSessionReducer(state, {
+        type: "ADD_FINAL_TRANSCRIPT_TURN",
+        turn: {
+          ...finalCandidateTurn,
+          id: "over-total-character-limit",
+          sequence: 8,
+          text: "y".repeat(2_001),
+        },
+      }),
+    ).toThrow("persisted transcript limit");
+    expect(() =>
+      demoSessionReducer(conversationPreflightState(), {
+        type: "ADD_FINAL_TRANSCRIPT_TURN",
+        turn: {
+          ...finalCandidateTurn,
+          id: "over-per-turn-limit",
+          text: "z".repeat(4_001),
+        },
+      }),
+    ).toThrow();
+  });
+
   it("orders final turns by provider sequence and ignores sequence duplicates", () => {
     const state = conversationPreflightState();
     const laterTurn = {
@@ -671,7 +708,7 @@ describe("demoSessionReducer", () => {
     });
   });
 
-  it("completes the temporary demo through a scrubbed reducer-owned stage", () => {
+  it("completes into a persisted local review without discarding evidence", () => {
     let state = demoSessionReducer(conversationPreflightState(), {
       type: "PREFLIGHT_READY",
     });
@@ -692,28 +729,35 @@ describe("demoSessionReducer", () => {
 
     const completed = demoSessionReducer(state, {
       type: "DEMO_INTERVIEW_COMPLETED",
+      voice: {
+        conversationId: "conversation-1",
+        status: "ended",
+        startedAt: LATER,
+        endedAt: "2026-09-09T09:25:00.000Z",
+        endReason: "Interview ended by the candidate.",
+      },
     });
 
-    expect(completed).toEqual({
-      schemaVersion: 3,
-      hydrationStatus: "ready",
-      stage: "complete_placeholder",
-      entryMode: null,
-      createdAt: null,
-      expiresAt: null,
-      runtimeConfig: null,
-      demoContext: null,
-      transcript: [],
-      insights: [],
-      topicProgress: [],
+    expect(completed).toMatchObject({
+      stage: "review_ready",
+      entryMode: "conversation_first",
+      transcript: [finalCandidateTurn],
+      voice: {
+        status: "ended",
+        endReason: "Interview ended by the candidate.",
+      },
     });
-    expect(projectPersistedDemoSession(completed)).toBeNull();
+    expect(projectPersistedDemoSession(completed)).toMatchObject({
+      stage: "review_ready",
+      transcript: [finalCandidateTurn],
+    });
   });
 
   it("rejects demo completion before voice shutdown begins", () => {
     expect(() =>
       demoSessionReducer(conversationPreflightState(), {
         type: "DEMO_INTERVIEW_COMPLETED",
+        voice: { status: "ended" },
       }),
     ).toThrow(InvalidSessionTransitionError);
   });

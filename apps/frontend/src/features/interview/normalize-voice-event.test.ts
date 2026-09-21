@@ -4,10 +4,12 @@ import type { VoiceSessionEvent } from "./voice-session-bridge";
 import {
   createVoiceEventNormalizerState,
   MAX_LIVE_CAPTION_CHARACTERS,
-  MAX_NORMALIZED_FINAL_EVENTS,
-  MAX_NORMALIZED_TRANSCRIPT_CHARACTERS,
   normalizeVoiceEvent,
 } from "./normalize-voice-event";
+import {
+  MAX_LOCAL_TRANSCRIPT_CHARACTERS,
+  MAX_LOCAL_TRANSCRIPT_TURNS,
+} from "@/features/transcript/transcript-limits";
 
 const OCCURRED_AT = "2026-09-14T12:00:00.000Z";
 
@@ -271,11 +273,7 @@ describe("normalizeVoiceEvent", () => {
   it("stops retaining final events at the collection and character bounds", () => {
     let eventBoundState = createVoiceEventNormalizerState();
     let retainedEventCount = 0;
-    for (
-      let eventId = 0;
-      eventId <= MAX_NORMALIZED_FINAL_EVENTS;
-      eventId += 1
-    ) {
+    for (let eventId = 0; eventId <= MAX_LOCAL_TRANSCRIPT_TURNS; eventId += 1) {
       const result = normalizeVoiceEvent(
         {
           type: "message",
@@ -292,7 +290,7 @@ describe("normalizeVoiceEvent", () => {
         retainedEventCount += 1;
       }
     }
-    expect(retainedEventCount).toBe(MAX_NORMALIZED_FINAL_EVENTS);
+    expect(retainedEventCount).toBe(MAX_LOCAL_TRANSCRIPT_TURNS);
 
     let characterBoundState = createVoiceEventNormalizerState();
     let retainedCharacterCount = 0;
@@ -315,7 +313,7 @@ describe("normalizeVoiceEvent", () => {
     }
     expect(retainedCharacterCount).toBe(7);
     expect(characterBoundState.transcriptCharacters).toBeLessThanOrEqual(
-      MAX_NORMALIZED_TRANSCRIPT_CHARACTERS,
+      MAX_LOCAL_TRANSCRIPT_CHARACTERS,
     );
   });
 });

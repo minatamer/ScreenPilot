@@ -11,6 +11,7 @@ import { createConversationFirstPlanFixture } from "@/test/conversation-first-pl
 import { DemoSessionProvider } from "./demo-session-provider";
 import { persistedDemoSessionSchema } from "./persisted-session.schema";
 import { SESSION_STORAGE_KEY } from "./session-storage";
+import type { SessionStorageLike } from "./session-storage";
 import { useDemoSession } from "./use-demo-session";
 
 function SessionProbe() {
@@ -40,13 +41,28 @@ function CompletionProbe() {
             },
           });
           dispatch({ type: "VOICE_ENDING" });
-          completeInterview();
+          completeInterview({
+            conversationId: "fake-conversation-1",
+            status: "ended",
+            startedAt: "2026-09-09T09:05:00.000Z",
+            endedAt: "2026-09-09T09:10:00.000Z",
+            endReason: "Interview ended by the candidate.",
+          });
         }}
         type="button"
       >
         Complete interview
       </button>
     </>
+  );
+}
+
+function ReviewStorageProbe() {
+  const { state, storageStatus } = useDemoSession();
+  return (
+    <output>
+      {state.stage}:{String(state.transcript.length)}:{storageStatus}
+    </output>
   );
 }
 
@@ -169,7 +185,7 @@ describe("DemoSessionProvider client lifecycle", () => {
     expect(stored).not.toContain(analysis.cv.facts[0]?.evidenceExcerpt);
   });
 
-  it("clears browser storage while entering the scrubbed completion stage", async () => {
+  it("persists the bounded review when an interview completes", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-09T09:05:00.000Z"));
     window.sessionStorage.setItem(
@@ -208,7 +224,71 @@ describe("DemoSessionProvider client lifecycle", () => {
     fireEvent.click(screen.getByRole("button", { name: "Complete interview" }));
 
     await act(() => Promise.resolve());
-    expect(screen.getByText("complete_placeholder")).toBeInTheDocument();
-    expect(window.sessionStorage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(screen.getByText("review_ready")).toBeInTheDocument();
+    expect(
+      JSON.parse(window.sessionStorage.getItem(SESSION_STORAGE_KEY) ?? "null"),
+    ).toMatchObject({
+      stage: "review_ready",
+      voice: { status: "ended" },
+    });
+  });
+
+  it("keeps restored review evidence visible when browser quota rejects saving", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-09T10:00:00.000Z"));
+    const storedReview = JSON.stringify(
+      persistedDemoSessionSchema.parse({
+        schemaVersion: 3,
+        stage: "review_ready",
+        entryMode: "conversation_first",
+        createdAt: "2026-09-09T09:00:00.000Z",
+        expiresAt: "2026-09-09T11:00:00.000Z",
+        runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
+        demoContext: {
+          kind: "role_agnostic_first_stage_hr_screen",
+          roleAvailability: "candidate_selected_synthetic_session_vacancy",
+          employerFactsAvailable: false,
+        },
+        screeningPlan: createConversationFirstPlanFixture(),
+        interviewGrant: "signed-conversation-first-grant",
+        interviewGrantExpiresAt: "2026-09-09T10:30:00.000Z",
+        voice: {
+          status: "ended",
+          endedAt: "2026-09-09T09:10:00.000Z",
+        },
+        transcript: [
+          {
+            id: "candidate-turn-1",
+            sequence: 0,
+            speaker: "candidate",
+            status: "final",
+            text: "I can start next month.",
+            occurredAt: "2026-09-09T09:08:00.000Z",
+          },
+        ],
+        insights: [],
+        topicProgress: [],
+      }),
+    );
+    const quotaStorage: SessionStorageLike = {
+      get length() {
+        return 1;
+      },
+      getItem: (key) => (key === SESSION_STORAGE_KEY ? storedReview : null),
+      key: (index) => (index === 0 ? SESSION_STORAGE_KEY : null),
+      removeItem: vi.fn(),
+      setItem: () => {
+        throw new DOMException("Quota exceeded", "QuotaExceededError");
+      },
+    };
+
+    render(
+      <DemoSessionProvider storage={quotaStorage}>
+        <ReviewStorageProbe />
+      </DemoSessionProvider>,
+    );
+
+    await act(() => Promise.resolve());
+    expect(screen.getByText("review_ready:1:unavailable")).toBeInTheDocument();
   });
 });

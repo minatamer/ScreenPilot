@@ -11,11 +11,10 @@ import {
 import { VOICE_VAD_SPEECH_PROBABILITY_THRESHOLD } from "@screenpilot/contracts/interview/voice-performance-policy";
 import { useCallback, useEffect, useRef } from "react";
 
+import { MAX_LOCAL_TRANSCRIPT_TURNS } from "@/features/transcript/transcript-limits";
+
 import { isStaticLatencyFiller } from "./latency-filler-policy";
-import {
-  MAX_LIVE_CAPTION_CHARACTERS,
-  MAX_NORMALIZED_FINAL_EVENTS,
-} from "./normalize-voice-event";
+import { MAX_LIVE_CAPTION_CHARACTERS } from "./normalize-voice-event";
 import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
 
 type MessagePayload = Parameters<NonNullable<HookCallbacks["onMessage"]>>[0];
@@ -27,7 +26,7 @@ function retainBoundedEventId(eventIds: Set<number>, eventId: number) {
   if (eventIds.has(eventId)) {
     return;
   }
-  if (eventIds.size >= MAX_NORMALIZED_FINAL_EVENTS) {
+  if (eventIds.size >= MAX_LOCAL_TRANSCRIPT_TURNS) {
     const oldestEventId = eventIds.values().next().value;
     if (oldestEventId !== undefined) {
       eventIds.delete(oldestEventId);
@@ -243,7 +242,7 @@ export function ElevenLabsVoiceSession({
         finalizedAgentMessageIdsRef.current.delete(eventId);
         if (
           !partialAgentMessagesRef.current.has(eventId) &&
-          partialAgentMessagesRef.current.size >= MAX_NORMALIZED_FINAL_EVENTS
+          partialAgentMessagesRef.current.size >= MAX_LOCAL_TRANSCRIPT_TURNS
         ) {
           const oldestEventId = partialAgentMessagesRef.current
             .keys()

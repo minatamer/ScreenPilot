@@ -17,6 +17,11 @@ import { transcriptTurnSchema } from "@screenpilot/contracts/interview/transcrip
 import { z } from "zod";
 
 import {
+  MAX_LOCAL_TRANSCRIPT_CHARACTERS,
+  MAX_LOCAL_TRANSCRIPT_TURNS,
+} from "@/features/transcript/transcript-limits";
+
+import {
   DEMO_STAGES,
   type DemoSessionState,
   type DemoStage,
@@ -29,7 +34,6 @@ export const MAX_PERSISTED_SESSION_BYTES = 512 * 1_024;
 const NON_PERSISTABLE_SESSION_STAGES = new Set<DemoStage>([
   "empty",
   "bootstrapping",
-  "complete_placeholder",
   "cleared",
 ]);
 const CV_ASSISTED_STAGES = new Set<DemoStage>([
@@ -106,7 +110,7 @@ export const persistedDemoSessionSchema = z
     interviewGrantExpiresAt: z.iso.datetime({ offset: true }).optional(),
     cvAnalysisUsage: providerUsageSchema.optional(),
     voice: voiceMetadataSchema.optional(),
-    transcript: z.array(transcriptTurnSchema).max(160),
+    transcript: z.array(transcriptTurnSchema).max(MAX_LOCAL_TRANSCRIPT_TURNS),
     insights: z.array(insightCardSchema).max(24),
     topicProgress: z.array(topicProgressSchema).max(16),
     summary: screeningSummarySchema.optional(),
@@ -222,6 +226,19 @@ export const persistedDemoSessionSchema = z
       });
     }
 
+    if (
+      session.stage === "review_ready" &&
+      (session.voice === undefined ||
+        (session.voice.status !== "ended" && session.voice.status !== "failed"))
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "A review-ready session requires ended or failed voice metadata.",
+        path: ["voice"],
+      });
+    }
+
     const createdAt = Date.parse(session.createdAt);
     const expiresAt = Date.parse(session.expiresAt);
     if (expiresAt <= createdAt || expiresAt - createdAt > SESSION_LIFETIME_MS) {
@@ -237,6 +254,18 @@ export const persistedDemoSessionSchema = z
       context.addIssue({
         code: "custom",
         message: "Only final transcript turns may be persisted.",
+        path: ["transcript"],
+      });
+    }
+
+    const transcriptCharacters = session.transcript.reduce(
+      (total, turn) => total + turn.text.length,
+      0,
+    );
+    if (transcriptCharacters > MAX_LOCAL_TRANSCRIPT_CHARACTERS) {
+      context.addIssue({
+        code: "custom",
+        message: "The stored transcript exceeds its character limit.",
         path: ["transcript"],
       });
     }

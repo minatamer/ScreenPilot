@@ -308,6 +308,80 @@ describe("session storage", () => {
     ).toBe(false);
   });
 
+  it("clears a restored transcript that exceeds the character bound", () => {
+    const storage = new MemorySessionStorage();
+    const oversizedTranscript = Array.from({ length: 8 }, (_, index) => ({
+      id: `turn-${String(index)}`,
+      sequence: index,
+      speaker:
+        index % 2 === 0 ? ("candidate" as const) : ("interviewer" as const),
+      status: "final" as const,
+      text: "x".repeat(index === 7 ? 2_001 : 4_000),
+      occurredAt: new Date(
+        Date.parse(CREATED_AT) + index * 1_000,
+      ).toISOString(),
+    }));
+    storage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({
+        ...persistedSession(),
+        transcript: oversizedTranscript,
+      }),
+    );
+
+    expect(
+      loadPersistedSession(storage, new Date("2026-09-09T10:00:00.000Z")),
+    ).toEqual({ status: "cleared", reason: "corrupt" });
+    expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it.each([
+    { name: "missing", voice: undefined },
+    {
+      name: "non-terminal",
+      voice: {
+        status: "connected" as const,
+        startedAt: CREATED_AT,
+      },
+    },
+  ])("clears review-ready storage with $name voice metadata", ({ voice }) => {
+    const storage = new MemorySessionStorage();
+    const validReview = persistedSession({
+      stage: "review_ready",
+      voice: {
+        status: "ended",
+        endedAt: "2026-09-09T09:30:00.000Z",
+      },
+    });
+    const invalidReview = { ...validReview, voice };
+    storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(invalidReview));
+
+    expect(persistedDemoSessionSchema.safeParse(invalidReview).success).toBe(
+      false,
+    );
+    expect(
+      loadPersistedSession(storage, new Date("2026-09-09T10:00:00.000Z")),
+    ).toEqual({ status: "cleared", reason: "corrupt" });
+    expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+  });
+
+  it("restores review-ready evidence with failed voice metadata", () => {
+    const storage = new MemorySessionStorage();
+    const partialReview = persistedSession({
+      stage: "review_ready",
+      voice: {
+        status: "failed",
+        endedAt: "2026-09-09T09:30:00.000Z",
+        endReason: "The voice connection was interrupted.",
+      },
+    });
+    storage.setItem(SESSION_STORAGE_KEY, JSON.stringify(partialReview));
+
+    expect(
+      loadPersistedSession(storage, new Date("2026-09-09T10:00:00.000Z")),
+    ).toEqual({ status: "restored", session: partialReview });
+  });
+
   it("clears a prepared session whose grant is missing its expiry", () => {
     const storage = new MemorySessionStorage();
     const invalidSession = {

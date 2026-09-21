@@ -1,13 +1,16 @@
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 
+import {
+  MAX_LOCAL_TRANSCRIPT_CHARACTERS,
+  MAX_LOCAL_TRANSCRIPT_TURNS,
+} from "@/features/transcript/transcript-limits";
+
 import type {
   VoiceSessionEvent,
   VoiceSessionSpeaker,
 } from "./voice-session-bridge";
 
 export const MAX_LIVE_CAPTION_CHARACTERS = 4_000;
-export const MAX_NORMALIZED_FINAL_EVENTS = 160;
-export const MAX_NORMALIZED_TRANSCRIPT_CHARACTERS = 30_000;
 const MAX_TRANSCRIPT_SEQUENCE = 10_000;
 
 export type LiveCaption = Readonly<{
@@ -185,9 +188,8 @@ export function normalizeVoiceEvent(
     };
   }
   if (
-    state.seenFinalTurnIds.length >= MAX_NORMALIZED_FINAL_EVENTS ||
-    state.transcriptCharacters + text.length >
-      MAX_NORMALIZED_TRANSCRIPT_CHARACTERS
+    state.seenFinalTurnIds.length >= MAX_LOCAL_TRANSCRIPT_TURNS ||
+    state.transcriptCharacters + text.length > MAX_LOCAL_TRANSCRIPT_CHARACTERS
   ) {
     return {
       event: null,

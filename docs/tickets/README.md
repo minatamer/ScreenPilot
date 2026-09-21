@@ -117,6 +117,13 @@ owner-approved SP-018A scope decision on 2026-09-21:
   provider revision/retention/usage/cost review remain explicitly unchecked and
   move intact to required SP-021A after SP-021. No public/release readiness is
   claimed by this closure.
+- SP-019 is implemented and deterministically verified without provider
+  transcript retrieval or a paid call. Orderly and interrupted interviews now
+  converge on a bounded same-tab evidence review with stable transcript anchors,
+  explicit provenance, unavailable-reference fallbacks, focus return, restore
+  validation, and non-destructive quota handling. Human 320 px/200% zoom and
+  screen-reader approval remain in the later responsive/live gates; SP-020 is
+  eligible now.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

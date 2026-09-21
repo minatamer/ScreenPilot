@@ -1056,6 +1056,9 @@ This is the only live voice path. Do not add a second transcription/audio archit
 - Final agent messages become agent turns.
 - Tool calls reference existing final turn IDs.
 - Usable provider event sequences are the message identity and caption-order authority: tentative events without one are rejected, a finalized sequence rejects later tentative/duplicate callbacks, and an older final may enter the sorted transcript without replacing a newer caption. When a final message has no usable provider ID, assign the next bounded local sequence and suppress only an immediately adjacent final with the same speaker and normalized text; distinct provider IDs or an intervening accepted final preserve legitimate repeated statements.
+- The local browser projection accepts at most 160 final turns and 30,000 transcript characters. The reducer validates each turn before insertion, ignores repeated IDs or same-speaker sequences, and the restore schema rechecks both bounds before showing saved evidence.
+- A failed or quota-rejected `sessionStorage` write leaves the current in-memory transcript and cards visible and produces a review warning; it never creates a second persistence path.
+- A persisted `review_ready` projection is valid only with terminal voice metadata whose status is `ended` or `failed`. Missing or still-active voice state is corrupt restore data and must be cleared rather than presented as a complete interview; restored `failed` metadata always produces the partial-transcript review state.
 - The local transcript is review evidence, not a certified verbatim record.
 
 ### Performance gates
@@ -2776,8 +2779,8 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 choosing_entry_mode -> Use a CV -> awaiting_cv
 choosing_entry_mode -> Start without a CV -> preparing_conversation -> preflight
 awaiting_cv -> local extract/status -> SP-012 analysis -> plan_ready -> preflight
-preflight -> SP-013 consent/readiness -> ready/connecting -> live -> ending/summarizing -> review_ready
-current SP-016A placeholder -> ending -> DEMO_INTERVIEW_COMPLETED -> complete_placeholder (scrubbed and non-persistable)
+preflight -> SP-013 consent/readiness -> ready/connecting -> live -> ending -> DEMO_INTERVIEW_COMPLETED -> review_ready
+future SP-020/SP-021 summary path -> ending -> summarizing -> review_ready
 retryable failure -> Retry the failed operation without changing entry mode
 CV/preparation change -> reducer-valid Change starting option
 preflight Back -> choosing_entry_mode for conversation-first; plan_ready for CV-assisted
@@ -2785,7 +2788,7 @@ logo or browser Back -> landing/history while the tab session remains resumable
 Clear & exit -> CLEAR_SESSION -> router.replace('/')
 ```
 
-The stage indicator reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine. Until SP-021 implements the real Review surface, `complete_placeholder` is a reducer-owned terminal presentation stage rather than a component-local override: its transition clears the in-memory candidate/session fields, the provider removes the versioned browser projection, and the projection schema rejects persistence of that stage.
+The stage indicator reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine. SP-019 replaces the former scrubbed completion placeholder with the first bounded `review_ready` surface: orderly completion preserves final local turns and grounded cards in the current tab, while an interrupted call with usable evidence enters the same surface with an explicit partial-transcript warning. SP-020 and SP-021 may add summary orchestration around this state, but summary work must not clear the already available local evidence.
 
 #### Preflight
 
@@ -2816,15 +2819,16 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - Keep the shared Deep Ink/plum/coral workspace for completion and clarity; use calmer spacing, quieter borders, and restrained coral rather than returning to a light canvas.
 - Top summary panel states that notes are AI-organized and require human interpretation.
 - Insight cards keep the same colors/labels used live.
-- Evidence chips scroll the local transcript to the supporting turn.
+- Candidate evidence chips scroll and move keyboard focus to a stable final-turn anchor in the local transcript; the focused turn provides a return-to-card control. Missing, non-final, or non-candidate references render as unavailable evidence rather than being hidden or redirected.
 - Show the entry mode and enforce provenance: conversation-first review uses Candidate evidence only, while CV-assisted can distinguish CV, Candidate, and combined confirmation.
+- Until summary tickets land, the bounded SP-019 review shows local insight cards and the chronological transcript only. It labels orderly and interrupted/partial endings distinctly, shows speaker, local time, and final status, and retains natural document scrolling at phone, tablet, and desktop widths so long transcripts and the Clear action remain reachable.
 - Missing/unclear topics are displayed as gaps, never silently omitted.
 - Summary-time Turnstile interaction, when required, appears inside the **Organizing this conversation** state and never hides or clears the already available local transcript/insights.
 - **Clear & exit** is visually separated from Copy/Download actions.
 
 ### Responsive behavior
 
-- Responsive quality is a continuous requirement, not a desktop/mobile toggle. Small phones, standard phones, tablets, compact laptops, standard laptops/desktops, and large monitors are equal product-quality targets; none may ship with missing content, actions, states, or recovery paths. For standard `/demo` states, tablets and laptops use a bounded height-aware workspace that keeps the step indicator, active content, and primary/recovery actions visible without outer document scrolling; phones retain natural document flow.
+- Responsive quality is a continuous requirement, not a desktop/mobile toggle. Small phones, standard phones, tablets, compact laptops, standard laptops/desktops, and large monitors are equal product-quality targets; none may ship with missing content, actions, states, or recovery paths. For standard `/demo` states, tablets and laptops use a bounded height-aware workspace that keeps the step indicator, active content, and primary/recovery actions visible without outer document scrolling; phones retain natural document flow. Evidence-heavy review is the explicit content-driven exception: at every width it restores natural page scrolling instead of clipping long transcript turns inside the fixed-height shell.
 - The implementation must reflow fluidly across the complete practical width range from 320 px through 2560 px and beyond. Breakpoints respond to content pressure and available space rather than pretending every device belongs to one fixed preset.
 - Reference anchors are 320 px small phone; 360 × 800 and 390 × 844 standard phones; 768/820 px tablet widths in portrait and landscape; 1024 × 768 compact laptop/tablet landscape; 1280 × 800 and 1440 × 900 laptop/desktop; and 1920 × 1080 plus 2560 × 1440 large monitors. These are verification anchors, not separately designed versions or the only supported sizes.
 - Drag-resize and intermediate-width checks must show continuous, intentional adaptation without overflow, clipped content, sudden unusable density changes, or awkward empty bands between breakpoints.
@@ -3959,12 +3963,22 @@ release-ready.
 
 **Checklist:**
 
-- [ ] Build transcript timeline with speaker, local time, and stable turn anchors.
-- [ ] Link insight/source chips to transcript turns.
-- [ ] Mark partial/disconnected transcripts honestly.
-- [ ] Bound transcript storage and handle quota errors.
-- [ ] Add keyboard/focus behavior for evidence navigation.
-- [ ] Test missing references and duplicate event recovery.
+- [x] Build transcript timeline with speaker, local time, and stable turn anchors.
+- [x] Link insight/source chips to transcript turns.
+- [x] Mark partial/disconnected transcripts honestly.
+- [x] Bound transcript storage and handle quota errors.
+- [x] Add keyboard/focus behavior for evidence navigation.
+- [x] Test missing references and duplicate event recovery.
+
+**Implementation closure (2026-09-21):** bounded local transcript/evidence
+review is implemented and deterministically verified without provider artifact
+retrieval or another paid call. The complete frontend suite, lint, typecheck,
+and production build pass, as do backend/contract builds; see the ticket record
+for the exact 68-test focused run and 238-test frontend run. Human verification
+at 320 px/200% zoom and with a screen reader remains explicitly unchecked and
+transfers to the later responsive/live review gates. SP-020 is eligible for
+implementation; this closure does not claim that summaries or the complete
+SP-021 review surface exist.
 
 #### [SP-020 — Generate the stateless post-call summary](tickets/SP-020-generate-stateless-post-call-summary.md)
 

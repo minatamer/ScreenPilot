@@ -23,7 +23,10 @@ import {
   topicProgressSchema,
   type TopicProgress,
 } from "@screenpilot/contracts/interview/topic-progress";
-import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
+import {
+  transcriptTurnSchema,
+  type TranscriptTurn,
+} from "@screenpilot/contracts/interview/transcript-turn";
 
 import {
   FAILURE_STAGES,
@@ -38,6 +41,10 @@ import {
   SESSION_LIFETIME_MS,
   type PersistedDemoSession,
 } from "./persisted-session.schema";
+import {
+  MAX_LOCAL_TRANSCRIPT_CHARACTERS,
+  MAX_LOCAL_TRANSCRIPT_TURNS,
+} from "@/features/transcript/transcript-limits";
 
 export type DemoSessionEvent =
   | Readonly<{
@@ -98,7 +105,10 @@ export type DemoSessionEvent =
   | Readonly<{ type: "UPSERT_INSIGHT"; insight: InsightCard }>
   | Readonly<{ type: "SET_TOPIC_PROGRESS"; progress: TopicProgress }>
   | Readonly<{ type: "START_OVER" }>
-  | Readonly<{ type: "DEMO_INTERVIEW_COMPLETED" }>
+  | Readonly<{
+      type: "DEMO_INTERVIEW_COMPLETED";
+      voice: VoiceMetadata;
+    }>
   | Readonly<{ type: "BEGIN_NEW_SESSION"; now: string }>
   | Readonly<{ type: "SESSION_EXPIRED" }>
   | Readonly<{ type: "CLEAR_SESSION" }>;
@@ -583,35 +593,48 @@ export function demoSessionReducer(
         failure: undefined,
       };
     case "ADD_FINAL_TRANSCRIPT_TURN": {
-      if (event.turn.status !== "final") {
+      const turn = transcriptTurnSchema.parse(event.turn);
+      if (turn.status !== "final") {
         throw new TypeError(
           "Only final transcript turns may enter session evidence.",
         );
       }
       if (
         state.transcript.some(
-          (turn) =>
-            turn.id === event.turn.id ||
-            (turn.speaker === event.turn.speaker &&
-              turn.sequence === event.turn.sequence),
+          (existingTurn) =>
+            existingTurn.id === turn.id ||
+            (existingTurn.speaker === turn.speaker &&
+              existingTurn.sequence === turn.sequence),
         )
       ) {
         return state;
       }
       const transcriptCharacters = state.transcript.reduce(
-        (total, turn) => total + turn.text.length,
-        event.turn.text.length,
+        (total, existingTurn) => total + existingTurn.text.length,
+        turn.text.length,
       );
-      if (state.transcript.length >= 160 || transcriptCharacters > 30_000) {
+      if (
+        state.transcript.length >= MAX_LOCAL_TRANSCRIPT_TURNS ||
+        transcriptCharacters > MAX_LOCAL_TRANSCRIPT_CHARACTERS
+      ) {
         throw new RangeError(
           "The persisted transcript limit has been reached.",
         );
       }
       return {
         ...state,
-        transcript: [...state.transcript, event.turn].sort(
-          (left, right) => left.sequence - right.sequence,
-        ),
+        transcript: [...state.transcript, turn].sort((left, right) => {
+          const sequenceDifference = left.sequence - right.sequence;
+          if (sequenceDifference !== 0) {
+            return sequenceDifference;
+          }
+          const timeDifference = left.occurredAt.localeCompare(
+            right.occurredAt,
+          );
+          return timeDifference !== 0
+            ? timeDifference
+            : left.id.localeCompare(right.id);
+        }),
       };
     }
     case "UPSERT_INSIGHT": {
@@ -733,10 +756,14 @@ export function demoSessionReducer(
       return clearModeSpecificState(state);
     case "DEMO_INTERVIEW_COMPLETED":
       assertStage(state, event.type, ["ending"]);
+      if (event.voice.status !== "ended" && event.voice.status !== "failed") {
+        throw new InvalidSessionTransitionError(state.stage, event.type);
+      }
       return {
-        ...createInitialDemoSessionState(),
-        hydrationStatus: "ready",
-        stage: "complete_placeholder",
+        ...state,
+        stage: "review_ready",
+        voice: event.voice,
+        failure: undefined,
       };
     case "BEGIN_NEW_SESSION":
       assertStage(state, event.type, ["cleared"]);

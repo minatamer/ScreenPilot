@@ -24,7 +24,7 @@ import type { VoiceStartRequest } from "@/features/interview/voice-connection-st
 import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
 import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
-import { InterviewCompletePlaceholder } from "@/features/review/interview-complete-placeholder";
+import { InterviewEvidenceReview } from "@/features/review/interview-evidence-review";
 import type {
   DemoStage,
   SessionFailure,
@@ -86,14 +86,19 @@ const DEMO_STAGE_PROGRESS: Readonly<Record<DemoStage, number>> = {
   ending: 3,
   summarizing: 4,
   review_ready: 4,
-  complete_placeholder: 4,
   cleared: 0,
 };
 
 export function DemoExperience() {
   const router = useRouter();
-  const { completeInterview, clearSession, dispatch, startOver, state } =
-    useDemoSession();
+  const {
+    completeInterview,
+    clearSession,
+    dispatch,
+    startOver,
+    state,
+    storageStatus,
+  } = useDemoSession();
   const [voiceStartRequest, setVoiceStartRequest] =
     useState<VoiceStartRequest | null>(null);
   const [performanceTracker] = useState(createVoicePerformanceTracker);
@@ -169,13 +174,20 @@ export function DemoExperience() {
     state.stage !== "cleared";
 
   let stageContent;
-  if (
-    state.stage === "complete_placeholder" ||
-    state.stage === "summarizing" ||
-    state.stage === "review_ready"
-  ) {
+  if (state.stage === "review_ready" && state.entryMode) {
     stageContent = (
-      <InterviewCompletePlaceholder onReturnHome={returnHomeAfterClear} />
+      <InterviewEvidenceReview
+        {...(state.cv ? { cv: state.cv } : {})}
+        entryMode={state.entryMode}
+        insights={state.insights}
+        isPartial={
+          state.restoreNotice === "call_interrupted" ||
+          state.voice?.status === "failed"
+        }
+        onReturnHome={returnHomeAfterClear}
+        storageStatus={storageStatus}
+        transcript={state.transcript}
+      />
     );
   } else if (
     state.hydrationStatus === "pending" ||
@@ -363,9 +375,9 @@ export function DemoExperience() {
             voice,
           });
         }}
-        onEnded={() => {
+        onEnded={(voice) => {
           setVoiceStartRequest(null);
-          completeInterview();
+          completeInterview(voice);
         }}
         onEnding={() => {
           dispatch({ type: "VOICE_ENDING" });
@@ -441,7 +453,11 @@ export function DemoExperience() {
   }
 
   return (
-    <AppShell className="sp-demo-shell" id="top" tone="dark">
+    <AppShell
+      className={`sp-demo-shell${state.stage === "review_ready" ? " sp-demo-shell--review" : ""}`}
+      id="top"
+      tone="dark"
+    >
       <a className="sp-skip-link" href="#main-content">
         Skip to main content
       </a>

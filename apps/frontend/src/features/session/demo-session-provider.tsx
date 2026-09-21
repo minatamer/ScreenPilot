@@ -12,6 +12,8 @@ import {
   type ReactNode,
 } from "react";
 
+import type { VoiceMetadata } from "@screenpilot/contracts/api/voice-token";
+
 import {
   createInitialDemoSessionState,
   demoSessionReducer,
@@ -36,7 +38,7 @@ const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
 export type DemoSessionContextValue = Readonly<{
   state: DemoSessionState;
   dispatch: Dispatch<DemoSessionEvent>;
-  completeInterview: () => void;
+  completeInterview: (voice: VoiceMetadata) => void;
   clearSession: () => void;
   startOver: () => void;
   storageStatus: SavePersistedSessionResult["status"] | "idle";
@@ -121,7 +123,7 @@ export function DemoSessionProvider({
     if (state.hydrationStatus !== "ready") {
       return;
     }
-    if (state.stage === "cleared" || state.stage === "complete_placeholder") {
+    if (state.stage === "cleared") {
       setStorageStatus(
         clearScreenPilotSession(storageRef.current) ? "idle" : "unavailable",
       );
@@ -197,9 +199,8 @@ export function DemoSessionProvider({
     dispatch({ type: "CLEAR_SESSION" });
   }, []);
 
-  const completeInterview = useCallback(() => {
-    clearScreenPilotSession(storageRef.current);
-    dispatch({ type: "DEMO_INTERVIEW_COMPLETED" });
+  const completeInterview = useCallback((voice: VoiceMetadata) => {
+    dispatch({ type: "DEMO_INTERVIEW_COMPLETED", voice });
   }, []);
 
   const startOver = useCallback(() => {
