@@ -133,6 +133,20 @@ owner-approved SP-018A scope decision on 2026-09-21:
   unsupported citations or forbidden assessment/employer claims. SP-022 still
   owns the production route/source rate and capacity limiter; the first
   controlled real summary remains deferred to SP-021A and SP-021 is eligible.
+- SP-021 is implemented and deterministically verified without credentials or
+  a provider call. Manual, automatic, and interrupted endings now converge on
+  one in-place review transition; the right board collapses as the interview
+  surface becomes a connected deterministic evidence map with a central
+  conversation overview. Selecting a node replaces that center with its bounded
+  question/answer/evidence/summary preview, another selection swaps it, and
+  minimizing restores the overview. No model/provider name or full transcript
+  timeline appears in review. Fresh summary Turnstile/retry, correct provenance,
+  complete summary sections, copy, and deliberate clear behavior have focused
+  coverage. Engineering browser inspection is not the owner's visual pass; the
+  owner's mandatory visual feedback, resulting bounded adjustments, and explicit
+  approval now lead SP-021A before its paid live window. The broader
+  credentialed/live/manual matrix remains in SP-021A, SP-024, and SP-025;
+  SP-021A is now eligible.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
@@ -162,10 +176,10 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-017 | [Write and evaluate adaptive interview policy](SP-017-write-and-evaluate-adaptive-interview-policy.md) | SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016, SP-016A | Required |
 | SP-018 | [Tune latency, interruption, and filler](SP-018-tune-latency-interruption-and-filler.md) | SP-014, SP-015, SP-017 | Required |
 | SP-018A | [Verify live CV and voice integrations](SP-018A-verify-live-cv-and-voice-integrations.md) | SP-014A, SP-018 | Required |
-| SP-019 | [Finalize transcript and evidence navigation](SP-019-finalize-transcript-and-evidence-navigation.md) | SP-015, SP-016, SP-018A | Required |
+| SP-019 | [Finalize the local transcript evidence foundation](SP-019-finalize-transcript-and-evidence-navigation.md) — timeline UI superseded by the SP-021 evidence map | SP-015, SP-016, SP-018A | Required |
 | SP-020 | [Generate stateless post-call summary](SP-020-generate-stateless-post-call-summary.md) | SP-009, SP-010, SP-010A, SP-017, SP-019 | Required |
 | SP-021 | [Build review, retry, and Clear session](SP-021-build-review-retry-and-clear-session.md) | SP-005, SP-006, SP-010A, SP-019, SP-020 | Required |
-| SP-021A | [Validate the complete live demo flow](SP-021A-validate-complete-live-demo-flow.md) | SP-018A, SP-019, SP-020, SP-021 | Required |
+| SP-021A | [Approve the review visuals and validate the complete live demo flow](SP-021A-validate-complete-live-demo-flow.md) | SP-018A, SP-019, SP-020, SP-021 | Required |
 | SP-022 | [Add public abuse and spend controls](SP-022-add-public-abuse-and-spend-controls.md) | SP-003, SP-009, SP-010, SP-014, SP-020, SP-021 | Required |
 | SP-023 | [Harden privacy, headers, and logging](SP-023-harden-privacy-headers-and-logging.md) | SP-006, SP-009, SP-010, SP-014, SP-020 | Required |
 | SP-024 | [Harden accessibility, responsiveness, and performance](SP-024-harden-accessibility-responsiveness-and-performance.md) | SP-005, SP-011, SP-012, SP-013, SP-016, SP-016A, SP-021 | Required |
@@ -180,7 +194,7 @@ Execute in order unless the dependency column proves a later packet can safely p
 - Milestone 0: SP-001 through SP-005 — repository, quality, configuration, and visual foundations.
 - Milestone 1: SP-006 through SP-012, including SP-010A and SP-011A — disposable state, the role-neutral migration, the modern entry shell, and both preparation paths.
 - Milestone 2: SP-013 through SP-018A, including SP-014A and SP-015A — shared preflight, provider setup, real-time voice, owner-reviewed UI polish, insights, policy, latency controls, and the bounded live CV/voice compatibility smoke.
-- Milestone 3: SP-019 through SP-021A — transcript evidence, summary, local review, and one consolidated complete-flow live validation.
+- Milestone 3: SP-019 through SP-021A — transcript evidence, summary, local review, mandatory owner visual approval, and one consolidated complete-flow live validation.
 - Milestone 4: SP-022 through SP-025A — public-demo hardening, focused release approval, and the final repository/ticket audit.
 - Milestone 5: SP-026 — deployment.
 - Milestone 6: SP-027 — optional portfolio packaging.

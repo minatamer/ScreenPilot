@@ -8,6 +8,7 @@ import { createVoicePerformanceTracker } from "./voice-performance";
 
 function callbacks() {
   return {
+    endTransitionMs: 0,
     onConnected: vi.fn(),
     onConnectionFailure: vi.fn(),
     onEnded: vi.fn(),
@@ -440,7 +441,9 @@ describe("useVoiceSession", () => {
     });
 
     expect(
-      tracker.getSnapshot().samples.filter((sample) => sample.metric === "ttfa"),
+      tracker
+        .getSnapshot()
+        .samples.filter((sample) => sample.metric === "ttfa"),
     ).toHaveLength(0);
   });
 
@@ -525,8 +528,11 @@ describe("useVoiceSession", () => {
   });
 
   it("treats an agent-completed disconnect as one orderly end", () => {
+    vi.useFakeTimers();
     const events = callbacks();
-    const { result } = renderHook(() => useVoiceSession(events));
+    const { result } = renderHook(() =>
+      useVoiceSession({ ...events, endTransitionMs: 420 }),
+    );
 
     act(() => {
       result.current.onSessionEvent({
@@ -536,8 +542,19 @@ describe("useVoiceSession", () => {
       result.current.onSessionEvent({ type: "disconnected", reason: "agent" });
     });
 
-    expect(result.current.phase).toBe("ended");
+    expect(result.current.phase).toBe("ending");
     expect(events.onEnding).toHaveBeenCalledOnce();
+    expect(events.onEnded).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(419);
+    });
+    expect(result.current.phase).toBe("ending");
+    expect(events.onEnded).not.toHaveBeenCalled();
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+
+    expect(result.current.phase).toBe("ended");
     expect(events.onEnded).toHaveBeenCalledOnce();
     expect(events.onEnded).toHaveBeenCalledWith(
       expect.objectContaining({

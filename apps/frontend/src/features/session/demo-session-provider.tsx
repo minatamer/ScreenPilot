@@ -39,7 +39,7 @@ export type DemoSessionContextValue = Readonly<{
   state: DemoSessionState;
   dispatch: Dispatch<DemoSessionEvent>;
   completeInterview: (voice: VoiceMetadata) => void;
-  clearSession: () => void;
+  clearSession: () => boolean;
   startOver: () => void;
   storageStatus: SavePersistedSessionResult["status"] | "idle";
 }>;
@@ -195,12 +195,17 @@ export function DemoSessionProvider({
   }, [state.entryMode, state.interviewGrantExpiresAt, state.stage]);
 
   const clearSession = useCallback(() => {
-    clearScreenPilotSession(storageRef.current);
+    const cleared = clearScreenPilotSession(storageRef.current);
+    setStorageStatus(cleared ? "idle" : "unavailable");
+    if (!cleared) {
+      return false;
+    }
     dispatch({ type: "CLEAR_SESSION" });
+    return true;
   }, []);
 
   const completeInterview = useCallback((voice: VoiceMetadata) => {
-    dispatch({ type: "DEMO_INTERVIEW_COMPLETED", voice });
+    dispatch({ type: "VOICE_ENDED", voice });
   }, []);
 
   const startOver = useCallback(() => {

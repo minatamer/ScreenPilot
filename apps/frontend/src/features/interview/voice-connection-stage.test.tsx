@@ -19,6 +19,7 @@ import {
   createVoicePerformanceCollector,
   createVoicePerformanceTracker,
 } from "./voice-performance";
+import { createFakeVoiceToolTrace } from "./fake-voice-session";
 
 const DEMO_CONTEXT = {
   kind: "role_agnostic_first_stage_hr_screen",
@@ -281,9 +282,9 @@ describe("VoiceConnectionStage", () => {
     expect(
       props.onFinalTranscriptTurn.mock.calls.map(([turn]) => turn.text),
     ).toEqual([
-      "Hi. What would you like me to call you?",
-      "You can call me Sam.",
-      "Thanks, Sam. Tell me what you would like to focus on today.",
+      "Hi. What would you like me to call you, and which role should this synthetic session use?",
+      "Riley is fine. Please use Junior Software Developer for this session.",
+      "What context and experience would you like to highlight?",
     ]);
     expect(
       props.onFinalTranscriptTurn.mock.calls.map(([turn]) => turn.speaker),
@@ -291,9 +292,9 @@ describe("VoiceConnectionStage", () => {
     await waitFor(() => {
       expect(props.onInsight).toHaveBeenCalledWith(
         expect.objectContaining({
-          category: "preferred_name",
+          category: "role_preference",
           source: "Candidate",
-          value: "Sam",
+          value: "Junior Software Developer",
         }),
       );
       expect(props.onTopicProgress).toHaveBeenCalledWith(
@@ -320,6 +321,58 @@ describe("VoiceConnectionStage", () => {
           status: "ended",
         }),
       );
+    });
+  });
+
+  it("models a rich sample-CV review without pretending CV evidence exists in conversation-first mode", () => {
+    const conversationFirstTrace =
+      createFakeVoiceToolTrace("conversation_first");
+    const cvAssistedTrace = createFakeVoiceToolTrace("cv_assisted");
+
+    expect(
+      conversationFirstTrace.find(
+        (entry) =>
+          entry.name === "recordInsight" &&
+          entry.parameters["category"] === "relevant_experience",
+      ),
+    ).toMatchObject({
+      name: "recordInsight",
+      parameters: {
+        category: "relevant_experience",
+        source: "Candidate",
+        value:
+          "Six-month product internship supporting accessible workflow screens",
+      },
+    });
+    expect(
+      conversationFirstTrace.find(
+        (entry) =>
+          entry.name === "recordInsight" &&
+          entry.parameters["category"] === "motivation",
+      ),
+    ).toMatchObject({
+      parameters: {
+        value: "Structured onboarding, mentorship, and room to grow",
+      },
+    });
+    expect(
+      conversationFirstTrace.find(
+        (entry) => entry.name === "recordCandidateQuestion",
+      ),
+    ).toMatchObject({
+      parameters: {
+        question:
+          "What onboarding and work-arrangement details can a recruiter share?",
+      },
+    });
+    expect(
+      cvAssistedTrace.find((entry) => entry.name === "correctInsight"),
+    ).toMatchObject({
+      parameters: {
+        cardId: "insight-relevant_experience",
+        value:
+          "Six-month product internship supporting accessible workflow screens",
+      },
     });
   });
 

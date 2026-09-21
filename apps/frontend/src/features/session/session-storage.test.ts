@@ -6,7 +6,7 @@ import {
   type ScreeningPlan,
   UNIVERSAL_TOPIC_KEYS,
 } from "@screenpilot/contracts/interview/screening-plan";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { TEST_PUBLIC_RUNTIME_CONFIG } from "@/test/cv-analysis.fixture";
 
@@ -508,6 +508,24 @@ describe("session storage", () => {
     expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
     expect(storage.getItem("screenpilot:future-key")).toBeNull();
     expect(storage.getItem("another-app:key")).toBe("keep");
+  });
+
+  it("reports cleanup failure when browser removal throws", () => {
+    const storedSession = JSON.stringify(persistedSession());
+    const storage: SessionStorageLike = {
+      get length() {
+        return 1;
+      },
+      getItem: (key) => (key === SESSION_STORAGE_KEY ? storedSession : null),
+      key: (index) => (index === 0 ? SESSION_STORAGE_KEY : null),
+      removeItem: () => {
+        throw new DOMException("Removal blocked", "SecurityError");
+      },
+      setItem: vi.fn(),
+    };
+
+    expect(clearScreenPilotSession(storage)).toBe(false);
+    expect(storage.getItem(SESSION_STORAGE_KEY)).toBe(storedSession);
   });
 
   it("is safe to import and call without browser globals", () => {

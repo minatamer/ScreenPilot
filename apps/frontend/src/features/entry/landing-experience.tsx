@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
@@ -8,6 +9,7 @@ import { useDemoSession } from "@/features/session/use-demo-session";
 import { AppShell } from "@/shared/ui/app-shell";
 import { Button, ButtonGroup } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { ErrorPanel } from "@/shared/ui/error-panel";
 import { PageContainer } from "@/shared/ui/layout";
 import { SiteHeader } from "@/shared/ui/site-header";
 
@@ -38,6 +40,7 @@ const ACTIVE_SESSION_STAGES = new Set([
 export function LandingExperience() {
   const router = useRouter();
   const { clearSession, dispatch, state } = useDemoSession();
+  const [clearFailed, setClearFailed] = useState(false);
   const scrollToHowItWorks = useDeliberateAnchorScroll("how-it-works");
   useDemoBootstrap(true);
 
@@ -204,10 +207,23 @@ export function LandingExperience() {
                 >
                   Continue demo
                 </Button>
-                <Button onClick={clearSession} variant="quiet">
+                <Button
+                  onClick={() => {
+                    setClearFailed(!clearSession());
+                  }}
+                  variant="quiet"
+                >
                   Clear session
                 </Button>
               </ButtonGroup>
+              {clearFailed ? (
+                <ErrorPanel title="The browser session was not cleared">
+                  <p>
+                    ScreenPilot could not remove the saved session. Retry, or
+                    close this tab to end access to its session data.
+                  </p>
+                </ErrorPanel>
+              ) : null}
             </Card>
           ) : (
             <EntryModeChooser

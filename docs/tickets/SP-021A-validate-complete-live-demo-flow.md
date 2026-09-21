@@ -1,6 +1,6 @@
 # SP-021A — Validate the complete live demo flow
 
-Status: Required; deferred live evidence gate<br>
+Status: Required; deferred owner visual-approval and live evidence gate<br>
 Milestone: Milestone 3 — same-session review<br>
 Last synchronized: 2026-09-21<br>
 Depends on: SP-018A, SP-019, SP-020, SP-021<br>
@@ -12,11 +12,12 @@ Ticket index: [`README.md`](README.md)
 
 ## Objective
 
-Run one consolidated, owner-authorized live validation window after the complete
-same-session review exists. Validate both entry modes from preparation through
-voice, corrected captions and automatic ending, summary, evidence-linked review,
-retry behavior, cleanup, provider usage, and cost without paying for another
-partial pre-review smoke test.
+Obtain the owner's visual feedback on the completed same-session review, apply
+the requested bounded adjustments, and receive an explicit owner visual pass
+before spending on the consolidated live validation window. Then validate both
+entry modes from preparation through voice, corrected captions and automatic
+ending, summary, evidence-linked review, retry behavior, cleanup, provider
+usage, and cost without paying for another partial pre-review smoke test.
 
 ## Why this ticket exists
 
@@ -32,6 +33,11 @@ partial pre-review smoke test.
 - SP-020 and SP-021 must remain fake-first. Their first real summary and review
   walkthrough belongs to this complete-flow window rather than a standalone
   summary charge.
+- SP-021 received engineering visual inspection but not the owner's final visual
+  review. SP-021A therefore owns the owner's feedback, any resulting bounded
+  review-polish changes, and explicit approval of the ending-to-review
+  transformation. Agent inspection, screenshots, or passing tests cannot
+  substitute for that approval.
 - SP-025 may reuse current SP-021A live evidence. It repeats a paid flow only
   when a later code, provider, configuration, hostname, or release-candidate
   change invalidates that evidence.
@@ -58,6 +64,12 @@ partial pre-review smoke test.
 - [ ] SP-019, SP-020, and SP-021 are implemented and pass their focused fake-mode
   and deterministic verification without loading `.env.local` or reaching a
   provider.
+- [ ] Before paid mode is enabled, present the fake-mode SP-021 ending transition
+  and completed review to the owner at representative desktop, tablet, and phone
+  widths; collect the owner's visual feedback, implement the agreed bounded
+  adjustments, rerun affected deterministic checks, and obtain the owner's
+  explicit visual pass. If the owner has not passed it, leave SP-021A open and
+  do not treat engineering inspection as approval.
 - [ ] The exact unchecked SP-018A evidence ledger is reviewed; no deferred item
   is represented as already passed.
 - [ ] Repository status contains no local environment file, credential,
@@ -72,6 +84,21 @@ partial pre-review smoke test.
   them.
 
 ## Consolidated live-validation checklist
+
+### 0. Owner visual feedback and approval
+
+- [ ] Walk the owner through the continuous interview-to-review transformation:
+  right-column fade/collapse, left-column expansion, central summary card,
+  connected evidence-node composition, node selection/replacement, and
+  minimize-to-overview behavior.
+- [ ] Show the deterministic complete, partial, loading, summary-failure, and
+  selected-node states at representative desktop, tablet, and phone widths,
+  including long content and the reduced-motion treatment.
+- [ ] Record the owner's concrete visual feedback, implement the agreed bounded
+  adjustments within the established ScreenPilot design system, and recheck the
+  affected fake-mode states before any paid walkthrough.
+- [ ] Receive an explicit owner visual pass. Without it, SP-021A is incomplete
+  even when every automated, engineering, and live-provider check passes.
 
 ### 1. CV-assisted complete flow
 
@@ -151,6 +178,10 @@ partial pre-review smoke test.
 
 ## Acceptance criteria
 
+- [ ] The owner explicitly approves the adjusted SP-021 ending transition,
+  mind-map composition, center-card interaction, readability, and responsive
+  visual treatment; this approval is recorded as an owner decision rather than
+  inferred from agent inspection.
 - [ ] Both entry modes complete through corrected live voice behavior, summary,
   evidence-linked review, and cleanup using synthetic data.
 - [ ] Pilot captions and the provider-owned automatic ending are independently
@@ -172,6 +203,8 @@ partial pre-review smoke test.
 
 ## Focused verification
 
+- [ ] Re-run the smallest checks affected by owner-requested visual changes and
+  repeat the affected fake-mode visual states before beginning the paid window.
 - [ ] Run only the smallest relevant deterministic suites before and after the
   live window; never add paid calls to automated tests or CI.
 - [ ] Use browser network, storage, console, accessibility, responsive, and
@@ -197,8 +230,10 @@ unless the user asks or the active workflow already authorizes it.
 
 ## Completion handoff
 
-Report every live and deterministic scenario separately, provider operation
-counts, sanitized timing/cost/retention evidence, files changed, focused checks,
-both restored safety-switch values as owner confirmations, and every unchecked
-item with its blocker. Never include credentials, tokens, candidate content,
-raw provider payloads, real audio, or a secret-bearing screenshot.
+Report the owner's visual feedback, the resulting adjustments, and the explicit
+owner pass separately from every live and deterministic scenario. Also report
+provider operation counts, sanitized timing/cost/retention evidence, files
+changed, focused checks, both restored safety-switch values as owner
+confirmations, and every unchecked item with its blocker. Never include
+credentials, tokens, candidate content, raw provider payloads, real audio, or a
+secret-bearing screenshot.

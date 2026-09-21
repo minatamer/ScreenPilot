@@ -1,32 +1,60 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import type { SummarizeInterviewResponse } from "@screenpilot/contracts/api/interview-summary";
+import type { PublicRuntimeConfig } from "@screenpilot/contracts/api/public-runtime-config";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
+import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-plan";
+import type { ScreeningSummary } from "@screenpilot/contracts/interview/screening-summary";
+import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 
+import { ManagedTurnstileGate } from "@/features/abuse-protection/managed-turnstile-gate";
 import {
-  compareInsightBoardCards,
-  INSIGHT_CATEGORY_METADATA,
-} from "@/features/insights/insight-category-metadata";
+  TURNSTILE_ACTIONS,
+  type ExecuteTurnstileChallenge,
+} from "@/features/abuse-protection/turnstile-client";
+import type { SessionFailure } from "@/features/session/demo-session.types";
 import {
-  TranscriptTimeline,
-  transcriptTurnDomId,
-} from "@/features/transcript/transcript-timeline";
+  isAbortError,
+  ScreenPilotApiError,
+  summarizeInterview,
+} from "@/shared/api/screenpilot-api";
 import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
+import { Button, ButtonGroup } from "@/shared/ui/button";
 import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
+import { ErrorPanel } from "@/shared/ui/error-panel";
+
+import { EvidenceMap } from "./evidence-map";
+import { formatSummaryForCopy } from "./review-evidence-model";
+import { SessionClearDialog } from "./session-clear-dialog";
+import { SummarySections } from "./summary-sections";
+
+export type SummaryRequester = typeof summarizeInterview;
 
 type InterviewEvidenceReviewProps = Readonly<{
   cv?: NormalizedCv | undefined;
   entryMode: EntryMode;
+  executeChallenge?: ExecuteTurnstileChallenge | undefined;
+  failure?: SessionFailure | undefined;
   insights: readonly InsightCard[];
+  interviewGrant: string;
   isPartial: boolean;
-  onReturnHome: () => void;
+  onFailure: (failure: SessionFailure) => void;
+  onRetry: () => void;
+  onReturnHome: () => boolean;
+  onSummarySucceeded: (response: SummarizeInterviewResponse) => void;
+  plan: ScreeningPlan;
+  runtimeConfig: PublicRuntimeConfig;
+  stage: "review_ready" | "summarizing";
   storageStatus: "saved" | "rejected" | "unavailable" | "idle";
+  summary?: ScreeningSummary | undefined;
+  summarize?: SummaryRequester | undefined;
+  topicProgress: readonly TopicProgress[];
   transcript: readonly TranscriptTurn[];
 }>;
 
@@ -34,89 +62,273 @@ function modeLabel(entryMode: EntryMode): string {
   return entryMode === "cv_assisted" ? "CV-assisted" : "Conversation-first";
 }
 
-function insightStatusLabel(status: InsightCard["status"]): string {
-  return status.replaceAll("_", " ");
+function summaryFailure(error: unknown): SessionFailure {
+  if (error instanceof ScreenPilotApiError) {
+    return {
+      stage: "summarizing",
+      code: error.code,
+      message: error.message,
+      retryable: error.retryable,
+    };
+  }
+  return {
+    stage: "summarizing",
+    code: "SUMMARY_UNREACHABLE",
+    message:
+      "ScreenPilot could not organize the conversation. Your local evidence is still available.",
+    retryable: true,
+  };
+}
+
+type SummaryCenterCardProps = Readonly<{
+  entryMode: EntryMode;
+  executeChallenge?: ExecuteTurnstileChallenge | undefined;
+  failure?: SessionFailure | undefined;
+  onChallengeFailure: (failure: {
+    code: "TURNSTILE_REJECTED" | "TURNSTILE_UNAVAILABLE";
+    message: string;
+    retryable: true;
+  }) => void;
+  onRetry: () => void;
+  onVerified: (token: string) => void;
+  requestPending: boolean;
+  siteKey: string;
+  stage: "review_ready" | "summarizing";
+  summary?: ScreeningSummary | undefined;
+}>;
+
+function SummaryCenterCard({
+  entryMode,
+  executeChallenge,
+  failure,
+  onChallengeFailure,
+  onRetry,
+  onVerified,
+  requestPending,
+  siteKey,
+  stage,
+  summary,
+}: SummaryCenterCardProps) {
+  const roleLabel =
+    summary?.rolePreference?.status === "candidate_stated"
+      ? summary.rolePreference.label
+      : "Undecided";
+
+  return (
+    <article
+      aria-busy={stage === "summarizing" && !failure ? true : undefined}
+      className="sp-summary-center-card"
+      data-state={summary ? "ready" : failure ? "failed" : stage}
+    >
+      <div className="sp-summary-center-card__signal" aria-hidden="true">
+        <span>SP</span>
+      </div>
+      {summary ? (
+        <>
+          <p className="sp-summary-center-card__eyebrow">
+            Conversation overview
+          </p>
+          <h3>Conversation summary</h3>
+          <p className="sp-summary-center-card__overview">{summary.overview}</p>
+          <div className="sp-summary-center-card__role">
+            <span>Synthetic session role</span>
+            <strong>{roleLabel}</strong>
+            <small>
+              Candidate-stated context for this session, not a real vacancy.
+            </small>
+          </div>
+          <div className="sp-summary-center-card__meta">
+            <Badge tone="coral">{modeLabel(entryMode)}</Badge>
+            <Badge tone="success">Summary ready</Badge>
+          </div>
+          <p className="sp-summary-center-card__notice">
+            AI-organized notes require human interpretation. No hiring decision
+            was made.
+          </p>
+        </>
+      ) : stage === "summarizing" ? (
+        <>
+          <p className="sp-summary-center-card__eyebrow">End-of-call review</p>
+          <h3>Organizing this conversation</h3>
+          <p className="sp-summary-center-card__overview">
+            The interview has ended. Your insight nodes remain available while
+            ScreenPilot prepares cautious, evidence-linked notes.
+          </p>
+          {failure ? (
+            <ErrorPanel
+              actions={
+                failure.retryable ? (
+                  <Button onClick={onRetry} variant="secondary">
+                    Retry summary
+                  </Button>
+                ) : undefined
+              }
+              announce="polite"
+              title="The summary did not finish"
+            >
+              <p>{failure.message}</p>
+            </ErrorPanel>
+          ) : (
+            <>
+              <div className="sp-summary-center-card__organizing" role="status">
+                <span aria-hidden="true" />
+                <span>
+                  {requestPending
+                    ? "Connecting evidence to the review…"
+                    : "Securing this summary request…"}
+                </span>
+              </div>
+              <ManagedTurnstileGate
+                action={TURNSTILE_ACTIONS.interviewSummary}
+                {...(executeChallenge ? { executeChallenge } : {})}
+                onFailure={onChallengeFailure}
+                onVerified={onVerified}
+                siteKey={siteKey}
+              />
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="sp-summary-center-card__eyebrow">
+            Local evidence review
+          </p>
+          <h3>Summary unavailable</h3>
+          <p className="sp-summary-center-card__overview">
+            The interview evidence remains available, but there was not enough
+            final candidate material to create a grounded summary.
+          </p>
+          <Badge tone="warning">Local evidence only</Badge>
+        </>
+      )}
+    </article>
+  );
 }
 
 export function InterviewEvidenceReview({
   cv,
   entryMode,
+  executeChallenge,
+  failure,
   insights,
+  interviewGrant,
   isPartial,
+  onFailure,
+  onRetry,
   onReturnHome,
+  onSummarySucceeded,
+  plan,
+  runtimeConfig,
+  stage,
   storageStatus,
+  summary,
+  summarize = summarizeInterview,
+  topicProgress,
   transcript,
 }: InterviewEvidenceReviewProps) {
-  const [activeTurnId, setActiveTurnId] = useState<string | null>(null);
-  const [navigationAnnouncement, setNavigationAnnouncement] = useState("");
-  const returnTargetRef = useRef<HTMLButtonElement | null>(null);
-  const eligibleCandidateTurns = new Map(
-    transcript
-      .filter((turn) => turn.speaker === "candidate" && turn.status === "final")
-      .map((turn) => [turn.id, turn] as const),
+  const [requestPending, setRequestPending] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
+    "idle",
   );
-  const orderedInsights = [...insights].sort(compareInsightBoardCards);
+  const summaryAbortRef = useRef<AbortController | null>(null);
+  const summaryRequestStartedRef = useRef(false);
 
-  const navigateToTurn = (turn: TranscriptTurn, trigger: HTMLButtonElement) => {
-    const turnElement = document.getElementById(transcriptTurnDomId(turn.id));
-    if (!turnElement) {
-      setNavigationAnnouncement(
-        "That evidence is unavailable in this transcript.",
-      );
+  useEffect(
+    () => () => {
+      summaryAbortRef.current?.abort();
+      summaryAbortRef.current = null;
+    },
+    [],
+  );
+
+  const handleVerified = useCallback(
+    (turnstileToken: string) => {
+      if (summaryRequestStartedRef.current || stage !== "summarizing") {
+        return;
+      }
+      summaryRequestStartedRef.current = true;
+      setRequestPending(true);
+      const controller = new AbortController();
+      summaryAbortRef.current?.abort();
+      summaryAbortRef.current = controller;
+      void summarize(
+        {
+          entryMode,
+          insights: [...insights],
+          interviewGrant,
+          plan,
+          topicProgress: [...topicProgress],
+          transcript: [...transcript],
+          turnstileToken,
+        },
+        controller.signal,
+      )
+        .then((response) => {
+          if (!controller.signal.aborted) {
+            setRequestPending(false);
+            onSummarySucceeded(response);
+          }
+        })
+        .catch((error: unknown) => {
+          if (controller.signal.aborted || isAbortError(error)) {
+            return;
+          }
+          summaryRequestStartedRef.current = false;
+          setRequestPending(false);
+          onFailure(summaryFailure(error));
+        });
+    },
+    [
+      entryMode,
+      insights,
+      interviewGrant,
+      onFailure,
+      onSummarySucceeded,
+      plan,
+      stage,
+      summarize,
+      topicProgress,
+      transcript,
+    ],
+  );
+
+  const copySummary = async () => {
+    if (!summary) {
+      setCopyStatus("failed");
       return;
     }
-
-    returnTargetRef.current = trigger;
-    setActiveTurnId(turn.id);
-    const reduceMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    turnElement.scrollIntoView({
-      behavior: reduceMotion ? "auto" : "smooth",
-      block: "center",
-    });
-    turnElement.focus({ preventScroll: true });
-    setNavigationAnnouncement(
-      `Moved to Candidate turn ${String(turn.sequence + 1)}.`,
-    );
+    try {
+      await navigator.clipboard.writeText(formatSummaryForCopy(summary, plan));
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
+    }
   };
 
-  const returnToEvidence = () => {
-    returnTargetRef.current?.focus();
-    setActiveTurnId(null);
-    setNavigationAnnouncement("Returned to the evidence card.");
-  };
+  const summaryStatus = summary
+    ? "ready"
+    : failure
+      ? "failed"
+      : stage === "summarizing"
+        ? "pending"
+        : "unavailable";
 
   return (
-    <div className="sp-demo-stage sp-review-stage">
+    <div
+      className="sp-demo-stage sp-review-stage"
+      data-review-phase={summaryStatus}
+    >
       <div className="sp-review-stage__heading">
         <DemoStageHeading
           pretitle={isPartial ? "Partial interview review" : "Interview review"}
-          title="Review the evidence saved in this tab."
+          title="Your conversation, organized as connected evidence."
         />
         <div className="sp-review-stage__badges">
           <Badge tone="coral">{modeLabel(entryMode)}</Badge>
           <Badge tone={isPartial ? "warning" : "success"}>
-            {isPartial ? "Partial transcript" : "Interview ended"}
+            {isPartial ? "Partial review" : "Interview ended"}
           </Badge>
         </div>
-      </div>
-
-      <div
-        className="sp-review-disclosure"
-        data-partial={isPartial || undefined}
-        role={isPartial ? "status" : undefined}
-      >
-        <strong>
-          {isPartial
-            ? "The connection ended before a complete transcript was received."
-            : "This review contains the final text received during this interview."}
-        </strong>
-        <p>
-          It is stored only for this browser tab, may omit speech around a
-          disconnect, and is not a recording or certified transcript. The role
-          shown in this demo was synthetic and available only for this session.
-        </p>
       </div>
 
       {storageStatus === "unavailable" || storageStatus === "rejected" ? (
@@ -126,123 +338,67 @@ export function InterviewEvidenceReview({
         </p>
       ) : null}
 
-      <div className="sp-review-stage__workspace">
-        <section
-          aria-labelledby="review-insights-title"
-          className="sp-review-insights"
-        >
-          <header className="sp-review-panel-heading">
-            <div>
-              <p>Grounded notes</p>
-              <h2 id="review-insights-title">Candidate insights</h2>
-            </div>
-            <Badge>
-              {orderedInsights.length}{" "}
-              {orderedInsights.length === 1 ? "note" : "notes"}
-            </Badge>
-          </header>
+      <EvidenceMap
+        center={
+          <SummaryCenterCard
+            entryMode={entryMode}
+            {...(executeChallenge ? { executeChallenge } : {})}
+            {...(failure ? { failure } : {})}
+            onChallengeFailure={(challengeFailure) => {
+              summaryRequestStartedRef.current = false;
+              setRequestPending(false);
+              onFailure({ stage: "summarizing", ...challengeFailure });
+            }}
+            onRetry={onRetry}
+            onVerified={handleVerified}
+            requestPending={requestPending}
+            siteKey={runtimeConfig.abuseProtection.siteKey}
+            stage={stage}
+            {...(summary ? { summary } : {})}
+          />
+        }
+        {...(cv ? { cv } : {})}
+        entryMode={entryMode}
+        insights={insights}
+        plan={plan}
+        {...(summary ? { summary } : {})}
+        summaryStatus={summaryStatus}
+        transcript={transcript}
+      />
 
-          {orderedInsights.length === 0 ? (
-            <p className="sp-review-insights__empty">
-              No insight cards were finalized before the interview ended.
-            </p>
-          ) : (
-            <div className="sp-review-insights__list" role="list">
-              {orderedInsights.map((insight) => {
-                const metadata = INSIGHT_CATEGORY_METADATA[insight.category];
-                return (
-                  <article
-                    className="sp-review-insight-card"
-                    data-status={insight.status}
-                    key={insight.id}
-                    role="listitem"
-                  >
-                    <header>
-                      <span aria-hidden="true">{metadata.mark}</span>
-                      <div>
-                        <p>{insight.label}</p>
-                        <strong>{insight.value}</strong>
-                      </div>
-                    </header>
-                    <div className="sp-review-insight-card__meta">
-                      <Badge>{insight.source}</Badge>
-                      <span>{insightStatusLabel(insight.status)}</span>
-                    </div>
-                    <div
-                      aria-label={`Evidence for ${insight.label}`}
-                      className="sp-review-insight-card__evidence"
-                    >
-                      {insight.cvFactIds.map((factId) => {
-                        const fact = cv?.facts.find(
-                          (candidateFact) => candidateFact.id === factId,
-                        );
-                        return fact ? (
-                          <span
-                            className="sp-evidence-chip"
-                            key={`cv-${factId}`}
-                          >
-                            CV source: {fact.statement}
-                          </span>
-                        ) : (
-                          <span
-                            className="sp-evidence-chip sp-evidence-chip--unavailable"
-                            key={`cv-${factId}`}
-                          >
-                            CV evidence unavailable
-                          </span>
-                        );
-                      })}
-                      {insight.evidenceTurnIds.map((turnId) => {
-                        const turn = eligibleCandidateTurns.get(turnId);
-                        return turn ? (
-                          <button
-                            aria-controls={transcriptTurnDomId(turn.id)}
-                            aria-label={`View Candidate evidence, turn ${String(turn.sequence + 1)}, for ${insight.label}`}
-                            className="sp-evidence-chip sp-evidence-chip--button"
-                            key={`turn-${turnId}`}
-                            onClick={(event) => {
-                              navigateToTurn(turn, event.currentTarget);
-                            }}
-                            type="button"
-                          >
-                            Candidate · turn {turn.sequence + 1}
-                          </button>
-                        ) : (
-                          <span
-                            aria-label={`Candidate evidence unavailable for ${insight.label}`}
-                            className="sp-evidence-chip sp-evidence-chip--unavailable"
-                            key={`turn-${turnId}`}
-                          >
-                            Candidate evidence unavailable
-                          </span>
-                        );
-                      })}
-                    </div>
-                    {insight.correctionReason ? (
-                      <p className="sp-review-insight-card__correction">
-                        Correction note: {insight.correctionReason}
-                      </p>
-                    ) : null}
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
-        <TranscriptTimeline
-          activeTurnId={activeTurnId}
-          onReturnToEvidence={returnToEvidence}
+      {summary ? (
+        <SummarySections
+          plan={plan}
+          summary={summary}
           transcript={transcript}
         />
-      </div>
+      ) : null}
 
-      <p aria-live="polite" className="sp-visually-hidden">
-        {navigationAnnouncement}
+      <p aria-live="polite" className="sp-review-copy-status">
+        {copyStatus === "copied"
+          ? "Summary copied to the clipboard."
+          : copyStatus === "failed"
+            ? "The summary could not be copied in this browser."
+            : ""}
       </p>
 
       <DemoActionFooter note="No score or automated hiring decision was created.">
-        <Button onClick={onReturnHome}>Clear &amp; return home</Button>
+        <div className="sp-review-actions">
+          <ButtonGroup>
+            <Button
+              disabled={!summary}
+              onClick={() => {
+                void copySummary();
+              }}
+            >
+              Copy summary
+            </Button>
+          </ButtonGroup>
+          <div className="sp-review-actions__clear">
+            <span>Remove every ScreenPilot item held in this tab.</span>
+            <SessionClearDialog onClear={onReturnHome} />
+          </div>
+        </div>
       </DemoActionFooter>
     </div>
   );

@@ -2,6 +2,8 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createInitialDemoSessionState } from "@/features/session/demo-session.reducer";
+import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
+import { TEST_PUBLIC_RUNTIME_CONFIG } from "@/test/cv-analysis.fixture";
 
 import { DemoExperience } from "./demo-experience";
 
@@ -30,6 +32,9 @@ vi.mock("@/features/session/use-demo-session", () => ({
       hydrationStatus: "ready",
       stage: "review_ready",
       entryMode: "conversation_first",
+      interviewGrant: "signed-interview-grant",
+      runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
+      screeningPlan: createConversationFirstPlanFixture(),
       voice: {
         status: reviewFixture.voiceStatus,
         endedAt: "2026-09-21T09:15:00.000Z",
@@ -55,7 +60,33 @@ vi.mock("@/features/session/use-demo-session", () => ({
 describe("DemoExperience completion stage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionActions.clearSession.mockReturnValue(true);
     reviewFixture.voiceStatus = "ended";
+  });
+
+  it("keeps the review open and reports when browser cleanup fails", () => {
+    sessionActions.clearSession.mockReturnValue(false);
+    render(<DemoExperience />);
+
+    const footerClear = screen
+      .getAllByRole("button", { name: "Clear & exit" })
+      .at(-1);
+    if (!footerClear) {
+      throw new Error("Expected the review Clear & exit action.");
+    }
+    fireEvent.click(footerClear);
+    fireEvent.click(screen.getByRole("button", { name: "Clear session" }));
+
+    expect(sessionActions.clearSession).toHaveBeenCalledOnce();
+    expect(router.replace).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(/could not remove this session from the browser/u),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", {
+        name: "Your conversation, organized as connected evidence.",
+      }),
+    ).toBeVisible();
   });
 
   it("renders the reducer-owned local evidence review at the Review step", () => {
@@ -71,12 +102,17 @@ describe("DemoExperience completion stage", () => {
     expect(
       screen.getByRole("heading", {
         level: 1,
-        name: "Review the evidence saved in this tab.",
+        name: "Your conversation, organized as connected evidence.",
       }),
     ).toBeVisible();
     expect(screen.getByText("Interview ended")).toBeVisible();
     expect(
-      screen.getByText("I am looking for a collaborative product team."),
+      screen.queryByText("I am looking for a collaborative product team."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "No insight nodes were finalized before the interview ended. The local evidence available for this review is limited.",
+      ),
     ).toBeVisible();
     expect(screen.getByText("Review").closest("li")).toHaveAttribute(
       "aria-current",
@@ -84,9 +120,16 @@ describe("DemoExperience completion stage", () => {
     );
     expect(router.replace).not.toHaveBeenCalled();
 
-    fireEvent.click(
-      screen.getByRole("button", { name: "Clear & return home" }),
-    );
+    const clearActions = screen.getAllByRole("button", {
+      name: "Clear & exit",
+    });
+    const footerClear = clearActions.at(-1);
+    if (!footerClear) {
+      throw new Error("Expected the review Clear & exit action.");
+    }
+    fireEvent.click(footerClear);
+    expect(sessionActions.clearSession).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Clear session" }));
     expect(sessionActions.clearSession).toHaveBeenCalledOnce();
     expect(router.replace).toHaveBeenCalledWith("/");
 
@@ -103,12 +146,10 @@ describe("DemoExperience completion stage", () => {
     reviewFixture.voiceStatus = "failed";
     render(<DemoExperience />);
 
-    expect(screen.getByText("Partial transcript")).toBeVisible();
+    expect(screen.getByText("Partial review")).toBeVisible();
     expect(
-      screen.getByText(
-        "The connection ended before a complete transcript was received.",
-      ),
-    ).toBeVisible();
+      screen.queryByText(/The connection ended before complete interview/u),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Interview ended")).not.toBeInTheDocument();
   });
 });

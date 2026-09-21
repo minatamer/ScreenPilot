@@ -57,6 +57,18 @@ const summaryInput: InterviewSummaryInput = {
       createdAt: "2026-09-12T09:01:00.000Z",
       updatedAt: "2026-09-12T09:01:00.000Z",
     },
+    {
+      id: "insight-current-context",
+      category: "current_context",
+      label: "Current context",
+      value: "Early-career developer with product internship experience",
+      source: "Candidate",
+      status: "confirmed",
+      evidenceTurnIds: ["turn-1"],
+      cvFactIds: [],
+      createdAt: "2026-09-12T09:01:00.000Z",
+      updatedAt: "2026-09-12T09:01:00.000Z",
+    },
   ],
   topicProgress: [],
 };
@@ -92,6 +104,11 @@ describe("provider adapter composition", () => {
       label: "Backend Developer",
     });
     expect(JSON.stringify(summaryResult)).not.toContain(privateCandidateText);
+    expect(summaryResult.summary.confirmedFacts).toContainEqual({
+      evidenceTurnIds: ["turn-1"],
+      statement:
+        "Current context: Early-career developer with product internship experience.",
+    });
     expect(firstCvResult.usage).toMatchObject({
       cachedInputTokens: 0,
       outputTokens: 700,

@@ -124,6 +124,7 @@ function voiceSessionViewReducer(
 
 type UseVoiceSessionOptions = Readonly<{
   endFallbackMs?: number;
+  endTransitionMs?: number;
   hardStopAtMs?: number;
   now?: () => number;
   onConnected: (voice: VoiceMetadata) => void;
@@ -136,6 +137,7 @@ type UseVoiceSessionOptions = Readonly<{
 }>;
 
 const DEFAULT_END_FALLBACK_MS = 2_000;
+const DEFAULT_END_TRANSITION_MS = 420;
 
 export function useVoiceSession(options: UseVoiceSessionOptions) {
   const [state, dispatch] = useReducer(
@@ -154,8 +156,10 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   const voiceRef = useRef<VoiceMetadata | null>(null);
   const connectedRef = useRef(false);
   const endingRequestedRef = useRef(false);
+  const endingStartedAtRef = useRef<number | null>(null);
   const endingReasonRef = useRef("Interview ended by the candidate.");
   const completedRef = useRef(false);
+  const endTransitionTimerRef = useRef<number | null>(null);
   const candidateTurnRef = useRef(0);
   const candidateSpeechActiveRef = useRef(false);
   const fillerPolicyRef = useRef(createFillerPolicyState());
@@ -265,10 +269,18 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
     [clearLatencyTimer],
   );
 
-  const completeEnd = useCallback(() => {
+  const clearEndTransitionTimer = useCallback(() => {
+    if (endTransitionTimerRef.current !== null) {
+      window.clearTimeout(endTransitionTimerRef.current);
+      endTransitionTimerRef.current = null;
+    }
+  }, []);
+
+  const finishEnd = useCallback(() => {
     if (completedRef.current || !voiceRef.current) {
       return;
     }
+    clearEndTransitionTimer();
     completedRef.current = true;
     cancelPendingMeasurements();
     setLatencyStage("idle");
@@ -279,7 +291,30 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       endReason: endingReasonRef.current,
       status: "ended",
     });
-  }, [cancelPendingMeasurements, currentTime]);
+  }, [cancelPendingMeasurements, clearEndTransitionTimer, currentTime]);
+
+  const completeEnd = useCallback(() => {
+    if (completedRef.current || !voiceRef.current) {
+      return;
+    }
+    const transitionMilliseconds = Math.max(
+      0,
+      callbacksRef.current.endTransitionMs ?? DEFAULT_END_TRANSITION_MS,
+    );
+    const transitionStartedAt = endingStartedAtRef.current ?? currentTime();
+    const transitionRemaining = Math.max(
+      0,
+      transitionMilliseconds - (currentTime() - transitionStartedAt),
+    );
+    if (transitionRemaining === 0) {
+      finishEnd();
+      return;
+    }
+    endTransitionTimerRef.current ??= window.setTimeout(
+      finishEnd,
+      transitionRemaining,
+    );
+  }, [currentTime, finishEnd]);
 
   const requestEnd = useCallback(
     (reason = "Interview ended by the candidate.") => {
@@ -291,6 +326,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         return;
       }
       endingRequestedRef.current = true;
+      endingStartedAtRef.current = currentTime();
       endingReasonRef.current = reason;
       cancelPendingMeasurements();
       setLatencyStage("idle");
@@ -298,7 +334,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       setEndRequested(true);
       callbacksRef.current.onEnding();
     },
-    [cancelPendingMeasurements],
+    [cancelPendingMeasurements, currentTime],
   );
 
   const handleUnexpectedTerminalEvent = useCallback(
@@ -326,6 +362,17 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   const onSessionEvent = useCallback(
     (providerEvent: VoiceSessionEvent) => {
       if (completedRef.current) {
+        return;
+      }
+      if (
+        endingRequestedRef.current &&
+        (providerEvent.type === "message" ||
+          providerEvent.type === "mode" ||
+          providerEvent.type === "candidate_speech_activity" ||
+          providerEvent.type === "agent_audio_started" ||
+          providerEvent.type === "latency_filler" ||
+          providerEvent.type === "interruption")
+      ) {
         return;
       }
       if (
@@ -626,6 +673,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   }, [completeEnd, endRequested]);
 
   useEffect(() => cancelPendingMeasurements, [cancelPendingMeasurements]);
+  useEffect(() => clearEndTransitionTimer, [clearEndTransitionTimer]);
 
   return {
     caption: state.caption,

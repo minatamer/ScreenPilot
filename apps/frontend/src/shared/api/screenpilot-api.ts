@@ -15,6 +15,12 @@ import {
   type PrepareInterviewResponse,
 } from "@screenpilot/contracts/api/interview-preparation";
 import {
+  summarizeInterviewRequestSchema,
+  summarizeInterviewResponseSchema,
+  type SummarizeInterviewRequest,
+  type SummarizeInterviewResponse,
+} from "@screenpilot/contracts/api/interview-summary";
+import {
   voiceTokenRequestSchema,
   voiceTokenResponseSchema,
   type VoiceTokenRequest,
@@ -205,6 +211,36 @@ export async function requestVoiceToken(
     throw new ScreenPilotApiError({
       code: "INVALID_VOICE_TOKEN_RESPONSE",
       message: "ScreenPilot received an incomplete voice authorization.",
+      retryable: true,
+    });
+  }
+  return parsed.data;
+}
+
+export async function summarizeInterview(
+  input: SummarizeInterviewRequest,
+  signal: AbortSignal,
+  browserFetch: BrowserFetch = fetch,
+): Promise<SummarizeInterviewResponse> {
+  const request = summarizeInterviewRequestSchema.parse(input);
+  const response = await browserFetch("/v1/interview/summary", {
+    body: JSON.stringify(request),
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+    },
+    method: "POST",
+    signal,
+  });
+  const parsed = summarizeInterviewResponseSchema.safeParse(
+    await requireSuccessfulBody(response),
+  );
+  if (!parsed.success) {
+    throw new ScreenPilotApiError({
+      code: "INVALID_SUMMARY_RESPONSE",
+      message: "ScreenPilot received an incomplete interview summary.",
       retryable: true,
     });
   }

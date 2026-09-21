@@ -2,6 +2,7 @@ import { roleLabelSchema } from "@screenpilot/contracts/interview/demo-context";
 import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-cv";
 import { UNDECIDED_ROLE_VALUE } from "@screenpilot/contracts/interview/client-tools";
 import {
+  SCREENING_SUMMARY_LIMITATIONS,
   screeningSummarySchema,
   type ScreeningSummary,
 } from "@screenpilot/contracts/interview/screening-summary";
@@ -65,29 +66,54 @@ function latestCandidateInsight(
   }, undefined);
 }
 
-function genericFactStatement(
-  category: InterviewSummaryInput["insights"][number]["category"],
+function sentenceWithDetail(prefix: string, value: string): string {
+  const normalizedValue = value.trim().replace(/[.!?]+$/u, "");
+  const maximumValueCharacters = 600 - prefix.length - 2;
+  const boundedValue = Array.from(normalizedValue)
+    .slice(0, maximumValueCharacters)
+    .join("");
+  return `${prefix}: ${boundedValue}.`;
+}
+
+function factStatement(
+  insight: InterviewSummaryInput["insights"][number],
+  includeCandidateDetail: boolean,
 ): string | null {
   const statements: Partial<
     Record<InterviewSummaryInput["insights"][number]["category"], string>
   > = {
-    current_context: "Candidate shared current or recent context.",
-    relevant_experience:
-      "Candidate described broad relevant experience for human review.",
-    responsibility: "Candidate described broad responsibilities.",
-    strongest_areas: "Candidate identified a self-described strongest area.",
-    team_work_style: "Candidate described a team or work-style preference.",
-    motivation: "Candidate described a next-role motivation or priority.",
-    location_work_arrangement:
-      "Candidate described a location or work-arrangement preference.",
-    english_use: "Candidate described where they use English.",
+    current_context: includeCandidateDetail
+      ? sentenceWithDetail("Current context", insight.value)
+      : "Candidate shared current or recent context.",
+    relevant_experience: includeCandidateDetail
+      ? sentenceWithDetail("Relevant experience", insight.value)
+      : "Candidate described broad relevant experience for human review.",
+    responsibility: includeCandidateDetail
+      ? sentenceWithDetail("Responsibility described", insight.value)
+      : "Candidate described broad responsibilities.",
+    strongest_areas: includeCandidateDetail
+      ? sentenceWithDetail("Candidate-highlighted area", insight.value)
+      : "Candidate identified a self-described strongest area.",
+    team_work_style: includeCandidateDetail
+      ? sentenceWithDetail("Team and work preference", insight.value)
+      : "Candidate described a team or work-style preference.",
+    motivation: includeCandidateDetail
+      ? sentenceWithDetail("Next-role priority", insight.value)
+      : "Candidate described a next-role motivation or priority.",
+    location_work_arrangement: includeCandidateDetail
+      ? sentenceWithDetail("Work-arrangement preference", insight.value)
+      : "Candidate described a location or work-arrangement preference.",
+    english_use: includeCandidateDetail
+      ? sentenceWithDetail("Candidate-described English use", insight.value)
+      : "Candidate described where they use English.",
   };
-  return statements[category] ?? null;
+  return statements[insight.category] ?? null;
 }
 
-export function createFakeInterviewSummary(
+function fakeInterviewSummaryValue(
   input: InterviewSummaryInput,
-): ScreeningSummary {
+  includeCandidateDetail: boolean,
+): unknown {
   const roleInsight = latestCandidateInsight(input, "role_preference");
   const confirmedFacts = input.insights.flatMap((insight) => {
     if (
@@ -97,7 +123,7 @@ export function createFakeInterviewSummary(
     ) {
       return [];
     }
-    const statement = genericFactStatement(insight.category);
+    const statement = factStatement(insight, includeCandidateDetail);
     return statement === null
       ? []
       : [{ evidenceTurnIds: insight.evidenceTurnIds, statement }];
@@ -117,8 +143,14 @@ export function createFakeInterviewSummary(
     .filter((topicKey) => !coveredKeys.has(topicKey));
   const compensationInsight = latestCandidateInsight(input, "compensation");
   const availabilityInsight = latestCandidateInsight(input, "availability");
+  const unresolvedInsights = input.insights.filter(
+    (insight) =>
+      insight.source !== "CV" &&
+      (insight.status === "needs_clarification" ||
+        insight.category === "follow_up_needed"),
+  );
 
-  return screeningSummarySchema.parse({
+  return {
     overview:
       "Local interview evidence was organized into cautious notes for human review.",
     ...(roleInsight === undefined
@@ -148,7 +180,9 @@ export function createFakeInterviewSummary(
       )
       .map((insight) => ({
         evidenceTurnIds: insight.evidenceTurnIds,
-        statement: "Candidate context remains unclear and needs human review.",
+        statement: includeCandidateDetail
+          ? sentenceWithDetail("Clarification needed", insight.value)
+          : "Candidate context remains unclear and needs human review.",
       })),
     topicsCovered,
     topicsNotCovered,
@@ -156,8 +190,12 @@ export function createFakeInterviewSummary(
       ? {}
       : {
           compensation: {
-            candidateStatement:
-              "Candidate provided, declined, or remained uncertain about compensation details.",
+            candidateStatement: includeCandidateDetail
+              ? sentenceWithDetail(
+                  "Candidate-stated compensation preference",
+                  compensationInsight.value,
+                )
+              : "Candidate provided, declined, or remained uncertain about compensation details.",
             evidenceTurnIds: compensationInsight.evidenceTurnIds,
           },
         }),
@@ -165,8 +203,12 @@ export function createFakeInterviewSummary(
       ? {}
       : {
           availability: {
-            candidateStatement:
-              "Candidate described availability or uncertainty for human review.",
+            candidateStatement: includeCandidateDetail
+              ? sentenceWithDetail(
+                  "Candidate-stated availability",
+                  availabilityInsight.value,
+                )
+              : "Candidate described availability or uncertainty for human review.",
             evidenceTurnIds: availabilityInsight.evidenceTurnIds,
           },
         }),
@@ -178,7 +220,9 @@ export function createFakeInterviewSummary(
       )
       .map((insight) => ({
         evidenceTurnIds: insight.evidenceTurnIds,
-        question: "Candidate asked a question for human review.",
+        question: includeCandidateDetail
+          ? insight.value
+          : "Candidate asked a question for human review.",
       })),
     humanFollowups: input.insights
       .filter(
@@ -187,16 +231,33 @@ export function createFakeInterviewSummary(
       )
       .map((insight) => ({
         evidenceTurnIds: insight.evidenceTurnIds,
-        reason:
-          "Human follow-up is needed for an unanswered candidate question or unclear detail.",
+        reason: includeCandidateDetail
+          ? insight.value
+          : "Human follow-up is needed for an unanswered candidate question or unclear detail.",
       })),
     limitations: [
-      "These AI-organized notes require human review.",
+      SCREENING_SUMMARY_LIMITATIONS[0],
       ...(topicsNotCovered.length === 0
         ? []
-        : ["Some planned topics were not covered in the local evidence."]),
+        : [SCREENING_SUMMARY_LIMITATIONS[1]]),
+      ...(unresolvedInsights.length === 0
+        ? []
+        : [SCREENING_SUMMARY_LIMITATIONS[2]]),
     ],
-  });
+  };
+}
+
+export function createFakeInterviewSummary(
+  input: InterviewSummaryInput,
+): ScreeningSummary {
+  const detailedSummary = screeningSummarySchema.safeParse(
+    fakeInterviewSummaryValue(input, true),
+  );
+  if (detailedSummary.success) {
+    return detailedSummary.data;
+  }
+
+  return screeningSummarySchema.parse(fakeInterviewSummaryValue(input, false));
 }
 
 function trustedFixtureText(cvText: string): string {

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
-import { StrictMode } from "react";
+import { StrictMode, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -63,6 +63,26 @@ function ReviewStorageProbe() {
     <output>
       {state.stage}:{String(state.transcript.length)}:{storageStatus}
     </output>
+  );
+}
+
+function ClearSessionProbe() {
+  const { clearSession, state, storageStatus } = useDemoSession();
+  const [clearResult, setClearResult] = useState("idle");
+  return (
+    <>
+      <output>
+        {state.stage}:{storageStatus}:{clearResult}
+      </output>
+      <button
+        onClick={() => {
+          setClearResult(clearSession() ? "cleared" : "failed");
+        }}
+        type="button"
+      >
+        Clear stored session
+      </button>
+    </>
   );
 }
 
@@ -290,5 +310,70 @@ describe("DemoSessionProvider client lifecycle", () => {
 
     await act(() => Promise.resolve());
     expect(screen.getByText("review_ready:1:unavailable")).toBeInTheDocument();
+  });
+
+  it("keeps in-memory review state when browser removal throws", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-09T10:00:00.000Z"));
+    const storedReview = JSON.stringify(
+      persistedDemoSessionSchema.parse({
+        schemaVersion: 3,
+        stage: "review_ready",
+        entryMode: "conversation_first",
+        createdAt: "2026-09-09T09:00:00.000Z",
+        expiresAt: "2026-09-09T11:00:00.000Z",
+        runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
+        demoContext: {
+          kind: "role_agnostic_first_stage_hr_screen",
+          roleAvailability: "candidate_selected_synthetic_session_vacancy",
+          employerFactsAvailable: false,
+        },
+        screeningPlan: createConversationFirstPlanFixture(),
+        interviewGrant: "signed-conversation-first-grant",
+        interviewGrantExpiresAt: "2026-09-09T10:30:00.000Z",
+        voice: {
+          status: "ended",
+          endedAt: "2026-09-09T09:10:00.000Z",
+        },
+        transcript: [
+          {
+            id: "candidate-turn-1",
+            sequence: 0,
+            speaker: "candidate",
+            status: "final",
+            text: "Keep this candidate evidence visible for a safe retry.",
+            occurredAt: "2026-09-09T09:08:00.000Z",
+          },
+        ],
+        insights: [],
+        topicProgress: [],
+      }),
+    );
+    const blockedStorage: SessionStorageLike = {
+      get length() {
+        return 1;
+      },
+      getItem: (key) => (key === SESSION_STORAGE_KEY ? storedReview : null),
+      key: (index) => (index === 0 ? SESSION_STORAGE_KEY : null),
+      removeItem: () => {
+        throw new DOMException("Removal blocked", "SecurityError");
+      },
+      setItem: vi.fn(),
+    };
+
+    render(
+      <DemoSessionProvider storage={blockedStorage}>
+        <ClearSessionProbe />
+      </DemoSessionProvider>,
+    );
+
+    await act(() => Promise.resolve());
+    expect(screen.getByText("review_ready:saved:idle")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Clear stored session" }),
+    );
+
+    expect(screen.getByText("review_ready:unavailable:failed")).toBeVisible();
+    expect(blockedStorage.getItem(SESSION_STORAGE_KEY)).toBe(storedReview);
   });
 });

@@ -200,7 +200,7 @@ export function clearScreenPilotSession(
     for (const key of sessionKeys) {
       storage.removeItem(key);
     }
-    return true;
+    return sessionKeys.every((key) => storage.getItem(key) === null);
   } catch {
     return false;
   }

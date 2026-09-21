@@ -105,10 +105,6 @@ export type DemoSessionEvent =
   | Readonly<{ type: "UPSERT_INSIGHT"; insight: InsightCard }>
   | Readonly<{ type: "SET_TOPIC_PROGRESS"; progress: TopicProgress }>
   | Readonly<{ type: "START_OVER" }>
-  | Readonly<{
-      type: "DEMO_INTERVIEW_COMPLETED";
-      voice: VoiceMetadata;
-    }>
   | Readonly<{ type: "BEGIN_NEW_SESSION"; now: string }>
   | Readonly<{ type: "SESSION_EXPIRED" }>
   | Readonly<{ type: "CLEAR_SESSION" }>;
@@ -192,6 +188,11 @@ function interruptedSession(
 ): DemoSessionState {
   const hasUsableEvidence =
     session.transcript.length > 0 || session.insights.length > 0;
+  const canSummarize =
+    Boolean(session.interviewGrant && session.screeningPlan) &&
+    session.transcript.some(
+      (turn) => turn.speaker === "candidate" && turn.status === "final",
+    );
   const voice: VoiceMetadata = {
     ...(session.voice?.conversationId
       ? { conversationId: session.voice.conversationId }
@@ -205,7 +206,11 @@ function interruptedSession(
   return {
     ...session,
     hydrationStatus: "ready",
-    stage: hasUsableEvidence ? "review_ready" : "preflight",
+    stage: canSummarize
+      ? "summarizing"
+      : hasUsableEvidence
+        ? "review_ready"
+        : "preflight",
     voice,
     restoreNotice: "call_interrupted",
   };
@@ -560,7 +565,15 @@ export function demoSessionReducer(
       if (event.voice.status !== "ended" && event.voice.status !== "failed") {
         throw new InvalidSessionTransitionError(state.stage, event.type);
       }
-      return { ...state, stage: "summarizing", voice: event.voice };
+      return {
+        ...state,
+        stage: state.transcript.some(
+          (turn) => turn.speaker === "candidate" && turn.status === "final",
+        )
+          ? "summarizing"
+          : "review_ready",
+        voice: event.voice,
+      };
     case "VOICE_INTERRUPTED":
       assertStage(state, event.type, ["connecting", "live", "ending"]);
       {
@@ -754,17 +767,6 @@ export function demoSessionReducer(
         "ready",
       ]);
       return clearModeSpecificState(state);
-    case "DEMO_INTERVIEW_COMPLETED":
-      assertStage(state, event.type, ["ending"]);
-      if (event.voice.status !== "ended" && event.voice.status !== "failed") {
-        throw new InvalidSessionTransitionError(state.stage, event.type);
-      }
-      return {
-        ...state,
-        stage: "review_ready",
-        voice: event.voice,
-        failure: undefined,
-      };
     case "BEGIN_NEW_SESSION":
       assertStage(state, event.type, ["cleared"]);
       return {

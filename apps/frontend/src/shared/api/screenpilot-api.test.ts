@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
 import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
+import {
+  SCREENING_SUMMARY_LIMITATIONS,
+  SCREENING_SUMMARY_OVERVIEW,
+} from "@screenpilot/contracts/interview/screening-summary";
 
 import {
   analyzeCv,
@@ -9,6 +13,7 @@ import {
   prepareConversationFirst,
   requestVoiceToken,
   ScreenPilotApiError,
+  summarizeInterview,
 } from "./screenpilot-api";
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -157,6 +162,65 @@ describe("ScreenPilot browser API", () => {
       interviewGrant: "signed-interview-grant",
       turnstileToken: "single-use-turnstile-token",
     });
+    expect(options).toMatchObject({
+      cache: "no-store",
+      credentials: "same-origin",
+      method: "POST",
+      signal: controller.signal,
+    });
+  });
+
+  it("sends bounded local evidence to the relative summary endpoint", async () => {
+    const plan = createConversationFirstPlanFixture();
+    const request = {
+      interviewGrant: "signed-interview-grant",
+      turnstileToken: "single-use-summary-token",
+      entryMode: "conversation_first" as const,
+      plan,
+      transcript: [
+        {
+          id: "candidate-turn-1",
+          sequence: 0,
+          speaker: "candidate" as const,
+          status: "final" as const,
+          text: "I am exploring a collaborative product role.",
+          occurredAt: "2026-09-21T09:10:00.000Z",
+        },
+      ],
+      insights: [],
+      topicProgress: [],
+    };
+    const responseBody = {
+      summary: {
+        overview: SCREENING_SUMMARY_OVERVIEW,
+        confirmedFacts: [],
+        clarifications: [],
+        topicsCovered: [],
+        topicsNotCovered: [],
+        communicationNotes: [],
+        candidateQuestions: [],
+        humanFollowups: [],
+        limitations: [SCREENING_SUMMARY_LIMITATIONS[0]],
+      },
+      limitations: [],
+      usage: {
+        inputTokens: 400,
+        outputTokens: 180,
+        cachedInputTokens: 0,
+        estimatedCostUsd: 0.001,
+      },
+    };
+    const browserFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse(responseBody));
+    const controller = new AbortController();
+
+    await expect(
+      summarizeInterview(request, controller.signal, browserFetch),
+    ).resolves.toEqual(responseBody);
+    const options = browserFetch.mock.calls[0]?.[1];
+    expect(browserFetch.mock.calls[0]?.[0]).toBe("/v1/interview/summary");
+    expect(requestJsonBody(options)).toEqual(request);
     expect(options).toMatchObject({
       cache: "no-store",
       credentials: "same-origin",

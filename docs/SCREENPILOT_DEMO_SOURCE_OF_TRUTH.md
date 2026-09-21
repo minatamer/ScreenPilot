@@ -32,10 +32,14 @@ deliberately not re-observed through another partial paid run. No unperformed
 SP-018A item is converted into a pass.
 
 SP-019 through SP-021 proceed in fake-first mode without another paid provider
-operation. Required SP-021A then runs the next owner-authorized paid window
-after the complete product exists, covering both entry modes through corrected
-voice behavior, summary, evidence-linked review, retry behavior, cleanup,
-provider usage/cost, and the retained performance ledger. SP-025 reuses current
+operation. Required SP-021A first collects the owner's visual feedback on the
+SP-021 ending-to-review transformation, applies the agreed bounded adjustments,
+and requires an explicit owner visual pass; engineering inspection or automated
+coverage cannot substitute for that approval. SP-021A then runs the next
+owner-authorized paid window after the complete product exists, covering both
+entry modes through corrected voice behavior, summary, evidence-linked review,
+retry behavior, cleanup, provider usage/cost, and the retained performance
+ledger. SP-025 reuses current
 SP-021A live evidence and repeats only evidence invalidated by later code,
 provider, configuration, hostname, or release-candidate changes. SP-021A remains
 a required pre-release gate through SP-025; this sequencing reduces duplicate
@@ -157,7 +161,7 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - The lightweight HTML Design System Reference is reviewed before broad React styling and clearly communicates the approved fonts, typography, colors, spacing, surfaces, icon rules, and representative component states.
 - One desktop/mobile active-interview concept is generated from the approved HTML reference and reviewed for composition, hierarchy, responsive continuity, and overall visual direction before broad React styling.
 - Frontend tokens and shared components remain consistent with the approved HTML reference across representative desktop/mobile screens; accessibility-driven corrections update both.
-- The review screen shows the local transcript, captured insights, unanswered areas, and a cautious evidence-linked summary.
+- The review screen shows captured insights, unanswered areas, a cautious evidence-linked summary, and only the selected node's bounded transcript evidence; it never renders the full transcript as a review section.
 - Clearing the session removes all ScreenPilot browser-held candidate content.
 - The demo remains understandable when a provider, microphone, PDF, or network step fails.
 
@@ -332,7 +336,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 - **Visible behavior:** one **Start interview** button aligned at the lower right. Clicking it executes Turnstile in managed, interaction-only mode; a legitimate visitor normally moves directly into the connecting animation, while any required interaction appears inline without leaving preflight. This infrastructure detail is not narrated in candidate-facing copy.
 - **API:** `POST /v1/voice/token` verifies the signed grant and one memory-only `turnstileToken`, applies backend/provider capacity gates, and returns a short-lived private conversation token.
 - **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, role-neutral synthetic-demo disclosure, the universal screening plan, optional normalized CV/fact-linked role suggestion, candidate-stated role or undecided state, and registered client tools. All candidate content is bounded and delimited as untrusted data.
-- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Bootstrap exposes the non-secret provider mode and paid-operation state. Fake mode keeps its deterministic CV/voice paths, while live mode exposes CV, microphone, Turnstile, token, SDK, and WebRTC controls only when `paidOperationsEnabled: true`. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
+- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Its bounded synthetic interview trace follows the bundled Riley Vale sample context—junior software-development direction, accessible workflow internship, distributed collaboration, logistics, and onboarding/mentorship priorities—then exercises the same client-tool and evidence-linking paths as live mode. Conversation-first still records Candidate-only provenance, while the sample-CV path confirms/corrects the matching seeded CV insight. The fake summary adapter preserves safe candidate-stated detail in its evidence-linked sections, with a cautious generic fallback if a supplied value would violate the summary boundary. Bootstrap exposes the non-secret provider mode and paid-operation state. Fake mode keeps its deterministic CV/voice paths, while live mode exposes CV, microphone, Turnstile, token, SDK, and WebRTC controls only when `paidOperationsEnabled: true`. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
 - **Output state:** `interviewing` only after the SDK reports connected.
 - **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider. A terminal SDK error, rejected conversation identifier, or unrecoverable interruption ends the provider session once and unmounts the session bridge before recovery UI remains available.
 
@@ -349,7 +353,7 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 9 — end and summarize
 
 - **Input state:** local final transcript and insight state; no recording artifact is expected.
-- **Visible behavior:** both manual and provider-owned automatic endings transform the existing live workspace in place. Voice/media resources are released immediately; independently of that cleanup, the right Insight Board fades and collapses while the left interview column expands and centers into a full-width evidence-map surface. Its central card shows **Organizing this conversation** with truthful progress while the retained insight cards settle into connected evidence nodes. Execute a fresh managed Turnstile check there, showing interaction only if required; the animation never delays the request or implies that a summary succeeded.
+- **Visible behavior:** both manual and provider-owned automatic endings transform the existing live workspace in place. Voice/media resources are released immediately; independently of that cleanup, the reducer must render the `ending` workspace for the bounded 420 ms transition interval before advancing to summary/review, even when the provider reports its terminal disconnect in the same callback stack. The right Insight Board fades and collapses while the left interview column expands and centers into a full-width evidence-map surface; compact fixed-height layouts also collapse the board's grid row so an invisible panel cannot retain space. Its central card shows **Organizing this conversation** with truthful progress while the retained insight cards settle into connected evidence nodes. Execute a fresh managed Turnstile check there, showing interaction only if required; media teardown and the request are not delayed by the visual hold, and the animation never implies that a summary succeeded.
 - **API:** `POST /v1/interview/summary` sends the bounded local transcript, plan, insight cards, and a memory-only `turnstileToken`; after Siteverify succeeds, GPT-5.4 mini returns structured evidence-linked notes using `store: false`.
 - **Output state:** `review` with complete or partial summary.
 - **Failure:** Turnstile or summary failure preserves the transcript and cards; Retry summary obtains a fresh token and is allowed while the browser session exists.
@@ -357,8 +361,8 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 10 — local review and clear
 
 - **Input state:** transcript, plan, insight cards, and optional summary in browser session.
-- **Visible behavior:** the organizing surface resolves into review without a blank page replacement. Its central card becomes the summary overview and the connected retained insight nodes remain available around it. Selecting a node opens a stable detail containing the unambiguous preceding final Pilot question when available, the cited final candidate answer, an **Interview evidence** source/time label with transcript navigation, and all GPT-organized summary items whose evidence arrays cite that answer. Missing relationships are labelled unavailable rather than inferred. The complete review also includes the entry-mode label, candidate-stated synthetic session role or undecided state, topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, recruiter follow-ups, and limitations. Conversation-first review contains no CV source chips or claims of CV verification.
-- **Allowed actions:** return to transcript evidence, copy summary, optionally download a local JSON report, or **Clear session**.
+- **Visible behavior:** the organizing surface resolves into review without a blank page replacement. Its central card becomes the conversation-summary overview and the connected retained insight nodes remain available around it. Selecting a node replaces the center overview with a stable bounded preview containing the unambiguous preceding final Pilot question when available, the cited final candidate answer, an **Interview evidence** source/time label, and all summary items whose evidence arrays cite that answer. For corrected insights, the latest cited final candidate turn and its preceding Pilot question are primary; earlier cited answers remain concise history references so the preview never pairs an updated value with superseded evidence. Selecting another node swaps the center preview; selecting the active node again or minimizing it restores the overview. Missing relationships are labelled unavailable rather than inferred. The complete review also includes the entry-mode label, candidate-stated synthetic session role or undecided state, topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, recruiter follow-ups, and limitations. Conversation-first review contains no CV source chips or claims of CV verification. The full transcript remains bounded local input for evidence resolution and retry but is not rendered as a review section, and user-facing copy never names the underlying model/provider.
+- **Allowed actions:** inspect bounded evidence previews, copy summary, or **Clear session**.
 - **Mutation:** Clear removes ScreenPilot `sessionStorage` and in-memory candidate/interview state, then returns to landing. The content-free safety cookie expires automatically and is not presented as candidate data.
 - **Output state:** `cleared`.
 - **Limitation:** closing the tab or losing browser session data makes the review unrecoverable by design.
@@ -1058,7 +1062,7 @@ This is the only live voice path. Do not add a second transcription/audio archit
 - Usable provider event sequences are the message identity and caption-order authority: tentative events without one are rejected, a finalized sequence rejects later tentative/duplicate callbacks, and an older final may enter the sorted transcript without replacing a newer caption. When a final message has no usable provider ID, assign the next bounded local sequence and suppress only an immediately adjacent final with the same speaker and normalized text; distinct provider IDs or an intervening accepted final preserve legitimate repeated statements.
 - The local browser projection accepts at most 160 final turns and 30,000 transcript characters. The reducer validates each turn before insertion, ignores repeated IDs or same-speaker sequences, and the restore schema rechecks both bounds before showing saved evidence.
 - A failed or quota-rejected `sessionStorage` write leaves the current in-memory transcript and cards visible and produces a review warning; it never creates a second persistence path.
-- A persisted `review_ready` projection is valid only with terminal voice metadata whose status is `ended` or `failed`. Missing or still-active voice state is corrupt restore data and must be cleared rather than presented as a complete interview; restored `failed` metadata always produces the partial-transcript review state.
+- A persisted `review_ready` projection is valid only with terminal voice metadata whose status is `ended` or `failed`. Missing or still-active voice state is corrupt restore data and must be cleared rather than presented as a complete interview; restored `failed` metadata always produces the concise **Partial review** state while keeping the bounded transcript internal until a node is selected.
 - The local transcript is review evidence, not a certified verbatim record.
 
 ### Performance gates
@@ -1514,15 +1518,14 @@ screen-pilot/
 │  │     │  │  ├─ use-insight-client-tools.ts    # SP-016
 │  │     │  │  └─ use-insight-client-tools.test.tsx # SP-016
 │  │     │  ├─ transcript/
-│  │     │  │  ├─ transcript-store.ts            # SP-019
-│  │     │  │  ├─ transcript-store.test.ts       # SP-019
-│  │     │  │  └─ evidence-navigation.ts         # SP-019
+│  │     │  │  └─ transcript-limits.ts           # SP-019
 │  │     │  ├─ review/
-│  │     │  │  ├─ review-stage.tsx               # SP-021
-│  │     │  │  ├─ transcript-panel.tsx           # SP-019/SP-021
-│  │     │  │  ├─ summary-panel.tsx              # SP-020/SP-021
-│  │     │  │  ├─ generate-summary.ts            # SP-020
-│  │     │  │  └─ review-stage.test.tsx          # SP-021
+│  │     │  │  ├─ interview-evidence-review.tsx  # SP-021
+│  │     │  │  ├─ evidence-map.tsx               # SP-019/SP-021
+│  │     │  │  ├─ review-evidence-model.ts       # SP-019/SP-021
+│  │     │  │  ├─ summary-sections.tsx           # SP-020/SP-021
+│  │     │  │  ├─ session-clear-dialog.tsx       # SP-021
+│  │     │  │  └─ interview-evidence-review.test.tsx # SP-021
 │  │     │  └─ privacy/
 │  │     │     ├─ privacy-notice.tsx              # SP-023; landing/preflight reuse
 │  │     │     └─ privacy-copy.ts                 # SP-023
@@ -2704,7 +2707,7 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - The compact ScreenPilot mark and wordmark sit at the start on every screen, including the landing.
 - The approved product mark is the code-native SVG shown in the HTML reference: a Deep Ink rounded square containing a Warm Coral forward/paper-plane shape with a Pale Coral inner facet. Reuse this mark in the actual frontend starting in SP-005, including the browser-tab favicon, with an accessible ScreenPilot label wherever the mark is interactive. The raster concept's generated logo is an approximation and must not replace the HTML SVG authority.
 - On the landing, keep only **How it works** and **Start demo** with the product mark. Privacy and repository/source access are secondary to the entry decision: Privacy remains a clearly labelled control in the visible trust section and repository/source access moves to the footer.
-- During `/demo`, the navigation header contains the ScreenPilot home link, **Privacy details**, and **Clear & exit**, in that order. The logo returns to `/` without clearing so the landing can offer Continue or Clear; **Clear & exit** clears the reducer/session projection and replaces the route with `/`. **Privacy details** opens the shared accessible dialog without changing workflow state.
+- During `/demo`, the navigation header contains the ScreenPilot home link, **Privacy details**, and **Clear & exit**, in that order. The logo returns to `/` without clearing so the landing can offer Continue or Clear; **Clear & exit** replaces the route only after browser storage removal is verified, while a failed removal keeps the review available and reports the retryable privacy error. **Privacy details** opens the shared accessible dialog without changing workflow state.
 - The inert stage indicator owns the first full-width panel inside the workspace instead of competing with the brand navigation. It uses the same bounded block language as the rest of the product frame and never looks or behaves like navigation.
 - `/demo` has no safeguards footer. Privacy remains persistently available from the header, while the relevant task surfaces and preflight copy own session, human-decision, and synthetic-role disclosures where the visitor needs them.
 - No Dashboard, Jobs, Candidates, Pricing, Login, or Signup navigation.
@@ -2770,7 +2773,7 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - Author the dark hierarchy rather than inverting the former light UI: atmospheric page field → bounded product frame → raised task regions → quiet status/details. Borders, spacing, type scale, and coral signal moments—not many generic cards—separate responsibilities.
 - Place the inert five-step status in a compact horizontal panel at the top of the workspace. Do not add a site-wide workspace footer. Stage-level navigation and primary actions across CV intake/status, deterministic conversation preparation, plan preview, preflight, and voice connection use one consistent bordered action row anchored as the bottom row of the active card/workspace, including when the content above is short; file selection, consent, microphone permission, and error-specific Retry controls remain with the content that owns them. Keep **Privacy details** immediately before **Clear & exit** in the persistent header across bootstrap/retry, choose, CV input/status, deterministic preparation/retry, shared preflight, live stages, and review.
 - Align the active stage's working surface to the same inner inline gutter as the progress panel; do not add a second centered-stage inset on wide screens. Top-align the task content beneath progress so short stages do not acquire content-dependent blank space. Every reachable `/demo` state—including bootstrap/error, choose, CV intake/status, conversation preparation/error, plan, preflight, connection, live interview, and the future-stage fallback—uses the shared stage-heading primitive: a short uppercase pretitle followed immediately by one page-level title. The design-system title, panel-title, card, body, and metadata tokens own the hierarchy; the shared stage, card, and heading-gap variables own vertical rhythm rather than stage-local margins. Desktop stage titles use the full task width and remain on one line when the viewport can hold them. Do not split a heading into an artificially narrow left column or float a detached explanatory sentence on its right; necessary guidance belongs inside the relevant task card, while compact widths may wrap naturally. Fluidly adapt header height, outer spacing, frame padding, type scale, and task-panel density to the available dynamic viewport height. Standard choose, CV intake, preparation, plan, and preflight states must keep progress, task, and primary/recovery actions visible without document scrolling at the 1024 × 768, 1280 × 800, and 1440 × 900 reference anchors. Phones, 200% zoom, validation/errors, and compact layouts use natural document scrolling. The laptop/desktop plan preview and active-interview Insight Board use their documented bounded inner list/panel scrolling so content volume does not inflate the page; never create a keyboard trap, hide page overflow, or clip required controls.
-- The logo links to `/` and preserves the active tab session. Browser Back follows ordinary page history and does not impersonate reducer history. **Clear & exit** dispatches `CLEAR_SESSION` then replaces the route with `/` so a cleared workflow cannot be revived by Back.
+- The logo links to `/` and preserves the active tab session. Browser Back follows ordinary page history and does not impersonate reducer history. **Clear & exit** first removes and verifies every ScreenPilot key in the tab's browser storage; only after that succeeds may it dispatch `CLEAR_SESSION` and replace the route with `/`. A blocked removal preserves the in-memory review, stays on the current route, and exposes a retryable cleanup error so retained candidate data is never silently presented as cleared.
 - Normalize stage recovery: **Change starting option** dispatches only reducer-valid Back/Start-over events; **Retry** repeats only the failed operation; **Continue** appears only when the next reducer transition is implemented; **Clear & exit** is the explicit destructive escape. Do not render two controls with the same transition or allow stage skipping.
 - On compact widths, the progress panel stacks above the active stage and the two header actions remain readable and keyboard-accessible. Progress may abbreviate visually only when its full accessible name and current step remain clear.
 
@@ -2787,10 +2790,11 @@ retryable failure -> Retry the failed operation without changing entry mode
 CV/preparation change -> reducer-valid Change starting option
 preflight Back -> choosing_entry_mode for conversation-first; plan_ready for CV-assisted
 logo or browser Back -> landing/history while the tab session remains resumable
-Clear & exit -> CLEAR_SESSION -> router.replace('/')
+Clear & exit -> verified browser cleanup -> CLEAR_SESSION -> router.replace('/')
+blocked cleanup -> retain review/state -> visible retryable clear error
 ```
 
-The stage indicator reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine. SP-019 replaces the former scrubbed completion placeholder with the first bounded `review_ready` surface: orderly completion preserves final local turns and grounded cards in the current tab, while an interrupted call with usable evidence enters the same surface with an explicit partial-transcript warning. SP-020 and SP-021 may add summary orchestration around this state, but summary work must not clear the already available local evidence.
+The stage indicator reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine. SP-019 replaced the former scrubbed completion placeholder with the first bounded `review_ready` evidence foundation. SP-021 supersedes its temporary full timeline: orderly completion preserves final local turns and grounded cards in the current tab, while an interrupted call with usable evidence enters the same map with a concise **Partial review** badge. Only a selected node's exact bounded evidence appears in the center preview. Summary work must not clear the already available local evidence.
 
 #### Preflight
 
@@ -2819,14 +2823,14 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 #### Review
 
 - Keep the shared Deep Ink/plum/coral workspace for completion and clarity; use calmer spacing, quieter borders, and restrained coral rather than returning to a light canvas.
-- Preserve spatial continuity when either end path fires: immediately release voice/media resources, then fade and collapse the right Insight Board as the left interview column expands and centers into the full review workspace. Use the same transition for manual and provider-owned automatic completion, with no blank interstitial or route-like page swap.
+- Preserve spatial continuity when either end path fires: immediately release voice/media resources, then keep the reducer-owned `ending` state rendered for the bounded 420 ms morph while the right Insight Board fades/collapses and the left interview column expands/centers into the full review workspace. Provider-owned disconnect callbacks must not batch `ending` and `summarizing` into one paint. Compact/fixed-height layouts collapse the board's explicit grid row as well as its opacity. Use the same transition for manual and provider-owned automatic completion, with no blank interstitial or route-like page swap.
 - Turn that expanded surface into a deterministic evidence map. The central organizing card becomes the summary overview; every retained insight card becomes one connected node arranged around it on capable wide screens. This is not a graph engine: nodes are not draggable, zoomable, physics-driven, editable, or permitted to disappear off canvas.
-- Selecting a node keeps the map context visible and opens a stable detail with four explicitly separated layers: the nearest preceding final Pilot question only when the relationship is unambiguous, the cited final candidate answer, an **Interview evidence** subtitle carrying source/local time plus the SP-019 transcript link, and each GPT-summary item whose `evidenceTurnIds` contains that candidate turn. Show **Question unavailable**, **Evidence unavailable**, or **No related AI-organized note** when appropriate; never invent an association.
+- Selecting a node keeps the map context visible and replaces the center overview with a stable preview containing four explicitly separated layers: the nearest preceding final Pilot question only when the relationship is unambiguous, the cited final candidate answer, an **Interview evidence** source/local-time label, and each summary item whose `evidenceTurnIds` contains that candidate turn. Selecting a different node swaps the preview; selecting the active node again or minimizing restores the overview and focus to the node. Show **Question unavailable**, **Evidence unavailable**, or **No connected summary note** when appropriate; never invent an association.
 - Top summary panel states that notes are AI-organized and require human interpretation.
 - Insight cards keep the same colors/labels used live.
-- Candidate evidence chips scroll and move keyboard focus to a stable final-turn anchor in the local transcript; the focused turn provides a return-to-card control. Missing, non-final, or non-candidate references render as unavailable evidence rather than being hidden or redirected.
+- Candidate evidence chips remain concise, static references in review. The bounded transcript stays available in browser state for association, summary retry, and privacy clearing but is not rendered wholesale. Missing, non-final, or non-candidate references render as unavailable evidence rather than being hidden or redirected.
 - Show the entry mode and enforce provenance: conversation-first review uses Candidate evidence only, while CV-assisted can distinguish CV, Candidate, and combined confirmation.
-- Until summary tickets land, the bounded SP-019 review shows local insight cards and the chronological transcript only. It labels orderly and interrupted/partial endings distinctly, shows speaker, local time, and final status, and retains natural document scrolling at phone, tablet, and desktop widths so long transcripts and the Clear action remain reachable.
+- SP-019's chronological transcript remains an internal local-evidence foundation; SP-021 supersedes its temporary user-facing timeline with the connected map and selected evidence excerpts. Orderly and interrupted/partial endings remain labelled distinctly.
 - Missing/unclear topics are displayed as gaps, never silently omitted.
 - Summary-time Turnstile interaction, when required, appears inside the **Organizing this conversation** state and never hides or clears the already available local transcript/insights.
 - **Clear & exit** is visually separated from Copy/Download actions.
@@ -2842,7 +2846,7 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - On mobile landing, the two entry cards stack with equal emphasis and complete explanatory copy; the first card's height or order must not make the second feel optional.
 - On mobile interview view: compact voice signal at the top, readable captions beneath it, sticky safe-area-aware mute/end controls, and a swipeable insight rail whose selected card expands into full evidence detail.
 - On mobile plan preview: CV facts and interview topics become linked stacked sections with visible source badges; no source relationship disappears merely because connector lines are reduced.
-- On mobile review: the visual evidence map becomes a connected vertical sequence beneath the central overview card; tablets may use a bounded connected grid, while desktop/large-monitor layouts may place nodes around the center. Every width preserves the same node/detail semantics and logical order, evidence chips scroll to transcript turns, and transcript content is never hidden behind fixed controls or forced into horizontal page scrolling.
+- On mobile review: the visual evidence map becomes a connected vertical sequence beneath the central overview/preview card; tablets may use a bounded connected grid, while desktop/large-monitor layouts may place nodes around the center. Every width preserves the same node/center-preview semantics and logical order, and no evidence excerpt or action is forced into horizontal page scrolling.
 - Any visible Turnstile fallback fits at 320 px without horizontal scrolling or clipped controls and retains an understandable retry state in portrait and landscape.
 - Use dynamic viewport units and safe-area insets so browser chrome, display cutouts, and virtual keyboards do not cover primary actions.
 - Treat browser content height as a first-class responsive input. At 768/820 px tablet widths and practical tablet/laptop browser viewports down through 1024 × 600, use fluid type/density and feature-owned inner scrolling for variable collections before allowing the outer document to grow. Preserve 14 px body text, 12 px metadata, 44 × 44 px targets, required disclosures, and keyboard escape from every inner scroll region. Error expansion, interactive Turnstile, 200% zoom, and virtual-keyboard states may fall back to natural page scrolling rather than clip content.
@@ -2862,7 +2866,7 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - End-to-review morph: after call controls become inert and media cleanup starts, fade/recede the right board over 240–320 ms, expand and center the left column over 320–450 ms, then settle retained cards into the evidence map with the existing insight opacity/connector language. Keep the whole transition bounded and allow summary/Turnstile work to proceed concurrently.
 - Correction: brief border/color morph, not shake.
 - Voice signal responds smoothly but avoids rapid flashing.
-- Reduced-motion mode removes automatic spatial travel and scaling. The end-to-review morph becomes an immediate layout change with a short opacity-only state transition and already-drawn static connectors; no node or column travels, scales, or floats. Essential voice-status bars may use slow opacity-only activity so the speaking party remains understandable. Same-page anchor navigation retains its native smooth-scroll fallback rather than running the custom timed journey.
+- Reduced-motion mode removes automatic spatial travel and scaling. The end-to-review morph becomes an immediate layout change with a short opacity-only state transition and already-drawn static connectors; no node or column travels, scales, or floats. Essential voice-status bars may use slow opacity-only activity so the speaking party remains understandable. Evidence-node selection and minimize/focus return remain immediate.
 - The landing product preview loops slowly through two three-topic boards: salary expectation, relevant experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It starts automatically without playback or topic-switching controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. Normal motion reveals both questions and answers one spoken word at a time inside fixed-height regions, waits for both complete lines, draws both evidence highlights together from left to right, and then creates the corresponding note. Speaker activity and board/card transitions stay on opacity/transform. Reduced motion keeps the same word-by-word timing through opacity-only entrances, removes spatial movement, resolves the highlight without a sweep, and limits voice activity to slow opacity changes.
 - Each newly spoken subtitle word mounts with a short fade-and-rise so the timing reads as speech rather than a whole-line replacement. The compact participant pane contains only the centered speaking illustration and its integrated waveform; it has no redundant lower identity/instruction strip. Preview note cards use only sequence, captured field, captured value, and a quiet completion dot—no “Interview note,” “Added from your answer,” “Waiting,” or “Listening for answer” filler copy.
 - The active-interview caption panel reuses that word-entry language for received Pilot turns, with a restrained caret for tentative Pilot text. Candidate turns use one short right-side chat-bubble entrance instead of per-word spatial motion. Reduced motion resolves Pilot caption words immediately, removes the candidate bubble entrance, and disables repeated waveform travel through the global motion preference contract.
@@ -2895,7 +2899,6 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - `ReviewTransition`
 - `EvidenceMap`
 - `EvidenceDetailPanel`
-- `TranscriptTimeline`
 - `EvidenceChip`
 - `SummarySection`
 - `SessionClearDialog`
@@ -3962,9 +3965,9 @@ release-ready.
 
 ### Milestone 3 — same-session review
 
-#### [SP-019 — Finalize local transcript and evidence navigation](tickets/SP-019-finalize-transcript-and-evidence-navigation.md)
+#### [SP-019 — Finalize the local transcript evidence foundation](tickets/SP-019-finalize-transcript-and-evidence-navigation.md)
 
-**Outcome:** The browser review can trace insights to final transcript turns without provider retrieval.
+**Outcome:** The browser review can resolve insights to final transcript turns without provider retrieval. SP-021 supersedes the temporary timeline UI with selected-node center previews while retaining the bounded evidence foundation.
 
 **Depends on:** SP-015, SP-016, SP-018A.
 
@@ -3972,11 +3975,11 @@ release-ready.
 
 **Checklist:**
 
-- [x] Build transcript timeline with speaker, local time, and stable turn anchors.
-- [x] Link insight/source chips to transcript turns.
-- [x] Mark partial/disconnected transcripts honestly.
+- [x] Build bounded transcript normalization with speaker, local time, and stable turn IDs.
+- [x] Resolve insight/source references to eligible final candidate turns; SP-021 presents those references in the center evidence preview rather than a full timeline.
+- [x] Mark partial/disconnected review state honestly.
 - [x] Bound transcript storage and handle quota errors.
-- [x] Add keyboard/focus behavior for evidence navigation.
+- [x] Add keyboard/focus behavior for evidence selection and preview restoration.
 - [x] Test missing references and duplicate event recovery.
 
 **Implementation closure (2026-09-21):** bounded local transcript/evidence
@@ -3987,7 +3990,10 @@ for the exact 68-test focused run and 238-test frontend run. Human verification
 at 320 px/200% zoom and with a screen reader remains explicitly unchecked and
 transfers to the later responsive/live review gates. SP-020 is eligible for
 implementation; this closure does not claim that summaries or the complete
-SP-021 review surface exist.
+SP-021 review surface exist. SP-021 later removed the temporary
+`TranscriptTimeline` component by explicit owner direction; the local
+transcript remains the browser-only association/retry/clearing input, and this
+closure no longer claims full-timeline navigation as current UI.
 
 #### [SP-020 — Generate the stateless post-call summary](tickets/SP-020-generate-stateless-post-call-summary.md)
 
@@ -4013,7 +4019,7 @@ SP-021 review surface exist.
 
 #### [SP-021 — Build review, retry, and clear-session experience](tickets/SP-021-build-review-retry-and-clear-session.md)
 
-**Outcome:** The demo ends with a polished local result and an explicit privacy exit.
+**Outcome:** Completed locally on 2026-09-21. The demo ends with a polished connected evidence map, bounded center-card evidence previews, no full transcript surface, and an explicit privacy exit; credentialed/live acceptance remains deferred to SP-021A.
 
 **Depends on:** SP-005, SP-006, SP-010A, SP-019, SP-020.
 
@@ -4021,22 +4027,23 @@ SP-021 review surface exist.
 
 **Checklist:**
 
-- [ ] Build overview, facts, clarifications, coverage, questions, follow-ups, and limitations sections.
-- [ ] Show the entry mode and correct evidence provenance; conversation-first review never claims CV verification.
-- [ ] Show any candidate-authored role or undecided state without supported-role, unavailable-vacancy, real-opening, or application language; surface unsupported employer questions as human follow-up.
-- [ ] Preserve transcript/insights when summary fails and offer Retry.
-- [ ] Execute a fresh managed Turnstile `interview_summary` check immediately before summary generation; keep the token in memory only, preserve all local evidence if it fails, and reset it before Retry.
-- [ ] Implement evidence scrolling, Copy summary, and Clear session.
-- [ ] Decide during final scope review whether local JSON download earns its complexity.
-- [ ] Clearly label AI-organized notes and no hiring recommendation.
-- [ ] Verify clearing removes all ScreenPilot session keys and content UI.
+- [x] Build overview, facts, clarifications, coverage, questions, follow-ups, and limitations sections.
+- [x] Show the entry mode and correct evidence provenance; conversation-first review never claims CV verification.
+- [x] Show any candidate-authored role or undecided state without supported-role, unavailable-vacancy, real-opening, or application language; surface unsupported employer questions as human follow-up.
+- [x] Preserve transcript/insights when summary fails and offer Retry without rendering the full transcript timeline.
+- [x] Execute a fresh managed Turnstile `interview_summary` check immediately before summary generation; keep the token in memory only, preserve all local evidence if it fails, and reset it before Retry.
+- [x] Implement bounded center-card evidence previews, Copy summary, and Clear session.
+- [x] Omit local JSON download: Copy summary provides the useful disposable handoff without another candidate-data export surface.
+- [x] Clearly label AI-organized notes and no hiring recommendation without exposing a model/provider name in user-facing copy.
+- [x] Verify clearing removes all ScreenPilot session keys and content UI.
 
 #### [SP-021A — Validate the complete live demo flow](tickets/SP-021A-validate-complete-live-demo-flow.md)
 
-**Outcome:** One consolidated, owner-authorized paid window validates both
-entry modes through corrected voice behavior, summary, evidence-linked review,
-retry behavior, cleanup, provider evidence, and retained performance sampling
-after the entire same-session product exists.
+**Outcome:** The owner first reviews and explicitly approves the adjusted
+SP-021 ending-to-review visuals; one subsequent consolidated, owner-authorized
+paid window validates both entry modes through corrected voice behavior,
+summary, evidence-linked review, retry behavior, cleanup, provider evidence,
+and retained performance sampling after the entire same-session product exists.
 
 **Depends on:** SP-018A, SP-019, SP-020, SP-021.
 
@@ -4046,6 +4053,11 @@ after the entire same-session product exists.
 
 - [ ] Reconcile the exact unchecked SP-018A ledger without converting any
   unperformed item into a pass.
+- [ ] Before enabling paid mode, present the fake-mode ending transition and
+  review at representative desktop, tablet, and phone widths; collect and apply
+  the owner's visual feedback, rerun affected checks, and record an explicit
+  owner visual pass. Keep SP-021A open if that pass is absent, regardless of
+  engineering inspection, automated checks, or later provider results.
 - [ ] Run one bounded synthetic CV-assisted complete flow and one bounded
   synthetic conversation-first complete flow through summary and review.
 - [ ] Independently observe the corrected Pilot captions and provider-owned
@@ -4299,9 +4311,9 @@ deterministic final gate passes.
 
 - [ ] Same-session review works without provider artifact retrieval.
 - [ ] Manual and automatic endings transform the existing two-column interview into the same centered evidence-map review: voice/media cleanup is immediate, the right board fades/collapses, the left column expands, and retained insight nodes remain reachable without a blank page jump.
-- [ ] Each evidence-map node can disclose an unambiguous Pilot question, cited candidate answer, evidence metadata/link, and related evidence-citing summary notes, with explicit unavailable states and no invented links.
+- [ ] Each evidence-map node can replace the center overview with an unambiguous Pilot question, cited candidate answer, evidence metadata, and related evidence-citing summary notes, with explicit unavailable states and no invented links; switching/minimizing restores the intended center state.
 - [ ] Review identifies the entry mode and accurately distinguishes CV-supported from candidate-only evidence.
-- [ ] Every summary fact links to a local transcript turn.
+- [ ] Every summary fact carries a bounded local evidence reference or an explicit unavailable state without rendering the full transcript.
 - [ ] Partial transcripts and missing topics are labelled honestly.
 - [ ] No score, pass/fail, ranking, personality, sentiment, accent, or protected inference appears.
 - [ ] Summary failure preserves transcript and cards.
@@ -4339,7 +4351,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Separate Express backend | In scope | Keep because it protects keys, uses a broadly recognized Node.js API stack, and demonstrates backend/API skill. Collapsing into Next.js route handlers is the largest remaining architectural simplification if schedule becomes tight. |
 | Real-time Insight Board and review evidence map | In scope with an aligned live stack and deterministic connected review composition | Keep the cards and the SP-021 in-place morph into a responsive mind-map-like evidence layout. Avoid a true graph engine, draggable nodes, zoom, physics, editable relationships, or inferred links. |
 | Five client tools | In scope | Keep only if all five are reliable. `recordInsight` and `correctInsight` are essential; topic/question/follow-up tools may be merged into one structured event tool. |
-| Full local transcript | In scope | Keep final text and evidence navigation; cut word-level timestamps, speaker audio alignment, search, and editing. |
+| Bounded local transcript | In scope as browser-only evidence input, not a full review surface | Keep final text for association, summary retry, and clearing. Show only the selected node's exact evidence excerpt and concise static references; cut the full timeline, word-level timestamps, speaker audio alignment, search, and editing. |
 | GPT post-call summary | In scope | Keep because it completes the story. Do not add recruiter decisions, scoring, regeneration history, or multiple summary formats. |
 | JSON report download | Undecided | First optional cut. Copy summary is enough for the demo unless download materially improves the portfolio video. |
 | Sample-CV path | In scope | Keep because it demonstrates focused CV-grounded behavior with safe fixture data; conversation-first now serves visitors who want no document. Do not add a fully prerecorded sample interview. |

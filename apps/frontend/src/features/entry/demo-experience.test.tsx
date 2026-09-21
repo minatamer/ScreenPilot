@@ -287,7 +287,7 @@ describe("DemoExperience preparation paths", () => {
             },
             dispatch,
             completeInterview: vi.fn(),
-            clearSession: vi.fn(),
+            clearSession: vi.fn(() => true),
             startOver: vi.fn(),
             storageStatus: "idle",
           }}

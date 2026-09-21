@@ -25,6 +25,7 @@ import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
 import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
 import { InterviewEvidenceReview } from "@/features/review/interview-evidence-review";
+import { SessionClearDialog } from "@/features/review/session-clear-dialog";
 import type {
   DemoStage,
   SessionFailure,
@@ -164,8 +165,11 @@ export function DemoExperience() {
     dispatch({ type: "SELECT_ENTRY_MODE", entryMode });
   };
   const returnHomeAfterClear = () => {
-    clearSession();
+    if (!clearSession()) {
+      return false;
+    }
     router.replace("/");
+    return true;
   };
   const showRuntimeConfigFailure =
     runtimeConfigStatus === "failed" &&
@@ -174,18 +178,39 @@ export function DemoExperience() {
     state.stage !== "cleared";
 
   let stageContent;
-  if (state.stage === "review_ready" && state.entryMode) {
+  if (
+    (state.stage === "summarizing" || state.stage === "review_ready") &&
+    state.entryMode &&
+    state.screeningPlan &&
+    state.runtimeConfig
+  ) {
     stageContent = (
       <InterviewEvidenceReview
         {...(state.cv ? { cv: state.cv } : {})}
         entryMode={state.entryMode}
+        {...(state.failure?.stage === "summarizing"
+          ? { failure: state.failure }
+          : {})}
         insights={state.insights}
+        interviewGrant={state.interviewGrant ?? ""}
         isPartial={
           state.restoreNotice === "call_interrupted" ||
           state.voice?.status === "failed"
         }
+        onFailure={handlePreparationFailure}
+        onRetry={() => {
+          dispatch({ type: "RETRY" });
+        }}
         onReturnHome={returnHomeAfterClear}
+        onSummarySucceeded={(response) => {
+          dispatch({ type: "SUMMARY_SUCCEEDED", summary: response.summary });
+        }}
+        plan={state.screeningPlan}
+        runtimeConfig={state.runtimeConfig}
+        stage={state.stage}
         storageStatus={storageStatus}
+        {...(state.summary ? { summary: state.summary } : {})}
+        topicProgress={state.topicProgress}
         transcript={state.transcript}
       />
     );
@@ -454,7 +479,7 @@ export function DemoExperience() {
 
   return (
     <AppShell
-      className={`sp-demo-shell${state.stage === "review_ready" ? " sp-demo-shell--review" : ""}`}
+      className={`sp-demo-shell${state.stage === "review_ready" || state.stage === "summarizing" ? " sp-demo-shell--review" : ""}`}
       id="top"
       tone="dark"
     >
@@ -470,13 +495,20 @@ export function DemoExperience() {
               clearActionLabel="Clear & exit"
               triggerLabel="Privacy details"
             />
-            <button
-              className="sp-header-link"
-              onClick={returnHomeAfterClear}
-              type="button"
-            >
-              Clear &amp; exit
-            </button>
+            {state.stage === "review_ready" || state.stage === "summarizing" ? (
+              <SessionClearDialog
+                onClear={returnHomeAfterClear}
+                triggerClassName="sp-header-link"
+              />
+            ) : (
+              <button
+                className="sp-header-link"
+                onClick={returnHomeAfterClear}
+                type="button"
+              >
+                Clear &amp; exit
+              </button>
+            )}
           </>
         }
       />

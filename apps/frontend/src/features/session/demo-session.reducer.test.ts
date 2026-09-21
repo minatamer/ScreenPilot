@@ -589,7 +589,7 @@ describe("demoSessionReducer", () => {
       now: "2026-09-09T09:30:00.000Z",
     });
 
-    expect(restoredState.stage).toBe("review_ready");
+    expect(restoredState.stage).toBe("summarizing");
     expect(restoredState.restoreNotice).toBe("call_interrupted");
     expect(restoredState.voice).toMatchObject({
       conversationId: "conversation-1",
@@ -728,7 +728,7 @@ describe("demoSessionReducer", () => {
     state = demoSessionReducer(state, { type: "VOICE_ENDING" });
 
     const completed = demoSessionReducer(state, {
-      type: "DEMO_INTERVIEW_COMPLETED",
+      type: "VOICE_ENDED",
       voice: {
         conversationId: "conversation-1",
         status: "ended",
@@ -739,7 +739,7 @@ describe("demoSessionReducer", () => {
     });
 
     expect(completed).toMatchObject({
-      stage: "review_ready",
+      stage: "summarizing",
       entryMode: "conversation_first",
       transcript: [finalCandidateTurn],
       voice: {
@@ -748,7 +748,7 @@ describe("demoSessionReducer", () => {
       },
     });
     expect(projectPersistedDemoSession(completed)).toMatchObject({
-      stage: "review_ready",
+      stage: "summarizing",
       transcript: [finalCandidateTurn],
     });
   });
@@ -756,7 +756,7 @@ describe("demoSessionReducer", () => {
   it("rejects demo completion before voice shutdown begins", () => {
     expect(() =>
       demoSessionReducer(conversationPreflightState(), {
-        type: "DEMO_INTERVIEW_COMPLETED",
+        type: "VOICE_ENDED",
         voice: { status: "ended" },
       }),
     ).toThrow(InvalidSessionTransitionError);
