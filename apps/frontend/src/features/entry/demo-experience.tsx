@@ -16,6 +16,7 @@ import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progr
 
 import { CvStage } from "@/features/cv/cv-stage";
 import { createCvInsightSeeds } from "@/features/insights/seed-cv-insights";
+import { InterviewStage } from "@/features/interview/interview-stage";
 import {
   createVoicePerformanceCollector,
   createVoicePerformanceTracker,
@@ -25,6 +26,7 @@ import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
 import { PrivacyDialog } from "@/features/privacy/privacy-dialog";
 import { InterviewEvidenceReview } from "@/features/review/interview-evidence-review";
+import { InterviewSummaryPreparation } from "@/features/review/interview-summary-preparation";
 import { SessionClearDialog } from "@/features/review/session-clear-dialog";
 import type {
   DemoStage,
@@ -38,20 +40,11 @@ import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 import { PageContainer } from "@/shared/ui/layout";
 import { SiteHeader } from "@/shared/ui/site-header";
-import { StageIndicator } from "@/shared/ui/stage-indicator";
 
 import { BootstrapStatus } from "./bootstrap-status";
 import { ConversationPreparationStage } from "./conversation-preparation-stage";
 import { EntryModeChooser } from "./entry-mode-chooser";
 import { useDemoBootstrap } from "./use-demo-bootstrap";
-
-const DEMO_PROGRESS_STAGES = [
-  "Choose",
-  "Prepare",
-  "Preflight",
-  "Interview",
-  "Review",
-] as const;
 
 const VoiceConnectionStage = dynamic(
   () =>
@@ -63,6 +56,7 @@ const VoiceConnectionStage = dynamic(
       <div className="sp-demo-stage" role="status">
         <DemoStageHeading
           pretitle="Secure connection"
+          step={4}
           title="Loading the private voice client."
         />
       </div>
@@ -71,23 +65,24 @@ const VoiceConnectionStage = dynamic(
   },
 );
 
-const DEMO_STAGE_PROGRESS: Readonly<Record<DemoStage, number>> = {
-  empty: 0,
-  bootstrapping: 0,
-  choosing_entry_mode: 0,
-  awaiting_cv: 1,
-  extracting_cv: 1,
-  analyzing_cv: 1,
-  plan_ready: 1,
-  preparing_conversation: 1,
-  preflight: 2,
-  ready: 2,
-  connecting: 3,
-  live: 3,
-  ending: 3,
-  summarizing: 4,
-  review_ready: 4,
-  cleared: 0,
+const DEMO_STAGE_STEP: Readonly<Record<DemoStage, 1 | 2 | 3 | 4 | 5>> = {
+  empty: 1,
+  bootstrapping: 1,
+  choosing_entry_mode: 1,
+  awaiting_cv: 2,
+  extracting_cv: 2,
+  analyzing_cv: 2,
+  plan_ready: 2,
+  preparing_conversation: 2,
+  preflight: 3,
+  ready: 3,
+  connecting: 4,
+  live: 4,
+  ending: 4,
+  interview_complete: 4,
+  summarizing: 5,
+  review_ready: 5,
+  cleared: 1,
 };
 
 export function DemoExperience() {
@@ -102,6 +97,7 @@ export function DemoExperience() {
   } = useDemoSession();
   const [voiceStartRequest, setVoiceStartRequest] =
     useState<VoiceStartRequest | null>(null);
+  const [summaryRequestPending, setSummaryRequestPending] = useState(false);
   const [performanceTracker] = useState(createVoicePerformanceTracker);
   const [performanceCollector] = useState(() =>
     createVoicePerformanceCollector(performanceTracker),
@@ -209,7 +205,28 @@ export function DemoExperience() {
         runtimeConfig={state.runtimeConfig}
         stage={state.stage}
         storageStatus={storageStatus}
+        summaryPreparationManagedExternally
+        summaryRequestPending={summaryRequestPending}
         {...(state.summary ? { summary: state.summary } : {})}
+        topicProgress={state.topicProgress}
+        transcript={state.transcript}
+      />
+    );
+  } else if (
+    state.stage === "interview_complete" &&
+    state.entryMode &&
+    state.interviewCompletion
+  ) {
+    stageContent = (
+      <InterviewStage
+        {...(state.cv ? { cv: state.cv } : {})}
+        completed
+        elapsedSeconds={state.interviewCompletion.elapsedSeconds}
+        entryMode={state.entryMode}
+        insights={state.insights}
+        onViewSummary={() => {
+          dispatch({ type: "VIEW_SUMMARY" });
+        }}
         topicProgress={state.topicProgress}
         transcript={state.transcript}
       />
@@ -224,6 +241,7 @@ export function DemoExperience() {
       <div className="sp-demo-stage">
         <DemoStageHeading
           pretitle="Private browser demo"
+          step={1}
           title={
             state.failure
               ? "Your private demo needs another try."
@@ -244,6 +262,7 @@ export function DemoExperience() {
       <div className="sp-demo-stage">
         <DemoStageHeading
           pretitle="Choose how to start"
+          step={1}
           title="Bring a CV, or start with a conversation."
         />
         <EntryModeChooser
@@ -400,12 +419,13 @@ export function DemoExperience() {
             voice,
           });
         }}
-        onEnded={(voice) => {
+        onEnded={(voice, completion) => {
           setVoiceStartRequest(null);
-          completeInterview(voice);
+          completeInterview(voice, completion);
         }}
-        onEnding={() => {
-          dispatch({ type: "VOICE_ENDING" });
+        onEnding={(completion) => {
+          setVoiceStartRequest(null);
+          dispatch({ type: "VOICE_ENDING", completion });
         }}
         onFailure={(failure) => {
           setVoiceStartRequest(null);
@@ -464,6 +484,7 @@ export function DemoExperience() {
       <div className="sp-demo-stage">
         <DemoStageHeading
           pretitle="Private browser session"
+          step={DEMO_STAGE_STEP[state.stage]}
           title="This step is not available in the current demo yet."
         />
         <p className="sp-demo-stage__lead">
@@ -476,6 +497,47 @@ export function DemoExperience() {
       </div>
     );
   }
+
+  const hasFinalCandidateEvidence = state.transcript.some(
+    (turn) => turn.speaker === "candidate" && turn.status === "final",
+  );
+  const summaryPreparationActive =
+    (state.stage === "interview_complete" || state.stage === "summarizing") &&
+    Boolean(
+      state.entryMode &&
+      state.screeningPlan &&
+      state.runtimeConfig &&
+      hasFinalCandidateEvidence &&
+      !state.summary &&
+      !state.failure,
+    );
+  const summaryPreparation =
+    (state.stage === "interview_complete" || state.stage === "summarizing") &&
+    state.entryMode &&
+    state.screeningPlan &&
+    state.runtimeConfig &&
+    hasFinalCandidateEvidence ? (
+      <div className="sp-interview-summary-preparation">
+        <InterviewSummaryPreparation
+          active={summaryPreparationActive}
+          entryMode={state.entryMode}
+          insights={state.insights}
+          interviewGrant={state.interviewGrant ?? ""}
+          onFailure={handlePreparationFailure}
+          onPendingChange={setSummaryRequestPending}
+          onSummarySucceeded={(response) => {
+            dispatch({
+              type: "SUMMARY_SUCCEEDED",
+              summary: response.summary,
+            });
+          }}
+          plan={state.screeningPlan}
+          siteKey={state.runtimeConfig.abuseProtection.siteKey}
+          topicProgress={state.topicProgress}
+          transcript={state.transcript}
+        />
+      </div>
+    ) : null;
 
   return (
     <AppShell
@@ -519,13 +581,6 @@ export function DemoExperience() {
             className="sp-demo-workspace"
             data-stage={state.stage}
           >
-            <div className="sp-demo-progress-panel">
-              <StageIndicator
-                currentIndex={DEMO_STAGE_PROGRESS[state.stage]}
-                label="Demo progress"
-                stages={DEMO_PROGRESS_STAGES}
-              />
-            </div>
             <div className="sp-demo-workspace__task">
               {showRuntimeConfigFailure ? (
                 <ErrorPanel
@@ -543,6 +598,7 @@ export function DemoExperience() {
                 </ErrorPanel>
               ) : null}
               {stageContent}
+              {summaryPreparation}
             </div>
           </section>
         </PageContainer>

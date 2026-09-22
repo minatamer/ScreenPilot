@@ -8,8 +8,7 @@ import {
 
 function modelOutput() {
   return {
-    overview:
-      "Local interview evidence was organized into cautious notes for human review.",
+    overview: "Key conversation points, organized for review.",
     rolePreference: {
       label: "Graphic Designer and UX Researcher",
       status: "candidate_stated",

@@ -99,6 +99,13 @@ function sectionContainsEvidence(
   );
 }
 
+function hasSameEvidenceTurnIds(
+  left: readonly string[],
+  right: readonly string[],
+): boolean {
+  return left.length === right.length && left.every((id) => right.includes(id));
+}
+
 type RequiredFactEvidence = Readonly<{
   evidenceTurnId: string;
   section: "clarification" | "confirmed";
@@ -371,14 +378,26 @@ export function validateInterviewSummary(
     (insight) =>
       insight.category === "candidate_question" && insight.source !== "CV",
   )) {
-    const latestEvidenceId = questionInsight.evidenceTurnIds.at(-1);
-    if (
-      latestEvidenceId !== undefined &&
-      !sectionContainsEvidence(summary.candidateQuestions, latestEvidenceId)
-    ) {
+    const matchingQuestion = summary.candidateQuestions.some(
+      (question) =>
+        question.question === questionInsight.value &&
+        hasSameEvidenceTurnIds(
+          question.evidenceTurnIds,
+          questionInsight.evidenceTurnIds,
+        ),
+    );
+    if (!matchingQuestion) {
+      const citesCapturedEvidence = summary.candidateQuestions.some(
+        (question) =>
+          question.evidenceTurnIds.some((id) =>
+            questionInsight.evidenceTurnIds.includes(id),
+          ),
+      );
       issues.push({
         path: "candidateQuestions",
-        ruleId: "candidate_question_omitted",
+        ruleId: citesCapturedEvidence
+          ? "candidate_question_mismatch"
+          : "candidate_question_omitted",
       });
     }
   }
@@ -406,16 +425,25 @@ export function validateInterviewSummary(
   for (const insight of input.insights.filter(
     (candidate) => candidate.category === "follow_up_needed",
   )) {
-    if (
-      !summary.humanFollowups.some((followup) =>
+    const matchingFollowup = summary.humanFollowups.some(
+      (followup) =>
+        followup.reason === insight.value &&
+        hasSameEvidenceTurnIds(
+          followup.evidenceTurnIds,
+          insight.evidenceTurnIds,
+        ),
+    );
+    if (!matchingFollowup) {
+      const citesCapturedEvidence = summary.humanFollowups.some((followup) =>
         followup.evidenceTurnIds.some((id) =>
           insight.evidenceTurnIds.includes(id),
         ),
-      )
-    ) {
+      );
       issues.push({
         path: "humanFollowups",
-        ruleId: "candidate_followup_omitted",
+        ruleId: citesCapturedEvidence
+          ? "candidate_followup_mismatch"
+          : "candidate_followup_omitted",
       });
     }
   }

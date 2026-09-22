@@ -9,7 +9,6 @@ import { EntryModeCard } from "./entry-mode-card";
 import { ErrorPanel } from "./error-panel";
 import { ScreenPilotMark } from "./screenpilot-mark";
 import { SiteHeader } from "./site-header";
-import { StageIndicator } from "./stage-indicator";
 
 describe("Signal Canvas foundations", () => {
   it("exposes light and dark shells through one component", () => {
@@ -37,62 +36,21 @@ describe("Signal Canvas foundations", () => {
     render(
       <DemoStageHeading
         pretitle="Before you begin"
+        step={3}
         title="Get ready for your interview."
         titleId="preflight-title"
       />,
     );
 
-    expect(screen.getByText("Before you begin")).toHaveClass("sp-eyebrow");
+    expect(screen.getByText("Step 3 of 5 · Before you begin")).toHaveClass(
+      "sp-eyebrow",
+    );
     expect(
       screen.getByRole("heading", {
         level: 1,
         name: "Get ready for your interview.",
       }),
     ).toHaveAttribute("id", "preflight-title");
-  });
-
-  it("marks the current stage and completed stages", () => {
-    const { rerender } = render(
-      <StageIndicator
-        currentIndex={1}
-        stages={["Setup", "Preflight", "Interview"]}
-      />,
-    );
-
-    expect(
-      screen.getByRole("group", { name: "Interview progress" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Step 2 of 3 · Preflight")).toBeVisible();
-    expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
-    expect(screen.getByText("Setup").closest("li")).toHaveAttribute(
-      "data-state",
-      "complete",
-    );
-
-    rerender(
-      <StageIndicator
-        currentIndex={99}
-        stages={["Setup", "Preflight", "Interview"]}
-      />,
-    );
-    expect(screen.getByText("Interview").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
-
-    rerender(
-      <StageIndicator
-        currentIndex={Number.NaN}
-        stages={["Setup", "Preflight", "Interview"]}
-      />,
-    );
-    expect(screen.getByText("Setup").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
   });
 
   it("announces runtime errors and keeps a recovery action", () => {

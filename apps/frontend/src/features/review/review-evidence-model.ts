@@ -226,6 +226,45 @@ function linesForItems(
   ];
 }
 
+function evidenceLabelsForCopy(
+  evidenceTurnIds: readonly string[],
+  transcript: readonly TranscriptTurn[],
+): string {
+  const finalCandidateTurns = new Map(
+    transcript
+      .filter((turn) => turn.speaker === "candidate" && turn.status === "final")
+      .map((turn) => [turn.id, turn] as const),
+  );
+  const labels = evidenceTurnIds
+    .map((turnId) => {
+      const turn = finalCandidateTurns.get(turnId);
+      return turn ? `Candidate · turn ${String(turn.sequence + 1)}` : null;
+    })
+    .filter((label): label is string => label !== null)
+    .join(", ");
+  return labels || "Evidence unavailable";
+}
+
+function linesForEvidenceItems(
+  heading: string,
+  values: readonly Readonly<{
+    evidenceTurnIds: readonly string[];
+    text: string;
+  }>[],
+  emptyLabel: string,
+  transcript: readonly TranscriptTurn[],
+): string[] {
+  return [
+    heading,
+    ...(values.length > 0
+      ? values.flatMap((value) => [
+          `- ${value.text}`,
+          `  Evidence: ${evidenceLabelsForCopy(value.evidenceTurnIds, transcript)}`,
+        ])
+      : [`- ${emptyLabel}`]),
+  ];
+}
+
 export function formatSummaryForCopy(
   summary: ScreeningSummary,
   plan: ScreeningPlan,
@@ -295,16 +334,24 @@ export function formatSummaryForCopy(
       "No evidence-linked notes available.",
     ),
     "",
-    ...linesForItems(
+    ...linesForEvidenceItems(
       "Candidate questions",
-      summary.candidateQuestions.map((question) => question.question),
+      summary.candidateQuestions.map((question) => ({
+        evidenceTurnIds: question.evidenceTurnIds,
+        text: question.question,
+      })),
       "No candidate questions were captured.",
+      transcript,
     ),
     "",
-    ...linesForItems(
+    ...linesForEvidenceItems(
       "Human follow-ups",
-      summary.humanFollowups.map((followup) => followup.reason),
+      summary.humanFollowups.map((followup) => ({
+        evidenceTurnIds: followup.evidenceTurnIds,
+        text: followup.reason,
+      })),
       "No human follow-ups were recorded.",
+      transcript,
     ),
     "",
     ...linesForItems("Limitations", summary.limitations, "None reported."),

@@ -111,6 +111,7 @@ function EnabledCvStage({
     <Stack className="sp-cv-stage sp-demo-stage--with-footer" gap="medium">
       <DemoStageHeading
         pretitle="CV-assisted path"
+        step={2}
         title={
           showIntake
             ? "Prepare a focused screening conversation."
@@ -144,10 +145,8 @@ function EnabledCvStage({
           >
             <div>
               <p className="sp-cv-ready__status">Role stays flexible</p>
-              <h2>Confirm it when you talk.</h2>
-              <p>
-                Use any role, or stay undecided. This is not a real application.
-              </p>
+              <h2>We’ll suggest one from your CV.</h2>
+              <p>Confirm it, change it, or stay undecided when you talk.</p>
             </div>
           </Card>
         </div>

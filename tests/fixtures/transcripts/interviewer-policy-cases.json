@@ -1,5 +1,5 @@
 {
-  "fixtureVersion": "sp017-2026-09-16.1",
+  "fixtureVersion": "sp017-2026-09-22.1",
   "cases": [
     {
       "id": "terse-complete-answer",
@@ -55,43 +55,44 @@
       "expectedFailures": []
     },
     {
-      "id": "unsupported-salary-counterquestion",
+      "id": "unsupported-onboarding-counterquestion",
       "entryMode": "cv_assisted",
       "candidate": {
-        "id": "turn-candidate-salary-question",
+        "id": "turn-candidate-onboarding-question",
         "status": "final",
         "clarity": "clear",
-        "text": "What salary band does the company offer?",
+        "text": "What onboarding and work-arrangement details can a recruiter share?",
         "kind": "counterquestion",
         "evidence": {
-          "candidateQuestionMeaningTokens": ["salary band"],
-          "followupMeaningTokens": ["salary band"]
+          "candidateQuestionMeaningTokens": ["onboarding", "work-arrangement"],
+          "followupMeaningTokens": ["onboarding", "work-arrangement"]
         }
       },
       "assistant": {
-        "text": "No employer salary band is provided, so a human recruiter must confirm that. What range are you considering?",
+        "text": "I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review. What matters most in your next role?",
         "toolCalls": [
           {
             "name": "recordCandidateQuestion",
             "arguments": {
-              "question": "Asked what salary band the company offers"
+              "question": "What onboarding and work-arrangement details can a recruiter share?"
             },
-            "attachedTurnId": "turn-candidate-salary-question"
+            "attachedTurnId": "turn-candidate-onboarding-question"
           },
           {
             "name": "requestFollowup",
             "arguments": {
-              "reason": "A human recruiter needs to confirm the employer salary band"
+              "reason": "A human recruiter must confirm the unsupported onboarding and work-arrangement details"
             },
-            "attachedTurnId": "turn-candidate-salary-question"
+            "attachedTurnId": "turn-candidate-onboarding-question"
           }
         ]
       },
       "semantic": {
-        "directAnswerTerms": ["no employer salary band", "human recruiter"],
-        "groundedFollowupTerms": ["range", "considering"],
+        "directAnswerTerms": ["confirmed onboarding", "human recruiter"],
+        "groundedFollowupTerms": ["matters most", "next role"],
         "neutralDirect": true
       },
+      "allowDetailedAnswer": true,
       "expectedFailures": []
     },
     {

@@ -47,7 +47,7 @@ describe("useDeliberateAnchorScroll", () => {
     vi.unstubAllGlobals();
   });
 
-  it("eases the primary click to the target before updating the fragment", () => {
+  it("eases the primary click to the target without changing the route", () => {
     render(<SharedAnchorHarness />);
     const target = screen.getByTestId("how-it-works-target");
     vi.spyOn(target, "getBoundingClientRect").mockReturnValue({
@@ -90,7 +90,7 @@ describe("useDeliberateAnchorScroll", () => {
       left: 0,
       top: 1_000,
     });
-    expect(window.location.hash).toBe("#how-it-works");
+    expect(window.location.hash).toBe("");
   });
 
   it("keeps the explicitly requested CTA journey when reduced motion is reported", () => {
@@ -114,10 +114,7 @@ describe("useDeliberateAnchorScroll", () => {
       button: 0,
       cancelable: true,
     });
-    fireEvent(
-      screen.getByRole("link", { name: "How it works" }),
-      clickEvent,
-    );
+    fireEvent(screen.getByRole("link", { name: "How it works" }), clickEvent);
 
     expect(clickEvent.defaultPrevented).toBe(true);
     expect(animationFrames).toHaveLength(1);

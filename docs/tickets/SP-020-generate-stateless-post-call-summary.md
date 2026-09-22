@@ -30,7 +30,7 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 
 - A real summary needs the same user-supplied backend `OPENAI_API_KEY`, `TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`, and `TURNSTILE_ALLOWED_HOSTNAMES` group documented in SP-010. Keep all blank in the committed template.
 - Obtain the OpenAI key and Turnstile pair from the official dashboard guides linked in the parent [credential guide](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup); store both secrets only in the ignored backend file or production Secret Manager.
-- Fake OpenAI/Turnstile covers route, evidence, repair, rejection, and no-persistence tests. When values are blank, no live fallback is allowed. The first controlled real summary is deliberately deferred to SP-021A so it validates the complete product rather than creating a standalone pre-review charge.
+- Fake OpenAI/Turnstile covers route, evidence, repair, rejection, and no-persistence tests. When values are blank, no live fallback is allowed. The first controlled real summary is deliberately deferred to SP-021B so it validates the complete product rather than creating a standalone pre-review charge.
 
 ## Scope boundaries
 
@@ -75,7 +75,7 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 - [x] Assert paid-provider call count is zero for every precondition failure.
 - [x] Inspect output evidence IDs and logs for unsupported claims/content leakage.
 - [x] Do not run a standalone real summary in this ticket; hand the first
-  controlled real summary to SP-021A after SP-021 is complete.
+  controlled real summary to SP-021B after SP-021 and SP-021A are complete.
 
 ## Implementation record — 2026-09-21
 
@@ -85,7 +85,7 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 - Semantic completeness validation now requires every available candidate-backed current-context, experience/responsibility/strongest-area, team/work-style, and candidate-question insight to appear in its appropriate output section. The three required fact groups must resolve to distinct summary entries, so one combined fact cannot satisfy all three. Topic validation is bidirectional: every claimed covered topic must match covered local progress, and every locally covered topic must remain in `topicsCovered` with evidence.
 - Added deterministic fake summaries plus contract, adapter, use-case, and Supertest coverage for both provenance modes, bounds, precondition zero-call behavior, repair/failure paths, role variants, partial evidence, logging privacy, and stateless repeat requests.
 - Final fake-only verification passed the focused contracts suite (3 files / 18 tests), focused backend summary suite (4 files / 41 tests), complete contracts suite (6 files / 47 tests), and complete backend suite (23 files / 256 tests). Both package lint commands, both package builds, Prettier checking for the affected code, and `git diff --check` also passed. The local runtime reported Node 22.23.2 while the repository requires Node 24, but every invoked check completed successfully.
-- No credential was read, no provider network request was made, and no standalone paid summary was run. The first controlled real summary remains assigned to SP-021A after SP-021.
+- No credential was read, no provider network request was made, and no standalone paid summary was run. The first controlled real summary remains assigned to SP-021B after SP-021A.
 - Validation follow-up on 2026-09-22 replaced lexical ISO timestamp comparison with one shared chronological candidate-insight selector. Focused regressions use valid mixed-offset timestamps to prove both semantic grounding and fake summary output preserve the genuinely latest role correction. The follow-up passed the focused backend set (5 files / 48 tests), focused contracts set (3 files / 18 tests), backend typecheck, affected-file lint and Prettier checks, and `git diff --check`; no live verification claim changed.
 
 ## Commit boundary

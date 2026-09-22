@@ -2,8 +2,8 @@
 
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
-Last synchronized: 2026-09-21<br>
-Depends on: SP-010A, SP-017, SP-018, SP-021A, SP-022, SP-023, SP-024<br>
+Last synchronized: 2026-09-22<br>
+Depends on: SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024<br>
 Suggested commit: `SP-025: complete focused demo release checks`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
@@ -18,7 +18,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 
 - Manual approval is intentionally primary. SP-028 remains optional and cannot block release.
 - Run the smallest relevant targeted checks while investigating; run the full quick gate once at this release boundary.
-- Current SP-021A evidence supplies the controlled live flow for each entry mode.
+- Current SP-021B evidence supplies the controlled live flow for each entry mode.
   Repeat a paid flow here only when a later code, provider, configuration,
   hostname, or release-candidate change invalidates that evidence.
 - The pre-measurement reserve is $0.80 per standard eight-minute flow or $1.40 if burst is deliberately enabled. The base estimate is about $0.70, but release evidence must use the provider dashboards rather than restating the estimate as measured fact.
@@ -30,7 +30,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - Run all unpaid/fake release checks before asking for live values. The controlled live pass needs the complete user-supplied OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit permission to incur provider charges.
 - Confirm both local `.env.local` paths are ignored and absent from `git status` before the user fills the backend file. Never record secret values in the manual matrix, defect evidence, screenshots, network exports, or provider-revision notes.
 - Before any real candidate content, external tester, or public release, explicitly warn the owner if OpenAI input/output sharing is enabled, require `Organization settings > Data controls > Share inputs and outputs with OpenAI` to be **Disabled**, and record only the project name, disabled state, and verification date. Localhost and `store: false` do not waive this gate.
-- If credentials, account balance, production widget, or paid-test permission are unavailable when SP-021A evidence must be refreshed, do not fake a live pass. Record every unpaid result, mark the invalidated live evidence blocked, and withhold release approval until the manual gate is satisfied.
+- If credentials, account balance, production widget, or paid-test permission are unavailable when SP-021B evidence must be refreshed, do not fake a live pass. Record every unpaid result, mark the invalidated live evidence blocked, and withhold release approval until the manual gate is satisfied.
 
 ## Scope boundaries
 
@@ -63,7 +63,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Verify normal 8–10-prompt HR coverage, multi-field answer credit, one broad role-context clarification maximum, and zero technical, portfolio, competency, roleplay, professional-knowledge, or suitability chains.
 - [ ] Verify unsupported employer/vacancy questions become human follow-up without blocking completion and that no selected role invents responsibilities, qualifications, salary, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines.
 - [ ] Run the smallest targeted release-critical unit/backend checks, then the complete fast default commands once.
-- [ ] Review SP-021A's controlled live flow for each entry mode and record its
+- [ ] Review SP-021B's controlled live flow for each entry mode and record its
   provider revision, date, measured behavior, and cost; repeat only evidence
   invalidated by later release-candidate or provider/configuration changes.
 - [ ] Create `docs/operations/full-flow-cost-baseline.md` from a blank sanitized template and record each flow's date, mode, revision, connection duration, direct OpenAI usage, ElevenLabs standard/burst minute charge, live-LLM Detailed costs, credits/free minutes applied, infrastructure overage, and total.
@@ -75,7 +75,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Every required Section 18 manual scenario has a recorded pass across the relevant responsive matrix.
 - [ ] The complete quick gate passes once on the release candidate.
 - [ ] Current controlled live evidence for both entry modes passes without
-  retention/privacy/scope drift, whether reused from SP-021A or narrowly rerun
+  retention/privacy/scope drift, whether reused from SP-021B or narrowly rerun
   because later changes invalidated it.
 - [ ] No release-blocking conversation, latency, evidence, Turnstile, responsive, accessibility, privacy, or provider defect remains.
 - [ ] Every required role-neutral scenario proves one universal HR screen, no allow-list/redirection, no profession-specific assessment, and no invented employer/vacancy fact.
@@ -92,7 +92,7 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Verify OpenAI input/output sharing is disabled before any real-data or public run; block release if the dashboard state cannot be confirmed.
 - [ ] Verify the cost file contains no CV/transcript text, candidate identity, API key, account ID, Turnstile token, or secret-bearing billing screenshot.
 - [ ] Obtain explicit user approval of the release candidate and unresolved non-blocking limitations.
-- [ ] Hand the exact approved candidate, manual matrix, current SP-021A evidence,
+- [ ] Hand the exact approved candidate, manual matrix, current SP-021B evidence,
   cost baseline, fixed defects, and every remaining limitation/blocker to
   SP-025A without treating this manual pass as the repository-wide final audit.
 

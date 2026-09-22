@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, type ReactNode, useRef, useState } from "react";
 
 import type { SummarizeInterviewResponse } from "@screenpilot/contracts/api/interview-summary";
 import type { PublicRuntimeConfig } from "@screenpilot/contracts/api/public-runtime-config";
@@ -12,19 +12,9 @@ import type { ScreeningSummary } from "@screenpilot/contracts/interview/screenin
 import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 
-import { ManagedTurnstileGate } from "@/features/abuse-protection/managed-turnstile-gate";
-import {
-  TURNSTILE_ACTIONS,
-  type ExecuteTurnstileChallenge,
-} from "@/features/abuse-protection/turnstile-client";
+import type { ExecuteTurnstileChallenge } from "@/features/abuse-protection/turnstile-client";
 import type { SessionFailure } from "@/features/session/demo-session.types";
-import {
-  isAbortError,
-  ScreenPilotApiError,
-  summarizeInterview,
-} from "@/shared/api/screenpilot-api";
-import { Badge } from "@/shared/ui/badge";
-import { Button, ButtonGroup } from "@/shared/ui/button";
+import { Button } from "@/shared/ui/button";
 import { DemoActionFooter } from "@/shared/ui/demo-action-footer";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
@@ -36,8 +26,15 @@ import {
 } from "./review-evidence-model";
 import { SessionClearDialog } from "./session-clear-dialog";
 import { SummarySections } from "./summary-sections";
+import {
+  InterviewSummaryPreparation,
+  type SummaryRequester,
+} from "./interview-summary-preparation";
 
-export type SummaryRequester = typeof summarizeInterview;
+export type { SummaryRequester } from "./interview-summary-preparation";
+
+const REVIEW_VIEWS = ["evidence", "notes"] as const;
+type ReviewView = (typeof REVIEW_VIEWS)[number];
 
 type InterviewEvidenceReviewProps = Readonly<{
   cv?: NormalizedCv | undefined;
@@ -53,6 +50,8 @@ type InterviewEvidenceReviewProps = Readonly<{
   onSummarySucceeded: (response: SummarizeInterviewResponse) => void;
   plan: ScreeningPlan;
   runtimeConfig: PublicRuntimeConfig;
+  summaryPreparationManagedExternally?: boolean | undefined;
+  summaryRequestPending?: boolean | undefined;
   stage: "review_ready" | "summarizing";
   storageStatus: "saved" | "rejected" | "unavailable" | "idle";
   summary?: ScreeningSummary | undefined;
@@ -61,55 +60,95 @@ type InterviewEvidenceReviewProps = Readonly<{
   transcript: readonly TranscriptTurn[];
 }>;
 
-function modeLabel(entryMode: EntryMode): string {
-  return entryMode === "cv_assisted" ? "CV-assisted" : "Conversation-first";
-}
+function ReviewViewTabs({
+  activeView,
+  onSelect,
+}: Readonly<{
+  activeView: ReviewView;
+  onSelect: (view: ReviewView) => void;
+}>) {
+  const tabRefs = useRef<Record<ReviewView, HTMLButtonElement | null>>({
+    evidence: null,
+    notes: null,
+  });
 
-function summaryFailure(error: unknown): SessionFailure {
-  if (error instanceof ScreenPilotApiError) {
-    return {
-      stage: "summarizing",
-      code: error.code,
-      message: error.message,
-      retryable: error.retryable,
-    };
-  }
-  return {
-    stage: "summarizing",
-    code: "SUMMARY_UNREACHABLE",
-    message:
-      "ScreenPilot could not organize the conversation. Your local evidence is still available.",
-    retryable: true,
+  const handleKeyDown = (
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentView: ReviewView,
+  ) => {
+    const currentIndex = REVIEW_VIEWS.indexOf(currentView);
+    let nextView: ReviewView | undefined;
+
+    if (event.key === "ArrowRight") {
+      nextView = REVIEW_VIEWS[(currentIndex + 1) % REVIEW_VIEWS.length];
+    } else if (event.key === "ArrowLeft") {
+      nextView =
+        REVIEW_VIEWS[
+          (currentIndex - 1 + REVIEW_VIEWS.length) % REVIEW_VIEWS.length
+        ];
+    } else if (event.key === "Home") {
+      nextView = REVIEW_VIEWS[0];
+    } else if (event.key === "End") {
+      nextView = REVIEW_VIEWS[REVIEW_VIEWS.length - 1];
+    }
+
+    if (!nextView) {
+      return;
+    }
+
+    event.preventDefault();
+    onSelect(nextView);
+    tabRefs.current[nextView]?.focus();
   };
+
+  return (
+    <div aria-label="Review views" className="sp-review-tabs" role="tablist">
+      {REVIEW_VIEWS.map((view) => {
+        const isActive = activeView === view;
+        const label = view === "evidence" ? "Evidence map" : "Organized notes";
+
+        return (
+          <button
+            aria-controls={`review-${view}-panel`}
+            aria-selected={isActive}
+            id={`review-${view}-tab`}
+            key={view}
+            onClick={() => {
+              onSelect(view);
+            }}
+            onKeyDown={(event) => {
+              handleKeyDown(event, view);
+            }}
+            ref={(node) => {
+              tabRefs.current[view] = node;
+            }}
+            role="tab"
+            tabIndex={isActive ? 0 : -1}
+            type="button"
+          >
+            {label}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 type SummaryCenterCardProps = Readonly<{
-  entryMode: EntryMode;
-  executeChallenge?: ExecuteTurnstileChallenge | undefined;
   failure?: SessionFailure | undefined;
-  onChallengeFailure: (failure: {
-    code: "TURNSTILE_REJECTED" | "TURNSTILE_UNAVAILABLE";
-    message: string;
-    retryable: true;
-  }) => void;
   onRetry: () => void;
-  onVerified: (token: string) => void;
+  preparation?: ReactNode;
   requestPending: boolean;
-  siteKey: string;
   stage: "review_ready" | "summarizing";
   summary?: ScreeningSummary | undefined;
   transcript: readonly TranscriptTurn[];
 }>;
 
 function SummaryCenterCard({
-  entryMode,
-  executeChallenge,
   failure,
-  onChallengeFailure,
   onRetry,
-  onVerified,
+  preparation,
   requestPending,
-  siteKey,
   stage,
   summary,
   transcript,
@@ -138,30 +177,7 @@ function SummaryCenterCard({
             <span>Synthetic session role</span>
             <strong>{roleReview?.label}</strong>
             <small>{roleReview?.note}</small>
-            <div
-              aria-label="Evidence for synthetic session role"
-              className="sp-summary-center-card__role-evidence"
-            >
-              {roleReview?.evidenceReferences.map((reference) => (
-                <span
-                  className={`sp-evidence-chip${
-                    reference.available ? "" : " sp-evidence-chip--unavailable"
-                  }`}
-                  key={reference.id}
-                >
-                  {reference.label}
-                </span>
-              ))}
-            </div>
           </div>
-          <div className="sp-summary-center-card__meta">
-            <Badge tone="coral">{modeLabel(entryMode)}</Badge>
-            <Badge tone="success">Summary ready</Badge>
-          </div>
-          <p className="sp-summary-center-card__notice">
-            AI-organized notes require human interpretation. No hiring decision
-            was made.
-          </p>
         </>
       ) : stage === "summarizing" ? (
         <>
@@ -195,13 +211,7 @@ function SummaryCenterCard({
                     : "Securing this summary request…"}
                 </span>
               </div>
-              <ManagedTurnstileGate
-                action={TURNSTILE_ACTIONS.interviewSummary}
-                {...(executeChallenge ? { executeChallenge } : {})}
-                onFailure={onChallengeFailure}
-                onVerified={onVerified}
-                siteKey={siteKey}
-              />
+              {preparation}
             </>
           )}
         </>
@@ -215,7 +225,6 @@ function SummaryCenterCard({
             The interview evidence remains available, but there was not enough
             final candidate material to create a grounded summary.
           </p>
-          <Badge tone="warning">Local evidence only</Badge>
         </>
       )}
     </article>
@@ -236,78 +245,23 @@ export function InterviewEvidenceReview({
   onSummarySucceeded,
   plan,
   runtimeConfig,
+  summaryPreparationManagedExternally = false,
+  summaryRequestPending: externalSummaryRequestPending = false,
   stage,
   storageStatus,
   summary,
-  summarize = summarizeInterview,
+  summarize,
   topicProgress,
   transcript,
 }: InterviewEvidenceReviewProps) {
-  const [requestPending, setRequestPending] = useState(false);
+  const [internalRequestPending, setInternalRequestPending] = useState(false);
+  const [activeView, setActiveView] = useState<ReviewView>("evidence");
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
     "idle",
   );
-  const summaryAbortRef = useRef<AbortController | null>(null);
-  const summaryRequestStartedRef = useRef(false);
-
-  useEffect(
-    () => () => {
-      summaryAbortRef.current?.abort();
-      summaryAbortRef.current = null;
-    },
-    [],
-  );
-
-  const handleVerified = useCallback(
-    (turnstileToken: string) => {
-      if (summaryRequestStartedRef.current || stage !== "summarizing") {
-        return;
-      }
-      summaryRequestStartedRef.current = true;
-      setRequestPending(true);
-      const controller = new AbortController();
-      summaryAbortRef.current?.abort();
-      summaryAbortRef.current = controller;
-      void summarize(
-        {
-          entryMode,
-          insights: [...insights],
-          interviewGrant,
-          plan,
-          topicProgress: [...topicProgress],
-          transcript: [...transcript],
-          turnstileToken,
-        },
-        controller.signal,
-      )
-        .then((response) => {
-          if (!controller.signal.aborted) {
-            setRequestPending(false);
-            onSummarySucceeded(response);
-          }
-        })
-        .catch((error: unknown) => {
-          if (controller.signal.aborted || isAbortError(error)) {
-            return;
-          }
-          summaryRequestStartedRef.current = false;
-          setRequestPending(false);
-          onFailure(summaryFailure(error));
-        });
-    },
-    [
-      entryMode,
-      insights,
-      interviewGrant,
-      onFailure,
-      onSummarySucceeded,
-      plan,
-      stage,
-      summarize,
-      topicProgress,
-      transcript,
-    ],
-  );
+  const requestPending = summaryPreparationManagedExternally
+    ? externalSummaryRequestPending
+    : internalRequestPending;
 
   const copySummary = async () => {
     if (!summary) {
@@ -340,14 +294,12 @@ export function InterviewEvidenceReview({
       <div className="sp-review-stage__heading">
         <DemoStageHeading
           pretitle={isPartial ? "Partial interview review" : "Interview review"}
+          step={5}
           title="Your conversation, organized as connected evidence."
         />
-        <div className="sp-review-stage__badges">
-          <Badge tone="coral">{modeLabel(entryMode)}</Badge>
-          <Badge tone={isPartial ? "warning" : "success"}>
-            {isPartial ? "Partial review" : "Interview ended"}
-          </Badge>
-        </div>
+        {summary ? (
+          <ReviewViewTabs activeView={activeView} onSelect={setActiveView} />
+        ) : null}
       </div>
 
       {storageStatus === "unavailable" || storageStatus === "rejected" ? (
@@ -357,41 +309,71 @@ export function InterviewEvidenceReview({
         </p>
       ) : null}
 
-      <EvidenceMap
-        center={
-          <SummaryCenterCard
-            entryMode={entryMode}
-            {...(executeChallenge ? { executeChallenge } : {})}
-            {...(failure ? { failure } : {})}
-            onChallengeFailure={(challengeFailure) => {
-              summaryRequestStartedRef.current = false;
-              setRequestPending(false);
-              onFailure({ stage: "summarizing", ...challengeFailure });
-            }}
-            onRetry={onRetry}
-            onVerified={handleVerified}
-            requestPending={requestPending}
-            siteKey={runtimeConfig.abuseProtection.siteKey}
-            stage={stage}
-            {...(summary ? { summary } : {})}
-            transcript={transcript}
-          />
-        }
-        {...(cv ? { cv } : {})}
-        entryMode={entryMode}
-        insights={insights}
-        plan={plan}
-        {...(summary ? { summary } : {})}
-        summaryStatus={summaryStatus}
-        transcript={transcript}
-      />
-
-      {summary ? (
-        <SummarySections
+      <div
+        {...(summary
+          ? {
+              "aria-labelledby": "review-evidence-tab",
+              id: "review-evidence-panel",
+              role: "tabpanel",
+            }
+          : {})}
+        className="sp-review-tab-panel"
+        hidden={summary ? activeView !== "evidence" : false}
+      >
+        <EvidenceMap
+          center={
+            <SummaryCenterCard
+              {...(failure ? { failure } : {})}
+              onRetry={onRetry}
+              preparation={
+                summaryPreparationManagedExternally ? null : (
+                  <InterviewSummaryPreparation
+                    active={stage === "summarizing" && !failure && !summary}
+                    entryMode={entryMode}
+                    {...(executeChallenge ? { executeChallenge } : {})}
+                    insights={insights}
+                    interviewGrant={interviewGrant}
+                    onFailure={onFailure}
+                    onPendingChange={setInternalRequestPending}
+                    onSummarySucceeded={onSummarySucceeded}
+                    plan={plan}
+                    siteKey={runtimeConfig.abuseProtection.siteKey}
+                    {...(summarize ? { summarize } : {})}
+                    topicProgress={topicProgress}
+                    transcript={transcript}
+                  />
+                )
+              }
+              requestPending={requestPending}
+              stage={stage}
+              {...(summary ? { summary } : {})}
+              transcript={transcript}
+            />
+          }
+          {...(cv ? { cv } : {})}
+          entryMode={entryMode}
+          insights={insights}
           plan={plan}
-          summary={summary}
+          {...(summary ? { summary } : {})}
+          summaryStatus={summaryStatus}
           transcript={transcript}
         />
+      </div>
+
+      {summary ? (
+        <div
+          aria-labelledby="review-notes-tab"
+          className="sp-review-tab-panel"
+          hidden={activeView !== "notes"}
+          id="review-notes-panel"
+          role="tabpanel"
+        >
+          <SummarySections
+            plan={plan}
+            summary={summary}
+            transcript={transcript}
+          />
+        </div>
       ) : null}
 
       <p aria-live="polite" className="sp-review-copy-status">
@@ -402,22 +384,17 @@ export function InterviewEvidenceReview({
             : ""}
       </p>
 
-      <DemoActionFooter note="No score or automated hiring decision was created.">
+      <DemoActionFooter>
         <div className="sp-review-actions">
-          <ButtonGroup>
-            <Button
-              disabled={!summary}
-              onClick={() => {
-                void copySummary();
-              }}
-            >
-              Copy summary
-            </Button>
-          </ButtonGroup>
-          <div className="sp-review-actions__clear">
-            <span>Remove every ScreenPilot item held in this tab.</span>
-            <SessionClearDialog onClear={onReturnHome} />
-          </div>
+          <Button
+            disabled={!summary}
+            onClick={() => {
+              void copySummary();
+            }}
+          >
+            Copy summary
+          </Button>
+          <SessionClearDialog onClear={onReturnHome} />
         </div>
       </DemoActionFooter>
     </div>

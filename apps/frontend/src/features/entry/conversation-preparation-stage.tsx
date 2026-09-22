@@ -117,6 +117,7 @@ export function ConversationPreparationStage({
     <div className="sp-demo-stage sp-demo-stage--with-footer sp-conversation-preparation">
       <DemoStageHeading
         pretitle="Conversation-first path"
+        step={2}
         title={
           failure
             ? "The open conversation is not prepared yet."

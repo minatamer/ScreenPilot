@@ -102,8 +102,7 @@ export function CvDropzone({
         <div className="sp-cv-dropzone__notes">
           <p id={requirementId}>PDF only · 5 MB maximum · 8 pages maximum</p>
           <p id={privacyId}>
-            Use synthetic information. The PDF stays in this tab and is never
-            uploaded.
+            Use synthetic data. The PDF itself is never uploaded.
           </p>
         </div>
       </div>

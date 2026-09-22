@@ -1,42 +1,32 @@
 import type { VoiceSessionPhase } from "./use-voice-session";
+import { MicrophoneIcon } from "./microphone-icon";
 
 type VoiceSignalProps = Readonly<{
   phase: VoiceSessionPhase;
 }>;
 
-function signalLabel(phase: VoiceSessionPhase) {
-  switch (phase) {
-    case "speaking":
-      return "Pilot is speaking";
-    case "listening":
-      return "Pilot is listening";
-    case "reconnecting":
-      return "Pilot is reconnecting";
-    case "ending":
-      return "The interview is ending";
-    case "failed":
-      return "The voice connection was interrupted";
-    default:
-      return "Pilot is preparing the voice connection";
-  }
-}
-
 export function VoiceSignal({ phase }: VoiceSignalProps) {
+  if (phase !== "speaking" && phase !== "listening") {
+    return null;
+  }
+
   return (
-    <div
-      aria-label={signalLabel(phase)}
+    <span
+      aria-hidden="true"
       className="sp-interview-signal"
       data-active={phase === "speaking"}
       data-phase={phase}
-      role="img"
     >
-      <span />
-      <span />
-      <span />
-      <span />
-      <span />
-      <span />
-      <span />
-    </div>
+      {phase === "speaking" ? (
+        <>
+          <span />
+          <span />
+          <span />
+          <span />
+        </>
+      ) : (
+        <MicrophoneIcon />
+      )}
+    </span>
   );
 }

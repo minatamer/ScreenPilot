@@ -42,6 +42,7 @@ export function LandingExperience() {
   const { clearSession, dispatch, state } = useDemoSession();
   const [clearFailed, setClearFailed] = useState(false);
   const scrollToHowItWorks = useDeliberateAnchorScroll("how-it-works");
+  const scrollToStart = useDeliberateAnchorScroll("start");
   useDemoBootstrap(true);
 
   const selectEntryMode = (entryMode: EntryMode) => {
@@ -64,6 +65,7 @@ export function LandingExperience() {
         Skip to main content
       </a>
       <SiteHeader
+        brandHref="/"
         className="sp-site-header--landing"
         actions={
           <>
@@ -140,7 +142,11 @@ export function LandingExperience() {
                   for your team to review.
                 </p>
                 <ButtonGroup className="sp-landing__hero-actions">
-                  <a className="sp-button sp-button--primary" href="#start">
+                  <a
+                    className="sp-button sp-button--primary"
+                    href="#start"
+                    onClick={scrollToStart}
+                  >
                     <span>Try the screening demo</span>
                   </a>
                   <a
@@ -165,10 +171,6 @@ export function LandingExperience() {
               </div>
               <IllustrativeInterviewPreview />
             </div>
-            <a className="sp-landing__scroll-cue" href="#how-it-works">
-              <span>Scroll to see the journey</span>
-              <span aria-hidden="true">↓</span>
-            </a>
           </PageContainer>
         </section>
 

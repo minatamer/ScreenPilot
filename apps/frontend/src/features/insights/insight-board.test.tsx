@@ -7,6 +7,14 @@ import { InsightBoard } from "./insight-board";
 
 const NOW = "2026-09-15T08:00:00.000Z";
 
+function parentElementOf(element: HTMLElement): HTMLElement {
+  const parentElement = element.parentElement;
+  if (!parentElement) {
+    throw new Error("Expected the carousel track to have a viewport parent.");
+  }
+  return parentElement;
+}
+
 describe("InsightBoard", () => {
   it("presents a purposeful conversation-first empty state", () => {
     render(
@@ -82,14 +90,221 @@ describe("InsightBoard", () => {
       />,
     );
 
-    const cards = within(
-      screen.getByRole("list", { name: "Candidate insight cards" }),
-    ).getAllByRole("listitem");
+    const insightList = screen.getByRole("list", {
+      name: "Candidate insight cards",
+    });
+    const insightViewport = insightList;
+    const cards = within(insightList).getAllByRole("listitem");
     expect(cards.map((card) => card.dataset["category"])).toEqual([
       "role_preference",
       "current_context",
     ]);
     expect(cards.every((card) => !card.hasAttribute("data-region"))).toBe(true);
+    expect(cards[0]).toHaveAttribute("data-carousel-active", "true");
+    expect(cards[1]).toHaveAttribute("data-carousel-active", "false");
+
+    const slideshowControls = screen.getByRole("group", {
+      name: "candidate note slideshow controls",
+    });
+    expect(
+      within(slideshowControls).getByRole("button", {
+        name: "Previous candidate note",
+      }),
+    ).toBeDisabled();
+    fireEvent.pointerDown(insightViewport, {
+      button: 0,
+      clientX: 260,
+      clientY: 120,
+      pointerId: 1,
+    });
+    fireEvent.pointerMove(insightViewport, {
+      button: 0,
+      clientX: 180,
+      clientY: 124,
+      pointerId: 1,
+    });
+    expect(insightViewport).toHaveAttribute("data-dragging", "true");
+    expect(insightViewport).toHaveStyle("--sp-carousel-drag-x: -80px");
+    fireEvent.pointerUp(insightViewport, {
+      button: 0,
+      clientX: 180,
+      clientY: 124,
+      pointerId: 1,
+    });
+    expect(cards[0]).toHaveAttribute("data-carousel-active", "false");
+    expect(cards[1]).toHaveAttribute("data-carousel-active", "true");
+    expect(insightViewport).toHaveAttribute("data-carousel-direction", "next");
+    expect(insightViewport).toHaveAttribute("data-dragging", "false");
+    expect(insightViewport).toHaveStyle("--sp-carousel-drag-x: 0px");
+    expect(within(slideshowControls).getByText("2 of 2")).toBeVisible();
+
+    fireEvent.click(
+      within(slideshowControls).getByRole("button", {
+        name: "Previous candidate note",
+      }),
+    );
+    expect(cards[0]).toHaveAttribute("data-carousel-active", "true");
+    expect(insightViewport).toHaveAttribute(
+      "data-carousel-direction",
+      "previous",
+    );
+  });
+
+  it("pages conversation coverage in compact groups of four", () => {
+    render(
+      <InsightBoard
+        entryMode="conversation_first"
+        insights={[]}
+        topicProgress={[
+          {
+            topicKey: "role_preference",
+            status: "covered",
+            evidenceTurnIds: [],
+            updatedAt: NOW,
+          },
+          {
+            topicKey: "current_context",
+            status: "covered",
+            evidenceTurnIds: [],
+            updatedAt: NOW,
+          },
+          {
+            topicKey: "relevant_experience_summary",
+            status: "covered",
+            evidenceTurnIds: [],
+            updatedAt: NOW,
+          },
+          {
+            topicKey: "availability",
+            status: "not_started",
+            evidenceTurnIds: [],
+            updatedAt: NOW,
+          },
+          {
+            topicKey: "motivation_and_next_role",
+            status: "not_started",
+            evidenceTurnIds: [],
+            updatedAt: NOW,
+          },
+        ]}
+        transcript={[]}
+      />,
+    );
+
+    const topics = within(
+      screen.getByRole("list", { name: "Interview topic progress" }),
+    ).getAllByRole("listitem");
+    expect(
+      topics.map((topic) => topic.getAttribute("data-carousel-active")),
+    ).toEqual(["true", "true", "true", "true", "false"]);
+    expect(topics[0]).toHaveStyle("grid-column: 1; grid-row: 1");
+    expect(topics[1]).toHaveStyle("grid-column: 2; grid-row: 1");
+    expect(topics[2]).toHaveStyle("grid-column: 1; grid-row: 2");
+    expect(topics[3]).toHaveStyle("grid-column: 2; grid-row: 2");
+    expect(topics[4]).toHaveStyle("grid-column: 3; grid-row: 1");
+
+    const slideshowControls = screen.getByRole("group", {
+      name: "coverage topics slideshow controls",
+    });
+    const topicList = screen.getByRole("list", {
+      name: "Interview topic progress",
+    });
+    const topicViewport = parentElementOf(topicList);
+    fireEvent.pointerDown(topicViewport, {
+      button: 0,
+      clientX: 250,
+      clientY: 80,
+      pointerId: 2,
+    });
+    fireEvent.pointerMove(topicViewport, {
+      button: 0,
+      clientX: 170,
+      clientY: 84,
+      pointerId: 2,
+    });
+    expect(topicViewport).toHaveAttribute("data-dragging", "true");
+    expect(topicViewport).toHaveStyle("--sp-carousel-drag-x: -80px");
+    fireEvent.pointerUp(topicViewport, {
+      button: 0,
+      clientX: 170,
+      clientY: 84,
+      pointerId: 2,
+    });
+    expect(
+      topics.map((topic) => topic.getAttribute("data-carousel-active")),
+    ).toEqual(["false", "false", "false", "false", "true"]);
+    expect(topicViewport).toHaveAttribute("data-carousel-direction", "next");
+    expect(within(slideshowControls).getByText("2 of 2")).toBeVisible();
+
+    fireEvent.click(
+      within(slideshowControls).getByRole("button", {
+        name: "Previous coverage topics",
+      }),
+    );
+    expect(
+      topics.map((topic) => topic.getAttribute("data-carousel-active")),
+    ).toEqual(["true", "true", "true", "true", "false"]);
+    expect(topicViewport).toHaveAttribute(
+      "data-carousel-direction",
+      "previous",
+    );
+  });
+
+  it("shows paired candidate-question and human-follow-up cards during the interview", () => {
+    const question =
+      "What onboarding and work-arrangement details can a recruiter share?";
+    const followup =
+      "A human recruiter must confirm the unsupported onboarding and work-arrangement details.";
+    const evidenceTurn = {
+      id: "candidate-question-turn",
+      sequence: 9,
+      speaker: "candidate" as const,
+      status: "final" as const,
+      text: question,
+      occurredAt: NOW,
+    };
+
+    render(
+      <InsightBoard
+        entryMode="conversation_first"
+        insights={[
+          {
+            id: "candidate-question-9",
+            category: "candidate_question",
+            label: "Candidate question",
+            value: question,
+            source: "Candidate",
+            status: "confirmed",
+            evidenceTurnIds: [evidenceTurn.id],
+            cvFactIds: [],
+            createdAt: NOW,
+            updatedAt: NOW,
+          },
+          {
+            id: "follow-up-9",
+            category: "follow_up_needed",
+            label: "Human follow-up",
+            value: followup,
+            source: "Candidate",
+            status: "needs_clarification",
+            evidenceTurnIds: [evidenceTurn.id],
+            cvFactIds: [],
+            createdAt: NOW,
+            updatedAt: NOW,
+          },
+        ]}
+        topicProgress={[]}
+        transcript={[evidenceTurn]}
+      />,
+    );
+
+    const insightList = screen.getByRole("list", {
+      name: "Candidate insight cards",
+    });
+    expect(within(insightList).getByText("Candidate question")).toBeVisible();
+    expect(within(insightList).getAllByText(question)).not.toHaveLength(0);
+    expect(within(insightList).getByText("Human follow-up")).toBeVisible();
+    expect(within(insightList).getByText(followup)).toBeVisible();
   });
 
   it("shows correction, provenance, transcript/CV evidence, and topic state", () => {
@@ -145,7 +360,32 @@ describe("InsightBoard", () => {
       ),
     ).toBeVisible();
 
-    fireEvent.click(within(insightList).getByText("Evidence"));
+    const evidenceToggle = within(insightList).getByRole("button", {
+      name: "Evidence 2",
+    });
+    expect(evidenceToggle.parentElement).toHaveClass("sp-insight-card__meta");
+    expect(evidenceToggle).toHaveAttribute("aria-expanded", "false");
+    fireEvent.pointerDown(evidenceToggle, {
+      button: 0,
+      clientX: 220,
+      clientY: 120,
+      pointerId: 3,
+      pointerType: "mouse",
+    });
+    fireEvent.pointerUp(evidenceToggle, {
+      button: 0,
+      clientX: 220,
+      clientY: 120,
+      pointerId: 3,
+      pointerType: "mouse",
+    });
+    expect(insightList).not.toHaveAttribute("data-dragging", "true");
+    fireEvent.click(evidenceToggle);
+    expect(evidenceToggle).toHaveAttribute("aria-expanded", "true");
+    expect(evidenceToggle).toHaveClass("sp-insight-card__evidence-toggle");
+    expect(evidenceToggle.nextElementSibling).toHaveClass(
+      "sp-insight-card__evidence-content",
+    );
     expect(
       screen.getByText(response.cv.facts[0]?.statement ?? "missing fixture"),
     ).toBeVisible();

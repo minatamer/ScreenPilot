@@ -1,8 +1,8 @@
 # SP-015 — Normalize live events, captions, and controls
 
-Status: Implementation complete; remaining live/manual interaction verification deferred to SP-021A<br>
+Status: Implementation complete; remaining live/manual interaction verification deferred to SP-021B<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-22<br>
 Depends on: SP-006, SP-014  
 Suggested commit: `SP-015: normalize local conversation events`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -20,15 +20,15 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 - The installed ElevenLabs conversational SDK exposes completed user/agent text through typed `onMessage` callbacks and no typed interim-transcript callback. The live bridge therefore maps those messages as final. The provider-neutral adapter still accepts typed tentative events for deterministic fixtures or a future typed provider capability; tentative text remains caption-only and never becomes evidence.
 - Final user and agent messages become bounded `TranscriptTurn` objects with browser-generated stable IDs.
 - Events may repeat or arrive out of order; normalize them through one adapter/reducer before UI or evidence tools consume them. Tentative events require a usable provider sequence; those sequences finalize message identity and advance captions monotonically, so late tentative callbacks are rejected and older finals can enter sorted evidence without replacing newer captions. An ID-less final receives the next bounded local sequence; only an immediately adjacent final with the same speaker and normalized text is considered an indistinguishable duplicate, while distinct provider IDs or an intervening accepted final preserve legitimate repetitions.
-- The UI includes voice signal, speaking/listening status, captions, elapsed timer, mute, End interview, and connection/reconnect banner.
-- An eight-minute hard stop ends the call. Refresh during a call never auto-reconnects the microphone.
+- The live UI includes voice signal, speaking/listening status, captions, elapsed timer, mute, End interview, and connection/reconnect banner. After normal shutdown, the same transcript workspace becomes read-only, reports the disconnected microphone, freezes elapsed time, and exposes **View summary** without live controls.
+- An eight-minute hard stop ends the call through the same first-reason-wins path as agent/manual completion and freezes the completed timer at `08:00`. Refresh during a call never auto-reconnects the microphone; refresh after normal completion restores the completed workspace without reconnecting.
 - The transcript is same-tab review evidence, not a certified verbatim recording.
 
 ## Manual credential gate
 
 - This ticket introduces no new key. Callback normalization, captions, controls, transcript bounds, and recovery tests use checked-in fake ElevenLabs event traces.
 - A live SDK verification reuses SP-014's user-filled ElevenLabs/Turnstile group and private agent. No provider secret enters the frontend; it receives only the short-lived conversation token.
-- SP-018A supplied the initial owner-controlled live CV-assisted voice smoke. Its unperformed active-session browser interaction, responsive, reduced-motion, complete callback, cleanup, and post-fix observations move unchanged to SP-021A after summary/review exists. Complete every fake/event-state acceptance item here without treating fake coverage as manual or live verification.
+- SP-018A supplied the initial owner-controlled live CV-assisted voice smoke. Its unperformed active-session browser interaction, responsive, reduced-motion, complete callback, cleanup, and post-fix observations move unchanged to SP-021B after summary/review and the SP-021A documentation gate exist. Complete every fake/event-state acceptance item here without treating fake coverage as manual or live verification.
 
 ## Scope boundaries
 
@@ -46,10 +46,10 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 - [x] Create final user/agent transcript turns with stable local IDs, bounded text, speaker, sequence, and local time metadata.
 - [x] Build the approved voice signal, caption line, timer, mute, End, and connection banner from shared components.
 - [x] Make mute/end controls keyboard accessible, safe-area aware, and idempotent.
-- [x] Enforce the eight-minute end and preserve usable final turns on disconnect.
+- [x] Enforce the eight-minute end, preserve usable final turns, and converge agent/manual/deadline completion on one reducer-owned completed workspace after immediate cleanup.
 - [x] Prevent refresh auto-reconnect; convert an interrupted live state into partial-review eligibility.
 - [x] Bound retained event/transcript data and ignore content-free malformed/late events safely.
-- [x] Test fake normal, tentative-to-final, interruption, duplicate, out-of-order, reconnect, disconnect, repeated-End, and time-limit traces.
+- [x] Test fake normal, tentative-to-final, interruption, duplicate, out-of-order, reconnect, disconnect, repeated-End, time-limit, completed-state restore, and first-terminal-reason traces.
 
 ## Acceptance criteria
 
@@ -58,12 +58,13 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 - [x] Duplicate/out-of-order provider callbacks cannot corrupt call state in deterministic adapter/state coverage.
 - [ ] Mute and End remain reachable and understandable at all supported viewport sizes; implementation and component coverage are complete, while active-session viewport verification is deferred to SP-018.
 - [x] Disconnect/refresh preserves usable local evidence but never silently reconnects.
+- [x] Normal completion removes mute/dynamic voice controls, freezes elapsed time, and requires explicit **View summary**; unexpected interruption remains partial.
 - [x] No audio or provider artifact is saved.
 
 ## Focused verification
 
 - [x] Run focused event-adapter/reducer/component tests with deterministic SDK fixtures.
-- [ ] Manually verify listening, speaking, interruption, mute, End, reconnect, disconnect, and hard stop; deterministic automated traces pass, while the remaining active-session evidence is deliberately deferred to SP-021A.
+- [ ] Manually verify listening, speaking, interruption, mute, End, reconnect, disconnect, and hard stop; deterministic automated traces pass, while the remaining active-session evidence is deliberately deferred to SP-021B.
 - [x] Inspect deterministic `sessionStorage` and logging behavior to confirm tentative text/raw events/audio are absent; the fake browser reached preflight with no console warnings/errors. Active-session browser inspection is deferred to SP-018.
 - [ ] Check long captions, keyboard control, reduced motion, mobile portrait/landscape, and sticky safe-area controls in the running browser; component coverage and responsive CSS are in place, while active-session visual verification is deliberately deferred to SP-018.
 

@@ -23,6 +23,7 @@ import {
 
 import {
   DEMO_STAGES,
+  INTERVIEW_TERMINAL_REASONS,
   type DemoSessionState,
   type DemoStage,
 } from "./demo-session.types";
@@ -52,6 +53,7 @@ const PREPARED_CONTEXT_STAGES = new Set<DemoStage>([
   "connecting",
   "live",
   "ending",
+  "interview_complete",
   "summarizing",
   "review_ready",
 ]);
@@ -93,6 +95,15 @@ export const preferredNameSchema = z
     }
   });
 
+export const interviewCompletionSchema = z.strictObject({
+  reason: z.enum(INTERVIEW_TERMINAL_REASONS),
+  elapsedSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .max(8 * 60),
+});
+
 export const persistedDemoSessionSchema = z
   .strictObject({
     schemaVersion: z.literal(PERSISTED_SESSION_SCHEMA_VERSION),
@@ -110,6 +121,7 @@ export const persistedDemoSessionSchema = z
     interviewGrantExpiresAt: z.iso.datetime({ offset: true }).optional(),
     cvAnalysisUsage: providerUsageSchema.optional(),
     voice: voiceMetadataSchema.optional(),
+    interviewCompletion: interviewCompletionSchema.optional(),
     transcript: z.array(transcriptTurnSchema).max(MAX_LOCAL_TRANSCRIPT_TURNS),
     insights: z.array(insightCardSchema).max(24),
     topicProgress: z.array(topicProgressSchema).max(16),
@@ -203,6 +215,7 @@ export const persistedDemoSessionSchema = z
         session.interviewGrant ||
         session.cvAnalysisUsage ||
         session.voice ||
+        session.interviewCompletion ||
         session.transcript.length > 0 ||
         session.insights.length > 0 ||
         session.topicProgress.length > 0 ||
@@ -218,11 +231,42 @@ export const persistedDemoSessionSchema = z
       });
     }
 
-    if (session.summary && session.stage !== "review_ready") {
+    if (
+      session.summary &&
+      session.stage !== "interview_complete" &&
+      session.stage !== "review_ready"
+    ) {
       context.addIssue({
         code: "custom",
-        message: "A completed summary requires the review-ready stage.",
+        message:
+          "A completed summary requires the completed-interview or review-ready stage.",
         path: ["summary"],
+      });
+    }
+
+    if (
+      session.interviewCompletion &&
+      !["ending", "interview_complete", "summarizing", "review_ready"].includes(
+        session.stage,
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "Interview completion metadata is only valid after normal termination begins.",
+        path: ["interviewCompletion"],
+      });
+    }
+
+    if (
+      session.stage === "interview_complete" &&
+      (!session.interviewCompletion || session.voice?.status !== "ended")
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "A completed interview requires a terminal reason, frozen elapsed time, and ended voice metadata.",
+        path: ["interviewCompletion"],
       });
     }
 
@@ -499,6 +543,9 @@ export function projectPersistedDemoSession(
       ? { cvAnalysisUsage: state.cvAnalysisUsage }
       : {}),
     ...(state.voice ? { voice: state.voice } : {}),
+    ...(state.interviewCompletion
+      ? { interviewCompletion: state.interviewCompletion }
+      : {}),
     transcript: [...state.transcript],
     insights: [...state.insights],
     topicProgress: [...state.topicProgress],

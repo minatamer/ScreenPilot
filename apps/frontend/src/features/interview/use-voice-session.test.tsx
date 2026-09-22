@@ -8,7 +8,6 @@ import { createVoicePerformanceTracker } from "./voice-performance";
 
 function callbacks() {
   return {
-    endTransitionMs: 0,
     onConnected: vi.fn(),
     onConnectionFailure: vi.fn(),
     onEnded: vi.fn(),
@@ -178,9 +177,9 @@ describe("useVoiceSession", () => {
         conversationId: "conversation-015",
       });
       result.current.toggleMuted();
-      result.current.requestEnd();
-      result.current.requestEnd();
       result.current.onSessionEvent({ type: "mode", mode: "speaking" });
+      result.current.requestEnd();
+      result.current.requestEnd();
       result.current.onSessionEvent({
         type: "connection_status",
         status: "reconnecting",
@@ -189,8 +188,12 @@ describe("useVoiceSession", () => {
 
     expect(result.current.isMuted).toBe(true);
     expect(result.current.phase).toBe("ending");
+    expect(result.current.displayPhase).toBe("speaking");
     expect(result.current.endRequested).toBe(true);
-    expect(events.onEnding).toHaveBeenCalledOnce();
+    expect(events.onEnding).toHaveBeenCalledWith({
+      reason: "candidate_ended",
+      elapsedSeconds: 0,
+    });
 
     act(() => {
       result.current.onSessionEvent({ type: "disconnected", reason: "user" });
@@ -213,6 +216,7 @@ describe("useVoiceSession", () => {
         endReason: "Interview ended by the candidate.",
         status: "ended",
       }),
+      { reason: "candidate_ended", elapsedSeconds: 0 },
     );
   });
 
@@ -238,7 +242,10 @@ describe("useVoiceSession", () => {
 
     expect(result.current.elapsedSeconds).toBe(480);
     expect(result.current.phase).toBe("ending");
-    expect(events.onEnding).toHaveBeenCalledOnce();
+    expect(events.onEnding).toHaveBeenCalledWith({
+      reason: "time_limit",
+      elapsedSeconds: 480,
+    });
 
     act(() => {
       result.current.onSessionEvent({ type: "disconnected", reason: "user" });
@@ -247,7 +254,41 @@ describe("useVoiceSession", () => {
       expect.objectContaining({
         endReason: "The eight-minute interview limit was reached.",
       }),
+      { reason: "time_limit", elapsedSeconds: 480 },
     );
+  });
+
+  it("freezes elapsed time while the two-second disconnect fallback completes", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T12:00:00.000Z"));
+    const events = callbacks();
+    const { result } = renderHook(() => useVoiceSession(events));
+
+    act(() => {
+      result.current.onSessionEvent({
+        type: "connected",
+        conversationId: "conversation-fallback",
+      });
+    });
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+    });
+    expect(result.current.elapsedSeconds).toBe(5);
+
+    act(() => {
+      result.current.requestEnd();
+    });
+    act(() => {
+      vi.advanceTimersByTime(1_999);
+    });
+    expect(result.current.elapsedSeconds).toBe(5);
+    expect(events.onEnded).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(events.onEnded).toHaveBeenCalledOnce();
+    expect(result.current.elapsedSeconds).toBe(5);
   });
 
   it("keeps an absolute deadline while a resumed session reconnects", () => {
@@ -527,12 +568,9 @@ describe("useVoiceSession", () => {
     expect(events.onInterrupted).not.toHaveBeenCalled();
   });
 
-  it("treats an agent-completed disconnect as one orderly end", () => {
-    vi.useFakeTimers();
+  it("takes an agent-completed disconnect directly to the ended state", () => {
     const events = callbacks();
-    const { result } = renderHook(() =>
-      useVoiceSession({ ...events, endTransitionMs: 420 }),
-    );
+    const { result } = renderHook(() => useVoiceSession(events));
 
     act(() => {
       result.current.onSessionEvent({
@@ -542,24 +580,14 @@ describe("useVoiceSession", () => {
       result.current.onSessionEvent({ type: "disconnected", reason: "agent" });
     });
 
-    expect(result.current.phase).toBe("ending");
-    expect(events.onEnding).toHaveBeenCalledOnce();
-    expect(events.onEnded).not.toHaveBeenCalled();
-    act(() => {
-      vi.advanceTimersByTime(419);
-    });
-    expect(result.current.phase).toBe("ending");
-    expect(events.onEnded).not.toHaveBeenCalled();
-    act(() => {
-      vi.advanceTimersByTime(1);
-    });
-
     expect(result.current.phase).toBe("ended");
+    expect(events.onEnding).toHaveBeenCalledOnce();
     expect(events.onEnded).toHaveBeenCalledOnce();
     expect(events.onEnded).toHaveBeenCalledWith(
       expect.objectContaining({
         endReason: "Interview completed by the interviewer.",
       }),
+      { reason: "agent_completed", elapsedSeconds: 0 },
     );
     expect(events.onInterrupted).not.toHaveBeenCalled();
   });

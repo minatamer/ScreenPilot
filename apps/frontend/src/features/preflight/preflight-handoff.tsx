@@ -205,6 +205,7 @@ function EnabledPreflightHandoff({
     <div className="sp-demo-stage sp-demo-stage--with-footer sp-preflight-handoff">
       <DemoStageHeading
         pretitle="Before you begin"
+        step={3}
         title="Get ready for your interview."
       />
       <div className="sp-preflight-handoff__steps">

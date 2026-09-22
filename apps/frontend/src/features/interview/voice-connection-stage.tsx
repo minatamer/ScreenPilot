@@ -23,6 +23,7 @@ import {
 } from "react";
 
 import type {
+  InterviewCompletion,
   RolePreference,
   SessionFailure,
 } from "@/features/session/demo-session.types";
@@ -75,8 +76,8 @@ type VoiceConnectionStageProps = Readonly<{
   insights: readonly InsightCard[];
   onCancel: () => void;
   onConnected: (voice: VoiceMetadata) => void;
-  onEnded: (voice: VoiceMetadata) => void;
-  onEnding: () => void;
+  onEnded: (voice: VoiceMetadata, completion: InterviewCompletion) => void;
+  onEnding: (completion: InterviewCompletion) => void;
   onFailure: (failure: SessionFailure) => void;
   onFinalTranscriptTurn: (turn: TranscriptTurn) => void;
   onGrantRejected: () => void;
@@ -259,11 +260,27 @@ export function VoiceConnectionStage({
     setSessionBridgeMounted(false);
     onInterrupted();
   }, [clearSensitiveValues, onInterrupted, performanceTracker]);
-  const handleEnded = useCallback(
-    (voice: VoiceMetadata) => {
+  const handleEnding = useCallback(
+    (completion: InterviewCompletion) => {
+      requestAbortControllerRef.current?.abort();
+      requestAbortControllerRef.current = null;
+      initialStartRequestRef.current = null;
+      if (connectMeasurementRef.current) {
+        performanceTracker?.cancel(connectMeasurementRef.current);
+        connectMeasurementRef.current = null;
+      }
+      clearSensitiveValues();
       setAuthorization(undefined);
       setSessionBridgeMounted(false);
-      onEnded(voice);
+      onEnding(completion);
+    },
+    [clearSensitiveValues, onEnding, performanceTracker],
+  );
+  const handleEnded = useCallback(
+    (voice: VoiceMetadata, completion: InterviewCompletion) => {
+      setAuthorization(undefined);
+      setSessionBridgeMounted(false);
+      onEnded(voice, completion);
     },
     [onEnded],
   );
@@ -274,7 +291,7 @@ export function VoiceConnectionStage({
     onConnected: handleConnected,
     onConnectionFailure: handleConnectionFailure,
     onEnded: handleEnded,
-    onEnding,
+    onEnding: handleEnding,
     onFinalTranscriptTurn: insightClientTools.onFinalTranscriptTurn,
     onInterrupted: handleInterrupted,
     performanceTracker,
@@ -437,6 +454,7 @@ export function VoiceConnectionStage({
         <>
           <DemoStageHeading
             pretitle="Secure connection"
+            step={4}
             title="Connecting your AI interview."
           />
 
@@ -473,6 +491,7 @@ export function VoiceConnectionStage({
           caption={voiceSession.caption}
           {...(cv ? { cv } : {})}
           elapsedSeconds={voiceSession.elapsedSeconds}
+          ending={voiceSession.endRequested}
           entryMode={entryMode}
           fillerPolicy={voiceSession.fillerPolicy}
           insights={insights}
@@ -482,7 +501,7 @@ export function VoiceConnectionStage({
             voiceSession.requestEnd();
           }}
           onToggleMute={voiceSession.toggleMuted}
-          phase={voiceSession.phase}
+          phase={voiceSession.displayPhase}
           {...(performanceCollector
             ? {
                 performanceCollector,

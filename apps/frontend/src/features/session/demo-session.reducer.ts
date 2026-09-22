@@ -33,6 +33,7 @@ import {
   type DemoStage,
   type DemoSessionState,
   type FailureStage,
+  type InterviewCompletion,
   type SessionFailure,
   type SessionRestoreNotice,
 } from "./demo-session.types";
@@ -95,9 +96,14 @@ export type DemoSessionEvent =
   | Readonly<{ type: "VOICE_CONNECTING" }>
   | Readonly<{ type: "VOICE_CONNECT_CANCELLED" }>
   | Readonly<{ type: "VOICE_CONNECTED"; voice: VoiceMetadata }>
-  | Readonly<{ type: "VOICE_ENDING" }>
-  | Readonly<{ type: "VOICE_ENDED"; voice: VoiceMetadata }>
+  | Readonly<{ type: "VOICE_ENDING"; completion: InterviewCompletion }>
+  | Readonly<{
+      type: "VOICE_ENDED";
+      voice: VoiceMetadata;
+      completion: InterviewCompletion;
+    }>
   | Readonly<{ type: "VOICE_INTERRUPTED"; now: string }>
+  | Readonly<{ type: "VIEW_SUMMARY" }>
   | Readonly<{ type: "SUMMARY_SUCCEEDED"; summary: ScreeningSummary }>
   | Readonly<{ type: "SESSION_FAILED"; failure: SessionFailure }>
   | Readonly<{ type: "RETRY" }>
@@ -245,6 +251,42 @@ function interruptedSummarySession(
   };
 }
 
+function completedEndingSession(
+  session: PersistedDemoSession,
+  now: string,
+): DemoSessionState {
+  if (!session.interviewCompletion) {
+    return interruptedSession(session, now);
+  }
+
+  return {
+    ...session,
+    hydrationStatus: "ready",
+    stage: "interview_complete",
+    voice: {
+      ...(session.voice?.conversationId
+        ? { conversationId: session.voice.conversationId }
+        : {}),
+      ...(session.voice?.startedAt
+        ? { startedAt: session.voice.startedAt }
+        : {}),
+      endedAt: new Date(now).toISOString(),
+      endReason: terminalReasonMessage(session.interviewCompletion.reason),
+      status: "ended",
+    },
+  };
+}
+
+function terminalReasonMessage(reason: InterviewCompletion["reason"]): string {
+  if (reason === "agent_completed") {
+    return "Interview completed by the interviewer.";
+  }
+  if (reason === "time_limit") {
+    return "The eight-minute interview limit was reached.";
+  }
+  return "Interview ended by the candidate.";
+}
+
 export function restoreDemoSession(
   session: PersistedDemoSession,
   now: string,
@@ -257,7 +299,11 @@ export function restoreDemoSession(
     return interruptedSummarySession(session);
   }
 
-  if (["connecting", "live", "ending"].includes(session.stage)) {
+  if (session.stage === "ending") {
+    return completedEndingSession(session, now);
+  }
+
+  if (["connecting", "live"].includes(session.stage)) {
     return interruptedSession(session, now);
   }
 
@@ -558,20 +604,27 @@ export function demoSessionReducer(
         failure: undefined,
       };
     case "VOICE_ENDING":
-      assertStage(state, event.type, ["live"]);
-      return { ...state, stage: "ending" };
+      assertStage(state, event.type, ["live", "ending", "interview_complete"]);
+      if (state.stage !== "live") {
+        return state;
+      }
+      return {
+        ...state,
+        stage: "ending",
+        interviewCompletion: event.completion,
+      };
     case "VOICE_ENDED":
-      assertStage(state, event.type, ["ending"]);
-      if (event.voice.status !== "ended" && event.voice.status !== "failed") {
+      assertStage(state, event.type, ["ending", "interview_complete"]);
+      if (state.stage === "interview_complete") {
+        return state;
+      }
+      if (event.voice.status !== "ended") {
         throw new InvalidSessionTransitionError(state.stage, event.type);
       }
       return {
         ...state,
-        stage: state.transcript.some(
-          (turn) => turn.speaker === "candidate" && turn.status === "final",
-        )
-          ? "summarizing"
-          : "review_ready",
+        stage: "interview_complete",
+        interviewCompletion: state.interviewCompletion ?? event.completion,
         voice: event.voice,
       };
     case "VOICE_INTERRUPTED":
@@ -583,15 +636,43 @@ export function demoSessionReducer(
         }
         return interruptedSession(persistedSession, event.now);
       }
-    case "SUMMARY_SUCCEEDED":
-      assertStage(state, event.type, ["summarizing"]);
+    case "VIEW_SUMMARY":
+      assertStage(state, event.type, [
+        "interview_complete",
+        "summarizing",
+        "review_ready",
+      ]);
+      if (state.stage !== "interview_complete") {
+        return state;
+      }
       return {
         ...state,
-        stage: "review_ready",
+        stage:
+          state.summary ||
+          !state.transcript.some(
+            (turn) => turn.speaker === "candidate" && turn.status === "final",
+          )
+            ? "review_ready"
+            : "summarizing",
+      };
+    case "SUMMARY_SUCCEEDED":
+      assertStage(state, event.type, ["interview_complete", "summarizing"]);
+      return {
+        ...state,
+        stage:
+          state.stage === "interview_complete"
+            ? "interview_complete"
+            : "review_ready",
         summary: event.summary,
         failure: undefined,
       };
     case "SESSION_FAILED":
+      if (
+        state.stage === "interview_complete" &&
+        event.failure.stage === "summarizing"
+      ) {
+        return { ...state, failure: event.failure };
+      }
       if (!isFailureStage(state.stage) || event.failure.stage !== state.stage) {
         throw new InvalidSessionTransitionError(state.stage, event.type);
       }

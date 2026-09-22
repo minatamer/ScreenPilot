@@ -1,8 +1,8 @@
 # SP-017 — Write and evaluate the adaptive interview policy
 
-Status: Local implementation and provider sync complete; remaining live observation deferred to SP-021A<br>
+Status: Policy `sp017-2026-09-22.1` owner-published; live observation deferred to SP-021B<br>
 Milestone: Milestone 2 — browser voice experience  
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-22<br>
 Depends on: SP-007, SP-010A, SP-011, SP-012, SP-014, SP-016, SP-016A<br>
 Suggested commit: `SP-017: implement the screening conversation policy`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -52,7 +52,7 @@ Implement a source-controlled live-interviewer policy that produces natural, con
 - [x] Implement conversation-first name capture, open target-role discovery, inclusive background discovery when asked what roles exist, and progressive focusing.
 - [x] Implement ordinary Graphic Designer, Customer Support Representative, Product Manager CV suggestion, Backend Developer, Full Stack Developer, correction, compound/multiple-role, and undecided paths through one shared HR policy.
 - [x] Implement the prioritized `ScreeningFieldState` selection logic, multi-field answer credit, synthesized experience, separate team/work style, 8–10-prompt budget, and one broad role-context clarification maximum.
-- [x] Answer candidate counterquestions first only from explicit server-owned context; otherwise mark human follow-up before asking at most one next question.
+- [x] Answer candidate counterquestions first only from explicit server-owned context; for unsupported employer/vacancy/onboarding/work-arrangement details use the approved exact fallback and pair the actual `recordCandidateQuestion` value with bounded `requestFollowup` on the same final turn before asking at most one next question.
 - [x] Define exact evidence eligibility and record/correct/mark/question/follow-up tool behavior.
 - [x] Enforce stop, unclear audio, refusal, uncertainty, privacy, prompt-injection, unsupported-company-fact, and safety behavior.
 - [x] Add checked-in good/bad transcript cases under the filename-level `tests/fixtures/transcripts` tree for both entry modes and every named cross-profession regression branch.
@@ -68,7 +68,7 @@ Implement a source-controlled live-interviewer policy that produces natural, con
 - [x] Role counterquestions, arbitrary/compound roles, undecided state, corrections, refusals, unsupported employer questions, unclear input, and stop behave exactly within policy.
 - [x] Graphic Designer and Customer Support Representative receive no portfolio/competency simulation; Backend Developer receives no technical questions; Full Stack Developer receives no redirection; experience/status changes structure only.
 - [x] All fact-changing tool calls have eligible final evidence and preserve uncertainty.
-- [ ] The prompt and fixture suite are versioned and traceable to the configured agent/model revision.
+- [x] The prompt and fixture suite are versioned and traceable to the configured agent/model revision.
 
 ## Focused verification
 
@@ -117,7 +117,31 @@ Implement a source-controlled live-interviewer policy that produces natural, con
   system tool without Preview. Immutable revision
   `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in source. Human
   read-aloud review, provider callback behavior, and live text/voice tuning not
-  completed by the bounded SP-018A smoke remain SP-021A owner-observation items.
+  completed by the bounded SP-018A smoke remain SP-021B owner-observation items.
+
+## Prompt 1 source-candidate reconciliation — 2026-09-22
+
+- Source policy and transcript fixtures now use `sp017-2026-09-22.1`. The
+  policy keeps the locked section order and estimates 1,779 static tokens under
+  the existing `<2,000` gate while adding the exact approved fallback for
+  unsupported employer, vacancy, onboarding, and work-arrangement questions.
+- The same final candidate turn must call `recordCandidateQuestion` with the
+  complete verbatim question and `requestFollowup` with a bounded reason that a
+  human recruiter must answer it. The browser accepts a complete question
+  segment within a compound candidate turn, rejects fragments, and keeps both
+  callbacks idempotent and evidence-linked.
+- Deterministic fake/provider-shaped coverage verifies the prompt, fixture,
+  client-tool, reducer, live Insight Board, summary, evidence-map, Organized
+  notes, duplicate-callback, and copy paths. No live provider was contacted.
+- On 2026-09-22 the owner copied the exact rendered source prompt to the existing
+  private ScreenPilot/Main branch, saved the changed `recordCandidateQuestion`
+  and `requestFollowup` dashboard descriptions, reviewed the Main publication
+  diff, and published without Preview or a paid conversation. Immutable revision
+  `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` is mapped to policy
+  `sp017-2026-09-22.1` in source. Historical revision
+  `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to
+  `sp017-2026-09-16.1`. SP-021B still owns authorized synthetic live behavior
+  observation; publication alone is not a live acceptance result.
 
 ## Commit boundary
 

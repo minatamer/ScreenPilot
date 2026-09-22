@@ -21,8 +21,8 @@ import {
 describe("source-controlled ElevenLabs agent configuration", () => {
   it("locks the approved model, transport behavior, privacy, and duration", () => {
     expect(SCREENPILOT_ELEVENLABS_AGENT_CONFIG).toMatchObject({
-      agentRevisionId: "agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4",
-      agentRevisionPolicyVersion: "sp017-2026-09-16.1",
+      agentRevisionId: "agtvrsn_8901m350e924f2ev7t4pwnvq38b1",
+      agentRevisionPolicyVersion: "sp017-2026-09-22.1",
       clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
       conversation: {
         clientEvents: [

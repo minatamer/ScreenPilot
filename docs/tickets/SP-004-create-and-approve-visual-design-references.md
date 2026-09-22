@@ -4,7 +4,7 @@ Status: Required
 Implementation state: Completed, user-approved, reviewed, revised, and committed; the Deep Ink + Warm Coral direction supersedes the earlier `6f94d0a` visual direction and SP-005 may begin
 
 Milestone: Milestone 0 — repository and visual foundations  
-Last synchronized: 2026-09-08<br>
+Last synchronized: 2026-09-22<br>
 Depends on: SP-001, SP-002  
 Suggested commit: `SP-004: approve ScreenPilot visual direction`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -20,7 +20,7 @@ Produce one lightweight browser-viewable HTML living style guide and one approve
 
 - The design language is **Signal Canvas** in its **Deep Ink + Warm Coral** direction: a calm, precise, modern, transparent AI workspace—not an HR dashboard, sci-fi interface, or neon robot theme.
 - The original reference moved from a clean light document surface into a dark live signal field and back to a light evidence review. SP-011A supersedes that route-level surface split: landing, setup, live interview, and review now share one Deep Ink/plum/coral atmosphere, while hierarchy comes from layered dark surfaces and near-white type rather than white page or card backgrounds.
-- Core colors: `ink-950 #18243A`, `ink-900 #22314B`, `paper-50 #FAFAF8`, `paper-0 #FFFFFF`, `coral-300 #FCA39A`, `coral-500 #F26B5B`, `coral-700 #CC493F`, `coral-800 #B93831`, `coral-100 #FDE8E4`, `line-200 #E4E7EC`, `line-strong #7D899B`, and `slate-500 #667085`. Confirmed, clarification, and danger states keep separate green, amber, and red tokens.
+- Core colors: `ink-950 #18243A`, `ink-900 #22314B`, `paper-50 #FAFAF8`, `paper-0 #FFFFFF`, `coral-300 #FCA39A`, `coral-500 #F26B5B`, `coral-700 #CC493F`, `coral-800 #B93831`, `coral-100 #FDE8E4`, `plum-700 #6F4778`, `plum-300 #D7ACDD`, `plum-100 #F2E7F4`, `line-200 #E4E7EC`, `line-strong #7D899B`, and `slate-500 #667085`. Confirmed/completed tags use plum/lilac, live operational signals retain green, and clarification/danger keep amber/red.
 - Typography uses Geist Sans, with Geist Mono only for technical metadata. Display is 56/60 desktop and 38/44 mobile at weight 600; body is 16/25.
 - Use an 8 px spacing base, 12 px control radius, 18–22 px card radius, and 28 px main-canvas radius. Borders do most separation; shadows and glass are sparse.
 - One final ImageGen concept artifact is allowed only after the HTML reference is approved. Corrective refinements may replace that same paired direction when explicitly requested; they cannot branch into extra screens or invent product features.
@@ -84,6 +84,10 @@ Produce one lightweight browser-viewable HTML living style guide and one approve
 - The HTML opening sample now demonstrates the intended product-first hierarchy: Deep Ink editorial copy, a clearly illustrative role-neutral signal → transcript → evidence preview, equal entry actions immediately afterward, and Privacy/source access outside primary navigation.
 - This corrective implementation was explicitly authorized without a new approval pause. It is a composition extension of the existing Signal Canvas authority, not a second design direction or replacement raster concept.
 
+## Owner status-color correction (2026-09-22)
+
+- Confirmed and completed pill tags now use the shared plum/lilac palette instead of green so they belong to the Deep Ink/plum/coral atmosphere. Green remains available for live operational signals; amber and red retain clarification and error/end meaning.
+
 ## Previous focused verification
 
 - [x] Open the HTML directly in a browser and check console/network behavior.
@@ -117,7 +121,7 @@ Produce one lightweight browser-viewable HTML living style guide and one approve
 - Contrast-aware pairings passed the local text audit; keyboard focus rendered as a 3 px cyan ring; the active reduced-motion environment removed signal/loading/insight animation and smooth scrolling; the 320 px Turnstile slot retained its dimensions when focused.
 ### Current approved Deep Ink + Warm Coral revision (2026-09-08)
 
-- Reviewed on 2026-09-08 against the previous artifacts, ticket requirements, source of truth, and commit history. The user then reopened this ticket for the Deep Ink + Warm Coral visual revision. The new HTML uses a sequential heading outline and the interview control now exposes the unambiguous action/state copy **Mute — Microphone on** with the accessible name **Mute Pilot's microphone input**.
+- Reviewed on 2026-09-08 against the previous artifacts, ticket requirements, source of truth, and commit history. The user then reopened this ticket for the Deep Ink + Warm Coral visual revision. The 2026-09-22 owner correction updates the HTML sample to the current theme-matched microphone/slashed-microphone control with the accessible action **Mute microphone**, plus the matching playback-stop icon on **End interview**.
 - Replaced the dense 91 KB internal-style HTML with a 56 KB plain-language visual guide whose first section is the final-looking landing hero direction. Detailed implementation authority remains in this ticket and the parent source of truth.
 - Replaced the single paired raster in place with the Deep Ink + Warm Coral direction. Corrective passes removed generated device chrome, changed unknown availability and experience to **Needs clarification**, and removed unsupported evidence claims from those unknown cards.
 - Recorded the simplified HTML's code-native Deep Ink / Warm Coral forward-mark SVG as the logo to reuse in the actual frontend; the generated raster logo is not authoritative.

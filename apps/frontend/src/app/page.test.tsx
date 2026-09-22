@@ -178,6 +178,11 @@ describe("HomePage", () => {
     ).toEqual(["ScreenPilot home", "How it works", "Start demo"]);
     expect(
       within(header as HTMLElement).getByRole("link", {
+        name: "ScreenPilot home",
+      }),
+    ).toHaveAttribute("href", "/");
+    expect(
+      within(header as HTMLElement).getByRole("link", {
         name: "How it works",
       }),
     ).toHaveAttribute("href", "#how-it-works");

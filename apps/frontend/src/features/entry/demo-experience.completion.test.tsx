@@ -14,6 +14,7 @@ const sessionActions = vi.hoisted(() => ({
   startOver: vi.fn(),
 }));
 const reviewFixture = vi.hoisted(() => ({
+  stage: "review_ready",
   voiceStatus: "ended",
 }));
 const router = vi.hoisted(() => ({
@@ -24,13 +25,17 @@ vi.mock("next/navigation", () => ({
   useRouter: () => router,
 }));
 
+vi.mock("@/features/review/interview-summary-preparation", () => ({
+  InterviewSummaryPreparation: () => null,
+}));
+
 vi.mock("@/features/session/use-demo-session", () => ({
   useDemoSession: () => ({
     ...sessionActions,
     state: {
       ...createInitialDemoSessionState(),
       hydrationStatus: "ready",
-      stage: "review_ready",
+      stage: reviewFixture.stage,
       entryMode: "conversation_first",
       interviewGrant: "signed-interview-grant",
       runtimeConfig: TEST_PUBLIC_RUNTIME_CONFIG,
@@ -42,6 +47,14 @@ vi.mock("@/features/session/use-demo-session", () => ({
           ? { endReason: "The voice connection was interrupted." }
           : {}),
       },
+      ...(reviewFixture.stage === "interview_complete"
+        ? {
+            interviewCompletion: {
+              reason: "time_limit",
+              elapsedSeconds: 480,
+            },
+          }
+        : {}),
       transcript: [
         {
           id: "candidate-turn-1",
@@ -62,6 +75,7 @@ describe("DemoExperience completion stage", () => {
     vi.clearAllMocks();
     sessionActions.clearSession.mockReturnValue(true);
     reviewFixture.voiceStatus = "ended";
+    reviewFixture.stage = "review_ready";
   });
 
   it("keeps the review open and reports when browser cleanup fails", () => {
@@ -105,7 +119,6 @@ describe("DemoExperience completion stage", () => {
         name: "Your conversation, organized as connected evidence.",
       }),
     ).toBeVisible();
-    expect(screen.getByText("Interview ended")).toBeVisible();
     expect(
       screen.queryByText("I am looking for a collaborative product team."),
     ).not.toBeInTheDocument();
@@ -114,10 +127,7 @@ describe("DemoExperience completion stage", () => {
         "No insight nodes were finalized before the interview ended. The local evidence available for this review is limited.",
       ),
     ).toBeVisible();
-    expect(screen.getByText("Review").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
+    expect(screen.getByText("Step 5 of 5 · Interview review")).toBeVisible();
     expect(router.replace).not.toHaveBeenCalled();
 
     const clearActions = screen.getAllByRole("button", {
@@ -146,10 +156,39 @@ describe("DemoExperience completion stage", () => {
     reviewFixture.voiceStatus = "failed";
     render(<DemoExperience />);
 
-    expect(screen.getByText("Partial review")).toBeVisible();
+    expect(
+      screen.getByText("Step 5 of 5 · Partial interview review"),
+    ).toBeVisible();
     expect(
       screen.queryByText(/The connection ended before complete interview/u),
     ).not.toBeInTheDocument();
-    expect(screen.queryByText("Interview ended")).not.toBeInTheDocument();
+  });
+
+  it("keeps completed evidence visible with a disconnected microphone until summary is requested", () => {
+    reviewFixture.stage = "interview_complete";
+    render(<DemoExperience />);
+
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Interview complete" }),
+    ).toBeVisible();
+    expect(screen.getByText("Microphone disconnected")).toBeVisible();
+    expect(screen.getByText("08:00")).toBeVisible();
+    expect(
+      screen.getByText("I am looking for a collaborative product team."),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "What ScreenPilot understood" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Mute microphone" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "End interview" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "View summary" }));
+    expect(sessionActions.dispatch).toHaveBeenCalledWith({
+      type: "VIEW_SUMMARY",
+    });
   });
 });

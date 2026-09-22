@@ -34,10 +34,7 @@ export function useDeliberateAnchorScroll(targetId: string) {
 
   return useCallback(
     (event: MouseEvent<HTMLAnchorElement>) => {
-      if (
-        event.defaultPrevented ||
-        !isPlainPrimaryClick(event)
-      ) {
+      if (event.defaultPrevented || !isPlainPrimaryClick(event)) {
         return;
       }
 
@@ -87,7 +84,6 @@ export function useDeliberateAnchorScroll(targetId: string) {
         }
 
         finish();
-        window.history.pushState(null, "", `#${targetId}`);
       };
 
       cancelActiveScrollRef.current = cancel;

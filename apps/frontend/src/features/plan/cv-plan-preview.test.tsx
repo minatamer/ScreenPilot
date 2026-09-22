@@ -19,7 +19,7 @@ describe("CvPlanPreview", () => {
       />,
     );
 
-    expect(screen.getByText("CV-assisted plan")).toBeVisible();
+    expect(screen.getByText("Step 2 of 5 · CV-assisted plan")).toBeVisible();
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -43,6 +43,9 @@ describe("CvPlanPreview", () => {
       ),
     ).toBeVisible();
     expect(within(suggestion).getByText("Product Manager")).toBeVisible();
+    expect(
+      within(suggestion).queryByText(response.plan.roleClarification.reason),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText(/applied role/iu)).not.toBeInTheDocument();
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
     expect(screen.queryByText(/supported roles/iu)).not.toBeInTheDocument();

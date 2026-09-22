@@ -7,6 +7,7 @@ import {
   recordCandidateQuestionArgumentsSchema,
   recordInsightArgumentsSchema,
   requestFollowupArgumentsSchema,
+  UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK,
 } from "@screenpilot/contracts/interview/client-tools";
 import { UNIVERSAL_TOPIC_KEYS } from "@screenpilot/contracts/interview/screening-plan";
 import {
@@ -551,6 +552,9 @@ describe("source-controlled interviewer prompt", () => {
       "close briefly and call end_call immediately",
     );
     expect(INTERVIEWER_SYSTEM_PROMPT).toContain("then call end_call");
+    expect(INTERVIEWER_SYSTEM_PROMPT).toContain(
+      UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK,
+    );
   });
 
   it("stays below the initial static prompt budget without a tokenizer dependency", () => {
@@ -569,6 +573,33 @@ describe("deterministic interviewer-policy graders", () => {
 
   it("keeps fixture and prompt versions aligned", () => {
     expect(policyFixtures.fixtureVersion).toBe(INTERVIEWER_PROMPT_VERSION);
+  });
+
+  it("uses the exact unsupported-question fallback and pairs both tools to one final turn", () => {
+    const policyCase = policyFixtures.cases.find(
+      (candidateCase) =>
+        candidateCase.id === "unsupported-onboarding-counterquestion",
+    );
+
+    expect(policyCase).toBeDefined();
+    if (!policyCase) {
+      return;
+    }
+    expect(
+      policyCase.assistant.text.startsWith(
+        UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK,
+      ),
+    ).toBe(true);
+    expect(
+      policyCase.assistant.toolCalls.map((toolCall) => toolCall.name),
+    ).toEqual(["recordCandidateQuestion", "requestFollowup"]);
+    expect(
+      new Set(
+        policyCase.assistant.toolCalls.map(
+          (toolCall) => toolCall.attachedTurnId,
+        ),
+      ),
+    ).toEqual(new Set([policyCase.candidate.id]));
   });
 
   it.each(policyFixtures.cases)(

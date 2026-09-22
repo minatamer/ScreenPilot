@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-09-21<br>
+Last revised: 2026-09-22<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -32,18 +32,27 @@ deliberately not re-observed through another partial paid run. No unperformed
 SP-018A item is converted into a pass.
 
 SP-019 through SP-021 proceed in fake-first mode without another paid provider
-operation. Required SP-021A first collects the owner's visual feedback on the
-SP-021 ending-to-review transformation, applies the agreed bounded adjustments,
-and requires an explicit owner visual pass; engineering inspection or automated
-coverage cannot substitute for that approval. SP-021A then runs the next
-owner-authorized paid window after the complete product exists, covering both
-entry modes through corrected voice behavior, summary, evidence-linked review,
-retry behavior, cleanup, provider usage/cost, and the retained performance
-ledger. SP-025 reuses current
-SP-021A live evidence and repeats only evidence invalidated by later code,
-provider, configuration, hostname, or release-candidate changes. SP-021A remains
-a required pre-release gate through SP-025; this sequencing reduces duplicate
-provider spend without weakening or misreporting acceptance evidence.
+operation. Required SP-021A records the owner's complete visual-feedback/fix
+ledger, explicit visual decisions, and two accepted pre-live behavior
+specifications: evidence-backed handling of candidate questions and a post-
+disconnect interview-complete hold before the user chooses View summary. The
+candidate-question behavior is implemented and deterministically verified in
+source policy `sp017-2026-09-22.1`; the reducer-owned completion hold is also
+implemented and deterministically verified in the browser lifecycle. On
+2026-09-22 the owner published the exact Prompt 1 source policy to the existing
+private ScreenPilot/Main branch without Preview at immutable revision
+`agtvrsn_8901m350e924f2ev7t4pwnvq38b1`; historical revision
+`agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to
+`sp017-2026-09-16.1`. This publication is configuration evidence, not live
+behavior acceptance. SP-021B runs the next owner-authorized paid
+window after the complete product exists, covering both entry modes through
+corrected voice behavior, summary, evidence-linked review, retry behavior,
+cleanup, provider usage/cost, and the retained performance ledger. SP-025 reuses
+current SP-021B live evidence and repeats only evidence invalidated by later
+code, provider, configuration, hostname, or release-candidate changes. Both
+SP-021A and SP-021B remain required pre-release gates through SP-025; this
+sequencing reduces duplicate provider spend without weakening or misreporting
+acceptance evidence.
 
 ### 2026-09-21 final release-candidate audit gate
 
@@ -255,14 +264,23 @@ landing
   -> preflight
   -> ready_to_start
   -> connecting
-  -> interviewing
+  -> live/interviewing
   -> ending
-  -> summarizing
-  -> review
+  -> interview_complete
+      -> explicit View summary -> summarizing or review_ready
+  -> review_ready/review
   -> cleared
+
+live/interviewing -> unexpected interruption -> summarizing or review_ready (partial review)
 ```
 
-Any blocking failure remains attached to its current stage and offers a specific retry or reset. No later stage is shown as successful when its prerequisite failed.
+Summary preparation may run single-flight behind `interview_complete`, but the
+user remains in the read-only completed workspace until **View summary** exposes
+the pending or ready review. Any blocking failure remains attached to its
+current stage and offers a specific retry or reset. No later stage is shown as
+successful when its prerequisite failed. Unexpected provider/network
+interruption remains the separate partial-review path rather than normal
+completion.
 
 ### 4.4 Detailed stage contracts
 
@@ -343,25 +361,29 @@ Any blocking failure remains attached to its current stage and offers a specific
 #### Stage 8 — live interview
 
 - **Input state:** connected ElevenLabs conversation.
-- **Visible behavior:** agent voice area, listening/speaking status, elapsed time, live captions, insight board, mute, and End interview.
+- **Visible behavior:** the left interview card gives its main area to the live transcript. A sticky 44 px status rail is integrated as a distinctly frosted ink-glass overlay at the top of that transcript instead of using a separate waveform/avatar header; the rail and captions share one scrolling layer so transcript content visibly blurs beneath the rail while the initial reading position keeps the first message unobscured. **Pilot speaking** uses four compact animated bars plus a soft transcript-top/current-Pilot-turn emphasis; **Listening to you** uses a static microphone; reviewing, reconnecting, ending, and interrupted states use concise plain text without decorative animation. The rail is an atomic polite live region, while the transcript keeps its existing bounded log semantics. Elapsed time, insight board, mute, and End interview remain available below/beside it according to the responsive composition.
 - **Conversation behavior:** follows the entry-mode opening in Section 8, learns/confirms the candidate's role wording or undecided state, then covers high-level context/experience, collaboration preferences, motivation, location/work-arrangement preferences, availability, compensation expectations, relevant candidate-stated English use, candidate questions, human follow-ups, and close. CV claims are verified only when needed in CV-assisted mode; conversation-first discovers facts from answers. The selected profession never changes the interview into a technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
 - **Client events:** completed user/agent messages arrive through typed `onMessage` callbacks. The installed SDK also exposes typed `onAgentChatResponsePart` start/delta/stop callbacks; accumulated agent deltas update a tentative Pilot caption and the stop/final callback creates one final local turn. Final-provider deduplication is keyed by speaker plus event ID because the two speakers may reuse a numeric provider ID. Never infer text by parsing untyped `onDebug` or `onIncomingEvent` payloads.
 - **Client tools:** add/correct structured insight cards and topic status in browser state.
-- **Output state:** `ending` on agent completion, user End action, time limit, or unrecoverable disconnect. Agent completion is a provider-owned terminal signal: after its brief spoken close the policy calls ElevenLabs' sole enabled `end_call` system tool, the SDK emits typed disconnect reason `agent`, and the existing reducer advances exactly once. Never infer completion by matching farewell wording.
+- **Output state:** `ending` on agent completion, user End action, or time limit; a normal terminal disconnect then advances to `interview_complete`. An unrecoverable unexpected disconnect follows the separate partial-review path. Agent completion is a provider-owned terminal signal: after its brief spoken close the policy calls ElevenLabs' sole enabled `end_call` system tool, the SDK emits typed disconnect reason `agent`, and the reducer preserves that first terminal reason exactly once. Never infer completion by matching farewell wording.
 - **Failure:** brief reconnect attempt only while SDK supports it; otherwise preserve local transcript and proceed to partial review.
+
+**Candidate-question behavior (SP-021A; implemented and provider-published, live observation pending):** source policy `sp017-2026-09-22.1` uses the exact bounded response, “I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review.” For the same eligible final candidate turn, the browser records the complete candidate question with `recordCandidateQuestion` and a bounded human reason with `requestFollowup`; full question-segment matching accepts a verbatim question inside a compound turn while rejecting arbitrary fragments. Duplicate callbacks remain idempotent. Candidate question and Human follow-up cards render during the interview and remain linked to final-transcript evidence in Organized notes, the evidence map, summary validation, and copied review text. Summary validation requires the exact captured value and complete insight evidence-ID set for every captured question/follow-up; a model paraphrase that merely cites the right turn receives a content-safe mismatch rule, gets the one existing bounded repair opportunity, and otherwise fails closed. Fake traces and provider-shaped contracts follow the same state path without durable storage or provider transcript retrieval. Owner-confirmed dashboard synchronization maps this policy to immutable private-Main revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`; no Preview or paid conversation occurred, so live behavior remains an SP-021B acceptance item.
 
 #### Stage 9 — end and summarize
 
 - **Input state:** local final transcript and insight state; no recording artifact is expected.
-- **Visible behavior:** both manual and provider-owned automatic endings transform the existing live workspace in place. Voice/media resources are released immediately; independently of that cleanup, the reducer must render the `ending` workspace for the bounded 420 ms transition interval before advancing to summary/review, even when the provider reports its terminal disconnect in the same callback stack. The right Insight Board fades and collapses while the left interview column expands and centers into a full-width evidence-map surface; compact fixed-height layouts also collapse the board's grid row so an invisible panel cannot retain space. Its central card shows **Organizing this conversation** with truthful progress while the retained insight cards settle into connected evidence nodes. Execute a fresh managed Turnstile check there, showing interaction only if required; media teardown and the request are not delayed by the visual hold, and the animation never implies that a summary succeeded.
+- **Termination:** agent `end_call`, candidate-selected **End interview**, and the absolute eight-minute deadline enter one idempotent shutdown path. The first terminal reason wins. Provider/WebRTC/media work, authorization, timers, requests, and content-free measurements are released immediately; the provider bridge unmounts, while the existing bounded two-second fallback completes local shutdown if no terminal disconnect arrives. During that short pending interval, manual End loses its stop icon, shows a continuous spinner, and cannot be clicked again; mute is disabled.
+- **Completed workspace:** after normal shutdown the reducer enters `interview_complete`, retaining the transcript and Insight Board read-only. Elapsed time is frozen (`08:00` for the hard stop), the status rail says **Interview complete** and **Microphone disconnected**, speaking/listening/reconnect UI and mute are absent, and **View summary** replaces End. Fake mode emits its agent-owned disconnect only after every final transcript and client-tool event. A restored completed session remains completed and never requests a voice token or reconnects.
+- **Summary handoff:** summary preparation may begin once voice is disconnected while the completed workspace remains visible. A single managed Turnstile/request lifecycle survives the `interview_complete` → `summarizing` transition, so **View summary** reveals the genuine **Organizing this conversation** state when pending or the ready review when already complete without a second provider call. The action never reconnects voice.
 - **API:** `POST /v1/interview/summary` sends the bounded local transcript, plan, insight cards, and a memory-only `turnstileToken`; after Siteverify succeeds, GPT-5.4 mini returns structured evidence-linked notes using `store: false`.
-- **Output state:** `review` with complete or partial summary.
+- **Output state:** explicit **View summary** advances to `summarizing` or `review_ready`; unexpected provider/network interruption remains the distinct partial-review path.
 - **Failure:** Turnstile or summary failure preserves the transcript and cards; Retry summary obtains a fresh token and is allowed while the browser session exists.
 
 #### Stage 10 — local review and clear
 
-- **Input state:** transcript, plan, insight cards, and optional summary in browser session.
-- **Visible behavior:** the organizing surface resolves into review without a blank page replacement. Its central card becomes the conversation-summary overview and the connected retained insight nodes remain available around it. Selecting a node replaces the center overview with a stable bounded preview containing the unambiguous preceding final Pilot question when available, the cited final candidate answer, an **Interview evidence** source/time label, and all summary items whose evidence arrays cite that answer. For corrected insights, the latest cited final candidate turn and its preceding Pilot question are primary; earlier cited answers remain concise history references so the preview never pairs an updated value with superseded evidence. Selecting another node swaps the center preview; selecting the active node again or minimizing it restores the overview. Missing relationships are labelled unavailable rather than inferred. The complete review also includes the entry-mode label, candidate-stated synthetic session role or explicit undecided state with its bounded evidence reference, topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, recruiter follow-ups, and limitations. When a partial summary omits role preference entirely, review and copied text say **Not established** with unavailable evidence rather than inventing an undecided answer. Conversation-first review contains no CV source chips or claims of CV verification. The full transcript remains bounded local input for evidence resolution and retry but is not rendered as a review section, and user-facing copy never names the underlying model/provider.
+- **Input state:** explicit **View summary** from the completed workspace, or the existing partial-review path, with transcript, plan, insight cards, and optional summary in browser session.
+- **Visible behavior:** the organizing surface resolves into review without a blank page replacement. Once the summary is ready, a themed two-tab switch occupies the former header-tag position opposite the step label/title and is vertically centered against that combined heading block; on narrow screens it moves below the heading at full width. It alternates between **Evidence map** and **Organized notes**; only the active panel occupies page flow, and the tab control supports standard pointer, focus, Home/End, and arrow-key operation. Redundant interview-ended, entry-mode, and node-count header tags are omitted; partial state remains explicit in the heading pretitle. The evidence map remains the default view. Its central card becomes a tag-free conversation-summary overview with the synthetic session role expressed as plain text, while the connected retained insight nodes remain available around it. Selecting a node replaces the center overview with a stable bounded preview containing the unambiguous preceding final Pilot question when available, the cited final candidate answer, an **Interview evidence** source/time label, and all summary items whose evidence arrays cite that answer. For corrected insights, the latest cited final candidate turn and its preceding Pilot question are primary; earlier cited answers remain concise history references so the preview never pairs an updated value with superseded evidence. Selecting another node swaps the center preview; selecting the active node again or minimizing it restores the overview. Missing relationships are labelled unavailable rather than inferred. The organized-notes tab contains entry-mode-aware topics covered, confirmed facts, corrections/uncertainties, compensation/availability, candidate questions, recruiter follow-ups, and limitations. The copied review retains the candidate-stated synthetic session role or explicit undecided state with its bounded evidence reference. When a partial summary omits role preference entirely, review and copied text say **Not established** rather than inventing an undecided answer; the copied review records unavailable evidence. Conversation-first review contains no CV source chips or claims of CV verification. The full transcript remains bounded local input for evidence resolution and retry but is not rendered as a review section, and user-facing copy never names the underlying model/provider.
 - **Allowed actions:** inspect bounded evidence previews, copy summary, or **Clear session**.
 - **Mutation:** Clear removes ScreenPilot `sessionStorage` and in-memory candidate/interview state, then returns to landing. The content-free safety cookie expires automatically and is not presented as candidate data.
 - **Output state:** `cleared`.
@@ -394,6 +416,10 @@ type DemoSession = {
     endedAt?: string;
     endReason?: string;
   };
+  interviewCompletion?: {
+    reason: "candidate_ended" | "agent_completed" | "time_limit";
+    elapsedSeconds: number;
+  };
   transcript: TranscriptTurn[];
   insights: InsightCard[];
   topicProgress: TopicProgress[];
@@ -418,6 +444,7 @@ Rules:
 - Persist only validated public bootstrap configuration; private provider configuration and all secrets remain backend-only.
 - Persist `interviewGrant` and `interviewGrantExpiresAt` together, clear both when preparation is invalidated, and rerun only the selected mode's preparation step when the grant expires.
 - Persist bounded CV-analysis usage metadata only alongside normalized CV data in a prepared CV-assisted stage.
+- Persist normal-completion reason and frozen elapsed seconds only after normal termination begins. `interview_complete` requires ended voice metadata; completion metadata never contains a provider object, token, audio, or microphone state.
 - The browser is authoritative only for this visitor's disposable demo; its content is untrusted when sent back to the backend.
 - `cv` must remain absent in conversation-first mode, and conversation-first insights may never acquire a `CV` source label.
 
@@ -473,7 +500,7 @@ Required stage views:
 - Disclosure/consent/microphone preflight.
 - Connecting state.
 - Active interview.
-- Ending/summarizing state.
+- Ending, completed-interview hold, and summarizing states.
 - Same-session review.
 - Stage-specific error/retry state.
 
@@ -483,6 +510,7 @@ Refresh behavior:
 - A refresh during local CV extraction or remote CV analysis returns to CV selection because the PDF and raw extracted text are intentionally memory-only.
 - Never restore an active microphone or WebRTC connection automatically.
 - A refresh during a call changes the call to `failed` and offers partial review or restart in the same entry mode.
+- A refresh after normal completion restores the read-only completed workspace with its frozen timer and never requests a voice token or reconnects the microphone.
 - A refresh during post-call summary generation preserves transcript and insights and exposes a retryable summary-interrupted state; it does not claim that the voice call was interrupted.
 - If the interview grant expired, preserve display data and rerun only the selected preparation path: CV analysis for CV-assisted, deterministic preparation for conversation-first.
 
@@ -507,6 +535,7 @@ empty
   -> connecting
   -> live
   -> ending
+  -> interview_complete
   -> summarizing
   -> review_ready
   -> cleared
@@ -550,8 +579,8 @@ The board is the demo's visual signature. It should make AI comprehension visibl
 
 ### Layout
 
-- Desktop: interviewer signal in the center-left and an aligned insight-card column on the right that scrolls vertically inside a panel matched to the voice/caption panel height.
-- Mobile: the same voice signal, captions, categories, source chips, correction states, and connector motif are recomposed into a deliberate vertical canvas with a swipeable insight rail and expandable evidence cards.
+- Desktop: a transcript-first interview card with an integrated compact speaker-status rail sits on the left, and an aligned insight-card column on the right scrolls vertically inside a panel matched to its height. Standard and roomy laptop layouts use one stretched workspace row so neither column receives an independent height cap; transcript and insight content scroll inside their equal-height cards.
+- Mobile: the same compact status rail, captions, categories, source chips, correction states, and evidence meaning are recomposed into a deliberate vertical canvas. The Insight Board becomes a controlled slideshow with one full-width, taller evidence card at a time, direct horizontal swipe, explicit previous/next controls, and position feedback. Its track follows the pointer continuously, reveals the adjacent slide during the gesture, resists overscroll at either end, and settles or returns according to the release distance. Conversation coverage uses a separate paged slideshow with up to four compact topic cards per page and the same direct-manipulation swipe behavior instead of free horizontal scrolling.
 - Use one stable category order, aligned card edges, and restrained connector lines; do not build a force-directed graph engine.
 
 ### Card categories
@@ -1070,8 +1099,8 @@ This is the only live voice path. Do not add a second transcription/audio archit
 TTFA means candidate speech end to first substantive agent audio. The browser
 timestamps speech end from the provider `vad_score` speaking-to-not-speaking
 transition at the locked 0.5 threshold. A later final-transcript callback does
-not replace that boundary; when VAD is unavailable the visual wait may continue
-but no TTFA sample is recorded. A filler does not stop the timer.
+not replace that boundary; when VAD is unavailable the latency interval may
+continue but no TTFA sample is recorded. A filler does not stop the timer.
 
 | Metric | Target | Release blocker |
 | --- | ---: | ---: |
@@ -1106,8 +1135,8 @@ budget prevents another provider request.
 
 ### Latency response policy
 
-- `0–800 ms`: visual listening/thinking state only.
-- `800–1,500 ms`: add **Reviewing your answer…** visually.
+- `0–800 ms`: rely on the existing Pilot listening/speaking status; do not add a separate waiting ornament.
+- `800–1,500 ms`: change the integrated transcript rail to **Reviewing your answer**.
 - `>1,500 ms`: ElevenLabs may play one static soft-timeout filler: **“Mm-hm…”**
 - At most one filler per turn.
 - A filler is non-evaluative and cannot imply agreement, praise, or a hiring judgment.
@@ -1126,6 +1155,8 @@ observation.
 
 - Eight-minute hard stop.
 - One live connection per browser session.
+- Normal completion disconnects the live voice session before the post-call summary gate; the completed hold cannot extend connected voice billing or reconnect the provider.
+- Summary preparation is single-flight across the completed hold and **View summary** transition so one completion cannot create duplicate paid summary operations.
 - Cloudflare Turnstile Free verification immediately before every provider-backed paid request: CV analysis, voice-token issuance, and post-call summary.
 - Best-effort bounded backend route/source limits on bootstrap, conversation preparation, CV analysis, voice token, and summary; counters are memory-only per instance and are not represented as durable identity enforcement.
 - Backend-configured paid-demo kill switch.
@@ -1534,7 +1565,7 @@ screen-pilot/
 │  │     │  │  ├─ button.tsx                     # SP-005
 │  │     │  │  ├─ card.tsx                       # SP-005
 │  │     │  │  ├─ badge.tsx                      # SP-005
-│  │     │  │  ├─ stage-indicator.tsx            # SP-005
+│  │     │  │  ├─ demo-stage-heading.tsx          # SP-011A
 │  │     │  │  ├─ error-panel.tsx                # SP-005
 │  │     │  │  ├─ app-shell.tsx                  # SP-005
 │  │     │  │  ├─ site-header.tsx                # SP-005
@@ -1882,7 +1913,7 @@ deferrals are:
 | `OPENAI_API_KEY` | Backend-only Bearer credential for the Responses client. | SP-010 live CV analysis and SP-020 live summary generation are wired; both remain paid/Turnstile gated. |
 | `ELEVENLABS_API_KEY` | Backend-only `xi-api-key` credential for private conversation-token creation. | Wired by SP-014. |
 | `ELEVENLABS_AGENT_ID` | Server-owned ElevenLabs `agent_id` for the conversation-token request. | Wired by SP-014 and never accepted from the browser. |
-| `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018A supplied the initial smoke and SP-021A/SP-025 own remaining manual drift/live acceptance. |
+| `ELEVENLABS_VOICE_ID` | Typed configuration and published-agent drift evidence. | Deliberately not sent with token creation because voice selection belongs to the published agent; SP-018A supplied the initial smoke and SP-021B/SP-025 own remaining manual drift/live acceptance. |
 | `TURNSTILE_SITE_KEY` | Allow-listed bootstrap field used by the browser widget. | Wired by SP-003/SP-012 and public by design. |
 | `TURNSTILE_SECRET_KEY` | Backend Siteverify secret. | Wired by SP-009 for CV and voice gates and reused by SP-020 for the `interview_summary` action. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | Exact backend comparison against Siteverify's hostname. | Wired by SP-009. |
@@ -1934,10 +1965,11 @@ Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIR
 | SP-014A | Current first-party OpenAI, ElevenLabs, and Turnstile documentation only; no dashboard login, account mutation, or credential | Consolidates all non-deployment provider, key, local-secret, spend, rotation, and verification guidance while values stay blank. |
 | SP-015 / SP-016 | The published SP-014 agent/session for live callbacks and client tools; no new key | Fake event traces and tool calls complete local work. |
 | SP-017 / SP-018 / SP-018A | Published ElevenLabs agent/account access for sync and controlled live evaluation | Source prompt, fixtures, and deterministic timing logic remain testable; SP-018A supplied the bounded smoke and transfers its exact unchecked live ledger. |
-| SP-020 / SP-021 | None required for implementation; do not run a standalone paid summary/retry walkthrough | Fake summary and challenge paths complete automated work; the first real summary/review belongs to SP-021A. |
-| SP-021A | All local OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit owner authorization and a pre-agreed cap | Consolidates the transferred SP-018A evidence with both complete entry modes after review exists; deterministic checks remain isolated in fake/paid-disabled mode. |
+| SP-020 / SP-021 | None required for implementation; do not run a standalone paid summary/retry walkthrough | Fake summary and challenge paths complete automated work; the first real summary/review belongs to SP-021B. |
+| SP-021A | Owner dashboard access for the no-conversation Prompt 1 publication only; no credential value or paid call | Records the owner-approved visual/fix ledger, implements/verifies both accepted prompts in deterministic fake/provider-shaped paths, and records Prompt 1 publication; live observation remains pending. |
+| SP-021B | All local OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit owner authorization and a pre-agreed cap | Consolidates the transferred SP-018A evidence with both complete entry modes after SP-021A is implemented and reconciled; deterministic checks remain isolated in fake/paid-disabled mode. |
 | SP-022 / SP-023 | Provider dashboard access for caps, retention, and secret audits | Rejection ordering, redaction, and scanning use fakes. |
-| SP-025 | Dashboard access and, only when SP-021A evidence was invalidated, all live provider values plus explicit paid-test permission | Unpaid release checks run first; current SP-021A evidence is reused and only invalidated evidence is narrowly refreshed. |
+| SP-025 | Dashboard access and, only when SP-021B evidence was invalidated, all live provider values plus explicit paid-test permission | Unpaid release checks run first; current SP-021B evidence is reused and only invalidated evidence is narrowly refreshed. |
 | SP-025A | No credential or live account access; tracked repository, ticket, Git, dependency, and deterministic-build evidence only | Runs with explicit fake/paid-disabled test isolation, never reads `.env.local`, and makes no provider call. |
 | SP-026 | All production secrets, non-secret Google/Firebase/domain identifiers, and dashboard access | Pipeline/config can be validated without values; production deploy blocks at the manual gate. |
 
@@ -2338,7 +2370,7 @@ Controls:
 - Verify `entryMode`, plan type, allowed source labels, and grant binding agree; reject `CV` evidence in conversation-first mode.
 - Treat all browser fields as untrusted.
 - GPT-5.4 mini, reasoning `none`, structured output, `store: false`.
-- Validate all returned candidate-turn citations, resolve repeated candidate insight categories by their parsed timestamp instant so valid timezone offsets cannot displace the latest correction, require available candidate-backed current-context/experience/team/question content, require distinct summary entries for the current-context, broad-experience, and team/work-style groups, enforce the covered/not-covered topic partition in both directions, and allow at most one repair for malformed or unsupported structured output.
+- Validate all returned candidate-turn citations, resolve repeated candidate insight categories by their parsed timestamp instant so valid timezone offsets cannot displace the latest correction, require available candidate-backed current-context/experience/team/question content, require every captured candidate-question and human-follow-up value plus its complete insight evidence-ID set to survive exactly, require distinct summary entries for the current-context, broad-experience, and team/work-style groups, enforce the covered/not-covered topic partition in both directions, and allow at most one repair for malformed or unsupported structured output.
 - Apply the paid-operation kill switch and any injected summary-admission denial before Turnstile/OpenAI. SP-020 provides this injected fail-closed boundary and its zero-provider-call tests; SP-022 owns the bounded TTL route/source limiter, capacity policy, and server wiring, so the current server default does not claim to rate-limit summary requests yet.
 - Never retrieve a provider conversation or recording.
 
@@ -2673,14 +2705,15 @@ Document enters
 | `coral-700` | `#CC493F` | Accessible filled action with White text and visible focus ring |
 | `coral-800` | `#B93831` | Accessible coral text on light/pale surfaces and primary-action hover |
 | `coral-100` | `#FDE8E4` | Pale Coral selection and soft brand surface |
+| `plum-700` / `plum-300` / `plum-100` | `#6F4778` / `#D7ACDD` / `#F2E7F4` | Confirmed and completed badge text/surfaces in the Deep Ink/plum/coral product palette |
 | `line-200` | `#E4E7EC` | Quiet card borders and dividers only |
 | `line-strong` | `#7D899B` | Interactive control boundaries on light surfaces |
 | `slate-500` | `#667085` | Secondary text |
-| `success-600` / `success-400` | `#067647` / `#52D6A2` | Confirmed state on light / dark surfaces |
+| `success-600` / `success-400` | `#067647` / `#52D6A2` | Live operational connection signals only; not completion/confirmation badges |
 | `warning-700` / `warning-400` | `#8A4B0F` / `#F79009` | Needs clarification on light / dark surfaces |
 | `danger-600` / `danger-400` | `#B42318` / `#F97066` | Error and end attention on light / dark surfaces |
 
-Use gradients only for the voice signal, selected Pilot accents, and hero atmosphere. Normal text and controls use solid accessible colors. Coral is brand/action language, not a replacement for success, warning, or danger. `coral-500` uses Deep Ink foreground; White text belongs on `coral-700`. `line-200` is too quiet to communicate an interactive boundary by itself, so controls use `line-strong` or another contrast-aware state border.
+Use gradients only for the voice signal, selected Pilot accents, and hero atmosphere. Normal text and controls use solid accessible colors. Coral is brand/action language. Confirmed/completed badges use the plum/lilac pair so they fit the product atmosphere without competing with coral actions; green is reserved for live operational connection signals, amber for clarification, and red for errors/end attention. `coral-500` uses Deep Ink foreground; White text belongs on `coral-700`. `line-200` is too quiet to communicate an interactive boundary by itself, so controls use `line-strong` or another contrast-aware state border.
 
 #### Typography
 
@@ -2708,16 +2741,16 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - The approved product mark is the code-native SVG shown in the HTML reference: a Deep Ink rounded square containing a Warm Coral forward/paper-plane shape with a Pale Coral inner facet. Reuse this mark in the actual frontend starting in SP-005, including the browser-tab favicon, with an accessible ScreenPilot label wherever the mark is interactive. The raster concept's generated logo is an approximation and must not replace the HTML SVG authority.
 - On the landing, keep only **How it works** and **Start demo** with the product mark. Privacy and repository/source access are secondary to the entry decision: Privacy remains a clearly labelled control in the visible trust section and repository/source access moves to the footer.
 - During `/demo`, the navigation header contains the ScreenPilot home link, **Privacy details**, and **Clear & exit**, in that order. The logo returns to `/` without clearing so the landing can offer Continue or Clear; **Clear & exit** replaces the route only after browser storage removal is verified, while a failed removal keeps the review available and reports the retryable privacy error. **Privacy details** opens the shared accessible dialog without changing workflow state.
-- The inert stage indicator owns the first full-width panel inside the workspace instead of competing with the brand navigation. It uses the same bounded block language as the rest of the product frame and never looks or behaves like navigation.
+- The shared stage pretitle begins with the inert **Step X of 5 ·** counter, keeping orientation next to the active task without competing with the brand navigation or consuming a separate full-width panel.
 - `/demo` has no safeguards footer. Privacy remains persistently available from the header, while the relevant task surfaces and preflight copy own session, human-decision, and synthetic-role disclosures where the visitor needs them.
 - No Dashboard, Jobs, Candidates, Pricing, Login, or Signup navigation.
 
 ### Interviewer naming and AI transparency
 
 - The visible interviewer name is **Pilot**.
-- Moment-to-moment interface status uses Pilot by name: **Pilot is interviewing** and **Pilot is listening…**. Do not use “AI” as the agent's display name or as the subject of a live-status sentence.
+- Moment-to-moment interface status uses Pilot by name when Pilot is active: **Pilot is interviewing** and **Pilot speaking**. Candidate input uses **Listening to you**. Do not use “AI” as the agent's display name or as the subject of a live-status sentence.
 - Transparency is not removed: disclosure, consent, privacy, and explanatory product copy must state clearly that Pilot is an AI interviewer and that provider processing occurs. Use “AI” for that factual explanation, not as the conversational persona label.
-- Accessible names and announcements use Pilot consistently while preserving the state or action, for example **Pilot is listening** and **Mute Pilot's microphone input**.
+- Accessible names and announcements preserve the actor, state, or action consistently, for example **Pilot speaking**, **Listening to you**, and **Mute microphone**.
 
 ### Screen design
 
@@ -2729,7 +2762,7 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 - Place a large semantic interview scene directly below the promise. It combines a polished abstract code-native participant-and-laptop illustration, distinct Pilot/candidate speaker activity, a prominent participant waveform, changing subtitles, synchronized highlighted question/answer evidence, and a matching plain-language interview note. Render the participant with a warm human skin tone and a featureless face rather than white skin or cartoon eyes/mouth. Keep the participant free of ambiguous hand shapes. Because the viewer faces the seated candidate from the opposite side of the desk, center a broad, uninterrupted outer laptop lid over the candidate's lower torso; keep the keyboard deck behind that lid and expose only a thin hinge/base silhouette. Pilot speaking is shown by a gently illuminated ScreenPilot mark and expanding rings on the lid rather than a second mechanical equalizer or a front-facing screen.
 - Play one deliberately paced loop through six clearly fictional role-neutral examples. The first three-column notes board fills salary expectation, relevant experience, and availability; after a readable completed-board hold, the same three slots transition to role preference, work setup, and growth goal. The second completed board then holds before the sequence returns to salary. Questions and answers reveal one spoken word every 200 ms inside a fixed-height subtitle region. After both lines are complete, their relevant phrases receive the same visible left-to-right two-pass marker sweep at the same time; only after that sweep finishes does the matching note appear. The existing inter-phase and completed-board holds keep the overall sequence readable. The figure keeps the accessible name **Example interview** without a redundant visible title/subline or playback/topic controls; deliberate keyboard or click focus pauses it, as does moving it off-screen or hiding the page. Reduced motion keeps the word-by-word timing through opacity-only entrances without spatial movement and changes voice activity to slow opacity-only feedback. The synchronized highlight remains a one-second paint-only sweep because it is the semantic bridge from the completed exchange to the created note.
 - Keep the compact landing header fully transparent, in normal document flow, and inside the edge-to-edge atmospheric field so it scrolls away with the top of the page. Place the enlarged ScreenPilot mark and wordmark at the left edge, with the larger **How it works** and **Start demo** actions at the right. DOM and keyboard order follow that familiar visual order. The page-wide atmosphere owns the top glow and grid; do not restart either effect at the hero boundary.
-- Every same-page landing link—including the product mark, hero actions, and scroll cue—scrolls smoothly to its target instead of jumping. The header's **How it works** action and the hero's **See it step by step** CTA share one 0.9-second ease-in/ease-out journey to **How it works** rather than maintaining separate scroll implementations or relying on the browser-controlled default duration. Retain their real fragment links, native modified-click behavior, user-input cancellation, and native anchor fallback when the target is missing. Keep this direct-click journey active when the operating system reports reduced motion because it is the explicitly requested result of those controls, while passive spatial landing motion continues to honor the system preference. Keep the scroll cue in its own normal-flow row beneath the interview frame so it cannot cover subtitles or collected-note cards at narrower widths.
+- The product mark is a clean `/` home link rather than a `#top` route mutation. Visible same-page landing CTAs—including **How it works**, **See it step by step**, and **Try the screening demo**—scroll smoothly to their targets instead of jumping while keeping the browser address at `/` during ordinary pointer or keyboard activation. The two **How it works** actions share one 0.9-second ease-in/ease-out journey rather than maintaining separate scroll implementations or relying on the browser-controlled default duration; the hero entry action reuses that behavior for the chooser. Keep target IDs and fragment-link markup only as progressive fallback, never push a fragment into history after the controlled journey, and retain user-input cancellation. Keep this direct-click journey active when the operating system reports reduced motion because it is the explicitly requested result of those controls, while passive spatial landing motion continues to honor the system preference. Keep the scroll cue in its own normal-flow row beneath the interview frame so it cannot cover subtitles or collected-note cards at narrower widths.
 - In the hero headline, a slightly informal handwritten SVG version of **notes.** draws letter by letter over about 1.1 seconds, followed immediately by a short imperfect coral underline. The ordinary text remains in the accessible headline, and the decorative writing never loops or changes layout. Reduced-motion mode shows the completed word and limits the emphasis to a gentle opacity finish.
 - Replace the separate context row and ordinary process-card grid with a four-step scroll story: **Choose**, **Talk**, **Notes**, **Review**. A sticky scene and segmented story progress respond to normal scrolling while all step content remains readable without JavaScript or motion.
 - Keep trust language concise and contextual. Fold the human-decision and privacy explanation plus the accessible Privacy dialog trigger into the final story step. Remove the standalone privacy slab and landing footer.
@@ -2768,14 +2801,14 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 
 #### Early `/demo` workspace
 
-- Treat `/demo` as an independently understandable product surface, not a marketing-page continuation. One stable bounded shell owns ScreenPilot identity, an inert canonical stage panel, and the active task; the header persistently owns **Privacy details** and **Clear & exit**.
+- Treat `/demo` as an independently understandable product surface, not a marketing-page continuation. One stable bounded shell owns ScreenPilot identity and the active task; the shared stage heading owns concise five-step orientation, while the header persistently owns **Privacy details** and **Clear & exit**.
 - Use the landing's Deep Ink/plum/coral atmosphere across every `/demo` stage. Warm White and White are reserved mainly for typography, icons, and small high-contrast details; they are not page, card, panel, input, drop-zone, or review backgrounds anywhere on `/demo`. This supersedes older setup/review guidance that called for Warm White surfaces.
 - Author the dark hierarchy rather than inverting the former light UI: atmospheric page field → bounded product frame → raised task regions → quiet status/details. Borders, spacing, type scale, and coral signal moments—not many generic cards—separate responsibilities.
-- Place the inert five-step status in a compact horizontal panel at the top of the workspace. Do not add a site-wide workspace footer. Stage-level navigation and primary actions across CV intake/status, deterministic conversation preparation, plan preview, preflight, and voice connection use one consistent bordered action row anchored as the bottom row of the active card/workspace, including when the content above is short; file selection, consent, microphone permission, and error-specific Retry controls remain with the content that owns them. Keep **Privacy details** immediately before **Clear & exit** in the persistent header across bootstrap/retry, choose, CV input/status, deterministic preparation/retry, shared preflight, live stages, and review.
-- Align the active stage's working surface to the same inner inline gutter as the progress panel; do not add a second centered-stage inset on wide screens. Top-align the task content beneath progress so short stages do not acquire content-dependent blank space. Every reachable `/demo` state—including bootstrap/error, choose, CV intake/status, conversation preparation/error, plan, preflight, connection, live interview, and the future-stage fallback—uses the shared stage-heading primitive: a short uppercase pretitle followed immediately by one page-level title. The design-system title, panel-title, card, body, and metadata tokens own the hierarchy; the shared stage, card, and heading-gap variables own vertical rhythm rather than stage-local margins. Desktop stage titles use the full task width and remain on one line when the viewport can hold them. Do not split a heading into an artificially narrow left column or float a detached explanatory sentence on its right; necessary guidance belongs inside the relevant task card, while compact widths may wrap naturally. Fluidly adapt header height, outer spacing, frame padding, type scale, and task-panel density to the available dynamic viewport height. Standard choose, CV intake, preparation, plan, and preflight states must keep progress, task, and primary/recovery actions visible without document scrolling at the 1024 × 768, 1280 × 800, and 1440 × 900 reference anchors. Phones, 200% zoom, validation/errors, and compact layouts use natural document scrolling. The laptop/desktop plan preview and active-interview Insight Board use their documented bounded inner list/panel scrolling so content volume does not inflate the page; never create a keyboard trap, hide page overflow, or clip required controls.
+- Do not render a separate step bar or site-wide workspace footer. Prefix every shared uppercase stage pretitle with **Step X of 5 ·** in the same typography: Choose is step 1, CV/conversation preparation is step 2, preflight is step 3, connection/interview is step 4, and summary/review is step 5. This text is inert orientation, never navigation. Stage-level navigation and primary actions across CV intake/status, deterministic conversation preparation, plan preview, preflight, and voice connection use one consistent bordered action row anchored as the bottom row of the active card/workspace, including when the content above is short; file selection, consent, microphone permission, and error-specific Retry controls remain with the content that owns them. Keep **Privacy details** immediately before **Clear & exit** in the persistent header across bootstrap/retry, choose, CV input/status, deterministic preparation/retry, shared preflight, live stages, and review.
+- Align the active stage's working surface to the workspace inner gutter; do not add a second centered-stage inset on wide screens. Top-align the task content in the workspace so short stages do not acquire content-dependent blank space. Every reachable `/demo` state—including bootstrap/error, choose, CV intake/status, conversation preparation/error, plan, preflight, connection, live interview, and the future-stage fallback—uses the shared stage-heading primitive: the step-prefixed uppercase pretitle followed immediately by one page-level title. The design-system title, panel-title, card, body, and metadata tokens own the hierarchy; the shared stage, card, and heading-gap variables own vertical rhythm rather than stage-local margins. Desktop stage titles use the full task width and remain on one line when the viewport can hold them. Do not split a heading into an artificially narrow left column or float a detached explanatory sentence on its right; necessary guidance belongs inside the relevant task card, while compact widths may wrap naturally. Fluidly adapt header height, outer spacing, frame padding, type scale, and task-panel density to the available dynamic viewport height. Standard choose, CV intake, preparation, plan, and preflight states must keep the task and primary/recovery actions visible without document scrolling at the 1024 × 768, 1280 × 800, and 1440 × 900 reference anchors. Phones, 200% zoom, validation/errors, and compact layouts use natural document scrolling. The laptop/desktop plan preview and active-interview Insight Board use their documented bounded inner list/panel scrolling so content volume does not inflate the page; never create a keyboard trap, hide page overflow, or clip required controls.
 - The logo links to `/` and preserves the active tab session. Browser Back follows ordinary page history and does not impersonate reducer history. **Clear & exit** first removes and verifies every ScreenPilot key in the tab's browser storage; only after that succeeds may it dispatch `CLEAR_SESSION` and replace the route with `/`. A blocked removal preserves the in-memory review, stays on the current route, and exposes a retryable cleanup error so retained candidate data is never silently presented as cleared.
 - Normalize stage recovery: **Change starting option** dispatches only reducer-valid Back/Start-over events; **Retry** repeats only the failed operation; **Continue** appears only when the next reducer transition is implemented; **Clear & exit** is the explicit destructive escape. Do not render two controls with the same transition or allow stage skipping.
-- On compact widths, the progress panel stacks above the active stage and the two header actions remain readable and keyboard-accessible. Progress may abbreviate visually only when its full accessible name and current step remain clear.
+- On compact widths, the step-prefixed pretitle may wrap naturally with the heading while both header actions remain readable and keyboard-accessible; never hide or abbreviate the current step.
 
 #### `/demo` navigation and stage transitions
 
@@ -2784,8 +2817,11 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 choosing_entry_mode -> Use a CV -> awaiting_cv
 choosing_entry_mode -> Start without a CV -> preparing_conversation -> preflight
 awaiting_cv -> local extract/status -> SP-012 analysis -> plan_ready -> preflight
-preflight -> SP-013 consent/readiness -> ready/connecting -> live -> ending -> DEMO_INTERVIEW_COMPLETED -> review_ready
-future SP-020/SP-021 summary path -> ending -> summarizing -> review_ready
+preflight -> SP-013 consent/readiness -> ready/connecting -> live -> ending -> interview_complete
+interview_complete -> background single-flight summary preparation while the read-only completed workspace remains visible
+interview_complete -> explicit View summary -> summarizing or review_ready
+summarizing -> review_ready
+live -> unexpected provider/network interruption -> summarizing or review_ready (partial review)
 retryable failure -> Retry the failed operation without changing entry mode
 CV/preparation change -> reducer-valid Change starting option
 preflight Back -> choosing_entry_mode for conversation-first; plan_ready for CV-assisted
@@ -2794,7 +2830,7 @@ Clear & exit -> verified browser cleanup -> CLEAR_SESSION -> router.replace('/')
 blocked cleanup -> retain review/state -> visible retryable clear error
 ```
 
-The stage indicator reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine. SP-019 replaced the former scrubbed completion placeholder with the first bounded `review_ready` evidence foundation. SP-021 supersedes its temporary full timeline: orderly completion preserves final local turns and grounded cards in the current tab, while an interrupted call with usable evidence enters the same map with a concise **Partial review** badge. Only a selected node's exact bounded evidence appears in the center preview. Summary work must not clear the already available local evidence.
+The step-prefixed shared stage heading reports this sequence but is not navigation. Internal Back/Change/Retry/Continue actions dispatch the canonical reducer event owned by the active stage; browser history never becomes a second workflow state machine. SP-019 replaced the former scrubbed completion placeholder with the first bounded `review_ready` evidence foundation. SP-021 supersedes its temporary full timeline: orderly completion preserves final local turns and grounded cards in the current tab, while an interrupted call with usable evidence enters the same map with a concise **Partial interview review** heading pretitle. Only a selected node's exact bounded evidence appears in the center preview. Summary work must not clear the already available local evidence.
 
 #### Preflight
 
@@ -2807,26 +2843,28 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 
 - Deep Ink `ink-950` centralized canvas that continues the shared `/demo` shell.
 - The background field fills the dynamic viewport, while wide screens center a bounded interview workspace instead of stretching panels and copy across the display.
-- Left 48%: voice signal, Pilot status, a scrollable conversation-caption log, timer, mute/end controls.
-- Right 52%: one efficient vertically scrollable stack of candidate-sourced insight cards with category icons, explicit confirmation states, and caption-evidence affordances.
-- Place readable live captions inside a distinct bordered `ink-900` panel below the signal, with the elapsed-time row and primary controls separated beneath it. The panel uses a familiar AI-chat composition: candidate captions sit on the right in compact coral/plum bubbles, while Pilot responses remain unboxed text on the left. Messages begin at the top, retain finalized turns, and automatically follow each newly received Pilot or candidate caption inside the panel's own vertical scroll region.
-- Show the microphone control as an unambiguous action and current state, for example **Mute** with **Microphone on**; never use an unclear label such as “Mute Off.”
+- Left 48%: a compact integrated speaker-status rail, scrollable conversation-caption log, timer, and mute/end controls.
+- Right 52%: one efficient vertically scrollable stack of candidate-sourced insight cards with category icons, explicit confirmation states, and caption-evidence affordances. Each card keeps its Evidence toggle anchored at the bottom-right beside the provenance row in both collapsed and expanded states; opening it adds one full-width evidence row below without compressing or repositioning the value/provenance content.
+- Place readable live captions inside a distinct bordered `ink-900` transcript panel directly below its integrated status rail, with the elapsed-time row and primary controls separated beneath it. The panel uses a familiar AI-chat composition: candidate captions sit on the right in compact coral/plum bubbles, while Pilot responses remain unboxed text on the left. Messages begin at the top, retain finalized turns, and automatically follow each newly received Pilot or candidate caption inside the panel's own vertical scroll region.
+- Show the microphone control as a conventional theme-matched microphone/slashed-microphone icon button. Its accessible label and tooltip state the action (**Mute microphone** or **Unmute microphone**) without repeating the state as visible text. The active-microphone state uses the standard coral control treatment; the muted state switches to a subdued gray surface, border, and icon while remaining visibly interactive for the Unmute action.
 - Place a compact ScreenPilot/mode header above two clearly bordered work areas so the bounded workspace reads as one composed application shell rather than two unrelated panels.
 - Follow the approved raster's spacious vertical insight rhythm on desktop; keep card content concise enough that role, compensation, English, availability, and relevant experience remain visible without turning the panel into a dense dashboard.
 - New cards emerge from the signal area with a short path animation.
 - Conversation-first begins with an intentionally open insight canvas and fills it from candidate answers; CV-assisted may begin with clearly marked CV facts. The empty state must feel purposeful, not unfinished.
 - The current speaking party is visually obvious without relying on color alone.
-- The caption panel labels both Pilot and candidate turns. Pilot responses retain the received-word reveal; candidate captions grow through incoming tentative updates inside a single bubble whose only entrance motion is the short message-bubble transition. A stable normalized turn identity preserves already-mounted Pilot words and the candidate bubble across tentative-to-final updates but restarts the appropriate entrance for a later same-speaker turn, including repeated prefixes. The voice signal animates only while the provider reports Pilot speaking; while the candidate speaks, the explicit **Pilot is listening…** state remains visible and the signal rests.
+- The caption panel labels both Pilot and candidate turns. Pilot responses retain the received-word reveal; candidate captions grow through incoming tentative updates inside a single bubble whose only entrance motion is the short message-bubble transition. A stable normalized turn identity preserves already-mounted Pilot words and the candidate bubble across tentative-to-final updates but restarts the appropriate entrance for a later same-speaker turn, including repeated prefixes. The compact four-bar rail signal animates only while the provider reports Pilot speaking and the current Pilot turn receives a soft surface emphasis; while the candidate speaks, **Listening to you** appears with a static microphone.
 - Fake mode emits a visibly paced, deterministic sequence of tentative and final captions for both speakers. The installed live SDK exposes completed turns through its typed callback, so live word reveal begins when that validated text arrives; do not inspect untyped debug payloads or add a parallel audio transcription path merely to simulate unavailable interim events.
 - Captions remain readable and are never covered by cards.
 
 #### Review
 
 - Keep the shared Deep Ink/plum/coral workspace for completion and clarity; use calmer spacing, quieter borders, and restrained coral rather than returning to a light canvas.
-- Preserve spatial continuity when either end path fires: immediately release voice/media resources, then keep the reducer-owned `ending` state rendered for the bounded 420 ms morph while the right Insight Board fades/collapses and the left interview column expands/centers into the full review workspace. Provider-owned disconnect callbacks must not batch `ending` and `summarizing` into one paint. Compact/fixed-height layouts collapse the board's explicit grid row as well as its opacity. Use the same transition for manual and provider-owned automatic completion, with no blank interstitial or route-like page swap.
+- Preserve spatial continuity without an ending interstitial. During a manual shutdown, keep the existing interview and insight layout stable and show progress only in the disabled End interview control. After a normal provider disconnect or bounded fallback, keep that same transcript and Insight Board visible as the read-only completed workspace, replace live controls with the frozen timer and **View summary**, and state that the microphone is disconnected. Provider-owned automatic completion and the eight-minute deadline enter the same hold. Only the deliberate **View summary** action exposes the organizing/ready review surface; do not add a blank page, fade/collapse sequence, or route-like page swap.
 - Turn that expanded surface into a deterministic evidence map. The central organizing card becomes the summary overview; every retained insight card becomes one connected node arranged around it on capable wide screens. This is not a graph engine: nodes are not draggable, zoomable, physics-driven, editable, or permitted to disappear off canvas.
+- Once organized notes are available, place a two-option **Evidence map** / **Organized notes** tab switch opposite and vertically centered against the review heading, replacing the redundant header tags; stack it below the heading only when responsive space requires it. On phones it becomes a compact full-width segmented control with two single-line, minimum-44 px tabs and content-sized height; desktop width sizing must not become vertical flex growth after the heading changes axis. Keep the evidence map selected by default, preserve each mounted view while switching, and remove the inactive panel from page flow so the two complete review surfaces never stack into an unnecessarily tall page. Within Organized notes, any section with four or more entries spans the two-column notes grid as one combined panel and balances its items into two internal columns; **Coverage and gaps** also places its gaps beneath its balanced covered-topic list. Pack compact panels into complete two-card rows across those full-width sections: when two compact panels would otherwise be stranded alone, pair them in the earlier available row and render the DOM in that visual order. This prevents sparse Clarifications/Limitations-style sections from leaving separate half-empty rows. Collapse every balanced internal list back to one column at narrow widths.
 - Selecting a node keeps the map context visible and replaces the center overview with a stable preview containing four explicitly separated layers: the nearest preceding final Pilot question only when the relationship is unambiguous, the cited final candidate answer, an **Interview evidence** source/local-time label, and each summary item whose `evidenceTurnIds` contains that candidate turn. Selecting a different node swaps the preview; selecting the active node again or minimizing restores the overview and focus to the node. Show **Question unavailable**, **Evidence unavailable**, or **No connected summary note** when appropriate; never invent an association.
-- Top summary panel states that notes are AI-organized and require human interpretation.
+- Give the overview and selected-node preview the same taller viewport-responsive center-card height. Keep the concise overview content vertically centered, and let the four-layer selected preview scroll internally when its evidence exceeds that stable space rather than resizing the map.
+- Keep the center overview to one concise line. Interpretation limits remain explicit in the structured **Organized notes** limitations rather than being repeated beneath the center card.
 - Insight cards keep the same colors/labels used live.
 - Candidate evidence chips remain concise, static references in review. The bounded transcript stays available in browser state for association, summary retry, and privacy clearing but is not rendered wholesale. Missing, non-final, or non-candidate references render as unavailable evidence rather than being hidden or redirected.
 - Show the entry mode and enforce provenance: conversation-first review uses Candidate evidence only, while CV-assisted can distinguish CV, Candidate, and combined confirmation.
@@ -2843,8 +2881,9 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - Drag-resize and intermediate-width checks must show continuous, intentional adaptation without overflow, clipped content, sudden unusable density changes, or awkward empty bands between breakpoints.
 - Large monitors use bounded readable content widths, deliberate whitespace, and expanded composition rather than stretching paragraphs, controls, and cards without limit. The public landing may break out of the 75 rem application-workspace cap from 1440 px upward: align its navbar and all landing sections to one fluid container that approaches the viewport and stops at a 128 rem cap, with the product preview capped at 120 rem. This landing-only rule must not widen the bounded `/demo` task workspace.
 - Responsive design preserves the same tokens, information hierarchy, insight categories, evidence model, copy, and state language while changing composition for available space.
+- Shared badges and status pills keep their short controlled labels on one line. At phone widths, their type size, minimum height, and horizontal padding scale down fluidly within bounded readable limits so compact labels never split into awkward two-line capsules or force horizontal page overflow.
 - On mobile landing, the two entry cards stack with equal emphasis and complete explanatory copy; the first card's height or order must not make the second feel optional.
-- On mobile interview view: compact voice signal at the top, readable captions beneath it, sticky safe-area-aware mute/end controls, and a swipeable insight rail whose selected card expands into full evidence detail.
+- On mobile interview view: the compact status rail stays attached to the top of a viewport-relative, height-capped transcript whose inner scroll automatically follows each latest Pilot or candidate update. Sticky safe-area-aware mute/end controls follow. The Insight Board uses a full-width single-card evidence slideshow and a separate coverage slideshow of up to three topics per page; both expose 44 px previous/next controls and position feedback, avoid free horizontal rails, and let the selected evidence card expand downward without moving its toggle.
 - On mobile plan preview: CV facts and interview topics become linked stacked sections with visible source badges; no source relationship disappears merely because connector lines are reduced.
 - On mobile review: the visual evidence map becomes a connected vertical sequence beneath the central overview/preview card; tablets may use a bounded connected grid, while desktop/large-monitor layouts may place nodes around the center. Every width preserves the same node/center-preview semantics and logical order, and no evidence excerpt or action is forced into horizontal page scrolling.
 - Any visible Turnstile fallback fits at 320 px without horizontal scrolling or clipped controls and retains an understandable retry state in portrait and landscape.
@@ -2865,8 +2904,8 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - Insight appearance: 320–450 ms with opacity, scale, and short connector draw.
 - End-to-review morph: after call controls become inert and media cleanup starts, fade/recede the right board over 240–320 ms, expand and center the left column over 320–450 ms, then settle retained cards into the evidence map with the existing insight opacity/connector language. Keep the whole transition bounded and allow summary/Turnstile work to proceed concurrently.
 - Correction: brief border/color morph, not shake.
-- Voice signal responds smoothly but avoids rapid flashing.
-- Reduced-motion mode removes automatic spatial travel and scaling. The end-to-review morph becomes an immediate layout change with a short opacity-only state transition and already-drawn static connectors; no node or column travels, scales, or floats. Essential voice-status bars may use slow opacity-only activity so the speaking party remains understandable. Evidence-node selection and minimize/focus return remain immediate.
+- The compact four-bar voice signal responds smoothly but avoids rapid flashing; the static listening microphone and plain reconnect/ending labels do not animate.
+- Reduced-motion mode removes automatic spatial travel and scaling. The end-to-review morph becomes an immediate layout change with a short opacity-only state transition and already-drawn static connectors; no node or column travels, scales, or floats. Voice-status bars remain still while the text label continues to identify the speaking party. Evidence-node selection and minimize/focus return remain immediate.
 - The landing product preview loops slowly through two three-topic boards: salary expectation, relevant experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It starts automatically without playback or topic-switching controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. Normal motion reveals both questions and answers one spoken word at a time inside fixed-height regions, waits for both complete lines, draws both evidence highlights together from left to right, and then creates the corresponding note. Speaker activity and board/card transitions stay on opacity/transform. Reduced motion keeps the same word-by-word timing through opacity-only entrances, removes spatial movement, resolves the highlight without a sweep, and limits voice activity to slow opacity changes.
 - Each newly spoken subtitle word mounts with a short fade-and-rise so the timing reads as speech rather than a whole-line replacement. The compact participant pane contains only the centered speaking illustration and its integrated waveform; it has no redundant lower identity/instruction strip. Preview note cards use only sequence, captured field, captured value, and a quiet completion dot—no “Interview note,” “Added from your answer,” “Waiting,” or “Listening for answer” filler copy.
 - The active-interview caption panel reuses that word-entry language for received Pilot turns, with a restrained caret for tentative Pilot text. Candidate turns use one short right-side chat-bubble entrance instead of per-word spatial motion. Reduced motion resolves Pilot caption words immediately, removes the candidate bubble entrance, and disables repeated waveform travel through the global motion preference contract.
@@ -2876,7 +2915,7 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 ### Component inventory
 
 - `ScreenPilotMark`
-- `DemoStageIndicator`
+- `DemoStageHeading`
 - `EntryModeCard`
 - `EntryModeBadge`
 - `HeroFeatureStack`
@@ -2890,6 +2929,7 @@ The stage indicator reports this sequence but is not navigation. Internal Back/C
 - `DisclosureCard`
 - `MicrophoneMeter`
 - `PaidActionTurnstileGate`
+- `VoiceStatusRail`
 - `VoiceSignal`
 - `LiveCaptionLine`
 - `InsightBoard`
@@ -2961,11 +3001,11 @@ Use this prompt as written unless Section 14 has been formally changed; in that 
 ```text
 Create one polished product-design concept board for ScreenPilot, a browser-based AI CV screening interview demo. Show the same active-interview moment in two coordinated views: a 1440 × 900 desktop composition and a 390 × 844 mobile portrait composition. This is one coherent direction, not multiple alternatives.
 
-Follow the approved “Signal Canvas” visual language exactly: precise, calm, modern, transparent, technically credible, and candidate-friendly; Deep Ink Navy ink-950 (#18243A) interview canvas; raised ink-900 (#22314B) surfaces; Warm Coral coral-500 (#F26B5B) brand and live signal paired with Deep Ink text; action coral-700 (#CC493F) for filled controls with White text; Pale Coral coral-100 (#FDE8E4) selected/soft accents; Warm White paper-50 (#FAFAF8) and White paper-0 (#FFFFFF); Cool Gray line-200 (#E4E7EC) for quiet card borders, stronger line-strong (#7D899B) for interactive boundaries, and Slate slate-500 (#667085) for secondary text. Keep status colors separate: green confirmed, amber clarification, and red error/end attention. Use Geist-like sans typography with mono metadata; 8 px spacing rhythm; 12 px controls, 18–22 px cards, 28 px main canvas; subtle borders and sparse soft elevation; limited accessible glass only around the live interview overlay; restrained Lucide-like line icons. Avoid neon cyberpunk, robots, stock photos, generic HR dashboards, decorative analytics charts, excessive glow, and excessive glassmorphism.
+Follow the approved “Signal Canvas” visual language exactly: precise, calm, modern, transparent, technically credible, and candidate-friendly; Deep Ink Navy ink-950 (#18243A) interview canvas; raised ink-900 (#22314B) surfaces; Warm Coral coral-500 (#F26B5B) brand and live signal paired with Deep Ink text; action coral-700 (#CC493F) for filled controls with White text; Pale Coral coral-100 (#FDE8E4) selected/soft accents; Plum plum-700 (#6F4778), plum-300 (#D7ACDD), and plum-100 (#F2E7F4) for confirmed/completed tags; Warm White paper-50 (#FAFAF8) and White paper-0 (#FFFFFF); Cool Gray line-200 (#E4E7EC) for quiet card borders, stronger line-strong (#7D899B) for interactive boundaries, and Slate slate-500 (#667085) for secondary text. Keep green for live operational signals, amber for clarification, and red for error/end attention. Use Geist-like sans typography with mono metadata; 8 px spacing rhythm; 12 px controls, 18–22 px cards, 28 px main canvas; subtle borders and sparse soft elevation; limited accessible glass only around the live interview overlay; restrained Lucide-like line icons. Avoid neon cyberpunk, robots, stock photos, generic HR dashboards, decorative analytics charts, excessive glow, and excessive glassmorphism.
 
-Depict Pilot, ScreenPilot's AI interviewer, interviewing a synthetic candidate in a role-agnostic first-stage HR demo. The candidate is using conversation-first mode and has stated “Graphic Designer,” which is shown as the synthetic session-only vacancy—not a real opening or application. They have also stated a compensation expectation and candidate-described English-use context. Show a clearly listening coral Pilot voice signal, Pilot status using the exact visible phrases “Pilot is interviewing” and “Pilot is listening…”, readable live caption, elapsed timer, a mute control whose action/state reads **Mute — Microphone on**, an **End interview** control, a subtle Conversation-first mode badge, and an insight area containing candidate-sourced cards for role preference (“Graphic Designer — synthetic demo role”), compensation expectation, English-use context, availability, and high-level relevant experience. Mark only role preference, compensation expectation, and English-use context as confirmed, using both text/icon and green status color with caption-evidence cues. Availability must read **Not confirmed yet** and relevant experience must read **Not discussed yet**; both use the amber **Needs clarification** state and neither claims caption evidence. Do not invent a company or candidate name, employer facts, responsibilities, qualifications, salary band, benefits, work pattern, or hiring timeline. Do not use “AI” as the visible interviewer label, and do not show hiring scores, rankings, pass/fail decisions, sentiment, emotion, login, recruiter navigation, job management, pause, phone controls, device chrome, or unsupported features.
+Depict Pilot, ScreenPilot's AI interviewer, interviewing a synthetic candidate in a role-agnostic first-stage HR demo. The candidate is using conversation-first mode and has stated “Graphic Designer,” which is shown as the synthetic session-only vacancy—not a real opening or application. They have also stated a compensation expectation and candidate-described English-use context. Give the transcript priority and integrate a compact status rail at its top: use the exact visible phrase **Listening to you** with a static microphone, or **Pilot speaking** with four restrained bars; do not add a separate large waveform or avatar. Show readable live captions, elapsed timer, a theme-matched microphone/slashed-microphone icon control with an accessible action label, an **End interview** control with a playback-stop icon, a subtle Conversation-first mode badge, and an insight area containing candidate-sourced cards for role preference (“Graphic Designer — synthetic demo role”), compensation expectation, English-use context, availability, and high-level relevant experience. Mark only role preference, compensation expectation, and English-use context as confirmed, using both text/icon and the plum/lilac positive-status treatment with caption-evidence cues. Availability must read **Not confirmed yet** and relevant experience must read **Not discussed yet**; both use the amber **Needs clarification** state and neither claims caption evidence. Do not invent a company or candidate name, employer facts, responsibilities, qualifications, salary band, benefits, work pattern, or hiring timeline. Do not use “AI” as the visible interviewer label, and do not show hiring scores, rankings, pass/fail decisions, sentiment, emotion, login, recruiter navigation, job management, pause, phone controls, device chrome, or unsupported features.
 
-Desktop composition: full-height dark canvas; approximately 42% left voice/caption/control area and 58% right Insight Board. The board matches the voice/caption panel height, scrolls vertically inside that boundary, and keeps every card on one aligned column; cards emerge visually from the voice area but never cover captions. Mobile composition: compact voice signal at top, readable captions, swipeable insight-card rail with one selected card expanded, and sticky safe-area-aware mute/end controls. Preserve the same content, status, actions, visual identity, and evidence meaning in both views rather than removing mobile features. All interactive targets should look at least 44 × 44 px and status must never rely on color alone.
+Desktop composition: full-height dark canvas; approximately 42% left transcript/control area and 58% right Insight Board. The board matches the transcript panel height, scrolls vertically inside that boundary, and keeps every card on one aligned column; cards emerge visually from the transcript area but never cover captions. Mobile composition: the compact status rail remains integrated at the top of readable captions, followed by the swipeable insight-card rail with one selected card expanded and sticky safe-area-aware mute/end controls. Preserve the same content, status, actions, visual identity, and evidence meaning in both views rather than removing mobile features. All interactive targets should look at least 44 × 44 px and status must never rely on color alone.
 
 Present this as a high-quality UI concept for composition and visual direction. Keep text concise and legible, but do not add invented copy or features. The result will guide a responsive React implementation; it is not a pixel-exact specification.
 ```
@@ -3353,7 +3393,7 @@ Every authorized ticket implementation or completion commit begins with the exac
 
 - [x] Translate the approved HTML reference’s color, typography, spacing, radius, elevation, grid, and motion values into maintainable frontend tokens without scattered magic values.
 - [x] Keep token names/values aligned between `docs/SCREENPILOT_DESIGN_SYSTEM.html` and frontend CSS; update both together when an approved correction is required.
-- [x] Build the shared ScreenPilot mark, navbar, entry-mode cards/badge, buttons, cards, stage indicator, error panel, and layout primitives from those tokens.
+- [x] Build the shared ScreenPilot mark, navbar, entry-mode cards/badge, buttons, cards, stage heading, error panel, and layout primitives from those tokens.
 - [x] Implement the original light/dark shell primitives; SP-011A subsequently assigns the continuous Deep Ink/plum/coral atmosphere to landing and every `/demo` state, including review.
 - [x] Implement focus, reduced-motion, contrast, safe-area, and responsive behavior documented in the reference.
 - [x] Manually compare desktop/mobile shells against the approved reference and document deliberate accessibility/implementation deviations in the ticket packet.
@@ -3504,7 +3544,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [x] Enter the shared preflight state with the deterministic plan, `interviewGrant`, and Conversation-first badge data.
 - [x] Explain that any candidate-stated role is a synthetic session-only demo vacancy, offer an undecided path, and show no catalogue, unavailable state, or profession-specific branch.
 - [x] Implement Back, retry, expiry, Clear-session, responsive, and keyboard behavior without redirecting to CV upload.
-- [x] Keep the `/demo` route shell visible across early stages with the shared stage indicator, reusable Privacy access, and immediate Clear-session action. SP-011A subsequently moves progress into the top in-workspace panel, places **Privacy details** immediately before **Clear & exit** in the header, and removes the workspace footer.
+- [x] Keep the `/demo` route shell visible across early stages with shared stage orientation, reusable Privacy access, and immediate Clear-session action. SP-011A subsequently places **Privacy details** immediately before **Clear & exit** in the header, removes the workspace footer, and later integrates the five-step counter into each shared stage pretitle instead of a separate progress panel.
 - [x] Add focused reducer/component/API tests proving mode isolation and no provider preparation call.
 
 #### [SP-011A — Modernize the entry and early demo experience](tickets/SP-011A-modernize-entry-and-early-demo-experience.md)
@@ -3524,7 +3564,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [x] Keep the automatic preview loop slow and deterministic across two three-topic boards, pause it on deliberate keyboard/click focus and when off-screen or hidden, keep layout stable, and use complete non-spatial states under reduced motion.
 - [x] Retain equal CV-assisted and conversation-first entry paths while materially redesigning the landing hierarchy and surfaces.
 - [x] Keep landing navigation limited to **How it works** and **Start demo**; preserve contextual Privacy access in the landing story and keep repository access outside the landing composition.
-- [x] Give `/demo` a logo, **Privacy details**, and **Clear & exit** navbar plus a top in-workspace progress panel; do not render a workspace footer, and use one layered-dark viewport-aware workspace across every current and downstream stage.
+- [x] Give `/demo` a logo, **Privacy details**, and **Clear & exit** navbar plus step-prefixed shared stage headings; do not render a separate progress bar or workspace footer, and use one layered-dark viewport-aware workspace across every current and downstream stage.
 - [x] Disable the identified Next.js development indicator through supported Next.js 16 configuration while preserving compile/runtime error reporting.
 - [x] Verify deterministic tests, lint, typecheck, build, keyboard/focus/dialog behavior, reduced motion, responsive anchors, and no overflow.
 - [x] Apply the 2026-09-11 user visual-review correction: left-aligned interview-led masthead with a four-card code-native diagonal feature cascade on its right, a wide product preview directly beneath it, plain-language copy, slow six-example loop with word-by-word subtitles and two alternating three-card notes boards, refined person-at-laptop illustration with active voice waveform, non-sticky transparent brand-left/action-right landing header inside one seamless edge-to-edge background, dark entry cards, sticky scroll timeline, contextual privacy, and no landing footer.
@@ -3723,7 +3763,7 @@ suppresses its real Turnstile site key from public bootstrap.
 - [x] Prevent refresh auto-reconnect and preserve partial local evidence.
 - [x] Test fake normal, interruption, duplicate, stale/out-of-order control events, disconnect, and time-limit traces.
 
-**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. SP-018A supplied the initial active-session smoke; its unperformed responsive, reduced-motion, callback, cleanup, and post-fix observations move unchanged to the consolidated SP-021A live gate after review exists.
+**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. SP-018A supplied the initial active-session smoke; its unperformed responsive, reduced-motion, callback, cleanup, and post-fix observations move unchanged to the consolidated SP-021B live gate after review exists.
 
 #### [SP-015A — Polish the landing and demo flow after visual review](tickets/SP-015A-polish-landing-and-demo-flow-after-visual-review.md)
 
@@ -3809,7 +3849,7 @@ without an HTTP request, browser load, provider operation, or paid action.
 - [x] Remove redundant copy and oversized presentation blocks without weakening required disclosures.
 - [x] Preserve phone natural flow and verify every current page-level step with deterministic per-step screenshots at multiple laptop sizes.
 
-**Implementation evidence (2026-09-15):** The shared shell passed deterministic fake-mode measurement at 768 × 1024, 820 × 1180, 1024 × 600, 1280 × 650, 1366 × 680, and 1440 × 800 with no outer/horizontal overflow and all primary/recovery actions visible; 1180 × 720 also passed. The final compact-anchor evidence used only the real `/demo` flow at 1024 × 600 and 1366 × 680: 16 page-state captures each began with asserted `scrollX = 0` and `scrollY = 0`, kept the complete header/brand/actions, progress panel/content, heading, and 44 px stage actions inside the viewport, and produced exact outer-document fit with zero horizontal overflow. The superseded preview-route harness was removed and misleading earlier captures were refreshed from the actual flow. Phone portrait and short landscape preserve natural flow without horizontal overflow. Compact-laptop entry rows, flexible CV states, icon-led preflight, 48/52 interview composition, plan/insight inner rails, and explicit three-track preparation footers were visually inspected with synthetic fixtures. A roomy-screen tier was verified at 1440 × 800, 1600 × 900, and 1920 × 1080: sparse entry/CV/completion cards retain natural caps, preflight sections stack compactly, and the interview voice panel reorganizes around a bounded caption surface without stretching to the Insight Board height. A fresh fake conversation at 1440 × 800 captured progressive Pilot/candidate/Pilot caption phases and verified computed signal animation only for Pilot speech. Captions now carry stable normalized turn identities, and a repeated-prefix regression proves tentative-to-final continuity plus fresh same-speaker-turn animation. Emulated reduced motion during tentative Pilot speech at both compact anchors measured `0s` word delays and `none` for the caret and all seven signal bars. The landing was separately inspected at 1440 × 800, 1600 × 900, 1920 × 1080, and 2560 × 1440: its aligned header/section containers expand beyond the old 1200 px cap with zero horizontal overflow, while the largest anchor preserves a bounded 2048 px content width and 1920 px product preview. The fake-mode End interview path passed at 1024 × 600, 1366 × 680, and 1920 × 1080, reached a reducer-owned scrubbed Review placeholder without a runtime overlay, and a regression prevents React click events from becoming `voice.endReason`. Frontend verification passed 31 files / 189 unit tests, typecheck, zero-warning lint, targeted formatting for the full SP-016A change set, and diff checks. Focused completion tests cover the valid and invalid reducer transitions, full memory scrub, non-persistable stage, browser projection deletion, and Review-step UI. The final production build ran from a fresh snapshot assembled only from Git-visible tracked/untracked files plus dependency-only junctions; it reported zero local environment files, retained the committed `.env.example` schemas, and could not include ignored owner files. Next's webpack production builder was used because Turbopack rejects dependency links outside an isolated filesystem root. No credential was read and no package was downloaded. The exact local artifact directories are recorded in the SP-016A packet; real hardware/credentialed/live-provider checks, 200% zoom, and owner visual acceptance remain pending.
+**Implementation evidence (2026-09-15):** The shared shell passed deterministic fake-mode measurement at 768 × 1024, 820 × 1180, 1024 × 600, 1280 × 650, 1366 × 680, and 1440 × 800 with no outer/horizontal overflow and all primary/recovery actions visible; 1180 × 720 also passed. The final compact-anchor evidence used only the real `/demo` flow at 1024 × 600 and 1366 × 680: 16 page-state captures each began with asserted `scrollX = 0` and `scrollY = 0`, kept the complete header/brand/actions, then-current progress panel/content, heading, and 44 px stage actions inside the viewport, and produced exact outer-document fit with zero horizontal overflow. The progress panel was later removed in favor of step-prefixed shared stage headings. The superseded preview-route harness was removed and misleading earlier captures were refreshed from the actual flow. Phone portrait and short landscape preserve natural flow without horizontal overflow. Compact-laptop entry rows, flexible CV states, icon-led preflight, 48/52 interview composition, plan/insight inner rails, and explicit three-track preparation footers were visually inspected with synthetic fixtures. A roomy-screen tier was verified at 1440 × 800, 1600 × 900, and 1920 × 1080: sparse entry/CV/completion cards retain natural caps, preflight sections stack compactly, and the interview voice panel reorganizes around a bounded caption surface without stretching to the Insight Board height. A fresh fake conversation at 1440 × 800 captured progressive Pilot/candidate/Pilot caption phases and verified computed signal animation only for Pilot speech. Captions now carry stable normalized turn identities, and a repeated-prefix regression proves tentative-to-final continuity plus fresh same-speaker-turn animation. Emulated reduced motion during tentative Pilot speech at both compact anchors measured `0s` word delays and `none` for the caret and all seven signal bars. The landing was separately inspected at 1440 × 800, 1600 × 900, 1920 × 1080, and 2560 × 1440: its aligned header/section containers expand beyond the old 1200 px cap with zero horizontal overflow, while the largest anchor preserves a bounded 2048 px content width and 1920 px product preview. The fake-mode End interview path passed at 1024 × 600, 1366 × 680, and 1920 × 1080, reached a reducer-owned scrubbed Review placeholder without a runtime overlay, and a regression prevents React click events from becoming `voice.endReason`. Frontend verification passed 31 files / 189 unit tests, typecheck, zero-warning lint, targeted formatting for the full SP-016A change set, and diff checks. Focused completion tests cover the valid and invalid reducer transitions, full memory scrub, non-persistable stage, browser projection deletion, and Review-step UI. The final production build ran from a fresh snapshot assembled only from Git-visible tracked/untracked files plus dependency-only junctions; it reported zero local environment files, retained the committed `.env.example` schemas, and could not include ignored owner files. Next's webpack production builder was used because Turbopack rejects dependency links outside an isolated filesystem root. No credential was read and no package was downloaded. The exact local artifact directories are recorded in the SP-016A packet; real hardware/credentialed/live-provider checks, 200% zoom, and owner visual acceptance remain pending.
 
 #### [SP-017 — Write and evaluate the adaptive interview policy](tickets/SP-017-write-and-evaluate-adaptive-interview-policy.md)
 
@@ -3855,10 +3895,10 @@ without an HTTP request, browser load, provider operation, or paid action.
 
 - [x] Instrument conversation-preparation response, browser TTFA, connect, interruption, and card timings without content logs.
 - [x] Tune prompt size, context bounds, turn eagerness, and TTS settings.
-- [x] Implement visual latency stages and one static soft-timeout filler.
+- [x] Implement bounded latency feedback and one static soft-timeout filler; the initial interval uses the integrated transcript status rail without a separate ornament.
 - [x] Enforce filler frequency rules and 8-minute hard stop.
 - [x] Provide repeatable content-free aggregation for 50 live turns plus 50 conversation-preparation requests across desktop/mobile and normal/throttled profiles.
-- [x] Encode documented release thresholds as failures; SP-021A owns the deferred live sample and must not weaken them.
+- [x] Encode documented release thresholds as failures; SP-021B owns the deferred live sample and must not weaken them.
 
 **Implementation evidence (2026-09-15):** Browser-only instrumentation now
 covers every named boundary, emits bounded content-free samples, and exposes an
@@ -3880,7 +3920,7 @@ claimed by this verification.
 
 #### [SP-018A — Verify live CV and voice integrations](tickets/SP-018A-verify-live-cv-and-voice-integrations.md)
 
-**Outcome:** Finalized by owner decision after a bounded synthetic live smoke proved the real CV-analysis path and one private CV-assisted voice interview. The two defects found were fixed and deterministically verified. Every unperformed full-flow, post-fix observation, tool/runtime-variable, performance, privacy, cleanup, usage, and cost item remains unchecked and transfers to required SP-021A after the review flow exists.
+**Outcome:** Finalized by owner decision after a bounded synthetic live smoke proved the real CV-analysis path and one private CV-assisted voice interview. The two defects found were fixed and deterministically verified. Every unperformed full-flow, post-fix observation, tool/runtime-variable, performance, privacy, cleanup, usage, and cost item remains unchecked and transfers to required SP-021B after the review flow and SP-021A documentation gate exist.
 
 **Depends on:** SP-014A, SP-018.
 
@@ -3914,7 +3954,7 @@ three evidence cards were cross-checked against the source-controlled expected
 fixture. This verifies only the live paid CV-assisted preparation slice; voice,
 negative Turnstile cases, provider usage/cost review, cleanup, and final safety-
 switch restoration remained open at that checkpoint. The owner later confirmed
-both switches were restored; the other unchecked items transfer to SP-021A.
+both switches were restored; the other unchecked items transfer to SP-021B.
 
 **Live voice path evidence (2026-09-16):** one owner-triggered Start passed the
 real `voice_token` gate, produced one successful private token response, and
@@ -3929,7 +3969,7 @@ two defects, the second entry mode, complete client-tool/runtime-variable
 coverage, live performance samples, cleanup, provider usage/cost, and final
 safety-switch restoration remained open at that checkpoint. The owner later
 confirmed both switches were restored; the other unchecked items transfer to
-SP-021A.
+SP-021B.
 
 **Live voice defect correction (2026-09-16, deterministic/no-spend):** the
 missing Pilot captions were traced to provider-event deduplication that used a
@@ -3957,7 +3997,7 @@ caption/automatic-end fixes remain deterministically verified but not re-
 observed live. The second entry mode, all eight runtime variables, all five
 client tools, the 50-turn and 50-preparation samples, full cleanup/privacy
 inspection, and provider revision/retention/usage/cost review remain unchecked
-and move intact to SP-021A. The owner explicitly confirms the local runtime is
+and move intact to SP-021B. The owner explicitly confirms the local runtime is
 restored to `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake`; the coding agent
 did not inspect either ignored environment file. This is a dependency-ordering
 closure, not a claim that the deferred evidence passed or that the demo is
@@ -3997,7 +4037,7 @@ closure no longer claims full-timeline navigation as current UI.
 
 #### [SP-020 — Generate the stateless post-call summary](tickets/SP-020-generate-stateless-post-call-summary.md)
 
-**Outcome:** Completed locally on 2026-09-21. GPT organizes local evidence into cautious recruiter-readable notes without saving it; the first real summary remains deferred to SP-021A.
+**Outcome:** Completed locally on 2026-09-21. GPT organizes local evidence into cautious recruiter-readable notes without saving it; the first real summary remains deferred to SP-021B.
 
 **Depends on:** SP-009, SP-010, SP-010A, SP-017, SP-019.
 
@@ -4019,7 +4059,7 @@ closure no longer claims full-timeline navigation as current UI.
 
 #### [SP-021 — Build review, retry, and clear-session experience](tickets/SP-021-build-review-retry-and-clear-session.md)
 
-**Outcome:** Completed locally on 2026-09-21. The demo ends with a polished connected evidence map, bounded center-card evidence previews, no full transcript surface, and an explicit privacy exit; credentialed/live acceptance remains deferred to SP-021A.
+**Outcome:** Completed locally on 2026-09-21. The demo ends with a polished connected evidence map, bounded center-card evidence previews, no full transcript surface, and an explicit privacy exit; credentialed/live acceptance remains deferred to SP-021B after SP-021A documents and reconciles the owner's pre-live decisions.
 
 **Depends on:** SP-005, SP-006, SP-010A, SP-019, SP-020.
 
@@ -4037,27 +4077,67 @@ closure no longer claims full-timeline navigation as current UI.
 - [x] Clearly label AI-organized notes and no hiring recommendation without exposing a model/provider name in user-facing copy.
 - [x] Verify clearing removes all ScreenPilot session keys and content UI.
 
-#### [SP-021A — Validate the complete live demo flow](tickets/SP-021A-validate-complete-live-demo-flow.md)
+#### [SP-021A — Document owner visual feedback and pre-live decisions](tickets/SP-021A-document-owner-visual-feedback-and-pre-live-decisions.md)
 
-**Outcome:** The owner first reviews and explicitly approves the adjusted
-SP-021 ending-to-review visuals; one subsequent consolidated, owner-authorized
-paid window validates both entry modes through corrected voice behavior,
-summary, evidence-linked review, retry behavior, cleanup, provider evidence,
-and retained performance sampling after the entire same-session product exists.
+**Outcome:** The packet records the complete owner visual-feedback/fix ledger
+and reconciles two accepted pre-live specifications. Prompt 1's evidence-backed
+candidate-question handling and Prompt 2's reducer-owned interview-complete
+hold are implemented and deterministically verified in source; provider
+publication of Prompt 1 is recorded at immutable revision
+`agtvrsn_8901m350e924f2ev7t4pwnvq38b1`, while live observation remains pending.
 
-**Depends on:** SP-018A, SP-019, SP-020, SP-021.
+**Depends on:** SP-019, SP-020, SP-021.
 
-**Suggested commit:** `SP-021A: validate the complete live demo flow`
+**Suggested commit:** `SP-021A: document owner visual review findings`
 
 **Checklist:**
 
+- [x] Preserve the former paid/live packet as SP-021B and update its dependency
+  on this documentation gate.
+- [x] Record every accepted visual change, rejected exploration, confirmed fix,
+  and remaining implementation item from the owner review.
+- [x] Specify the exact unsupported-employer-question fallback, live Candidate
+  question/Human follow-up cards, and evidence-linked final review behavior.
+- [x] Specify the three normal completion triggers, immediate resource shutdown,
+  reducer-owned interview-complete hold, View summary transition, fake-mode
+  simulation, restore behavior, and unexpected-disconnect distinction.
+- [x] Reconcile Prompt 1 into implementation, tests, source policy
+  `sp017-2026-09-22.1`, provider-sync instructions, and affected packets before
+  the separate owner-authorized no-conversation publication.
+- [x] Implement and reconcile Prompt 2 without reading local credentials,
+  enabling paid mode, or contacting a live provider.
+- [x] Publish the selected Prompt 1 policy with owner authorization to immutable
+  revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` without Preview or paid
+  conversation; keep live behavior acceptance in SP-021B.
+
+#### [SP-021B — Validate the complete live demo flow](tickets/SP-021B-validate-complete-live-demo-flow.md)
+
+**Outcome:** After SP-021A's accepted visual and pre-live decisions are fully
+implemented and reconciled, one consolidated owner-authorized paid window
+validates both entry modes through corrected voice behavior, summary, evidence-
+linked review, retry behavior, cleanup, provider evidence, and retained
+performance sampling.
+
+**Depends on:** SP-018A, SP-019, SP-020, SP-021, SP-021A.
+
+**Suggested commit:** `SP-021B: validate the complete live demo flow`
+
+**Checklist:**
+
+- [ ] Before any live-mode switch or paid provider operation, run a fresh
+  deterministic fake-mode rehearsal of both SP-021A prompts against the exact
+  release candidate: verify Prompt 1's approved fallback plus paired Candidate
+  question/Human follow-up evidence through review, and verify Prompt 2's fake
+  agent completion, disconnected read-only workspace, and **View summary**
+  handoff without voice reconnection or duplicate summary work. Any failure
+  keeps SP-021B closed until it is fixed, documented, and revalidated in fake
+  mode.
 - [ ] Reconcile the exact unchecked SP-018A ledger without converting any
   unperformed item into a pass.
-- [ ] Before enabling paid mode, present the fake-mode ending transition and
-  review at representative desktop, tablet, and phone widths; collect and apply
-  the owner's visual feedback, rerun affected checks, and record an explicit
-  owner visual pass. Keep SP-021A open if that pass is absent, regardless of
-  engineering inspection, automated checks, or later provider results.
+- [ ] Confirm SP-021A's two accepted behavior specifications and all owner-
+  approved fixes are implemented, documented, and deterministically verified;
+  keep SP-021B closed and do not spend provider credit while any mismatch
+  remains.
 - [ ] Run one bounded synthetic CV-assisted complete flow and one bounded
   synthetic conversation-first complete flow through summary and review.
 - [ ] Independently observe the corrected Pilot captions and provider-owned
@@ -4066,7 +4146,7 @@ and retained performance sampling after the entire same-session product exists.
   provenance, evidence navigation, retry behavior, Clear & exit, and cleanup.
 - [ ] Collect the deferred 50 free preparation measurements and 50 eligible live
   turns under a pre-agreed cap; report actual sample size and leave an incomplete
-  target unchecked and SP-021A open rather than weakening thresholds or
+  target unchecked and SP-021B open rather than weakening thresholds or
   inventing evidence.
 - [ ] Review provider revision, retention/audio state, operation counts, coarse
   usage, and actual cost with sanitized evidence only.
@@ -4139,7 +4219,7 @@ and retained performance sampling after the entire same-session product exists.
 
 **Outcome:** The complete demo is manually approved across phone, tablet, compact-laptop, laptop/desktop, and large-monitor layouts and passes the fast essential checks without requiring the extended automation suite.
 
-**Depends on:** SP-010A, SP-017, SP-018, SP-021A, SP-022, SP-023, SP-024.
+**Depends on:** SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024.
 
 **Suggested commit:** `SP-025: complete focused demo release checks`
 
@@ -4152,7 +4232,7 @@ and retained performance sampling after the entire same-session product exists.
 - [ ] Manually verify both modes remain role-agnostic HR screens: prioritized fields, multi-field answer credit, normal 8–10-prompt budget, at most one broad role-context clarification, and zero profession-specific assessment chains.
 - [ ] Run the smallest targeted unit/backend checks for release-critical logic.
 - [ ] Run the complete fast default command set once.
-- [ ] Review and reuse current SP-021A live evidence for both entry modes; repeat
+- [ ] Review and reuse current SP-021B live evidence for both entry modes; repeat
   a paid flow only when a later code, provider, configuration, hostname, or
   release-candidate change invalidates that evidence.
 - [ ] Create `docs/operations/full-flow-cost-baseline.md`; reconcile direct OpenAI usage, ElevenLabs connected minutes/live-LLM Detailed costs, free allowances, and infrastructure overages without candidate/account/secret content, and explain estimate variance above 20%.
@@ -4235,7 +4315,7 @@ deterministic final gate passes.
 
 **Release status:** Optional. SP-026 completes the releasable deployed demo; SP-027 cannot block deployment, release approval, or any later optional work.
 
-**Depends on:** SP-018, SP-021A, SP-025A, SP-026.
+**Depends on:** SP-018, SP-021B, SP-025A, SP-026.
 
 **Suggested commit:** `SP-027: prepare the ScreenPilot portfolio release`
 
@@ -4310,8 +4390,9 @@ deterministic final gate passes.
 ### Review
 
 - [ ] Same-session review works without provider artifact retrieval.
-- [ ] Manual and automatic endings transform the existing two-column interview into the same centered evidence-map review: voice/media cleanup is immediate, the right board fades/collapses, the left column expands, and retained insight nodes remain reachable without a blank page jump.
+- [ ] Agent, manual, and eight-minute endings clean up immediately, preserve the first terminal reason, and enter the same read-only completed workspace with frozen elapsed time, microphone-disconnected copy, retained transcript/insights, and **View summary**; unexpected interruption remains partial.
 - [ ] Each evidence-map node can replace the center overview with an unambiguous Pilot question, cited candidate answer, evidence metadata, and related evidence-citing summary notes, with explicit unavailable states and no invented links; switching/minimizing restores the intended center state.
+- [ ] The review heading exposes keyboard-operable Evidence map and Organized notes tabs once a summary exists, with only the selected complete view occupying page flow.
 - [ ] Review identifies the entry mode and accurately distinguishes CV-supported from candidate-only evidence.
 - [ ] Every summary fact carries a bounded local evidence reference or an explicit unavailable state without rendering the full transcript.
 - [ ] Partial transcripts and missing topics are labelled honestly.
@@ -4331,7 +4412,7 @@ deterministic final gate passes.
 - [ ] The manually selected custom domain stays under the renewal-price guardrail, Firebase Hosting serves valid managed HTTPS, apex/`www` canonicalization works, and same-origin `/v1` requests reach the backend without exposing direct service URLs to visitors.
 - [ ] Optional SP-027 portfolio packaging is explicitly not required for deployment or release approval.
 - [ ] Optional SP-028 automation is explicitly not required for deployment or release approval.
-- [ ] Current SP-021A controlled live evidence for both entry modes passes; any
+- [ ] Current SP-021B controlled live evidence for both entry modes passes; any
   evidence invalidated by later release-candidate or provider/configuration
   changes is narrowly rerun before approval.
 - [ ] Full phone, tablet, laptop/desktop, and large-monitor flows plus keyboard, reduced-motion, orientation, safe-area, intermediate resizing, and provider failure paths are verified.

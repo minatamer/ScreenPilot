@@ -5,6 +5,11 @@ import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript
 import { VOICE_LATENCY_REVIEWING_THRESHOLD_MS } from "@screenpilot/contracts/interview/voice-performance-policy";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 
+import type {
+  InterviewCompletion,
+  InterviewTerminalReason,
+} from "@/features/session/demo-session.types";
+
 import {
   createFillerPolicyState,
   observeLatencyFiller,
@@ -35,6 +40,7 @@ export type VoiceLatencyStage = "idle" | "visual" | "reviewing";
 type VoiceSessionViewState = Readonly<{
   caption: LiveCaption | null;
   connectedAt: number | null;
+  displayPhase: VoiceSessionPhase;
   isMuted: boolean;
   phase: VoiceSessionPhase;
 }>;
@@ -55,6 +61,7 @@ function createInitialViewState(): VoiceSessionViewState {
   return {
     caption: null,
     connectedAt: null,
+    displayPhase: "requesting_token",
     isMuted: false,
     phase: "requesting_token",
   };
@@ -70,7 +77,7 @@ function voiceSessionViewReducer(
   switch (event.type) {
     case "CONNECTING":
       return state.phase === "idle" || state.phase === "requesting_token"
-        ? { ...state, phase: "connecting" }
+        ? { ...state, displayPhase: "connecting", phase: "connecting" }
         : state;
     case "CONNECTED":
       if (
@@ -82,6 +89,7 @@ function voiceSessionViewReducer(
       return {
         ...state,
         connectedAt: event.connectedAt,
+        displayPhase: "listening",
         phase: "listening",
       };
     case "MODE":
@@ -90,14 +98,14 @@ function voiceSessionViewReducer(
       }
       return state.phase === event.mode
         ? state
-        : { ...state, phase: event.mode };
+        : { ...state, displayPhase: event.mode, phase: event.mode };
     case "RECONNECTING":
       return state.phase === "listening" || state.phase === "speaking"
-        ? { ...state, phase: "reconnecting" }
+        ? { ...state, displayPhase: "reconnecting", phase: "reconnecting" }
         : state;
     case "RECONNECTED":
       return state.phase === "reconnecting"
-        ? { ...state, phase: "listening" }
+        ? { ...state, displayPhase: "listening", phase: "listening" }
         : state;
     case "CAPTION":
       return state.connectedAt === null
@@ -118,26 +126,34 @@ function voiceSessionViewReducer(
     case "ENDED":
       return state.phase === "ending" ? { ...state, phase: "ended" } : state;
     case "FAILED":
-      return { ...state, phase: "failed" };
+      return { ...state, displayPhase: "failed", phase: "failed" };
   }
 }
 
 type UseVoiceSessionOptions = Readonly<{
   endFallbackMs?: number;
-  endTransitionMs?: number;
   hardStopAtMs?: number;
   now?: () => number;
   onConnected: (voice: VoiceMetadata) => void;
   onConnectionFailure: (message: string) => void;
-  onEnded: (voice: VoiceMetadata) => void;
-  onEnding: () => void;
+  onEnded: (voice: VoiceMetadata, completion: InterviewCompletion) => void;
+  onEnding: (completion: InterviewCompletion) => void;
   onFinalTranscriptTurn: (turn: TranscriptTurn) => void;
   onInterrupted: () => void;
   performanceTracker?: VoicePerformanceTracker | undefined;
 }>;
 
 const DEFAULT_END_FALLBACK_MS = 2_000;
-const DEFAULT_END_TRANSITION_MS = 420;
+
+function terminalReasonMessage(reason: InterviewTerminalReason): string {
+  if (reason === "agent_completed") {
+    return "Interview completed by the interviewer.";
+  }
+  if (reason === "time_limit") {
+    return "The eight-minute interview limit was reached.";
+  }
+  return "Interview ended by the candidate.";
+}
 
 export function useVoiceSession(options: UseVoiceSessionOptions) {
   const [state, dispatch] = useReducer(
@@ -156,13 +172,14 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   const voiceRef = useRef<VoiceMetadata | null>(null);
   const connectedRef = useRef(false);
   const endingRequestedRef = useRef(false);
-  const endingStartedAtRef = useRef<number | null>(null);
-  const endingReasonRef = useRef("Interview ended by the candidate.");
+  const completionRef = useRef<InterviewCompletion | null>(null);
+  const elapsedSecondsRef = useRef(0);
   const completedRef = useRef(false);
-  const endTransitionTimerRef = useRef<number | null>(null);
   const candidateTurnRef = useRef(0);
   const candidateSpeechActiveRef = useRef(false);
   const fillerPolicyRef = useRef(createFillerPolicyState());
+  const elapsedIntervalRef = useRef<number | null>(null);
+  const hardStopTimerRef = useRef<number | null>(null);
   const latencyTimerRef = useRef<number | null>(null);
   const latencySequenceRef = useRef(0);
   const pendingTtfaRef = useRef<{
@@ -197,6 +214,14 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   }, []);
 
   const cancelPendingMeasurements = useCallback(() => {
+    if (elapsedIntervalRef.current !== null) {
+      window.clearInterval(elapsedIntervalRef.current);
+      elapsedIntervalRef.current = null;
+    }
+    if (hardStopTimerRef.current !== null) {
+      window.clearTimeout(hardStopTimerRef.current);
+      hardStopTimerRef.current = null;
+    }
     clearLatencyTimer();
     const tracker = callbacksRef.current.performanceTracker;
     const pendingTtfa = pendingTtfaRef.current;
@@ -269,55 +294,27 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
     [clearLatencyTimer],
   );
 
-  const clearEndTransitionTimer = useCallback(() => {
-    if (endTransitionTimerRef.current !== null) {
-      window.clearTimeout(endTransitionTimerRef.current);
-      endTransitionTimerRef.current = null;
-    }
-  }, []);
-
   const finishEnd = useCallback(() => {
-    if (completedRef.current || !voiceRef.current) {
+    if (completedRef.current || !voiceRef.current || !completionRef.current) {
       return;
     }
-    clearEndTransitionTimer();
     completedRef.current = true;
     cancelPendingMeasurements();
     setLatencyStage("idle");
     dispatch({ type: "ENDED" });
-    callbacksRef.current.onEnded({
-      ...voiceRef.current,
-      endedAt: new Date(currentTime()).toISOString(),
-      endReason: endingReasonRef.current,
-      status: "ended",
-    });
-  }, [cancelPendingMeasurements, clearEndTransitionTimer, currentTime]);
-
-  const completeEnd = useCallback(() => {
-    if (completedRef.current || !voiceRef.current) {
-      return;
-    }
-    const transitionMilliseconds = Math.max(
-      0,
-      callbacksRef.current.endTransitionMs ?? DEFAULT_END_TRANSITION_MS,
+    callbacksRef.current.onEnded(
+      {
+        ...voiceRef.current,
+        endedAt: new Date(currentTime()).toISOString(),
+        endReason: terminalReasonMessage(completionRef.current.reason),
+        status: "ended",
+      },
+      completionRef.current,
     );
-    const transitionStartedAt = endingStartedAtRef.current ?? currentTime();
-    const transitionRemaining = Math.max(
-      0,
-      transitionMilliseconds - (currentTime() - transitionStartedAt),
-    );
-    if (transitionRemaining === 0) {
-      finishEnd();
-      return;
-    }
-    endTransitionTimerRef.current ??= window.setTimeout(
-      finishEnd,
-      transitionRemaining,
-    );
-  }, [currentTime, finishEnd]);
+  }, [cancelPendingMeasurements, currentTime]);
 
   const requestEnd = useCallback(
-    (reason = "Interview ended by the candidate.") => {
+    (reason: InterviewTerminalReason = "candidate_ended") => {
       if (
         endingRequestedRef.current ||
         completedRef.current ||
@@ -325,16 +322,25 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       ) {
         return;
       }
+      const elapsedSeconds =
+        reason === "time_limit"
+          ? INTERVIEW_HARD_STOP_MS / 1_000
+          : elapsedSecondsRef.current;
+      const completion: InterviewCompletion = {
+        reason,
+        elapsedSeconds,
+      };
       endingRequestedRef.current = true;
-      endingStartedAtRef.current = currentTime();
-      endingReasonRef.current = reason;
+      completionRef.current = completion;
+      elapsedSecondsRef.current = elapsedSeconds;
+      setElapsedSeconds(elapsedSeconds);
       cancelPendingMeasurements();
       setLatencyStage("idle");
       dispatch({ type: "ENDING" });
       setEndRequested(true);
-      callbacksRef.current.onEnding();
+      callbacksRef.current.onEnding(completion);
     },
-    [cancelPendingMeasurements, currentTime],
+    [cancelPendingMeasurements],
   );
 
   const handleUnexpectedTerminalEvent = useCallback(
@@ -343,7 +349,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         return;
       }
       if (endingRequestedRef.current) {
-        completeEnd();
+        finishEnd();
         return;
       }
       completedRef.current = true;
@@ -356,7 +362,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         callbacksRef.current.onConnectionFailure(message);
       }
     },
-    [cancelPendingMeasurements, completeEnd],
+    [cancelPendingMeasurements, finishEnd],
   );
 
   const onSessionEvent = useCallback(
@@ -588,11 +594,11 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
             if (!endingRequestedRef.current) {
               requestEnd(
                 event.reason === "agent"
-                  ? "Interview completed by the interviewer."
-                  : "Interview ended by the candidate.",
+                  ? "agent_completed"
+                  : "candidate_ended",
               );
             }
-            completeEnd();
+            finishEnd();
             return;
           }
           handleUnexpectedTerminalEvent(
@@ -606,9 +612,9 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
     [
       beginCandidateResponseWait,
       clearLatencyTimer,
-      completeEnd,
       completeTtfa,
       currentTime,
+      finishEnd,
       handleUnexpectedTerminalEvent,
       requestEnd,
     ],
@@ -638,24 +644,32 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         : connectedAt + INTERVIEW_HARD_STOP_MS;
     const sessionStartedAtMs = hardStopAtMs - INTERVIEW_HARD_STOP_MS;
     const updateElapsed = () => {
-      setElapsedSeconds(
-        Math.min(
-          INTERVIEW_HARD_STOP_MS / 1_000,
-          Math.floor(Math.max(0, currentTime() - sessionStartedAtMs) / 1_000),
-        ),
+      const nextElapsedSeconds = Math.min(
+        INTERVIEW_HARD_STOP_MS / 1_000,
+        Math.floor(Math.max(0, currentTime() - sessionStartedAtMs) / 1_000),
       );
+      elapsedSecondsRef.current = nextElapsedSeconds;
+      setElapsedSeconds(nextElapsedSeconds);
     };
     updateElapsed();
     const intervalId = window.setInterval(updateElapsed, 1_000);
+    elapsedIntervalRef.current = intervalId;
     const timeoutId = window.setTimeout(
       () => {
-        requestEnd("The eight-minute interview limit was reached.");
+        requestEnd("time_limit");
       },
       Math.max(0, hardStopAtMs - currentTime()),
     );
+    hardStopTimerRef.current = timeoutId;
     return () => {
       window.clearInterval(intervalId);
       window.clearTimeout(timeoutId);
+      if (elapsedIntervalRef.current === intervalId) {
+        elapsedIntervalRef.current = null;
+      }
+      if (hardStopTimerRef.current === timeoutId) {
+        hardStopTimerRef.current = null;
+      }
     };
   }, [currentTime, requestEnd, state.connectedAt]);
 
@@ -664,19 +678,19 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       return;
     }
     const fallbackId = window.setTimeout(
-      completeEnd,
+      finishEnd,
       callbacksRef.current.endFallbackMs ?? DEFAULT_END_FALLBACK_MS,
     );
     return () => {
       window.clearTimeout(fallbackId);
     };
-  }, [completeEnd, endRequested]);
+  }, [endRequested, finishEnd]);
 
   useEffect(() => cancelPendingMeasurements, [cancelPendingMeasurements]);
-  useEffect(() => clearEndTransitionTimer, [clearEndTransitionTimer]);
 
   return {
     caption: state.caption,
+    displayPhase: state.displayPhase,
     elapsedSeconds,
     endRequested,
     isMuted: state.isMuted,

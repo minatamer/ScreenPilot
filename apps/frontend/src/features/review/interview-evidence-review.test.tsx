@@ -46,6 +46,27 @@ const candidateTurn: TranscriptTurn = {
   occurredAt: "2026-09-21T09:10:00.000Z",
 };
 
+const candidateQuestion =
+  "What onboarding and work-arrangement details can a recruiter share?";
+const humanFollowup =
+  "A human recruiter must confirm the unsupported onboarding and work-arrangement details.";
+const candidateQuestionPrompt: TranscriptTurn = {
+  id: "pilot-question-opportunity",
+  sequence: 2,
+  speaker: "interviewer",
+  status: "final",
+  text: "What would you like a recruiter to clarify?",
+  occurredAt: "2026-09-21T09:10:30.000Z",
+};
+const candidateQuestionTurn: TranscriptTurn = {
+  id: "candidate-question-turn",
+  sequence: 3,
+  speaker: "candidate",
+  status: "final",
+  text: candidateQuestion,
+  occurredAt: "2026-09-21T09:10:35.000Z",
+};
+
 function candidateInsight(
   evidenceTurnIds: readonly string[] = [candidateTurn.id],
 ): InsightCard {
@@ -71,6 +92,26 @@ function availabilityInsight(): InsightCard {
     label: "Availability",
     value: "Available in four weeks",
   };
+}
+
+function candidateQuestionInsights(): readonly InsightCard[] {
+  return [
+    {
+      ...candidateInsight([candidateQuestionTurn.id]),
+      id: "candidate-question-3",
+      category: "candidate_question",
+      label: "Candidate question",
+      value: candidateQuestion,
+    },
+    {
+      ...candidateInsight([candidateQuestionTurn.id]),
+      id: "follow-up-3",
+      category: "follow_up_needed",
+      label: "Human follow-up",
+      value: humanFollowup,
+      status: "needs_clarification",
+    },
+  ];
 }
 
 const plan = createConversationFirstPlanFixture();
@@ -123,6 +164,210 @@ function baseProps() {
 }
 
 describe("InterviewEvidenceReview", () => {
+  it("switches between the evidence map and organized notes without stacking both views", () => {
+    render(<InterviewEvidenceReview {...baseProps()} />);
+
+    const evidenceTab = screen.getByRole("tab", { name: "Evidence map" });
+    const notesTab = screen.getByRole("tab", { name: "Organized notes" });
+    expect(
+      screen.getByRole("tablist", { name: "Review views" }).parentElement,
+    ).toHaveClass("sp-review-stage__heading");
+
+    expect(evidenceTab).toHaveAttribute("aria-selected", "true");
+    expect(notesTab).toHaveAttribute("aria-selected", "false");
+    expect(
+      screen.getByRole("tabpanel", { name: "Evidence map" }),
+    ).toBeVisible();
+    expect(screen.getByText(SCREENING_SUMMARY_OVERVIEW)).toBeVisible();
+    expect(
+      screen.queryByText(/AI-organized notes require human interpretation/iu),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("tabpanel", { name: "Organized notes" }),
+    ).not.toBeInTheDocument();
+    const evidenceNode = screen.getByRole("button", {
+      name: /Motivation \/ next role.*Collaborative team/u,
+    });
+    fireEvent.click(evidenceNode);
+    expect(evidenceNode).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.click(notesTab);
+
+    expect(evidenceTab).toHaveAttribute("aria-selected", "false");
+    expect(notesTab).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getByRole("tabpanel", { name: "Organized notes" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Organized conversation notes" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("region", { name: "Conversation evidence map" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.keyDown(notesTab, { key: "ArrowLeft" });
+
+    expect(evidenceTab).toHaveAttribute("aria-selected", "true");
+    expect(evidenceTab).toHaveFocus();
+    expect(
+      screen.getByRole("region", { name: "Conversation evidence map" }),
+    ).toBeVisible();
+    expect(evidenceNode).toHaveAttribute("aria-expanded", "true");
+  });
+
+  it("preserves paired question evidence across the map, organized notes, and copied review", async () => {
+    const clipboard = { writeText: vi.fn().mockResolvedValue(undefined) };
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: clipboard,
+    });
+    const questionSummary: ScreeningSummary = {
+      ...summary,
+      candidateQuestions: [
+        {
+          evidenceTurnIds: [candidateQuestionTurn.id],
+          question: candidateQuestion,
+        },
+      ],
+      humanFollowups: [
+        {
+          evidenceTurnIds: [candidateQuestionTurn.id],
+          reason: humanFollowup,
+        },
+      ],
+    };
+
+    render(
+      <InterviewEvidenceReview
+        {...baseProps()}
+        insights={[candidateInsight(), ...candidateQuestionInsights()]}
+        summary={questionSummary}
+        transcript={[
+          interviewerTurn,
+          candidateTurn,
+          candidateQuestionPrompt,
+          candidateQuestionTurn,
+        ]}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: new RegExp(`Candidate question.*${candidateQuestion}`, "u"),
+      }),
+    );
+    const evidenceDetail = screen.getByRole("region", {
+      name: "Expanded evidence for Candidate question",
+    });
+    expect(
+      within(evidenceDetail).getByText(candidateQuestionPrompt.text),
+    ).toBeVisible();
+    expect(
+      within(evidenceDetail).getAllByText(candidateQuestion).length,
+    ).toBeGreaterThan(0);
+    expect(
+      within(evidenceDetail).getByText(/Candidate · .+ · turn 4/u),
+    ).toBeVisible();
+    expect(
+      within(evidenceDetail).getAllByText("Candidate question").length,
+    ).toBeGreaterThan(0);
+    expect(within(evidenceDetail).getByText("Human follow-up")).toBeVisible();
+    expect(within(evidenceDetail).getByText(humanFollowup)).toBeVisible();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Organized notes" }));
+    expect(
+      screen.getByRole("heading", { name: "Questions asked" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Human follow-ups" }),
+    ).toBeVisible();
+    expect(screen.getAllByText(candidateQuestion).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(humanFollowup).length).toBeGreaterThan(0);
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy summary" }));
+    await waitFor(() => {
+      expect(clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining(
+          [
+            "Candidate questions",
+            `- ${candidateQuestion}`,
+            "  Evidence: Candidate · turn 4",
+            "",
+            "Human follow-ups",
+            `- ${humanFollowup}`,
+            "  Evidence: Candidate · turn 4",
+          ].join("\n"),
+        ),
+      );
+    });
+  });
+
+  it("gives dense note sections full-width panels with balanced lists", () => {
+    const denseTopics = plan.topics.slice(0, 5).map((topic) => ({
+      topicKey: topic.key,
+      evidenceTurnIds: [candidateTurn.id],
+    }));
+    const denseFacts = denseTopics.map((topic, index) => ({
+      statement: `Confirmed detail ${String(index + 1)} for ${topic.topicKey}.`,
+      evidenceTurnIds: [candidateTurn.id],
+    }));
+
+    render(
+      <InterviewEvidenceReview
+        {...baseProps()}
+        summary={{
+          ...summary,
+          confirmedFacts: denseFacts,
+          topicsCovered: denseTopics,
+          topicsNotCovered: ["clarifications_and_followups"],
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: "Organized notes" }));
+
+    const coveragePanel = screen
+      .getByRole("heading", { name: "Coverage and gaps" })
+      .closest("section");
+    if (!coveragePanel) {
+      throw new Error("Coverage panel was not rendered.");
+    }
+    expect(coveragePanel).toHaveClass("sp-summary-panel--wide");
+    expect(
+      within(coveragePanel).getByRole("list", {
+        name: "Covered topics",
+      }),
+    ).toHaveClass("sp-summary-panel__balanced-list");
+
+    const confirmedFactsPanel = screen
+      .getByRole("heading", { name: "Confirmed facts" })
+      .closest("section");
+    if (!confirmedFactsPanel) {
+      throw new Error("Confirmed facts panel was not rendered.");
+    }
+    expect(confirmedFactsPanel).toHaveClass("sp-summary-panel--wide");
+    expect(within(confirmedFactsPanel).getByRole("list")).toHaveClass(
+      "sp-summary-panel__balanced-list",
+    );
+
+    const organizedNotesGrid = confirmedFactsPanel.parentElement;
+    if (!organizedNotesGrid) {
+      throw new Error("Organized notes grid was not rendered.");
+    }
+    expect(
+      Array.from(
+        organizedNotesGrid.querySelectorAll(":scope > section > header > h3"),
+      )
+        .slice(0, 4)
+        .map((heading) => heading.textContent),
+    ).toEqual([
+      "Confirmed facts",
+      "Clarifications",
+      "Limitations",
+      "Coverage and gaps",
+    ]);
+  });
+
   it("previews the selected node in the center until another node replaces it or it is minimized", async () => {
     render(
       <InterviewEvidenceReview
@@ -132,8 +377,10 @@ describe("InterviewEvidenceReview", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Conversation evidence map" }),
+      screen.getByRole("region", { name: "Conversation evidence map" }),
     ).toBeVisible();
+    expect(screen.queryByText("2 nodes")).not.toBeInTheDocument();
+    expect(screen.queryByText("Interview ended")).not.toBeInTheDocument();
     expect(
       screen.queryByText(/This review contains evidence captured/u),
     ).not.toBeInTheDocument();
@@ -144,9 +391,14 @@ describe("InterviewEvidenceReview", () => {
       name: /Motivation \/ next role.*Collaborative team/u,
     });
     expect(node).toHaveAttribute("aria-expanded", "false");
-    expect(
-      screen.getByRole("heading", { name: "Conversation summary" }),
-    ).toBeVisible();
+    const summaryHeading = screen.getByRole("heading", {
+      name: "Conversation summary",
+    });
+    const centerSummary = summaryHeading.closest(
+      ".sp-evidence-map__center-summary",
+    );
+    expect(summaryHeading).toBeVisible();
+    expect(centerSummary).not.toHaveAttribute("aria-hidden");
     expect(screen.queryByText(interviewerTurn.text)).not.toBeInTheDocument();
 
     fireEvent.click(node);
@@ -157,13 +409,14 @@ describe("InterviewEvidenceReview", () => {
     });
     expect(within(detail).getByText(interviewerTurn.text)).toBeVisible();
     expect(within(detail).getByText(candidateTurn.text)).toBeVisible();
+    expect(centerSummary).toHaveAttribute("aria-hidden", "true");
     expect(
       within(detail).getByText(
         "The candidate described collaboration as a priority.",
       ),
     ).toBeVisible();
     expect(
-      screen.getByRole("heading", { name: "Conversation evidence map" }),
+      screen.getByRole("region", { name: "Conversation evidence map" }),
     ).toBeVisible();
     expect(
       screen.queryByRole("heading", { name: "Conversation summary" }),
@@ -188,6 +441,7 @@ describe("InterviewEvidenceReview", () => {
     expect(
       screen.getByRole("heading", { name: "Conversation summary" }),
     ).toBeVisible();
+    expect(centerSummary).not.toHaveAttribute("aria-hidden");
     await waitFor(() => {
       expect(nextNode).toHaveFocus();
     });
@@ -423,10 +677,17 @@ describe("InterviewEvidenceReview", () => {
     render(<InterviewEvidenceReview {...props} />);
 
     expect(
-      within(
-        screen.getByLabelText("Evidence for synthetic session role"),
-      ).getByText("Candidate · turn 2"),
-    ).toBeVisible();
+      screen.queryByText("No score or automated hiring decision was created."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Remove every ScreenPilot item held in this tab."),
+    ).not.toBeInTheDocument();
+
+    expect(
+      screen.queryByLabelText("Evidence for synthetic session role"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Summary ready")).not.toBeInTheDocument();
+    expect(screen.queryByText("Conversation-first")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Copy summary" }));
     await waitFor(() => {
@@ -485,7 +746,7 @@ describe("InterviewEvidenceReview", () => {
         "Role preference was not established in the available interview evidence.",
       ),
     ).toBeVisible();
-    expect(screen.getByText("Evidence unavailable")).toBeVisible();
+    expect(screen.queryByText("Evidence unavailable")).not.toBeInTheDocument();
     expect(screen.queryByText("Undecided")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Copy summary" }));
@@ -533,11 +794,13 @@ describe("InterviewEvidenceReview", () => {
         "The candidate explicitly remained undecided for this session; no real vacancy is implied.",
       ),
     ).toBeVisible();
+    const centerOverview = screen
+      .getByText("Undecided")
+      .closest(".sp-summary-center-card");
+    expect(centerOverview).not.toBeNull();
     expect(
-      within(
-        screen.getByLabelText("Evidence for synthetic session role"),
-      ).getByText("Candidate · turn 2"),
-    ).toBeVisible();
+      within(centerOverview as HTMLElement).queryByText("Candidate · turn 2"),
+    ).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Copy summary" }));
     await waitFor(() => {
@@ -588,7 +851,6 @@ describe("InterviewEvidenceReview", () => {
     fireEvent.click(
       screen.getByRole("button", { name: /Motivation \/ next role/u }),
     );
-    expect(screen.getAllByText("CV-assisted").length).toBeGreaterThan(0);
     expect(screen.getAllByText("CV + Candidate").length).toBeGreaterThan(0);
     expect(
       screen.getByText(

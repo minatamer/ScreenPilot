@@ -2,7 +2,7 @@
 
 Status: Implementation complete; timeline UI superseded by SP-021; evidence-map screen-reader and responsive visual approval pending<br>
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-22<br>
 Depends on: SP-015, SP-016, SP-018A<br>
 Suggested commit: `SP-019: link local transcript evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -22,7 +22,7 @@ Create bounded final local turns with stable evidence references for same-sessio
 - Evidence inspection must work with keyboard/focus and long selected excerpts on desktop and mobile.
 - The review is not a recording, certified transcript, searchable archive, editable case file, or provider conversation lookup.
 - SP-018A is finalized by explicit owner scope decision after the bounded live
-  CV/voice smoke. Its exact unchecked full-flow ledger moves to SP-021A, so no
+  CV/voice smoke. Its exact unchecked full-flow ledger moves to SP-021B, so no
   additional paid provider run blocks this ticket.
 - Conversation-first evidence is Candidate-only; CV-assisted may distinguish CV, Candidate, and CV + Candidate on cards.
 - Transcript-backed evidence inspection remains inside SP-011A's centralized dark `/demo` workspace with the same inert stage status, compact context band, home/exit behavior, and natural page-scroll fallback for long content; review does not switch to a white document shell. SP-021 is the presentation authority: the full transcript is no longer rendered, and selecting an insight replaces the center overview with its bounded question/answer evidence.
@@ -118,7 +118,7 @@ Keep SP-019 reviewable as one logical change represented by `SP-019: link local 
 - Manual review-state inspection was deliberately not forced through a storage
   backdoor or microphone/provider flow. A real 320 px/200% zoom visual pass,
   several mouse/keyboard chip journeys, and screen-reader output remain
-  unchecked for SP-024/SP-021A or an owner-approved browser session. Long text,
+  unchecked for SP-024/SP-021B or an owner-approved browser session. Long text,
   focus transfer/return, accessible labels, natural review page flow across the
   responsive breakpoints, and safe-area spacing have deterministic
   component/CSS coverage but are not represented as human visual or

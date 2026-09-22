@@ -18,7 +18,7 @@ export function ProviderOperationsUnavailable({
 }: ProviderOperationsUnavailableProps) {
   return (
     <div className="sp-demo-stage sp-demo-stage--with-footer">
-      <DemoStageHeading pretitle="Safety check" title={title} />
+      <DemoStageHeading pretitle="Safety check" step={4} title={title} />
       <Card aria-live="polite" as="section" role="status" tone="soft">
         <p>{description}</p>
       </Card>

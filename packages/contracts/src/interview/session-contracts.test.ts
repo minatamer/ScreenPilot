@@ -157,8 +157,7 @@ describe("SP-006 cross-boundary contracts", () => {
 
   it("reports candidate-stated or undecided role state without vacancy keys", () => {
     const summary = {
-      overview:
-        "Local interview evidence was organized into cautious notes for human review.",
+      overview: "Key conversation points, organized for review.",
       rolePreference: {
         label: null,
         status: "undecided",

@@ -302,7 +302,7 @@ describe("SP-016 insight client-tool dispatcher", () => {
     ).toContain("Applied");
     expect(
       await allowedDispatcher.tools.recordCandidateQuestion({
-        question: "How does your hiring process score or rank candidates?",
+        question: "How does your hiring process rank candidates?",
       }),
     ).toContain("Applied");
 
@@ -481,11 +481,11 @@ describe("SP-016 insight client-tool dispatcher", () => {
     );
   });
 
-  it("records topic progress, candidate questions, and human follow-ups", async () => {
+  it("records paired question and follow-up cards once against the same final turn", async () => {
     const turn = candidateTurn(
       "turn-7",
       7,
-      "What is the team structure and onboarding process?",
+      "I am open to hybrid work. What is the team structure and onboarding process?",
     );
     const testDispatcher = dispatcher({
       entryMode: "conversation_first",
@@ -498,13 +498,29 @@ describe("SP-016 insight client-tool dispatcher", () => {
       topicKey: "candidate_questions",
       status: "covered",
     });
-    await testDispatcher.tools.recordCandidateQuestion({
-      question: "Asked about team structure and onboarding.",
-    });
-    await testDispatcher.tools.requestFollowup({
+    const recordedQuestion = await testDispatcher.tools.recordCandidateQuestion(
+      {
+        question: "What is the team structure and onboarding process?",
+      },
+    );
+    const requestedFollowup = await testDispatcher.tools.requestFollowup({
       reason:
-        "A recruiter should provide the unsupported team and onboarding details.",
+        "A human recruiter must confirm the unsupported team and onboarding details.",
     });
+
+    expect(recordedQuestion).toContain("Applied:");
+    expect(requestedFollowup).toContain("Applied:");
+    expect(
+      await testDispatcher.tools.recordCandidateQuestion({
+        question: "What is the team structure and onboarding process?",
+      }),
+    ).toContain("already been recorded");
+    expect(
+      await testDispatcher.tools.requestFollowup({
+        reason:
+          "A human recruiter must confirm the unsupported team and onboarding details.",
+      }),
+    ).toContain("already been requested");
 
     const snapshot = testDispatcher.getSnapshot();
     expect(snapshot.topicProgress).toEqual([
@@ -516,11 +532,36 @@ describe("SP-016 insight client-tool dispatcher", () => {
       }),
     ]);
     expect(snapshot.insights).toEqual([
-      expect.objectContaining({ category: "candidate_question" }),
+      expect.objectContaining({
+        category: "candidate_question",
+        evidenceTurnIds: ["turn-7"],
+        value: "What is the team structure and onboarding process?",
+      }),
       expect.objectContaining({
         category: "follow_up_needed",
+        evidenceTurnIds: ["turn-7"],
         status: "needs_clarification",
       }),
     ]);
+    expect(
+      await dispatcher({
+        entryMode: "conversation_first",
+        insights: [],
+        topicProgress: [],
+        transcript: [turn],
+      }).tools.recordCandidateQuestion({
+        question: "What benefits does the employer offer?",
+      }),
+    ).toContain("preserve the latest candidate wording");
+    expect(
+      await dispatcher({
+        entryMode: "conversation_first",
+        insights: [],
+        topicProgress: [],
+        transcript: [turn],
+      }).tools.recordCandidateQuestion({
+        question: "onboarding process?",
+      }),
+    ).toContain("preserve the latest candidate wording");
   });
 });

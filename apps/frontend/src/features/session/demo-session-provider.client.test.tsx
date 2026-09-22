@@ -40,14 +40,21 @@ function CompletionProbe() {
               startedAt: "2026-09-09T09:05:00.000Z",
             },
           });
-          dispatch({ type: "VOICE_ENDING" });
-          completeInterview({
-            conversationId: "fake-conversation-1",
-            status: "ended",
-            startedAt: "2026-09-09T09:05:00.000Z",
-            endedAt: "2026-09-09T09:10:00.000Z",
-            endReason: "Interview ended by the candidate.",
-          });
+          const completion = {
+            reason: "candidate_ended" as const,
+            elapsedSeconds: 300,
+          };
+          dispatch({ type: "VOICE_ENDING", completion });
+          completeInterview(
+            {
+              conversationId: "fake-conversation-1",
+              status: "ended",
+              startedAt: "2026-09-09T09:05:00.000Z",
+              endedAt: "2026-09-09T09:10:00.000Z",
+              endReason: "Interview ended by the candidate.",
+            },
+            completion,
+          );
         }}
         type="button"
       >
@@ -244,13 +251,21 @@ describe("DemoSessionProvider client lifecycle", () => {
     fireEvent.click(screen.getByRole("button", { name: "Complete interview" }));
 
     await act(() => Promise.resolve());
-    expect(screen.getByText("review_ready")).toBeInTheDocument();
-    expect(
-      JSON.parse(window.sessionStorage.getItem(SESSION_STORAGE_KEY) ?? "null"),
-    ).toMatchObject({
-      stage: "review_ready",
+    expect(screen.getByText("interview_complete")).toBeInTheDocument();
+    const storedCompletedSession =
+      window.sessionStorage.getItem(SESSION_STORAGE_KEY) ?? "";
+    expect(JSON.parse(storedCompletedSession)).toMatchObject({
+      stage: "interview_complete",
+      interviewCompletion: {
+        reason: "candidate_ended",
+        elapsedSeconds: 300,
+      },
       voice: { status: "ended" },
     });
+    expect(storedCompletedSession).not.toContain("conversationToken");
+    expect(storedCompletedSession).not.toContain("turnstileToken");
+    expect(storedCompletedSession).not.toContain("isMuted");
+    expect(storedCompletedSession).not.toContain("audio");
   });
 
   it("keeps restored review evidence visible when browser quota rejects saving", async () => {

@@ -83,6 +83,42 @@ describe("LiveCaptions", () => {
     });
   });
 
+  it("auto-scrolls the shared transcript viewport used by the sticky glass rail", async () => {
+    const rendered = render(
+      <div className="sp-interview-transcript">
+        <LiveCaptions caption={null} transcript={[pilotTurn]} />
+      </div>,
+    );
+    const transcriptViewport = rendered.container.querySelector<HTMLElement>(
+      ".sp-interview-transcript",
+    );
+    if (!transcriptViewport) {
+      throw new Error("Transcript viewport was not rendered.");
+    }
+    Object.defineProperty(transcriptViewport, "scrollHeight", {
+      configurable: true,
+      value: 720,
+    });
+
+    rendered.rerender(
+      <div className="sp-interview-transcript">
+        <LiveCaptions
+          caption={{
+            speaker: "candidate",
+            stability: "tentative",
+            text: "A caption inside the shared transcript viewport",
+            turnId: "voice-candidate-2",
+          }}
+          transcript={[pilotTurn]}
+        />
+      </div>,
+    );
+
+    await waitFor(() => {
+      expect(transcriptViewport.scrollTop).toBe(720);
+    });
+  });
+
   it("labels a tentative Pilot caption as speaking", () => {
     render(
       <LiveCaptions

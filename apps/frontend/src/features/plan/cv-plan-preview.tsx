@@ -42,6 +42,7 @@ export function CvPlanPreview({
     <div className="sp-demo-stage sp-demo-stage--with-footer sp-plan-preview">
       <DemoStageHeading
         pretitle="CV-assisted plan"
+        step={2}
         title="The first interview has a grounded starting point."
       />
 
@@ -53,7 +54,6 @@ export function CvPlanPreview({
           <div>
             <p>Suggested from CV — confirm during the call</p>
             <h2>{plan.roleClarification.suggestedRole}</h2>
-            <span>{plan.roleClarification.reason}</span>
           </div>
           <EvidenceLinks
             factAnchors={factAnchors}

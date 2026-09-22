@@ -1,10 +1,10 @@
-# SP-021A — Validate the complete live demo flow
+# SP-021B — Validate the complete live demo flow
 
-Status: Required; deferred owner visual-approval and live evidence gate<br>
+Status: Required; deferred live evidence gate<br>
 Milestone: Milestone 3 — same-session review<br>
-Last synchronized: 2026-09-21<br>
-Depends on: SP-018A, SP-019, SP-020, SP-021<br>
-Suggested commit: `SP-021A: validate the complete live demo flow`<br>
+Last synchronized: 2026-09-22<br>
+Depends on: SP-018A, SP-019, SP-020, SP-021, SP-021A<br>
+Suggested commit: `SP-021B: validate the complete live demo flow`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
 Ticket index: [`README.md`](README.md)
 
@@ -12,12 +12,11 @@ Ticket index: [`README.md`](README.md)
 
 ## Objective
 
-Obtain the owner's visual feedback on the completed same-session review, apply
-the requested bounded adjustments, and receive an explicit owner visual pass
-before spending on the consolidated live validation window. Then validate both
-entry modes from preparation through voice, corrected captions and automatic
-ending, summary, evidence-linked review, retry behavior, cleanup, provider
-usage, and cost without paying for another partial pre-review smoke test.
+After SP-021A has documented the owner's visual feedback, every resulting fix,
+and implemented both accepted pre-live behavior specifications, validate both entry
+modes from preparation through voice, corrected captions and automatic ending,
+summary, evidence-linked review, retry behavior, cleanup, provider usage, and
+cost without paying for another partial pre-review smoke test.
 
 ## Why this ticket exists
 
@@ -33,12 +32,14 @@ usage, and cost without paying for another partial pre-review smoke test.
 - SP-020 and SP-021 must remain fake-first. Their first real summary and review
   walkthrough belongs to this complete-flow window rather than a standalone
   summary charge.
-- SP-021 received engineering visual inspection but not the owner's final visual
-  review. SP-021A therefore owns the owner's feedback, any resulting bounded
-  review-polish changes, and explicit approval of the ending-to-review
-  transformation. Agent inspection, screenshots, or passing tests cannot
-  substitute for that approval.
-- SP-025 may reuse current SP-021A live evidence. It repeats a paid flow only
+- SP-021A owns the visual-review ledger, the owner's explicit visual decisions,
+  and deterministic implementation reconciliation for the accepted candidate-
+  question fallback/evidence capture and completed-interview hold. Prompt 1 is
+  complete in source policy `sp017-2026-09-22.1`; Prompt 2 is implemented and
+  deterministically verified locally. SP-021B must not begin while either
+  behavior or its record differs from the code/provider revision selected for
+  live validation.
+- SP-025 may reuse current SP-021B live evidence. It repeats a paid flow only
   when a later code, provider, configuration, hostname, or release-candidate
   change invalidates that evidence.
 
@@ -61,15 +62,25 @@ usage, and cost without paying for another partial pre-review smoke test.
 
 ## Preconditions
 
+- [ ] Before any live-mode switch or paid provider operation, run a fresh
+  deterministic fake-mode rehearsal of both SP-021A prompts against the exact
+  release candidate. Prompt 1 must show the approved unsupported-employer
+  fallback and the paired Candidate question/Human follow-up evidence through
+  interview and review. Prompt 2 must show fake agent completion entering the
+  disconnected read-only workspace and **View summary** reaching review without
+  reconnecting voice or duplicating summary work. If either rehearsal fails,
+  stop, fix, document, and revalidate it in fake mode before continuing.
 - [ ] SP-019, SP-020, and SP-021 are implemented and pass their focused fake-mode
   and deterministic verification without loading `.env.local` or reaching a
   provider.
-- [ ] Before paid mode is enabled, present the fake-mode SP-021 ending transition
-  and completed review to the owner at representative desktop, tablet, and phone
-  widths; collect the owner's visual feedback, implement the agreed bounded
-  adjustments, rerun affected deterministic checks, and obtain the owner's
-  explicit visual pass. If the owner has not passed it, leave SP-021A open and
-  do not treat engineering inspection as approval.
+- [ ] SP-021A is complete: the visual-feedback ledger, resulting implementation
+  record, owner decisions, documentation synchronization, and the two pre-live
+  behavior specifications match the exact code selected for this paid window.
+- [x] Source policy `sp017-2026-09-22.1` was owner-published without Preview or
+  a paid conversation to immutable ElevenLabs revision
+  `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`. Historical `sp017-2026-09-16.1`
+  revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains historical evidence
+  only.
 - [ ] The exact unchecked SP-018A evidence ledger is reviewed; no deferred item
   is represented as already passed.
 - [ ] Repository status contains no local environment file, credential,
@@ -85,20 +96,22 @@ usage, and cost without paying for another partial pre-review smoke test.
 
 ## Consolidated live-validation checklist
 
-### 0. Owner visual feedback and approval
+### 0. Mandatory SP-021A fake-mode and owner-decision gate
 
-- [ ] Walk the owner through the continuous interview-to-review transformation:
-  right-column fade/collapse, left-column expansion, central summary card,
-  connected evidence-node composition, node selection/replacement, and
-  minimize-to-overview behavior.
-- [ ] Show the deterministic complete, partial, loading, summary-failure, and
-  selected-node states at representative desktop, tablet, and phone widths,
-  including long content and the reduced-motion treatment.
-- [ ] Record the owner's concrete visual feedback, implement the agreed bounded
-  adjustments within the established ScreenPilot design system, and recheck the
-  affected fake-mode states before any paid walkthrough.
-- [ ] Receive an explicit owner visual pass. Without it, SP-021A is incomplete
-  even when every automated, engineering, and live-provider check passes.
+- [ ] Keep `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`, then complete the
+  two-prompt fake-mode rehearsal required above. Record the observed Prompt 1
+  fallback/evidence path and Prompt 2 completed-workspace/View-summary path
+  before changing either switch for live testing.
+- [ ] Review SP-021A's complete visual-feedback and defect ledger; do not repeat
+  resolved visual iteration merely to recreate its history.
+- [ ] Confirm the owner-approved responsive review state, evidence interaction,
+  direct-manipulation swipe behavior, and interview workspace match SP-021A's
+  documented result at the fake-mode preflight gate.
+- [ ] Confirm Prompt 1 still passes deterministic verification, Prompt 2 has
+  been implemented and deterministically verified, and the selected Prompt 1
+  source policy has been published to the newly recorded immutable revision
+  before enabling paid operations; otherwise keep SP-021B open and do not spend
+  provider credit.
 
 ### 1. CV-assisted complete flow
 
@@ -111,10 +124,15 @@ usage, and cost without paying for another partial pre-review smoke test.
   speaker-scoped deduplication fix, with no duplicate session or final turn.
 - [ ] Exercise applicable client tools and confirm valid evidence provenance,
   correction replacement, topic state, candidate questions, and follow-up state.
+  Ask one unsupported employer/onboarding question and verify the approved
+  exact bounded fallback plus matching Candidate question and Human follow-up
+  cards attached to that same final candidate turn.
 - [ ] Let the agent close naturally; observe `end_call`, terminal disconnect,
-  media release, and the canonical transition into summary/review.
-- [ ] Generate one live evidence-grounded summary, inspect evidence navigation,
-  and reach the complete review without provider transcript/audio retrieval.
+  media release, and the reducer-owned read-only interview-complete workspace.
+- [ ] Choose **View summary**, generate one live evidence-grounded summary,
+  verify the question/follow-up evidence in Organized notes, linked review, and
+  copied review text, and reach the complete review without provider transcript
+  or audio retrieval.
 
 ### 2. Conversation-first complete flow
 
@@ -127,8 +145,9 @@ usage, and cost without paying for another partial pre-review smoke test.
 - [ ] Across the two flows, trigger and verify all five client tools exactly once
   per intended action, including `Applied:`/`Rejected:` responses and rejection
   safety.
-- [ ] Observe the corrected captions and automatic ending, then generate the
-  conversation-first summary and review with no CV source language.
+- [ ] Observe the corrected captions and automatic ending, confirm the completed
+  read-only workspace does not reconnect voice, then choose **View summary** and
+  generate the conversation-first summary/review with no CV source language.
 
 ### 3. Review, retry, evidence, and cleanup
 
@@ -141,6 +160,11 @@ usage, and cost without paying for another partial pre-review smoke test.
   behavior without creating saved history or provider retrieval.
 - [ ] End all sessions, stop microphone/media tracks, cancel timers and obsolete
   requests, remove temporary object URLs, and confirm no automatic reconnect.
+- [ ] Across focused bounded scenarios, verify agent `end_call`, manual **End
+  interview**, and the absolute eight-minute deadline each disconnect voice
+  immediately, preserve one terminal reason, enter the same completed workspace,
+  and require **View summary**; verify unexpected provider/network interruption
+  remains the distinct partial path.
 - [ ] Inspect browser storage, URLs, console, application logs, screenshots, and
   temporary files for secrets, tokens, candidate/provider content, or forbidden
   persistence.
@@ -156,7 +180,7 @@ usage, and cost without paying for another partial pre-review smoke test.
 - [ ] Evaluate TTFA, connection, client-tool-to-card, interruption, waiting-state,
   filler, and eight-minute-stop evidence against SP-018's locked thresholds.
 - [ ] If the authorized cap ends before 50 live turns, report the actual sample
-  size, keep the 50-turn item unchecked, and leave SP-021A incomplete unless the
+  size, keep the 50-turn item unchecked, and leave SP-021B incomplete unless the
   owner later makes an explicit scope decision; do not publish representative
   p50/p95 claims from an undersized sample.
 - [ ] Review the actual OpenAI and ElevenLabs operation counts, model/revision,
@@ -178,12 +202,17 @@ usage, and cost without paying for another partial pre-review smoke test.
 
 ## Acceptance criteria
 
-- [ ] The owner explicitly approves the adjusted SP-021 ending transition,
-  mind-map composition, center-card interaction, readability, and responsive
-  visual treatment; this approval is recorded as an owner decision rather than
-  inferred from agent inspection.
-- [ ] Both entry modes complete through corrected live voice behavior, summary,
-  evidence-linked review, and cleanup using synthetic data.
+- [ ] The two SP-021A prompt rehearsals pass in fake mode and are recorded before
+  the first live-mode switch or paid provider operation; a failure prevents the
+  live window from starting.
+- [ ] The SP-021A owner-decision and documentation record is complete and still
+  matches the release candidate used for this live window.
+- [ ] Both entry modes complete through corrected live voice behavior, the
+  read-only interview-complete hold, explicit **View summary**, evidence-linked
+  review, and cleanup using synthetic data.
+- [ ] Unsupported employer/onboarding questions use the approved fallback and
+  remain visible as evidence-linked Candidate question and Human follow-up data
+  during the interview, in Organized notes/review, and in copied review text.
 - [ ] Pilot captions and the provider-owned automatic ending are independently
   observed after their SP-018A fixes.
 - [ ] All eight runtime variables and all five client tools are verified without
@@ -203,8 +232,9 @@ usage, and cost without paying for another partial pre-review smoke test.
 
 ## Focused verification
 
-- [ ] Re-run the smallest checks affected by owner-requested visual changes and
-  repeat the affected fake-mode visual states before beginning the paid window.
+- [ ] Re-run the smallest checks affected by post-SP-021A changes, complete the
+  mandatory fake-mode rehearsal of both accepted prompts, and repeat any other
+  invalidated fake-mode visual states before beginning the paid window.
 - [ ] Run only the smallest relevant deterministic suites before and after the
   live window; never add paid calls to automated tests or CI.
 - [ ] Use browser network, storage, console, accessibility, responsive, and
@@ -214,9 +244,9 @@ usage, and cost without paying for another partial pre-review smoke test.
 
 ## Commit boundary
 
-Keep SP-021A reviewable as one logical consolidated live-validation and
+Keep SP-021B reviewable as one logical consolidated live-validation and
 sanitized-evidence change represented by
-`SP-021A: validate the complete live demo flow`. Do not implement public abuse
+`SP-021B: validate the complete live demo flow`. Do not implement public abuse
 controls, deployment, or unrelated release fixes here. Do not create a commit
 unless the user asks or the active workflow already authorizes it.
 
@@ -230,10 +260,9 @@ unless the user asks or the active workflow already authorizes it.
 
 ## Completion handoff
 
-Report the owner's visual feedback, the resulting adjustments, and the explicit
-owner pass separately from every live and deterministic scenario. Also report
-provider operation counts, sanitized timing/cost/retention evidence, files
-changed, focused checks, both restored safety-switch values as owner
-confirmations, and every unchecked item with its blocker. Never include
-credentials, tokens, candidate content, raw provider payloads, real audio, or a
-secret-bearing screenshot.
+Reference the completed SP-021A documentation/owner-decision record separately
+from every live and deterministic scenario. Report provider operation counts,
+sanitized timing/cost/retention evidence, files changed, focused checks, both
+restored safety-switch values as owner confirmations, and every unchecked item
+with its blocker. Never include credentials, tokens, candidate content, raw
+provider payloads, real audio, or a secret-bearing screenshot.

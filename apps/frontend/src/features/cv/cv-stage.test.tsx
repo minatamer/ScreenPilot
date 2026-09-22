@@ -158,7 +158,7 @@ describe("CvStage", () => {
   it("offers accessible picker, privacy, limits, sample, and role-neutral recovery", () => {
     render(<CvStageHarness />);
 
-    expect(screen.getByText("CV-assisted path")).toBeVisible();
+    expect(screen.getByText("Step 2 of 5 · CV-assisted path")).toBeVisible();
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -173,9 +173,19 @@ describe("CvStage", () => {
       ".pdf,application/pdf",
     );
     expect(screen.getByText(/5 MB maximum · 8 pages maximum/)).toBeVisible();
-    expect(screen.getByText(/never uploaded/)).toBeVisible();
+    expect(
+      screen.getByText("Use synthetic data. The PDF itself is never uploaded."),
+    ).toBeVisible();
     expect(screen.getByText("Role stays flexible")).toBeVisible();
-    expect(screen.getByText(/Use any role, or stay undecided/)).toBeVisible();
+    expect(screen.getByText("We’ll suggest one from your CV.")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Confirm it, change it, or stay undecided when you talk.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByText(/This is not a real application/u),
+    ).not.toBeInTheDocument();
     expect(screen.queryByText("Frontend Developer")).not.toBeInTheDocument();
     expect(screen.queryByText("Backend Developer")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Use sample CV" })).toBeEnabled();

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { SCREENING_SUMMARY_OVERVIEW } from "@screenpilot/contracts/interview/screening-summary";
+
 import {
   createSummaryFixtureInput,
   createSummaryModelFixture,
@@ -149,9 +151,7 @@ describe("OpenAiInterviewSummarizer", () => {
     const result = await new OpenAiInterviewSummarizer(
       client,
     ).summarizeInterview(input);
-    expect(result.summary.overview).toBe(
-      "Local interview evidence was organized into cautious notes for human review.",
-    );
+    expect(result.summary.overview).toBe(SCREENING_SUMMARY_OVERVIEW);
     expect(client.requests).toHaveLength(2);
     expect(client.requests[1]?.instructions).toContain(
       "evidence_not_final_candidate_turn",
@@ -176,6 +176,50 @@ describe("OpenAiInterviewSummarizer", () => {
     expect(client.requests).toHaveLength(2);
     expect(client.requests[1]?.instructions).toContain(
       "required_team_work_style_omitted",
+    );
+  });
+
+  it("repairs changed captured question and follow-up values once", async () => {
+    const input = createSummaryFixtureInput({
+      includeCandidateQuestion: true,
+      includeFollowup: true,
+    });
+    const changedOutput = createSummaryModelFixture(input);
+    const candidateQuestion = changedOutput.candidateQuestions[0];
+    const humanFollowup = changedOutput.humanFollowups[0];
+    if (candidateQuestion === undefined || humanFollowup === undefined) {
+      throw new Error("The summary fixture requires the captured item pair.");
+    }
+    changedOutput.candidateQuestions[0] = {
+      ...candidateQuestion,
+      question: "What benefits are included?",
+    };
+    changedOutput.humanFollowups[0] = {
+      ...humanFollowup,
+      reason: "A recruiter should discuss general next steps.",
+    };
+    const repairedOutput = createSummaryModelFixture(input);
+    const client = new RecordingClient([
+      { kind: "output", value: changedOutput },
+      { kind: "output", value: repairedOutput },
+    ]);
+
+    const result = await new OpenAiInterviewSummarizer(
+      client,
+    ).summarizeInterview(input);
+
+    expect(client.requests).toHaveLength(2);
+    expect(client.requests[1]?.instructions).toContain(
+      "candidate_question_mismatch",
+    );
+    expect(client.requests[1]?.instructions).toContain(
+      "candidate_followup_mismatch",
+    );
+    expect(result.summary.candidateQuestions).toEqual(
+      repairedOutput.candidateQuestions,
+    );
+    expect(result.summary.humanFollowups).toEqual(
+      repairedOutput.humanFollowups,
     );
   });
 

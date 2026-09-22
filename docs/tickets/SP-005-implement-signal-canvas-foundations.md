@@ -4,7 +4,7 @@ Status: Required
 Implementation state: Completed, revised against the approved Deep Ink + Warm Coral SP-004 revision in `d2a350c`, and committed in `24d256c`
 
 Milestone: Milestone 0 — repository and visual foundations  
-Last synchronized: 2026-09-08
+Last synchronized: 2026-09-22
 Depends on: SP-002, SP-004  
 Suggested commit: `SP-005: establish the Signal Canvas design system`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -19,7 +19,7 @@ Translate the approved visual reference into maintainable frontend tokens, share
 ## Standalone implementation context
 
 - The approved HTML living style guide in `docs/SCREENPILOT_DESIGN_SYSTEM.html`, committed by SP-004 revision `d2a350c`, is the visual foundation. Its token names and values must remain synchronized with frontend CSS; the historical violet/cyan direction in `6f94d0a` is superseded and must not be implemented.
-- The current palette is Deep Ink + Warm Coral: `ink-950 #18243A`, `ink-900 #22314B`, `paper-50 #FAFAF8`, `paper-0 #FFFFFF`, `coral-300 #FCA39A`, `coral-500 #F26B5B`, `coral-700 #CC493F`, `coral-800 #B93831`, `coral-100 #FDE8E4`, `line-200 #E4E7EC`, `line-strong #7D899B`, and `slate-500 #667085`, plus the documented green, amber, and red semantic-state pairs.
+- The current palette is Deep Ink + Warm Coral: `ink-950 #18243A`, `ink-900 #22314B`, `paper-50 #FAFAF8`, `paper-0 #FFFFFF`, `coral-300 #FCA39A`, `coral-500 #F26B5B`, `coral-700 #CC493F`, `coral-800 #B93831`, `coral-100 #FDE8E4`, `plum-700 #6F4778`, `plum-300 #D7ACDD`, `plum-100 #F2E7F4`, `line-200 #E4E7EC`, `line-strong #7D899B`, and `slate-500 #667085`. Confirmed/completed badges use the plum/lilac pair, while green remains reserved for live operational signals and amber/red retain clarification/error meaning.
 - Reuse the approved code-native ScreenPilot mark from the HTML reference: a Deep Ink rounded square with a Warm Coral forward/paper-plane shape and Pale Coral inner facet. Do not trace or substitute the generated raster logo.
 - The approved concept informs composition and atmosphere only; written behavior, accessibility, and tokens win if it conflicts.
 - Use shared React primitives and composition. There must not be separate desktop/mobile component trees or scattered page-specific color/spacing values.
@@ -76,6 +76,8 @@ Translate the approved visual reference into maintainable frontend tokens, share
 - The mobile header keeps its navigation visible on a second row instead of hiding it without an equivalent menu. The stage indicator becomes vertical at constrained widths so all stages remain visible without a precision horizontal scroll. These are accessibility-preserving compositions of the same content, not separate mobile implementations.
 - Buttons retain the 44 px minimum target but may grow taller for localized or zoomed labels. Long text may wrap rather than clip.
 - The concept image remains mood/composition guidance only. No dashboard, scoring, candidate-profile, analytics, phone-control, or recruiter-workflow feature was copied into the application.
+- The owner-directed 2026-09-22 status correction is implemented in shared badge tokens: every `success` badge uses plum/lilac across light and dark themes, while the separate green operational tokens continue to serve connection/live indicators.
+- Shared badge sizing now scales fluidly at phone widths while controlled tag labels remain unbroken. The same foundation rule applies to entry-mode, source, and state pills, preventing labels such as **Conversation-first** from collapsing into two-line capsules in constrained headers.
 
 ## Verification evidence
 

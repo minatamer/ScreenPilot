@@ -474,12 +474,13 @@ describe("DemoExperience preparation paths", () => {
       </DemoSessionProvider>,
     );
 
-    const progress = screen.getByRole("group", { name: "Demo progress" });
-    expect(progress.closest(".sp-demo-progress-panel")).not.toBeNull();
-    expect(screen.getByText("Choose").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
+    expect(
+      await screen.findByText("Step 1 of 5 · Choose how to start"),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("group", { name: "Demo progress" }),
+    ).not.toBeInTheDocument();
+    expect(document.querySelector(".sp-demo-progress-panel")).toBeNull();
     expect(screen.queryByLabelText("Demo safeguards")).not.toBeInTheDocument();
     const header = document.querySelector(".sp-site-header");
     expect(header).not.toBeNull();
@@ -515,7 +516,7 @@ describe("DemoExperience preparation paths", () => {
         name: "How the interview works",
       }),
     ).toBeVisible();
-    expect(screen.getByText("Before you begin")).toBeVisible();
+    expect(screen.getByText("Step 3 of 5 · Before you begin")).toBeVisible();
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -526,10 +527,7 @@ describe("DemoExperience preparation paths", () => {
     expect(
       screen.getByText(/Pilot uses your answers for follow-up questions/),
     ).toBeVisible();
-    expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
+    expect(screen.getByText("Step 3 of 5 · Before you begin")).toBeVisible();
 
     expect(browserFetch).toHaveBeenCalledTimes(2);
     expect(browserFetch.mock.calls.map(([input]) => requestUrl(input))).toEqual(
@@ -594,10 +592,9 @@ describe("DemoExperience preparation paths", () => {
         name: "Preparing an open conversation.",
       }),
     ).toBeVisible();
-    expect(screen.getByText("Prepare").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
+    expect(
+      screen.getByText("Step 2 of 5 · Conversation-first path"),
+    ).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Privacy details" }),
     ).toBeEnabled();
@@ -773,10 +770,7 @@ describe("DemoExperience preparation paths", () => {
     expect(
       screen.getByRole("heading", { name: "Product Manager" }),
     ).toBeVisible();
-    expect(screen.getByText("Prepare").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
+    expect(screen.getByText("Step 2 of 5 · CV-assisted plan")).toBeVisible();
 
     const analyzeOptions = browserFetch.mock.calls.find(
       ([input]) => requestUrl(input) === "/v1/cv/analyze",
@@ -824,10 +818,7 @@ describe("DemoExperience preparation paths", () => {
     expect(
       screen.getByRole("button", { name: "Back to interview plan" }),
     ).toBeEnabled();
-    expect(screen.getByText("Preflight").closest("li")).toHaveAttribute(
-      "aria-current",
-      "step",
-    );
+    expect(screen.getByText("Step 3 of 5 · Before you begin")).toBeVisible();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Back to interview plan" }),

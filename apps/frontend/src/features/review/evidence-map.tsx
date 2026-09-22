@@ -264,18 +264,7 @@ export function EvidenceMap({
   };
 
   return (
-    <section aria-labelledby="evidence-map-title" className="sp-evidence-map">
-      <header className="sp-review-panel-heading sp-evidence-map__heading">
-        <div>
-          <p>Connected local evidence</p>
-          <h2 id="evidence-map-title">Conversation evidence map</h2>
-        </div>
-        <Badge tone="coral">
-          {orderedInsights.length}{" "}
-          {orderedInsights.length === 1 ? "node" : "nodes"}
-        </Badge>
-      </header>
-
+    <section aria-label="Conversation evidence map" className="sp-evidence-map">
       <div className="sp-evidence-map__canvas">
         <ul
           aria-label="Evidence nodes, first branch"
@@ -295,9 +284,15 @@ export function EvidenceMap({
         <div
           aria-live="polite"
           className="sp-evidence-map__center"
-          data-selected={selectedInsight ? true : undefined}
           id={detailId}
         >
+          <div
+            aria-hidden={selectedInsight ? true : undefined}
+            className="sp-evidence-map__center-summary"
+            data-obscured={selectedInsight ? true : undefined}
+          >
+            {center}
+          </div>
           {selectedInsight ? (
             <EvidenceDetail
               {...(cv ? { cv } : {})}
@@ -314,9 +309,7 @@ export function EvidenceMap({
               summaryStatus={summaryStatus}
               transcript={transcript}
             />
-          ) : (
-            center
-          )}
+          ) : null}
         </div>
 
         <ul

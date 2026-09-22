@@ -1,6 +1,6 @@
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 import type { CSSProperties } from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useLayoutEffect, useMemo, useRef } from "react";
 
 import type { LiveCaption } from "./normalize-voice-event";
 
@@ -73,12 +73,14 @@ export function LiveCaptions({ caption, transcript }: LiveCaptionsProps) {
     [caption, transcript],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const captionLog = captionLogRef.current;
     if (!captionLog) {
       return;
     }
-    captionLog.scrollTop = captionLog.scrollHeight;
+    const transcriptViewport =
+      captionLog.closest<HTMLElement>(".sp-interview-transcript") ?? captionLog;
+    transcriptViewport.scrollTop = transcriptViewport.scrollHeight;
   }, [caption?.text, caption?.turnId, transcript.length]);
 
   return (

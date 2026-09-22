@@ -21,6 +21,7 @@ import {
 } from "./demo-session.reducer";
 import type {
   DemoSessionState,
+  InterviewCompletion,
   SessionRestoreNotice,
 } from "./demo-session.types";
 import { projectPersistedDemoSession } from "./persisted-session.schema";
@@ -38,7 +39,10 @@ const MAX_BROWSER_TIMEOUT_MS = 2_147_483_647;
 export type DemoSessionContextValue = Readonly<{
   state: DemoSessionState;
   dispatch: Dispatch<DemoSessionEvent>;
-  completeInterview: (voice: VoiceMetadata) => void;
+  completeInterview: (
+    voice: VoiceMetadata,
+    completion: InterviewCompletion,
+  ) => void;
   clearSession: () => boolean;
   startOver: () => void;
   storageStatus: SavePersistedSessionResult["status"] | "idle";
@@ -204,9 +208,12 @@ export function DemoSessionProvider({
     return true;
   }, []);
 
-  const completeInterview = useCallback((voice: VoiceMetadata) => {
-    dispatch({ type: "VOICE_ENDED", voice });
-  }, []);
+  const completeInterview = useCallback(
+    (voice: VoiceMetadata, completion: InterviewCompletion) => {
+      dispatch({ type: "VOICE_ENDED", voice, completion });
+    },
+    [],
+  );
 
   const startOver = useCallback(() => {
     dispatch({ type: "START_OVER" });

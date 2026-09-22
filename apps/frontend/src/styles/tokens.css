@@ -11,6 +11,9 @@
   --sp-color-coral-500: #f26b5b;
   --sp-color-coral-700: #cc493f;
   --sp-color-coral-800: #b93831;
+  --sp-color-plum-100: #f2e7f4;
+  --sp-color-plum-300: #d7acdd;
+  --sp-color-plum-700: #6f4778;
   --sp-color-slate-500: #667085;
   --sp-color-line-200: #e4e7ec;
   --sp-color-line-strong: #7d899b;
@@ -103,6 +106,13 @@
   --sp-accent-pressed: var(--sp-color-coral-800);
   --sp-focus-ring: var(--sp-color-coral-700);
   --sp-success: var(--sp-color-success-600);
+  --sp-badge-success-background: var(--sp-color-plum-100);
+  --sp-badge-success-border: color-mix(
+    in srgb,
+    var(--sp-color-plum-700) 22%,
+    transparent
+  );
+  --sp-badge-success-text: var(--sp-color-plum-700);
   --sp-warning: var(--sp-color-warning-700);
   --sp-danger: var(--sp-color-danger-600);
   --sp-disabled-surface: var(--sp-color-control-disabled);
@@ -125,6 +135,17 @@
   --sp-accent-pressed: var(--sp-color-coral-100);
   --sp-focus-ring: var(--sp-color-coral-300);
   --sp-success: var(--sp-color-success-400);
+  --sp-badge-success-background: color-mix(
+    in srgb,
+    var(--sp-color-plum-300) 16%,
+    transparent
+  );
+  --sp-badge-success-border: color-mix(
+    in srgb,
+    var(--sp-color-plum-300) 34%,
+    transparent
+  );
+  --sp-badge-success-text: var(--sp-color-plum-300);
   --sp-warning: var(--sp-color-warning-400);
   --sp-danger: var(--sp-color-danger-400);
   --sp-disabled-surface: var(--sp-surface-soft);

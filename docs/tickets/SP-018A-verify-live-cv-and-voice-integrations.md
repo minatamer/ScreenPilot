@@ -1,8 +1,8 @@
 # SP-018A — Verify live CV and voice integrations
 
-Status: Finalized by owner-approved bounded live smoke; deferred evidence moved to SP-021A<br>
+Status: Finalized by owner-approved bounded live smoke; deferred evidence moved to SP-021B<br>
 Milestone: Milestone 2 — browser voice experience<br>
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-22<br>
 Depends on: SP-014A, SP-018<br>
 Suggested commit: `SP-018A: verify live CV and voice integrations`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -16,7 +16,7 @@ Safely activate the already-implemented live provider paths with owner-supplied
 credentials and exclusively synthetic candidate data. Establish a bounded live
 CV and private-voice compatibility checkpoint before same-session review work,
 while preserving every unperformed full-flow, performance, privacy, usage, and
-cost item for the consolidated SP-021A validation window.
+cost item for the consolidated SP-021B validation window.
 
 ## Why this ticket exists
 
@@ -26,7 +26,7 @@ cost item for the consolidated SP-021A validation window.
   provider latency, interruption, or dashboard/source synchronization.
 - SP-018 owns content-free instrumentation and the runtime behavior being
   measured. This packet owns the completed initial bounded live feedback loop;
-  SP-021A owns the transferred representative performance sample during the
+  SP-021B owns the transferred representative performance sample during the
   consolidated complete-flow validation.
 - SP-020 owns the live OpenAI summary route and SP-021 owns the browser
   summary/review/retry experience. Do not call or simulate a live summary in
@@ -230,9 +230,9 @@ cost item for the consolidated SP-021A validation window.
 - [ ] Client-tool-to-card p95 is at most 300 ms.
 - [ ] Interruption-to-audio-stop p95 is at most 250 ms, with no overlapping
   residual agent speech.
-- [ ] The visual waiting state appears from 0–800 ms, **Reviewing your answer…**
-  appears from 800–1,500 ms, and the one allowed static **“Mm-hm…”** filler is
-  eligible only above 1,500 ms.
+- [ ] The existing Pilot status remains the only feedback from 0–800 ms,
+  **Reviewing your answer…** appears from 800–1,500 ms, and the one allowed
+  static **“Mm-hm…”** filler is eligible only above 1,500 ms.
 - [ ] A filler occurs at most once per turn, never on consecutive turns, never
   more than three times per interview, never changes evidence, and never implies
   praise, agreement, comprehension, or hiring judgment.
@@ -499,7 +499,7 @@ authorizes it.
   fixture without copying their content into this record. This passes the two
   checked live-CV items above; it does not verify role correction, negative
   Turnstile cases, provider-dashboard usage/cost, voice, or cleanup, which remain
-  unchecked and transfer to SP-021A. The owner later confirmed both safety
+  unchecked and transfer to SP-021B. The owner later confirmed both safety
   switches were restored, as recorded in the closure decision below.
 - The subsequent owner-triggered Start completed a real `voice_token`
   Turnstile check and private ElevenLabs token exchange. The content-free
@@ -511,7 +511,7 @@ authorizes it.
   appeared without a duplicate connection. This passes only the first two
   token/WebRTC items above; browser-memory inspection, all eight runtime
   variables, both entry modes, every client tool, performance sampling,
-  provider usage/cost, and cleanup remain unchecked and transfer to SP-021A.
+  provider usage/cost, and cleanup remain unchecked and transfer to SP-021B.
   The owner later confirmed both safety switches were restored, as recorded in
   the closure decision below.
 - The same live conversation exposed two blocking defects. Candidate captions
@@ -558,19 +558,19 @@ authorizes it.
 - The second entry mode, all eight runtime variables, all five client tools,
   negative/replay Turnstile behavior, the 50-turn and 50-preparation samples,
   complete cleanup/privacy inspection, and provider revision/retention/usage/cost
-  review remain unchecked. They move intact to the required SP-021A packet; this
+  review remain unchecked. They move intact to the required SP-021B packet; this
   closure does not represent them as passed.
 - The owner explicitly chose not to pay for another partial interview-only run
-  before summary and review exist. SP-021A consolidates the next paid window
+  before summary and review exist. SP-021B consolidates the next paid window
   after SP-021 so it validates both complete entry modes through interview,
   summary, evidence-linked review, retry behavior, cleanup, and cost.
 - The owner explicitly confirms the current local runtime is restored to
   `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake`. The coding agent did not
   read or inspect either ignored local environment file. Restart/fake-flow
-  verification remains part of SP-021A's close-window checklist.
+  verification remains part of SP-021B's close-window checklist.
 - SP-018A is finalized for dependency ordering on this bounded, explicitly
   scoped evidence. SP-019 is eligible now. Public/release readiness remains
-  blocked by SP-021A and the later hardening/release tickets.
+  blocked by SP-021B and the later hardening/release tickets.
 
 ## Precision references
 
@@ -584,7 +584,7 @@ authorizes it.
 ## Completion handoff
 
 The closure handoff must distinguish the bounded evidence completed here from
-the exact unchecked ledger transferred to SP-021A. It records the owner's
+the exact unchecked ledger transferred to SP-021B. It records the owner's
 confirmation that both switches are restored without claiming the ignored files
 were inspected or that fake mode was re-run. Never include credentials, tokens,
 candidate content, raw provider payloads, real audio, or a secret-bearing

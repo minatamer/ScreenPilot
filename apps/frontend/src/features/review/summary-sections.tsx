@@ -1,7 +1,9 @@
 import type { ScreeningPlan } from "@screenpilot/contracts/interview/screening-plan";
 import type { ScreeningSummary } from "@screenpilot/contracts/interview/screening-summary";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
-import type { ReactNode } from "react";
+import { Children, isValidElement, type ReactNode } from "react";
+
+const SUMMARY_BALANCE_THRESHOLD = 4;
 
 type EvidenceLinkedItemProps = Readonly<{
   evidenceTurnIds: readonly string[];
@@ -49,23 +51,106 @@ function EvidenceLinkedItem({
   );
 }
 
+type SummaryPanelProps = Readonly<{
+  children: ReactNode;
+  eyebrow: string;
+  layout?: "standard" | "wide";
+  title: string;
+}>;
+
 function SummaryPanel({
   children,
   eyebrow,
+  layout = "standard",
   title,
-}: Readonly<{
-  children: ReactNode;
-  eyebrow: string;
-  title: string;
-}>) {
+}: SummaryPanelProps) {
   return (
-    <section className="sp-summary-panel">
+    <section
+      className={`sp-summary-panel${layout === "wide" ? " sp-summary-panel--wide" : ""}`}
+    >
       <header>
         <p>{eyebrow}</p>
         <h3>{title}</h3>
       </header>
       {children}
     </section>
+  );
+}
+
+type SummaryPanelEntry = Readonly<{
+  isWide: boolean;
+  panel: ReactNode;
+}>;
+
+function arrangeSummaryPanels(children: ReactNode) {
+  const rows: SummaryPanelEntry[][] = [];
+  let compactRow: SummaryPanelEntry[] = [];
+
+  for (const panel of Children.toArray(children)) {
+    const entry = {
+      isWide:
+        isValidElement<SummaryPanelProps>(panel) &&
+        panel.props.layout === "wide",
+      panel,
+    };
+
+    if (entry.isWide) {
+      if (compactRow.length > 0) {
+        rows.push(compactRow);
+        compactRow = [];
+      }
+      rows.push([entry]);
+      continue;
+    }
+
+    compactRow.push(entry);
+    if (compactRow.length === 2) {
+      rows.push(compactRow);
+      compactRow = [];
+    }
+  }
+
+  if (compactRow.length > 0) {
+    rows.push(compactRow);
+  }
+
+  const singletonRowIndexes = rows.flatMap((row, rowIndex) =>
+    row.length === 1 && !row[0]?.isWide ? [rowIndex] : [],
+  );
+  const mergedRowIndexes = new Set<number>();
+
+  for (let index = 0; index + 1 < singletonRowIndexes.length; index += 2) {
+    const firstRowIndex = singletonRowIndexes[index];
+    const secondRowIndex = singletonRowIndexes[index + 1];
+    const firstRow =
+      firstRowIndex === undefined ? undefined : rows[firstRowIndex];
+    const secondRow =
+      secondRowIndex === undefined ? undefined : rows[secondRowIndex];
+    const secondPanel = secondRow?.[0];
+
+    if (
+      firstRowIndex !== undefined &&
+      firstRow &&
+      secondPanel &&
+      secondRowIndex !== undefined
+    ) {
+      rows[firstRowIndex] = [...firstRow, secondPanel];
+      mergedRowIndexes.add(secondRowIndex);
+    }
+  }
+
+  return rows.flatMap((row, rowIndex) =>
+    mergedRowIndexes.has(rowIndex) ? [] : row,
+  );
+}
+
+function SummaryPanelGrid({ children }: Readonly<{ children: ReactNode }>) {
+  const arrangedPanels = arrangeSummaryPanels(children);
+
+  return (
+    <div className="sp-summary-sections__grid">
+      {arrangedPanels.map(({ panel }) => panel)}
+    </div>
   );
 }
 
@@ -87,6 +172,21 @@ export function SummarySections({
   const topicTitles = new Map(
     plan.topics.map((topic) => [topic.key, topic.title] as const),
   );
+  const hasDenseConfirmedFacts =
+    summary.confirmedFacts.length >= SUMMARY_BALANCE_THRESHOLD;
+  const hasDenseClarifications =
+    summary.clarifications.length >= SUMMARY_BALANCE_THRESHOLD;
+  const hasDenseCoverage =
+    Math.max(summary.topicsCovered.length, summary.topicsNotCovered.length) >=
+    SUMMARY_BALANCE_THRESHOLD;
+  const hasDenseCommunicationNotes =
+    summary.communicationNotes.length >= SUMMARY_BALANCE_THRESHOLD;
+  const hasDenseCandidateQuestions =
+    summary.candidateQuestions.length >= SUMMARY_BALANCE_THRESHOLD;
+  const hasDenseHumanFollowups =
+    summary.humanFollowups.length >= SUMMARY_BALANCE_THRESHOLD;
+  const hasDenseLimitations =
+    summary.limitations.length >= SUMMARY_BALANCE_THRESHOLD;
 
   return (
     <section
@@ -100,10 +200,20 @@ export function SummarySections({
         </div>
       </header>
 
-      <div className="sp-summary-sections__grid">
-        <SummaryPanel eyebrow="Grounded context" title="Confirmed facts">
+      <SummaryPanelGrid>
+        <SummaryPanel
+          eyebrow="Grounded context"
+          layout={hasDenseConfirmedFacts ? "wide" : "standard"}
+          title="Confirmed facts"
+        >
           {summary.confirmedFacts.length > 0 ? (
-            <ul>
+            <ul
+              className={
+                hasDenseConfirmedFacts
+                  ? "sp-summary-panel__balanced-list"
+                  : undefined
+              }
+            >
               {summary.confirmedFacts.map((fact, index) => (
                 <EvidenceLinkedItem
                   evidenceTurnIds={fact.evidenceTurnIds}
@@ -121,10 +231,17 @@ export function SummarySections({
 
         <SummaryPanel
           eyebrow="Uncertainty stays visible"
+          layout={hasDenseClarifications ? "wide" : "standard"}
           title="Clarifications"
         >
           {summary.clarifications.length > 0 ? (
-            <ul>
+            <ul
+              className={
+                hasDenseClarifications
+                  ? "sp-summary-panel__balanced-list"
+                  : undefined
+              }
+            >
               {summary.clarifications.map((item, index) => (
                 <EvidenceLinkedItem
                   evidenceTurnIds={item.evidenceTurnIds}
@@ -142,12 +259,25 @@ export function SummarySections({
           )}
         </SummaryPanel>
 
-        <SummaryPanel eyebrow="Conversation shape" title="Coverage and gaps">
-          <div className="sp-summary-coverage">
+        <SummaryPanel
+          eyebrow="Conversation shape"
+          layout={hasDenseCoverage ? "wide" : "standard"}
+          title="Coverage and gaps"
+        >
+          <div
+            className={`sp-summary-coverage${hasDenseCoverage ? " sp-summary-coverage--balanced" : ""}`}
+          >
             <div>
               <h4>Covered</h4>
               {summary.topicsCovered.length > 0 ? (
-                <ul>
+                <ul
+                  aria-label="Covered topics"
+                  className={
+                    hasDenseCoverage
+                      ? "sp-summary-panel__balanced-list"
+                      : undefined
+                  }
+                >
                   {summary.topicsCovered.map((topic) => (
                     <EvidenceLinkedItem
                       evidenceTurnIds={topic.evidenceTurnIds}
@@ -167,7 +297,10 @@ export function SummarySections({
             <div>
               <h4>Not covered</h4>
               {summary.topicsNotCovered.length > 0 ? (
-                <ul className="sp-summary-gap-list">
+                <ul
+                  aria-label="Topics not covered"
+                  className={`sp-summary-gap-list${hasDenseCoverage ? " sp-summary-panel__balanced-list" : ""}`}
+                >
                   {summary.topicsNotCovered.map((topicKey) => (
                     <li key={topicKey}>
                       {topicTitles.get(topicKey) ?? topicKey}
@@ -216,10 +349,17 @@ export function SummarySections({
 
         <SummaryPanel
           eyebrow="Observed in this call"
+          layout={hasDenseCommunicationNotes ? "wide" : "standard"}
           title="Communication notes"
         >
           {summary.communicationNotes.length > 0 ? (
-            <ul>
+            <ul
+              className={
+                hasDenseCommunicationNotes
+                  ? "sp-summary-panel__balanced-list"
+                  : undefined
+              }
+            >
               {summary.communicationNotes.map((note, index) => (
                 <EvidenceLinkedItem
                   evidenceTurnIds={note.evidenceTurnIds}
@@ -237,9 +377,19 @@ export function SummarySections({
           )}
         </SummaryPanel>
 
-        <SummaryPanel eyebrow="Candidate-led" title="Questions asked">
+        <SummaryPanel
+          eyebrow="Candidate-led"
+          layout={hasDenseCandidateQuestions ? "wide" : "standard"}
+          title="Questions asked"
+        >
           {summary.candidateQuestions.length > 0 ? (
-            <ul>
+            <ul
+              className={
+                hasDenseCandidateQuestions
+                  ? "sp-summary-panel__balanced-list"
+                  : undefined
+              }
+            >
               {summary.candidateQuestions.map((question, index) => (
                 <EvidenceLinkedItem
                   evidenceTurnIds={question.evidenceTurnIds}
@@ -259,10 +409,17 @@ export function SummarySections({
 
         <SummaryPanel
           eyebrow="No invented employer facts"
+          layout={hasDenseHumanFollowups ? "wide" : "standard"}
           title="Human follow-ups"
         >
           {summary.humanFollowups.length > 0 ? (
-            <ul>
+            <ul
+              className={
+                hasDenseHumanFollowups
+                  ? "sp-summary-panel__balanced-list"
+                  : undefined
+              }
+            >
               {summary.humanFollowups.map((followup, index) => (
                 <EvidenceLinkedItem
                   evidenceTurnIds={followup.evidenceTurnIds}
@@ -280,14 +437,20 @@ export function SummarySections({
           )}
         </SummaryPanel>
 
-        <SummaryPanel eyebrow="Interpretation boundary" title="Limitations">
-          <ul className="sp-summary-limitations">
+        <SummaryPanel
+          eyebrow="Interpretation boundary"
+          layout={hasDenseLimitations ? "wide" : "standard"}
+          title="Limitations"
+        >
+          <ul
+            className={`sp-summary-limitations${hasDenseLimitations ? " sp-summary-panel__balanced-list" : ""}`}
+          >
             {summary.limitations.map((limitation) => (
               <li key={limitation}>{limitation}</li>
             ))}
           </ul>
         </SummaryPanel>
-      </div>
+      </SummaryPanelGrid>
     </section>
   );
 }

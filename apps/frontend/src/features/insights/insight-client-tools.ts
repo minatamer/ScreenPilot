@@ -69,6 +69,40 @@ function appendUnique(
   return values.includes(value) ? values : [...values, value];
 }
 
+function normalizedVerbatimEvidenceText(value: string): string {
+  return value
+    .normalize("NFC")
+    .replace(/\s+/gu, " ")
+    .trim()
+    .toLocaleLowerCase("en");
+}
+
+function turnContainsCandidateQuestion(
+  turn: TranscriptTurn,
+  question: string,
+): boolean {
+  const normalizedTurn = normalizedVerbatimEvidenceText(turn.text);
+  const normalizedQuestion = normalizedVerbatimEvidenceText(question);
+
+  if (!normalizedQuestion.endsWith("?")) {
+    return normalizedTurn === normalizedQuestion;
+  }
+
+  let matchIndex = normalizedTurn.indexOf(normalizedQuestion);
+  while (matchIndex >= 0) {
+    const precedingText = normalizedTurn.slice(0, matchIndex).trimEnd();
+    if (precedingText.length === 0 || /[.!?:;]$/u.test(precedingText)) {
+      return true;
+    }
+    matchIndex = normalizedTurn.indexOf(
+      normalizedQuestion,
+      matchIndex + normalizedQuestion.length,
+    );
+  }
+
+  return false;
+}
+
 function normalizeInsightValue(category: InsightCategory, value: string) {
   if (category !== "role_preference") {
     return value;
@@ -293,6 +327,11 @@ export function createInsightClientTools({
     if (!turn) {
       return rejected(
         "Wait for the latest final candidate question before recording it.",
+      );
+    }
+    if (!turnContainsCandidateQuestion(turn, parsed.data.question)) {
+      return rejected(
+        "The recorded question must preserve the latest candidate wording.",
       );
     }
     if (

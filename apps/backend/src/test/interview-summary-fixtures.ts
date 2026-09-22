@@ -88,8 +88,10 @@ export function createSummaryFixtureInput(
     insights.push(
       insight(
         "follow_up_needed",
-        "clarifications_and_followups",
-        "An employer detail needs human follow-up",
+        options.includeCandidateQuestion === false
+          ? "clarifications_and_followups"
+          : "candidate_questions",
+        "A human recruiter must answer the unsupported candidate question",
         "needs_clarification",
       ),
     );

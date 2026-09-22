@@ -3,6 +3,7 @@ import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-c
 import { UNDECIDED_ROLE_VALUE } from "@screenpilot/contracts/interview/client-tools";
 import {
   SCREENING_SUMMARY_LIMITATIONS,
+  SCREENING_SUMMARY_OVERVIEW,
   screeningSummarySchema,
   type ScreeningSummary,
 } from "@screenpilot/contracts/interview/screening-summary";
@@ -142,8 +143,7 @@ function fakeInterviewSummaryValue(
   );
 
   return {
-    overview:
-      "Local interview evidence was organized into cautious notes for human review.",
+    overview: SCREENING_SUMMARY_OVERVIEW,
     ...(roleInsight === undefined
       ? {}
       : {

@@ -26,6 +26,9 @@
         --coral-500: #f26b5b;
         --coral-700: #cc493f;
         --coral-800: #b93831;
+        --plum-100: #f2e7f4;
+        --plum-300: #d7acdd;
+        --plum-700: #6f4778;
         --coral-100: #fde8e4;
         --slate-500: #667085;
         --line-200: #e4e7ec;
@@ -888,8 +891,9 @@
       }
 
       .status.confirmed {
-        background: rgb(6 118 71 / 10%);
-        color: var(--success-600);
+        border-color: rgb(111 71 120 / 22%);
+        background: var(--plum-100);
+        color: var(--plum-700);
       }
 
       .status.clarify {
@@ -1147,11 +1151,18 @@
         color: var(--coral-300);
       }
 
-      .control-state {
-        display: block;
-        color: var(--dark-muted);
-        font-size: 10px;
-        font-weight: 500;
+      .interview-control.icon {
+        width: 44px;
+        min-width: 44px;
+        padding: 0;
+        border-radius: 999px;
+        color: var(--coral-300);
+      }
+
+      .interview-control svg {
+        width: 18px;
+        height: 18px;
+        flex: 0 0 auto;
       }
 
       .insight-heading {
@@ -1211,7 +1222,7 @@
         display: inline-flex;
         align-items: center;
         gap: 5px;
-        color: var(--success-400);
+        color: var(--plum-300);
         font-size: 11px;
         font-weight: 700;
       }
@@ -2541,12 +2552,12 @@
             <article class="swatch"><div class="swatch-color" style="--swatch:#FFFFFF;--foreground:#18243A"><span>Ink text</span></div><div class="swatch-copy"><strong>Card White</strong><code>#FFFFFF · paper-0</code></div></article>
             <article class="swatch"><div class="swatch-color" style="--swatch:#667085;--foreground:#FFFFFF"><span>White sample</span></div><div class="swatch-copy"><strong>Slate</strong><code>#667085 · slate-500</code></div></article>
             <article class="swatch"><div class="swatch-color" style="--swatch:#E4E7EC;--foreground:#18243A"><span>Border only</span></div><div class="swatch-copy"><strong>Cool Gray</strong><code>#E4E7EC · line-200</code></div></article>
-            <article class="swatch"><div class="swatch-color" style="--swatch:#067647;--foreground:#FFFFFF"><span>Confirmed</span></div><div class="swatch-copy"><strong>Success</strong><code>#067647 · success-600</code></div></article>
+            <article class="swatch"><div class="swatch-color" style="--swatch:#6F4778;--foreground:#FFFFFF"><span>Confirmed</span></div><div class="swatch-copy"><strong>Positive status</strong><code>#6F4778 · plum-700</code></div></article>
             <article class="swatch"><div class="swatch-color" style="--swatch:#F79009;--foreground:#18243A"><span>Clarify</span></div><div class="swatch-copy"><strong>Warning</strong><code>#F79009 · warning-400</code></div></article>
             <article class="swatch"><div class="swatch-color" style="--swatch:#B42318;--foreground:#FFFFFF"><span>Error / End</span></div><div class="swatch-copy"><strong>Danger</strong><code>#B42318 · danger-600</code></div></article>
           </div>
 
-          <p class="plain-note"><strong>Simple rule:</strong> use coral for brand and action—not for success, warnings, or errors. White text uses the darker action coral. Cool gray separates quiet cards; interactive controls use the stronger <code>#7D899B</code> border. Inside <code>/demo</code>, Warm White and Card White are typography/icon/detail colors, never page, card, form, drop-zone, or review backgrounds.</p>
+          <p class="plain-note"><strong>Simple rule:</strong> use coral for brand and action, plum/lilac for confirmed or completed tags, green only for live operational signals, amber for clarification, and red for errors/end attention. White text uses the darker action coral. Cool gray separates quiet cards; interactive controls use the stronger <code>#7D899B</code> border. Inside <code>/demo</code>, Warm White and Card White are typography/icon/detail colors, never page, card, form, drop-zone, or review backgrounds.</p>
           <p class="motion-note"><strong>Approved logo:</strong> use the header mark in the actual web app—a Deep Ink rounded square with the Warm Coral forward/paper-plane shape and Pale Coral inner facet. The inline SVG in this HTML is the shape authority; generated-image logos are only visual approximations.</p>
         </div>
       </section>
@@ -2729,8 +2740,8 @@
               <div class="control-row">
                 <span class="meta timer">ELAPSED · 02:14</span>
                 <div class="button-row">
-                  <button class="interview-control" type="button" aria-label="Mute Pilot's microphone input">Mute <span class="control-state">Microphone on</span></button>
-                  <button class="interview-control end" type="button">End interview</button>
+                  <button class="interview-control icon" type="button" aria-label="Mute microphone" title="Mute microphone"><svg aria-hidden="true" fill="none" viewBox="0 0 24 24"><rect height="10" rx="3.5" stroke="currentColor" stroke-width="1.8" width="7" x="8.5" y="3"></rect><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M8.5 21h7" stroke="currentColor" stroke-linecap="round" stroke-width="1.8"></path></svg></button>
+                  <button class="interview-control end" type="button"><svg aria-hidden="true" viewBox="0 0 24 24"><rect fill="currentColor" height="11" rx="1.5" width="11" x="6.5" y="6.5"></rect></svg>End interview</button>
                 </div>
               </div>
             </section>
@@ -2788,9 +2799,9 @@
             </article>
           </div>
 
-          <p class="plain-note"><strong>Motion:</strong> normal transitions last 180–240 ms. The hero word “notes.” is a slightly informal handwritten SVG whose individual pen strokes draw over about 1.1 seconds; an imperfect coral underline follows immediately, then the treatment stays still. The ordinary word remains in the accessible headline. Same-page landing links glide smoothly to their targets instead of jumping; header How it works and hero See it step by step share one brisk 0.9-second journey. The landing preview loops slowly through two three-topic boards: salary, experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It has no playback/topic controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. The active speaker bars and participant waveform scale in place, both question and answer subtitles reveal one spoken word at a time inside fixed-height regions, and note boards/cards enter with opacity plus a small transform. The four-step how-it-works scene changes in response to normal scrolling without hijacking it. Reduced-motion mode keeps the completed handwritten word visible and uses only a gentle opacity finish, cycles through complete speaking and note states without word-by-word or automatic spatial movement, and limits voice bars to slow opacity changes; every story step remains readable.</p>
+          <p class="plain-note"><strong>Motion:</strong> normal transitions last 180–240 ms. The hero word “notes.” is a slightly informal handwritten SVG whose individual pen strokes draw over about 1.1 seconds; an imperfect coral underline follows immediately, then the treatment stays still. The ordinary word remains in the accessible headline. Same-page landing CTAs glide smoothly to their targets instead of jumping while ordinary activation keeps the browser address fragment-free; header How it works, hero See it step by step, and the hero entry action share one brisk 0.9-second journey. The landing preview loops slowly through two three-topic boards: salary, experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It has no playback/topic controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. The active speaker bars and participant waveform scale in place, both question and answer subtitles reveal one spoken word at a time inside fixed-height regions, and note boards/cards enter with opacity plus a small transform. The four-step how-it-works scene changes in response to normal scrolling without hijacking it. Reduced-motion mode keeps the completed handwritten word visible and uses only a gentle opacity finish, cycles through complete speaking and note states without word-by-word or automatic spatial movement, and limits voice bars to slow opacity changes; every story step remains readable.</p>
           <p class="motion-note"><strong>Hero layout:</strong> keep the opening permanently stacked and centered. The promise and actions come first, and the wide interview product frame sits directly beneath them at every viewport width—never beside them.</p>
-          <p class="motion-note"><strong>Landing header:</strong> keep its surface fully transparent and non-sticky inside the edge-to-edge continuous atmosphere so it scrolls away with the page. Place the enlarged ScreenPilot mark and wordmark at the left and the larger How it works / Start demo action cluster at the right; keyboard order follows the same familiar layout. How it works shares the hero's controlled scroll journey, while Start demo routes directly to the `/demo` entry chooser. The page-wide grid and glow continue behind the header and hero without restarting at their boundary.</p>
+          <p class="motion-note"><strong>Landing header:</strong> keep its surface fully transparent and non-sticky inside the edge-to-edge continuous atmosphere so it scrolls away with the page. Place the enlarged ScreenPilot mark and wordmark at the left and the larger How it works / Start demo action cluster at the right; keyboard order follows the same familiar layout. The mark links cleanly to `/`, How it works shares the hero's fragment-free controlled scroll journey, and Start demo routes directly to the `/demo` entry chooser. The page-wide grid and glow continue behind the header and hero without restarting at their boundary.</p>
           <p class="motion-note"><strong>Reference boundary:</strong> the supplied dashboard image influenced only the Deep Ink + Warm Coral palette and warm visual mood. ScreenPilot does not inherit its recruiter navigation, candidate profiles, pipeline, analytics, scoring, phone controls, or other unsupported features.</p>
         </div>
       </section>

@@ -6,7 +6,7 @@ import { UNIVERSAL_TOPIC_KEYS } from "./screening-plan.ts";
 
 const evidenceIdSchema = z.string().trim().min(1).max(64);
 export const SCREENING_SUMMARY_OVERVIEW =
-  "Local interview evidence was organized into cautious notes for human review.";
+  "Key conversation points, organized for review.";
 export const SCREENING_SUMMARY_LIMITATIONS = [
   "These AI-organized notes require human review.",
   "Some planned topics were not covered in the local evidence.",

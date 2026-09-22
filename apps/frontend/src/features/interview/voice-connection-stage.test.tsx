@@ -5,10 +5,12 @@ import {
   VOICE_AGENT_POLICY_VERSION,
   type VoiceMetadata,
 } from "@screenpilot/contracts/api/voice-token";
+import { UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK } from "@screenpilot/contracts/interview/client-tools";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
 import { ScreenPilotApiError } from "@/shared/api/screenpilot-api";
+import type { InterviewCompletion } from "@/features/session/demo-session.types";
 
 import {
   VoiceConnectionStage,
@@ -19,7 +21,10 @@ import {
   createVoicePerformanceCollector,
   createVoicePerformanceTracker,
 } from "./voice-performance";
-import { createFakeVoiceToolTrace } from "./fake-voice-session";
+import {
+  createFakeVoiceToolTrace,
+  FAKE_VOICE_EVENT_TRACE,
+} from "./fake-voice-session";
 
 const DEMO_CONTEXT = {
   kind: "role_agnostic_first_stage_hr_screen",
@@ -30,6 +35,7 @@ const START_REQUEST = {
   interviewGrant: "signed-interview-grant",
   turnstileToken: "single-use-turnstile-token",
 } as const;
+const connectedBridgeCleanup = vi.fn();
 
 function FakeSessionBridge({
   authorization,
@@ -78,8 +84,9 @@ function ConnectedSessionBridge({
       type: "connected",
       conversationId: expectedConversationId ?? "missing-conversation",
     });
+    return connectedBridgeCleanup;
   }, [expectedConversationId, onAuthorizationConsumed, onEvent]);
-  return null;
+  return <div data-testid="connected-session-bridge" />;
 }
 
 function stageProps(requestToken: VoiceTokenRequester) {
@@ -91,8 +98,9 @@ function stageProps(requestToken: VoiceTokenRequester) {
     liveVoiceEnabled: true,
     onCancel: vi.fn(),
     onConnected: vi.fn<(voice: VoiceMetadata) => void>(),
-    onEnded: vi.fn<(voice: VoiceMetadata) => void>(),
-    onEnding: vi.fn(),
+    onEnded:
+      vi.fn<(voice: VoiceMetadata, completion: InterviewCompletion) => void>(),
+    onEnding: vi.fn<(completion: InterviewCompletion) => void>(),
     onFailure: vi.fn(),
     onFinalTranscriptTurn: vi.fn<(turn: TranscriptTurn) => void>(),
     onGrantRejected: vi.fn(),
@@ -113,6 +121,7 @@ function stageProps(requestToken: VoiceTokenRequester) {
 describe("VoiceConnectionStage", () => {
   beforeEach(() => {
     window.sessionStorage.clear();
+    connectedBridgeCleanup.mockClear();
   });
 
   afterEach(() => {
@@ -314,14 +323,20 @@ describe("VoiceConnectionStage", () => {
     );
     expect(screen.getByText("fake")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "End interview" }));
-    await waitFor(() => {
-      expect(props.onEnded).toHaveBeenCalledWith(
-        expect.objectContaining({
-          endReason: "Interview ended by the candidate.",
-          status: "ended",
-        }),
-      );
-    });
+    await waitFor(
+      () => {
+        expect(props.onEnded).toHaveBeenCalledWith(
+          expect.objectContaining({
+            endReason: "Interview ended by the candidate.",
+            status: "ended",
+          }),
+          expect.objectContaining({ reason: "candidate_ended" }),
+        );
+      },
+      { timeout: 3_000 },
+    );
+    const completion = props.onEnded.mock.calls.at(-1)?.[1];
+    expect(typeof completion?.elapsedSeconds).toBe("number");
   });
 
   it("models a rich sample-CV review without pretending CV evidence exists in conversation-first mode", () => {
@@ -366,6 +381,23 @@ describe("VoiceConnectionStage", () => {
       },
     });
     expect(
+      conversationFirstTrace.find((entry) => entry.name === "requestFollowup"),
+    ).toMatchObject({
+      parameters: {
+        reason:
+          "A human recruiter must confirm the unsupported onboarding and work-arrangement details.",
+      },
+    });
+    expect(
+      FAKE_VOICE_EVENT_TRACE.find(
+        (entry) =>
+          entry.event.type === "message" &&
+          entry.event.stability === "final" &&
+          entry.event.speaker === "interviewer" &&
+          entry.event.text.startsWith(UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK),
+      ),
+    ).toBeDefined();
+    expect(
       cvAssistedTrace.find((entry) => entry.name === "correctInsight"),
     ).toMatchObject({
       parameters: {
@@ -400,6 +432,47 @@ describe("VoiceConnectionStage", () => {
       retryable: true,
       stage: "connecting",
     });
+  });
+
+  it("unmounts the provider bridge and clears normal-ending controls immediately", async () => {
+    const requestToken = vi.fn<VoiceTokenRequester>().mockResolvedValue({
+      conversationId: "conversation-normal-end",
+      conversationToken: "short-lived-conversation-token",
+    });
+    const props = {
+      ...stageProps(requestToken),
+      liveSessionBridge: ConnectedSessionBridge,
+      onConnected: vi.fn(),
+    };
+    const rendered = render(<VoiceConnectionStage {...props} />);
+
+    await waitFor(() => {
+      expect(props.onConnected).toHaveBeenCalledOnce();
+    });
+    rendered.rerender(<VoiceConnectionStage {...props} stage="live" />);
+    expect(screen.getByTestId("connected-session-bridge")).toBeInTheDocument();
+    const cleanupCountBeforeEnd = connectedBridgeCleanup.mock.calls.length;
+
+    fireEvent.click(screen.getByRole("button", { name: "End interview" }));
+
+    expect(props.onEnding).toHaveBeenCalledOnce();
+    const completion = props.onEnding.mock.calls.at(-1)?.[0];
+    expect(completion?.reason).toBe("candidate_ended");
+    expect(typeof completion?.elapsedSeconds).toBe("number");
+    await waitFor(() => {
+      expect(connectedBridgeCleanup.mock.calls.length).toBeGreaterThan(
+        cleanupCountBeforeEnd,
+      );
+      expect(
+        screen.queryByTestId("connected-session-bridge"),
+      ).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("button", { name: "Ending interview" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Mute microphone" }),
+    ).toBeDisabled();
   });
 
   it("maps provider rejection to a retryable connecting failure", async () => {
@@ -445,7 +518,7 @@ describe("VoiceConnectionStage", () => {
       expect(requestToken).toHaveBeenCalledOnce();
     });
 
-    expect(screen.getByText("Secure connection")).toBeVisible();
+    expect(screen.getByText("Step 4 of 5 · Secure connection")).toBeVisible();
     expect(
       screen.getByRole("heading", {
         level: 1,

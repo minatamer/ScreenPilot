@@ -7,6 +7,11 @@ import {
   UNIVERSAL_TOPIC_KEYS,
 } from "@screenpilot/contracts/interview/screening-plan";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
+import {
+  SCREENING_SUMMARY_LIMITATIONS,
+  SCREENING_SUMMARY_OVERVIEW,
+  type ScreeningSummary,
+} from "@screenpilot/contracts/interview/screening-summary";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -21,6 +26,21 @@ const NOW = "2026-09-09T09:00:00.000Z";
 const LATER = "2026-09-09T09:20:00.000Z";
 const INTERVIEW_GRANT = "signed-test-grant";
 const INTERVIEW_GRANT_EXPIRES_AT = "2026-09-09T09:15:00.000Z";
+const candidateCompletion = {
+  reason: "candidate_ended" as const,
+  elapsedSeconds: 300,
+};
+const completedSummary: ScreeningSummary = {
+  overview: SCREENING_SUMMARY_OVERVIEW,
+  confirmedFacts: [],
+  clarifications: [],
+  topicsCovered: [],
+  topicsNotCovered: [],
+  communicationNotes: [],
+  candidateQuestions: [],
+  humanFollowups: [],
+  limitations: [SCREENING_SUMMARY_LIMITATIONS[0]],
+};
 
 const runtimeConfig: PublicRuntimeConfig = {
   abuseProtection: {
@@ -424,6 +444,59 @@ describe("demoSessionReducer", () => {
     ).toThrow("Only final transcript turns");
   });
 
+  it("keeps paired candidate-question evidence idempotent in reducer state", () => {
+    const questionTurn = {
+      ...finalCandidateTurn,
+      id: "candidate-question-turn",
+      sequence: 7,
+      text: "What onboarding and work-arrangement details can a recruiter share?",
+    };
+    let state = demoSessionReducer(conversationPreflightState(), {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: questionTurn,
+    });
+    const candidateQuestion = {
+      id: "candidate-question-7",
+      category: "candidate_question" as const,
+      label: "Candidate question",
+      value: questionTurn.text,
+      source: "Candidate" as const,
+      status: "confirmed" as const,
+      evidenceTurnIds: [questionTurn.id],
+      cvFactIds: [],
+      createdAt: LATER,
+      updatedAt: LATER,
+    };
+    const humanFollowup = {
+      id: "follow-up-7",
+      category: "follow_up_needed" as const,
+      label: "Human follow-up",
+      value:
+        "A human recruiter must confirm the unsupported onboarding and work-arrangement details.",
+      source: "Candidate" as const,
+      status: "needs_clarification" as const,
+      evidenceTurnIds: [questionTurn.id],
+      cvFactIds: [],
+      createdAt: LATER,
+      updatedAt: LATER,
+    };
+
+    state = demoSessionReducer(state, {
+      type: "UPSERT_INSIGHT",
+      insight: candidateQuestion,
+    });
+    state = demoSessionReducer(state, {
+      type: "UPSERT_INSIGHT",
+      insight: humanFollowup,
+    });
+    state = demoSessionReducer(state, {
+      type: "UPSERT_INSIGHT",
+      insight: humanFollowup,
+    });
+
+    expect(state.insights).toEqual([candidateQuestion, humanFollowup]);
+  });
+
   it("validates each final turn and rejects evidence beyond the character bound", () => {
     let state = conversationPreflightState();
     for (let sequence = 0; sequence < 7; sequence += 1) {
@@ -651,9 +724,13 @@ describe("demoSessionReducer", () => {
         updatedAt: LATER,
       },
     });
-    state = demoSessionReducer(state, { type: "VOICE_ENDING" });
+    state = demoSessionReducer(state, {
+      type: "VOICE_ENDING",
+      completion: candidateCompletion,
+    });
     state = demoSessionReducer(state, {
       type: "VOICE_ENDED",
+      completion: candidateCompletion,
       voice: {
         conversationId: "conversation-1",
         status: "ended",
@@ -661,6 +738,7 @@ describe("demoSessionReducer", () => {
         endedAt: "2026-09-09T09:25:00.000Z",
       },
     });
+    state = demoSessionReducer(state, { type: "VIEW_SUMMARY" });
     const persistedSession = projectPersistedDemoSession(state);
     if (!persistedSession) {
       throw new Error("Expected the summarizing session to be persistable.");
@@ -725,10 +803,14 @@ describe("demoSessionReducer", () => {
       type: "ADD_FINAL_TRANSCRIPT_TURN",
       turn: finalCandidateTurn,
     });
-    state = demoSessionReducer(state, { type: "VOICE_ENDING" });
+    state = demoSessionReducer(state, {
+      type: "VOICE_ENDING",
+      completion: candidateCompletion,
+    });
 
     const completed = demoSessionReducer(state, {
       type: "VOICE_ENDED",
+      completion: candidateCompletion,
       voice: {
         conversationId: "conversation-1",
         status: "ended",
@@ -739,8 +821,9 @@ describe("demoSessionReducer", () => {
     });
 
     expect(completed).toMatchObject({
-      stage: "summarizing",
+      stage: "interview_complete",
       entryMode: "conversation_first",
+      interviewCompletion: candidateCompletion,
       transcript: [finalCandidateTurn],
       voice: {
         status: "ended",
@@ -748,15 +831,154 @@ describe("demoSessionReducer", () => {
       },
     });
     expect(projectPersistedDemoSession(completed)).toMatchObject({
-      stage: "summarizing",
+      stage: "interview_complete",
       transcript: [finalCandidateTurn],
+      interviewCompletion: candidateCompletion,
     });
+
+    const persistedCompleted = projectPersistedDemoSession(completed);
+    if (!persistedCompleted) {
+      throw new Error("Expected completed interview state to be persistable.");
+    }
+    const restoredCompleted = demoSessionReducer(
+      createInitialDemoSessionState(),
+      {
+        type: "RESTORE_SESSION",
+        session: persistedCompleted,
+        now: "2026-09-09T09:30:00.000Z",
+      },
+    );
+    expect(restoredCompleted).toMatchObject({
+      stage: "interview_complete",
+      interviewCompletion: candidateCompletion,
+      voice: { status: "ended" },
+    });
+
+    const summaryRequested = demoSessionReducer(restoredCompleted, {
+      type: "VIEW_SUMMARY",
+    });
+    expect(summaryRequested.stage).toBe("summarizing");
+  });
+
+  it("keeps the first normal terminal reason across duplicate shutdown events", () => {
+    let state = demoSessionReducer(conversationPreflightState(), {
+      type: "PREFLIGHT_READY",
+    });
+    state = demoSessionReducer(state, { type: "VOICE_CONNECTING" });
+    state = demoSessionReducer(state, {
+      type: "VOICE_CONNECTED",
+      voice: {
+        conversationId: "conversation-duplicate-end",
+        status: "connected",
+        startedAt: LATER,
+      },
+    });
+    state = demoSessionReducer(state, {
+      type: "VOICE_ENDING",
+      completion: {
+        reason: "agent_completed",
+        elapsedSeconds: 42,
+      },
+    });
+
+    const duplicateEnding = demoSessionReducer(state, {
+      type: "VOICE_ENDING",
+      completion: {
+        reason: "time_limit",
+        elapsedSeconds: 480,
+      },
+    });
+    expect(duplicateEnding).toBe(state);
+
+    const persistedEnding = projectPersistedDemoSession(duplicateEnding);
+    if (!persistedEnding) {
+      throw new Error("Expected normal shutdown to remain persistable.");
+    }
+    expect(
+      demoSessionReducer(createInitialDemoSessionState(), {
+        type: "RESTORE_SESSION",
+        session: persistedEnding,
+        now: "2026-09-09T09:21:00.000Z",
+      }),
+    ).toMatchObject({
+      stage: "interview_complete",
+      interviewCompletion: {
+        reason: "agent_completed",
+        elapsedSeconds: 42,
+      },
+      voice: { status: "ended" },
+    });
+
+    const completed = demoSessionReducer(duplicateEnding, {
+      type: "VOICE_ENDED",
+      completion: {
+        reason: "time_limit",
+        elapsedSeconds: 480,
+      },
+      voice: {
+        conversationId: "conversation-duplicate-end",
+        status: "ended",
+        startedAt: LATER,
+        endedAt: "2026-09-09T09:20:42.000Z",
+      },
+    });
+    expect(completed.interviewCompletion).toEqual({
+      reason: "agent_completed",
+      elapsedSeconds: 42,
+    });
+    expect(
+      demoSessionReducer(completed, {
+        type: "VOICE_ENDED",
+        completion: candidateCompletion,
+        voice: { status: "ended" },
+      }),
+    ).toBe(completed);
+  });
+
+  it("prepares one summary behind the completed workspace and reveals it on request", () => {
+    let state = demoSessionReducer(conversationPreflightState(), {
+      type: "PREFLIGHT_READY",
+    });
+    state = demoSessionReducer(state, { type: "VOICE_CONNECTING" });
+    state = demoSessionReducer(state, {
+      type: "VOICE_CONNECTED",
+      voice: { status: "connected", startedAt: LATER },
+    });
+    state = demoSessionReducer(state, {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: finalCandidateTurn,
+    });
+    state = demoSessionReducer(state, {
+      type: "VOICE_ENDING",
+      completion: candidateCompletion,
+    });
+    state = demoSessionReducer(state, {
+      type: "VOICE_ENDED",
+      completion: candidateCompletion,
+      voice: { status: "ended", endedAt: LATER },
+    });
+
+    const preparedBehindWorkspace = demoSessionReducer(state, {
+      type: "SUMMARY_SUCCEEDED",
+      summary: completedSummary,
+    });
+    expect(preparedBehindWorkspace).toMatchObject({
+      stage: "interview_complete",
+      summary: completedSummary,
+    });
+
+    const review = demoSessionReducer(preparedBehindWorkspace, {
+      type: "VIEW_SUMMARY",
+    });
+    expect(review.stage).toBe("review_ready");
+    expect(demoSessionReducer(review, { type: "VIEW_SUMMARY" })).toBe(review);
   });
 
   it("rejects demo completion before voice shutdown begins", () => {
     expect(() =>
       demoSessionReducer(conversationPreflightState(), {
         type: "VOICE_ENDED",
+        completion: candidateCompletion,
         voice: { status: "ended" },
       }),
     ).toThrow(InvalidSessionTransitionError);

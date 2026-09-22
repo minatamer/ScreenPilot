@@ -142,7 +142,7 @@ describe("shared voice preflight", () => {
     );
 
     expect(screen.getByText("Conversation-first")).toBeVisible();
-    expect(screen.getByText("Before you begin")).toBeVisible();
+    expect(screen.getByText("Step 3 of 5 · Before you begin")).toBeVisible();
     expect(
       screen.getByRole("heading", {
         level: 1,

@@ -34,7 +34,7 @@ This ticket records those owner-directed corrections without reopening the reduc
 - Reveal each illustrative Pilot question and candidate answer completely before highlighting evidence. Draw the question and answer evidence highlights at the same time from left to right, then create the corresponding note card only after both highlight strokes finish.
 - Animate the participant waveform only during the candidate turn. During Pilot’s turn, animate the ScreenPilot mark/voice rings on the outside of the laptop lid so both speakers have a clear but restrained active state.
 - Keep the participant generic, featureless, and warm-toned. Remove eyes, smile, and ambiguous white limb shapes. From the viewer’s position across the desk, show the broad outside rear lid facing the viewer, centered in front of the participant, with the keyboard deck mostly hidden behind it and only a thin hinge/base silhouette visible.
-- Route the header **Start demo** action directly to `/demo`. The header **How it works** link and hero **See it step by step** link must call the same reusable deliberate-scroll behavior, retain real fragment-link semantics and native fallback, and use the owner-approved brisk smooth duration rather than an instant jump.
+- Route the product mark to clean `/` and header **Start demo** directly to `/demo`. The header **How it works**, hero **See it step by step**, and hero entry CTA use the reusable deliberate-scroll behavior, retain target markup as fallback, and use the owner-approved brisk smooth duration without writing `#top`, `#how-it-works`, or `#start` into the address during ordinary activation.
 - When market-evidence cards stack at tablet/phone widths, left-align every percentage with its card copy. Desktop asymmetry may use different placement only while the board remains a side-by-side composition.
 
 ### `/demo` information hierarchy
@@ -68,7 +68,7 @@ This ticket records those owner-directed corrections without reopening the reduc
 - [x] Add a restrained Pilot-speaking animation on the outside laptop mark and preserve the candidate-only waveform state.
 - [x] Redraw the generic participant and rear laptop orientation without facial features, white skin/limbs, a visible front screen, or ambiguous geometry.
 - [x] Keep hero feature cards and their copy crisp at rest across common device-pixel ratios.
-- [x] Share the deliberate-scroll function between **How it works** and **See it step by step**, and route **Start demo** directly to `/demo`.
+- [x] Share the clean-route deliberate-scroll function across same-page CTAs, route the product mark to `/`, and route **Start demo** directly to `/demo`.
 - [x] Left-align reflowed market-evidence percentages at tablet and phone widths.
 - [x] Remove the `/demo` safeguard footer and move **Privacy details** into the header before **Clear & exit**.
 - [x] Give every reachable `/demo` state the same pretitle-plus-page-title hierarchy.
@@ -81,7 +81,7 @@ This ticket records those owner-directed corrections without reopening the reduc
 - [ ] The landing animation visibly follows speak question → speak answer → draw both highlights together → add note, without a layout shift or instant highlight flash.
 - [ ] Candidate and Pilot speaking turns are visually distinguishable without adding playback controls, noisy motion, or an AI-avatar implication.
 - [ ] The participant reads as a humane, anonymous person using a laptop whose outside lid faces the viewer.
-- [ ] All three landing CTAs reach their intended target, and the two same-page CTAs share one interruptible, brisk, smooth-scroll implementation with accessible fragment fallback.
+- [ ] All landing CTAs reach their intended target, same-page CTAs share one interruptible brisk implementation, and ordinary activation leaves the address fragment-free while target markup remains available as fallback.
 - [ ] Reflowed statistics use one consistent left alignment; transformed hero-card typography remains visually crisp.
 - [ ] `/demo` has no repeated safeguard footer, while **Privacy details** and **Clear & exit** remain reachable in the header.
 - [ ] Every reachable `/demo` state has exactly one page-level `h1`, immediately preceded by the standard pretitle; desktop titles use available width and compact titles wrap without overflow.
@@ -95,7 +95,7 @@ This ticket records those owner-directed corrections without reopening the reduc
 - [x] Run frontend lint and typecheck plus `git diff --check`.
 - [ ] In deterministic fake mode, inspect the landing animation and the `/demo` choose, CV, conversation-first preparation, plan, preflight, connection-error/fake connection, and live-interview surfaces without granting real microphone access or making a paid provider call.
 - [ ] Check phone portrait, tablet, compact laptop, laptop/desktop, large monitor, and at least one intermediate drag-resized width. Confirm no horizontal overflow, accidental two-column title treatment, nested scroll trap, clipped action, or inconsistent reflowed statistic alignment.
-- [ ] Check keyboard focus, real fragment semantics, scroll interruption cleanup, reduced-motion behavior, one-`h1` hierarchy, and Privacy-dialog focus return.
+- [ ] Check keyboard focus, clean-route scrolling plus fallback target semantics, scroll interruption cleanup, reduced-motion behavior, one-`h1` hierarchy, and Privacy-dialog focus return.
 - [x] Compare computed typography and spacing on representative states to confirm shared token values rather than visually similar one-off rules.
 - [x] Record anything that requires real microphone hardware, credentials, or paid/live provider calls as explicitly unchecked and deferred; those are not authorized by this ticket.
 

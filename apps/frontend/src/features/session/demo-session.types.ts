@@ -28,6 +28,7 @@ export const DEMO_STAGES = [
   "connecting",
   "live",
   "ending",
+  "interview_complete",
   "summarizing",
   "review_ready",
   "cleared",
@@ -62,6 +63,20 @@ export type SessionFailure = Readonly<{
   retryable: boolean;
 }>;
 
+export const INTERVIEW_TERMINAL_REASONS = [
+  "candidate_ended",
+  "agent_completed",
+  "time_limit",
+] as const;
+
+export type InterviewTerminalReason =
+  (typeof INTERVIEW_TERMINAL_REASONS)[number];
+
+export type InterviewCompletion = Readonly<{
+  reason: InterviewTerminalReason;
+  elapsedSeconds: number;
+}>;
+
 export type SessionRestoreNotice =
   | "corrupt_session_cleared"
   | "expired_session_cleared"
@@ -90,6 +105,7 @@ export type DemoSessionState = Readonly<{
   interviewGrantExpiresAt?: string | undefined;
   cvAnalysisUsage?: ProviderUsage | undefined;
   voice?: VoiceMetadata | undefined;
+  interviewCompletion?: InterviewCompletion | undefined;
   transcript: readonly TranscriptTurn[];
   insights: readonly InsightCard[];
   topicProgress: readonly TopicProgress[];

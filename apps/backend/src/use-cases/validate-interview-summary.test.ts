@@ -119,6 +119,78 @@ describe("validateInterviewSummary", () => {
     ).toContain("candidate_question_omitted");
   });
 
+  it("rejects changed candidate-question text that cites the captured turn", () => {
+    const input = createSummaryFixtureInput({ includeCandidateQuestion: true });
+    const summary = createSummaryFixture(input);
+    const candidateQuestion = summary.candidateQuestions[0];
+    if (candidateQuestion === undefined) {
+      throw new Error("The summary fixture requires a candidate question.");
+    }
+
+    expect(
+      validationRuleIds(() =>
+        validateInterviewSummary(input, {
+          ...summary,
+          candidateQuestions: [
+            {
+              ...candidateQuestion,
+              question: "What benefits are included?",
+            },
+          ],
+        }),
+      ),
+    ).toContain("candidate_question_mismatch");
+  });
+
+  it("rejects a changed follow-up reason that cites the captured turn", () => {
+    const input = createSummaryFixtureInput({
+      includeCandidateQuestion: true,
+      includeFollowup: true,
+    });
+    const summary = createSummaryFixture(input);
+    const humanFollowup = summary.humanFollowups[0];
+    if (humanFollowup === undefined) {
+      throw new Error("The summary fixture requires a human follow-up.");
+    }
+
+    expect(
+      validationRuleIds(() =>
+        validateInterviewSummary(input, {
+          ...summary,
+          humanFollowups: [
+            {
+              ...humanFollowup,
+              reason: "A recruiter should discuss general next steps.",
+            },
+          ],
+        }),
+      ),
+    ).toContain("candidate_followup_mismatch");
+  });
+
+  it("preserves paired candidate-question and human-follow-up evidence from one final turn", () => {
+    const input = createSummaryFixtureInput({
+      includeCandidateQuestion: true,
+      includeFollowup: true,
+    });
+    const summary = createSummaryFixture(input);
+
+    expect(validateInterviewSummary(input, summary)).toEqual(summary);
+    expect(summary.candidateQuestions).toEqual([
+      expect.objectContaining({
+        evidenceTurnIds: ["turn-candidate_questions"],
+        question: "Asked about the next step",
+      }),
+    ]);
+    expect(summary.humanFollowups).toEqual([
+      expect.objectContaining({
+        evidenceTurnIds: ["turn-candidate_questions"],
+        reason:
+          "A human recruiter must answer the unsupported candidate question",
+      }),
+    ]);
+  });
+
   it("rejects one combined fact used for all distinct required insight groups", () => {
     const input = createSummaryFixtureInput();
     const summary = createSummaryFixture(input);

@@ -118,10 +118,10 @@ either ignored `.env.local` file and did not contact a provider.
 
 | Environment value | Current code consumer | Current state / ticket ownership |
 | --- | --- | --- |
-| `OPENAI_API_KEY` | The live backend adapter passes it to the OpenAI Responses client as a Bearer credential. | Live CV analysis is implemented by SP-010 and live post-call summary generation is implemented by SP-020. Both remain paid/Turnstile gated, and the first controlled real summary stays deferred to SP-021A. |
+| `OPENAI_API_KEY` | The live backend adapter passes it to the OpenAI Responses client as a Bearer credential. | Live CV analysis is implemented by SP-010 and live post-call summary generation is implemented by SP-020. Both remain paid/Turnstile gated, and the first controlled real summary stays deferred to SP-021B. |
 | `ELEVENLABS_API_KEY` | The live backend client sends it only in the server-side `xi-api-key` header when requesting a private conversation token. | Implemented by SP-014; no browser exposure. |
 | `ELEVENLABS_AGENT_ID` | The live token client binds it into the ElevenLabs `agent_id` request and rejects a mismatched requested agent. | Implemented by SP-014; it is not accepted from the browser. |
-| `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. SP-018A supplied the initial smoke; SP-021A/SP-025 own remaining manual/deployed-agent drift acceptance. |
+| `ELEVENLABS_VOICE_ID` | Validated and retained in typed backend configuration and the source-controlled agent target. | Intentionally not sent in the token request: the published ElevenAgent owns the selected voice. SP-018A supplied the initial smoke; SP-021B/SP-025 own remaining manual/deployed-agent drift acceptance. |
 | `TURNSTILE_SITE_KEY` | Copied into the allow-listed public bootstrap response, then passed to the frontend Turnstile widget. | Implemented by SP-003/SP-012. This is the only provider value in this group that is public by design. |
 | `TURNSTILE_SECRET_KEY` | The backend sends it to Cloudflare Siteverify in the form body. | Implemented by SP-009 and used before CV-analysis, voice-token, and SP-020 summary provider calls with route-specific actions. |
 | `TURNSTILE_ALLOWED_HOSTNAMES` | The backend compares Siteverify's returned hostname against this exact allow-list. | Implemented by SP-009; `localhost` is the current local-only value. |
@@ -414,7 +414,7 @@ control; do not improvise a different behavior.
 | --- | --- |
 | Product and template | ElevenAgents (`elevenagents`), one private Blank agent |
 | First message | `Hi, what's your name?` |
-| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts` at policy version `sp017-2026-09-16.1` |
+| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts`. Policy `sp017-2026-09-22.1` is owner-published to private Main at immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`; live conversation behavior remains unobserved. Historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to `sp017-2026-09-16.1`. |
 | Language | English only |
 | Native LLM | GPT-5.4 Mini (`gpt-5.4-mini`) through ElevenLabs |
 | Reasoning | None / reasoning budget 0 |
@@ -474,6 +474,17 @@ Do this only after the local SP-017 prompt tests pass. The TypeScript constant
 is the prose source of truth; the dashboard is a deployed copy and must never
 be edited as an independent prompt draft.
 
+Current synchronization status: source policy `sp017-2026-09-22.1` contains the
+SP-021A Prompt 1 candidate-question fallback/evidence behavior and has passed
+deterministic fake/provider-shaped verification. On 2026-09-22 the owner copied
+the exact rendered prompt to the existing private ScreenPilot/Main branch,
+saved the two changed client-tool descriptions, and published without Preview
+at immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`. This records
+dashboard synchronization only; no live conversation behavior is claimed. The
+historical `sp017-2026-09-16.1` revision
+`agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains historical evidence and was not
+relabelled.
+
 1. Run the focused prompt suite in fake mode. Do not start a Preview
    conversation.
 
@@ -501,7 +512,7 @@ be edited as an independent prompt draft.
    same prompt test, and record the prompt version, model alias or snapshot, and
    agent revision in the SP-017 completion evidence. If publication is not
    performed, leave revision/live acceptance unchecked and keep the last
-   verified revision explicitly identified as pre-SP-017.
+   verified revision explicitly identified as the older published policy.
 
 Never use a real CV, real candidate detail, or live transcript for dashboard
 preview values. The checked-in synthetic fixtures under
@@ -609,7 +620,7 @@ not applicable, or deferred to a named later ticket.
 | Knowledge base / RAG | Disabled or empty |
 | Workflows, branches, sub-agents, transfer rules | Disabled or not applicable |
 | Evaluation criteria, post-call analysis, data collection, sentiment | Disabled or empty |
-| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation belongs to SP-017 and deterministic timing behavior to SP-018. SP-018A completed the bounded initial smoke; SP-021A owns the remaining consolidated complete-flow validation and representative live sample. |
+| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation belongs to SP-017 and deterministic timing behavior to SP-018. SP-018A completed the bounded initial smoke; SP-021B owns the remaining consolidated complete-flow validation and representative live sample. |
 | Initiation and post-call webhooks | Disabled |
 | Experiments, traffic splits, alternate versions | Disabled; one active Main version |
 | Server-to-client and client-to-server events | Only events required by the private WebRTC bridge and exact client tools; normalization and handlers are deferred to SP-015 and SP-016 |
@@ -960,6 +971,15 @@ state, not a payment method, account identifier, key, or billing screenshot:
   immutable agent revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded
   with the matching policy version. No Preview conversation is claimed by this
   item.
+- [x] SP-021A Prompt 1 source policy `sp017-2026-09-22.1` was owner-published to
+  ScreenPilot/Main on 2026-09-22 after the complete rendered prompt was reviewed
+  and the changed `recordCandidateQuestion` and `requestFollowup` descriptions
+  were saved separately. The publish review targeted Main and no Preview or
+  paid conversation was started. Immutable revision
+  `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` is recorded for this policy. Main's
+  `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` value remains a branch ID only, and the
+  earlier `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` revision remains historical
+  evidence for `sp017-2026-09-16.1`.
 - [x] Owner-reported publication checkpoint on 2026-09-16: the publish review
   targeted ScreenPilot/Main and showed the complete rendered SP-017 prompt
   replacement, both added runtime variables (`screenpilot_known_state` and
@@ -1016,7 +1036,7 @@ state, not a payment method, account identifier, key, or billing screenshot:
 
 ### Phase D: safe configuration readiness
 
-SP-018A executed this phase before its paid CV and voice smoke. SP-021A repeats
+SP-018A executed this phase before its paid CV and voice smoke. SP-021B repeats
 the fail-closed checkpoint before its later consolidated paid window.
 
 - [x] Correct the SP-009 backend local-start path so it deliberately loads the
@@ -1050,7 +1070,7 @@ the fail-closed checkpoint before its later consolidated paid window.
   control of both switches and kept `PROVIDER_MODE=live` with
   `PAID_DEMO_ENABLED=false` until intentionally opening the bounded SP-018A paid
   window. After that smoke, the owner confirmed the current restored state is
-  `PROVIDER_MODE=fake` with `PAID_DEMO_ENABLED=false`. SP-021A must repeat the
+  `PROVIDER_MODE=fake` with `PAID_DEMO_ENABLED=false`. SP-021B must repeat the
   fail-closed live/false checkpoint before its future paid window and restore
   fake/false afterward.
 - [x] The no-spend phase is accepted as closed by the combined backend
@@ -1078,13 +1098,13 @@ coding agent to change either switch or begin a provider operation.
 
 SP-018A executed the bounded CV-analysis and initial voice portions with
 synthetic data. By owner decision on 2026-09-21, every unperformed full-flow
-item below remains unchecked and moves to SP-021A after SP-019 through SP-021.
+item below remains unchecked and moves to SP-021B after SP-019 through SP-021A.
 The first live summary belongs to that consolidated window.
 
 - [x] The owner explicitly authorizes the paid smoke test.
 - [ ] Synthetic CV analysis makes at most one bounded direct OpenAI operation
   and is checked for cost and `store: false` behavior during SP-018A.
-- [ ] During SP-021A, synthetic summary makes at most one bounded direct OpenAI
+- [ ] During SP-021B, synthetic summary makes at most one bounded direct OpenAI
   operation per authorized complete flow and is checked for cost and
   `store: false` behavior.
 - [ ] The owner verifies real Turnstile success, action and hostname validation,
@@ -1095,7 +1115,7 @@ The first live summary belongs to that consolidated window.
   evidence are manually reviewed.
 - [x] The owner confirms `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake` are
   restored after the bounded test. The coding agent did not inspect either
-  ignored local environment file; SP-021A still owns post-window restart/fake-
+  ignored local environment file; SP-021B still owns post-window restart/fake-
   flow verification for its future consolidated run.
 
 Live CV checkpoint on 2026-09-16: the owner-authorized paid run completed the
@@ -1129,17 +1149,22 @@ the SDK's typed `reason: "agent"` disconnect; browser farewell phrase matching
 is explicitly prohibited. The existing one-time agent-disconnect reducer path
 enters the scrubbed Review placeholder. Focused regression tests cover the two
 defects without a provider operation. The two live acceptance observations stay
-unchecked until SP-021A's owner-observed complete flow; another partial paid
+unchecked until SP-021B's owner-observed complete flow; another partial paid
 call is not required solely to repeat this fix.
 
 The owner confirmed the corrected Main configuration was published without a
-Preview or paid conversation. Immutable revision
-`agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` is recorded in the source-controlled
-provider target with policy `sp017-2026-09-16.1`.
+Preview or paid conversation. Historical immutable revision
+`agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains recorded with policy
+`sp017-2026-09-16.1`. On 2026-09-22 the owner separately published source policy
+`sp017-2026-09-22.1` and its candidate-question fallback/tool-description delta
+to private Main at immutable revision
+`agtvrsn_8901m350e924f2ev7t4pwnvq38b1`, again without Preview or a paid
+conversation. SP-021B observation is still required before this behavior can be
+described as live-validated.
 
 ### Phase F: owner microphone and real-conversation checks
 
-SP-021A owns every unchecked Phase F observation during the consolidated
+SP-021B owns every unchecked Phase F observation during the consolidated
 complete-flow window. SP-025 reuses current evidence unless later changes
 invalidate it.
 

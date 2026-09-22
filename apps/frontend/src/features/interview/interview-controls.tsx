@@ -1,6 +1,7 @@
 import { Button, ButtonGroup } from "@/shared/ui/button";
 
 import { formatInterviewElapsedTime } from "./interview-timer";
+import { MicrophoneIcon } from "./microphone-icon";
 
 type InterviewControlsProps = Readonly<{
   elapsedSeconds: number;
@@ -9,6 +10,44 @@ type InterviewControlsProps = Readonly<{
   onEnd: () => void;
   onToggleMute: () => void;
 }>;
+
+type CompletedInterviewControlsProps = Readonly<{
+  elapsedSeconds: number;
+  onViewSummary: () => void;
+}>;
+
+function StopIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="sp-interview-controls__stop-icon"
+      viewBox="0 0 24 24"
+    >
+      <rect
+        fill="currentColor"
+        height="11"
+        rx="1.5"
+        width="11"
+        x="6.5"
+        y="6.5"
+      />
+    </svg>
+  );
+}
+
+function InterviewTimer({
+  elapsedSeconds,
+}: Readonly<{ elapsedSeconds: number }>) {
+  return (
+    <div className="sp-interview-controls__timer">
+      <span>Elapsed time</span>
+      <time dateTime={`PT${String(elapsedSeconds)}S`}>
+        {formatInterviewElapsedTime(elapsedSeconds)}
+      </time>
+      <small>8-minute session limit</small>
+    </div>
+  );
+}
 
 export function InterviewControls({
   elapsedSeconds,
@@ -19,35 +58,45 @@ export function InterviewControls({
 }: InterviewControlsProps) {
   return (
     <div className="sp-interview-controls">
-      <div className="sp-interview-controls__timer">
-        <span>Elapsed time</span>
-        <time dateTime={`PT${String(elapsedSeconds)}S`}>
-          {formatInterviewElapsedTime(elapsedSeconds)}
-        </time>
-        <small>8-minute session limit</small>
-      </div>
+      <InterviewTimer elapsedSeconds={elapsedSeconds} />
       <ButtonGroup className="sp-interview-controls__actions">
         <Button
-          aria-label={
-            isMuted
-              ? "Unmute Pilot's microphone input"
-              : "Mute Pilot's microphone input"
-          }
+          aria-label={isMuted ? "Unmute microphone" : "Mute microphone"}
+          aria-pressed={isMuted}
+          className="sp-interview-controls__mic-button"
+          data-microphone-state={isMuted ? "off" : "on"}
           disabled={ending}
           onClick={onToggleMute}
+          title={isMuted ? "Unmute microphone" : "Mute microphone"}
           variant="secondary"
         >
-          {isMuted ? "Unmute — Microphone off" : "Mute — Microphone on"}
+          <MicrophoneIcon muted={isMuted} />
         </Button>
         <Button
+          className="sp-interview-controls__end-button"
           disabled={ending}
           loading={ending}
           loadingLabel="Ending interview"
           onClick={onEnd}
           variant="danger"
         >
-          End interview
+          <StopIcon />
+          <span>End interview</span>
         </Button>
+      </ButtonGroup>
+    </div>
+  );
+}
+
+export function CompletedInterviewControls({
+  elapsedSeconds,
+  onViewSummary,
+}: CompletedInterviewControlsProps) {
+  return (
+    <div className="sp-interview-controls" data-state="complete">
+      <InterviewTimer elapsedSeconds={elapsedSeconds} />
+      <ButtonGroup className="sp-interview-controls__actions">
+        <Button onClick={onViewSummary}>View summary</Button>
       </ButtonGroup>
     </div>
   );

@@ -27,6 +27,8 @@ export const CLIENT_TOOL_TOPIC_STATUSES = [
 ] as const;
 
 export const UNDECIDED_ROLE_VALUE = "Undecided" as const;
+export const UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK =
+  "I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review." as const;
 
 type DashboardClientToolParameter = Readonly<{
   description: string;
@@ -196,12 +198,12 @@ export const VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS = Object.freeze({
   },
   recordCandidateQuestion: {
     description:
-      "Record the latest eligible final candidate question as local evidence. Use only when the candidate actually asked the question.",
+      "Record the actual latest eligible final candidate question as local evidence. Preserve the candidate's wording, use only when the candidate actually asked the question, and pair unsupported employer or vacancy questions with requestFollowup for the same final turn.",
     dynamicVariableAssignments: false,
     parameters: {
       question: {
         description:
-          "Latest final candidate question, from 1 to 600 characters.",
+          "Actual latest final candidate question in the candidate's wording, from 1 to 600 characters.",
         maximumCharacters: 600,
         minimumCharacters: 1,
         required: true,
@@ -213,7 +215,7 @@ export const VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS = Object.freeze({
   },
   requestFollowup: {
     description:
-      "Create a local human-follow-up item for a real unresolved contradiction, missing logistical fact, safety concern, or unsupported employer or vacancy question. Do not use it for routine gaps or hiring judgments.",
+      "Create a local human-follow-up item for a real unresolved contradiction, missing logistical fact, safety concern, or unsupported employer or vacancy question. For an unsupported candidate question, call this with recordCandidateQuestion against the same latest final turn. Do not use it for routine gaps or hiring judgments.",
     dynamicVariableAssignments: false,
     parameters: {
       reason: {

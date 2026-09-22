@@ -1,6 +1,7 @@
 "use client";
 
 import type { VoiceClientToolName } from "@screenpilot/contracts/api/voice-token";
+import { UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK } from "@screenpilot/contracts/interview/client-tools";
 import { useEffect, useRef } from "react";
 
 import { INSIGHT_CATEGORY_METADATA } from "@/features/insights/insight-category-metadata";
@@ -20,6 +21,8 @@ type FakeVoiceToolTraceEntry = Readonly<{
   name: VoiceClientToolName;
   parameters: Record<string, unknown>;
 }>;
+
+export const FAKE_AGENT_DISCONNECT_AFTER_MS = 7_650;
 
 const fakeFinalTurn = (
   afterMs: number,
@@ -172,19 +175,19 @@ export const FAKE_VOICE_EVENT_TRACE: readonly FakeVoiceEventTraceEntry[] = [
     5_600,
     9,
     "candidate",
-    "I use English for project notes and distributed collaboration. I am open to discussing compensation with a recruiter.",
+    "I use English for project notes and distributed collaboration. I am open to discussing compensation with a recruiter. What onboarding and work-arrangement details can a recruiter share?",
   ),
   ...fakeFinalTurn(
     6_150,
     10,
     "interviewer",
-    "What matters most in your next role, and what would you like a recruiter to clarify?",
+    `${UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK} What matters most in your next role?`,
   ),
   ...fakeFinalTurn(
     6_700,
     11,
     "candidate",
-    "Structured onboarding, mentorship, and room to grow matter most. What onboarding and work-arrangement details can a recruiter share?",
+    "Structured onboarding, mentorship, and room to grow matter most.",
   ),
   ...fakeFinalTurn(
     7_450,
@@ -369,6 +372,38 @@ export function createFakeVoiceToolTrace(
       },
     },
     {
+      afterMs: 5_900,
+      name: "recordCandidateQuestion",
+      parameters: {
+        question:
+          "What onboarding and work-arrangement details can a recruiter share?",
+      },
+    },
+    {
+      afterMs: 5_960,
+      name: "requestFollowup",
+      parameters: {
+        reason:
+          "A human recruiter must confirm the unsupported onboarding and work-arrangement details.",
+      },
+    },
+    {
+      afterMs: 6_020,
+      name: "markTopic",
+      parameters: {
+        topicKey: "candidate_questions",
+        status: "covered",
+      },
+    },
+    {
+      afterMs: 6_080,
+      name: "markTopic",
+      parameters: {
+        topicKey: "clarifications_and_followups",
+        status: "needs_clarification",
+      },
+    },
+    {
       afterMs: 6_760,
       name: "recordInsight",
       parameters: {
@@ -379,43 +414,11 @@ export function createFakeVoiceToolTrace(
       },
     },
     {
-      afterMs: 6_820,
-      name: "recordCandidateQuestion",
-      parameters: {
-        question:
-          "What onboarding and work-arrangement details can a recruiter share?",
-      },
-    },
-    {
-      afterMs: 6_880,
-      name: "requestFollowup",
-      parameters: {
-        reason:
-          "A recruiter should clarify onboarding and work-arrangement details.",
-      },
-    },
-    {
       afterMs: 6_940,
       name: "markTopic",
       parameters: {
         topicKey: "motivation_and_next_role",
         status: "covered",
-      },
-    },
-    {
-      afterMs: 7_000,
-      name: "markTopic",
-      parameters: {
-        topicKey: "candidate_questions",
-        status: "covered",
-      },
-    },
-    {
-      afterMs: 7_060,
-      name: "markTopic",
-      parameters: {
-        topicKey: "clarifications_and_followups",
-        status: "needs_clarification",
       },
     },
   ];
@@ -507,6 +510,18 @@ export function FakeVoiceSession({
         }, toolEntry.afterMs);
         traceTimerIdsRef.current.push(toolTimerId);
       }
+      const disconnectTimerId = window.setTimeout(() => {
+        if (endedRef.current) {
+          return;
+        }
+        endedRef.current = true;
+        initialSession.onEvent({
+          type: "connection_status",
+          status: "disconnecting",
+        });
+        initialSession.onEvent({ type: "disconnected", reason: "agent" });
+      }, FAKE_AGENT_DISCONNECT_AFTER_MS);
+      traceTimerIdsRef.current.push(disconnectTimerId);
     }, 0);
 
     return () => {

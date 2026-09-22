@@ -8,8 +8,12 @@ import { InsightBoard } from "@/features/insights/insight-board";
 import { Badge } from "@/shared/ui/badge";
 import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 
-import { InterviewControls } from "./interview-controls";
+import {
+  CompletedInterviewControls,
+  InterviewControls,
+} from "./interview-controls";
 import { LiveCaptions } from "./live-captions";
+import { MicrophoneIcon } from "./microphone-icon";
 import type { LiveCaption } from "./normalize-voice-event";
 import type { VoiceLatencyStage, VoiceSessionPhase } from "./use-voice-session";
 import type { FillerPolicyState } from "./latency-filler-policy";
@@ -19,20 +23,23 @@ import type {
   VoicePerformanceCollector,
   VoicePerformanceTracker,
 } from "./voice-performance";
-import { VoiceSignal } from "./voice-signal";
+import { VoiceStatusRail } from "./voice-status-rail";
 
 type InterviewStageProps = Readonly<{
-  caption: LiveCaption | null;
+  caption?: LiveCaption | null;
+  completed?: boolean | undefined;
   cv?: NormalizedCv | undefined;
   elapsedSeconds: number;
+  ending?: boolean | undefined;
   entryMode: EntryMode;
   fillerPolicy?: FillerPolicyState | undefined;
   insights: readonly InsightCard[];
-  isMuted: boolean;
+  isMuted?: boolean | undefined;
   latencyStage?: VoiceLatencyStage | undefined;
-  onEnd: () => void;
-  onToggleMute: () => void;
-  phase: VoiceSessionPhase;
+  onEnd?: (() => void) | undefined;
+  onToggleMute?: (() => void) | undefined;
+  onViewSummary?: (() => void) | undefined;
+  phase?: VoiceSessionPhase | undefined;
   performanceCollector?: VoicePerformanceCollector | undefined;
   performanceSource?: VoicePerformanceBatch["source"] | undefined;
   performanceTracker?: VoicePerformanceTracker | undefined;
@@ -44,43 +51,28 @@ function modeLabel(entryMode: EntryMode) {
   return entryMode === "cv_assisted" ? "CV-assisted" : "Conversation-first";
 }
 
-function statusLabel(phase: VoiceSessionPhase) {
-  switch (phase) {
-    case "speaking":
-      return "Pilot is speaking…";
-    case "listening":
-      return "Pilot is listening…";
-    case "reconnecting":
-      return "Pilot is reconnecting…";
-    case "ending":
-      return "Ending the interview…";
-    case "failed":
-      return "The voice connection was interrupted.";
-    default:
-      return "Pilot is preparing the conversation…";
-  }
-}
-
 export function InterviewStage({
   caption,
+  completed = false,
   cv,
   elapsedSeconds,
+  ending = false,
   entryMode,
   fillerPolicy,
   insights,
-  isMuted,
+  isMuted = false,
   latencyStage = "idle",
   onEnd,
   onToggleMute,
-  phase,
+  onViewSummary,
+  phase = "ended",
   performanceCollector,
   performanceSource,
   performanceTracker,
   topicProgress,
   transcript,
 }: InterviewStageProps) {
-  const reconnecting = phase === "reconnecting";
-  const ending = phase === "ending";
+  const statusPhase = completed ? "ended" : ending ? "ending" : phase;
 
   return (
     <div
@@ -91,7 +83,8 @@ export function InterviewStage({
       <header className="sp-interview-stage__header">
         <DemoStageHeading
           pretitle="ScreenPilot interview"
-          title="Pilot is interviewing"
+          step={4}
+          title={completed ? "Interview complete" : "Pilot is interviewing"}
         />
         <Badge tone="coral">{modeLabel(entryMode)}</Badge>
       </header>
@@ -101,57 +94,50 @@ export function InterviewStage({
           aria-labelledby="pilot-voice-status"
           className="sp-interview-stage__voice"
         >
-          <div className="sp-interview-stage__presence">
-            <VoiceSignal phase={phase} />
-            <div aria-live="polite" role="status">
-              <span className="sp-interview-stage__pilot-mark">P</span>
-              <div>
-                <strong id="pilot-voice-status">{statusLabel(phase)}</strong>
-                <span>
-                  {isMuted ? "Your microphone is off" : "Your microphone is on"}
+          <div className="sp-interview-transcript" data-phase={statusPhase}>
+            {completed ? (
+              <div
+                aria-live="polite"
+                className="sp-interview-status-rail sp-interview-status-rail--complete"
+                role="status"
+              >
+                <MicrophoneIcon muted />
+                <strong id="pilot-voice-status">Interview complete</strong>
+                <span className="sp-interview-status-rail__detail">
+                  Microphone disconnected
                 </span>
               </div>
-            </div>
+            ) : (
+              <VoiceStatusRail
+                latencyStage={latencyStage}
+                phase={statusPhase}
+              />
+            )}
+            <LiveCaptions
+              caption={completed ? null : (caption ?? null)}
+              transcript={transcript}
+            />
           </div>
-
-          {latencyStage === "visual" ? (
-            <span
-              aria-hidden="true"
-              className="sp-interview-latency sp-interview-latency--visual"
-            >
-              <span />
-              <span />
-              <span />
-            </span>
-          ) : null}
-          {latencyStage === "reviewing" ? (
-            <p className="sp-interview-latency" role="status">
-              Reviewing your answer…
-            </p>
-          ) : null}
-
-          {reconnecting ? (
-            <div
-              className="sp-interview-connection-banner"
-              data-reconnecting="true"
-              role="status"
-            >
-              <span aria-hidden="true" />
-              <p>
-                <strong>Reconnecting voice</strong>
-                Pilot is making one brief reconnect attempt.
-              </p>
-            </div>
-          ) : null}
-
-          <LiveCaptions caption={caption} transcript={transcript} />
-          <InterviewControls
-            elapsedSeconds={elapsedSeconds}
-            ending={ending}
-            isMuted={isMuted}
-            onEnd={onEnd}
-            onToggleMute={onToggleMute}
-          />
+          {completed ? (
+            <CompletedInterviewControls
+              elapsedSeconds={elapsedSeconds}
+              onViewSummary={() => {
+                onViewSummary?.();
+              }}
+            />
+          ) : (
+            <InterviewControls
+              elapsedSeconds={elapsedSeconds}
+              ending={ending}
+              isMuted={isMuted}
+              onEnd={() => {
+                onEnd?.();
+              }}
+              onToggleMute={() => {
+                onToggleMute?.();
+              }}
+            />
+          )}
         </section>
         <InsightBoard
           {...(cv ? { cv } : {})}
@@ -161,7 +147,8 @@ export function InterviewStage({
           transcript={transcript}
         />
       </div>
-      {performanceCollector &&
+      {!completed &&
+      performanceCollector &&
       performanceSource &&
       performanceTracker &&
       fillerPolicy ? (
