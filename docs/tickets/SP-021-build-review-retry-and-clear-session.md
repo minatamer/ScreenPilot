@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-22<br>
 Depends on: SP-005, SP-006, SP-010A, SP-019, SP-020<br>
 Suggested commit: `SP-021: complete disposable session review`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -18,7 +18,7 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 
 - When a call ends, obtain a fresh managed Turnstile token for `interview_summary`, then request the SP-020 summary while preserving all local evidence.
 - The review includes overview, role nuance, facts, clarifications, coverage/gaps, compensation/availability, candidate questions, human follow-ups, limitations, and bounded evidence excerpts. It does not render the full transcript as a user-facing section.
-- The role section shows the candidate-stated synthetic session role or an honest undecided state; it never presents a fixed vacancy match or real-employer opening. Compound labels remain candidate wording.
+- The role section shows the candidate-stated synthetic session role or an explicit evidence-backed undecided state; when a partial summary omits role preference entirely, it says **Not established** with unavailable evidence rather than inventing an undecided answer. It never presents a fixed vacancy match or real-employer opening. Compound labels remain candidate wording.
 - Label notes as AI-organized and requiring human interpretation; never present a hiring recommendation.
 - Conversation-first review is Candidate-only and contains no CV source chips or CV-verification language.
 - CV-assisted review may distinguish CV, Candidate, and CV + Candidate while candidate corrections win.
@@ -108,6 +108,7 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - Local JSON download was omitted as the first optional cut. Copy summary supplies the bounded disposable handoff, while omitting JSON avoids a second local candidate-data export surface.
 - Deterministic verification passed the focused review/fake-provider set (6 files / 36 tests), the complete frontend suite (35 files / 247 tests), the complete backend suite (23 files / 256 tests), frontend/backend lint and typecheck, frontend/backend production builds, targeted formatting checks, and `git diff --check`. After the completion-validation fixes, the focused privacy/evidence/ending regression set passed again (6 files / 65 tests), together with frontend lint and typecheck. The local runtime reported Node 22.23.2 while the repository requires Node 24, but every direct package check completed successfully; the root wrapper scripts could not be used because they resolve an older global pnpm inside nested scripts, so the pinned Corepack package commands were invoked directly.
 - No credential was read and no paid/provider request was made. The repaired provider-owned ending hold is covered deterministically at the hook boundary, and the compact-layout row collapse is enforced in the review transition styles; a new live visual observation of that automatic ending was not performed. The broad live end-to-end matrix, storage inspection in a credentialed complete flow, named-role fixture walkthroughs, screen-reader pass, 200% zoom/landscape/large-monitor acceptance, and provider evidence remain explicitly deferred to SP-021A/SP-024/SP-025 as assigned below; they are not claimed as passed here.
+- The 2026-09-22 pre-SP-021A validation found that the review center card and copied summary collapsed an omitted partial-summary `rolePreference` into **Undecided** and hid role evidence. The follow-up now derives both surfaces from one role-review resolver: omitted means **Not established** plus unavailable evidence, **Undecided** requires the explicit summary state, and candidate-stated/undecided roles expose their bounded final-candidate-turn references. Focused regression coverage exercises missing partial role data, explicit undecided data, evidence-backed stated-role copy, and matching UI/copy evidence wording; live and owner visual acceptance remain deferred to SP-021A.
 
 ## Commit boundary
 

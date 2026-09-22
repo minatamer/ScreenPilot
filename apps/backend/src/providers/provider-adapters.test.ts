@@ -74,6 +74,45 @@ const summaryInput: InterviewSummaryInput = {
 };
 
 describe("provider adapter composition", () => {
+  it("uses the chronologically latest candidate correction across timezone offsets", async () => {
+    const adapters = createProviderAdapters(fakeConfig);
+    const offsetInput = structuredClone(summaryInput);
+    const originalRoleInsight = offsetInput.insights.find(
+      (insight) => insight.category === "role_preference",
+    );
+    if (originalRoleInsight === undefined) {
+      throw new Error("The summary fixture requires a role insight.");
+    }
+    originalRoleInsight.value = "Graphic Designer";
+    originalRoleInsight.createdAt = "2026-09-12T07:00:00Z";
+    originalRoleInsight.updatedAt = "2026-09-12T10:30:00+03:00";
+    offsetInput.transcript.push({
+      id: "turn-2",
+      sequence: 2,
+      speaker: "candidate",
+      status: "final",
+      text: "I would like to use UX Researcher as the role for this session.",
+      occurredAt: "2026-09-12T08:00:00Z",
+    });
+    offsetInput.insights.push({
+      ...originalRoleInsight,
+      id: "insight-role-correction",
+      value: "UX Researcher",
+      evidenceTurnIds: ["turn-2"],
+      createdAt: "2026-09-12T08:00:00Z",
+      updatedAt: "2026-09-12T08:00:00Z",
+    });
+
+    const result =
+      await adapters.interviewSummarizer.summarizeInterview(offsetInput);
+
+    expect(result.summary.rolePreference).toEqual({
+      label: "UX Researcher",
+      status: "candidate_stated",
+      evidenceTurnIds: ["turn-2"],
+    });
+  });
+
   it("exercises every fake with stable, content-safe results", async () => {
     const adapters = createProviderAdapters(fakeConfig);
     const privateCandidateText = "PRIVATE CANDIDATE FIXTURE CONTENT";

@@ -30,7 +30,10 @@ import { DemoStageHeading } from "@/shared/ui/demo-stage-heading";
 import { ErrorPanel } from "@/shared/ui/error-panel";
 
 import { EvidenceMap } from "./evidence-map";
-import { formatSummaryForCopy } from "./review-evidence-model";
+import {
+  formatSummaryForCopy,
+  resolveSummaryRoleReview,
+} from "./review-evidence-model";
 import { SessionClearDialog } from "./session-clear-dialog";
 import { SummarySections } from "./summary-sections";
 
@@ -95,6 +98,7 @@ type SummaryCenterCardProps = Readonly<{
   siteKey: string;
   stage: "review_ready" | "summarizing";
   summary?: ScreeningSummary | undefined;
+  transcript: readonly TranscriptTurn[];
 }>;
 
 function SummaryCenterCard({
@@ -108,11 +112,11 @@ function SummaryCenterCard({
   siteKey,
   stage,
   summary,
+  transcript,
 }: SummaryCenterCardProps) {
-  const roleLabel =
-    summary?.rolePreference?.status === "candidate_stated"
-      ? summary.rolePreference.label
-      : "Undecided";
+  const roleReview = summary
+    ? resolveSummaryRoleReview(summary, transcript)
+    : undefined;
 
   return (
     <article
@@ -132,10 +136,23 @@ function SummaryCenterCard({
           <p className="sp-summary-center-card__overview">{summary.overview}</p>
           <div className="sp-summary-center-card__role">
             <span>Synthetic session role</span>
-            <strong>{roleLabel}</strong>
-            <small>
-              Candidate-stated context for this session, not a real vacancy.
-            </small>
+            <strong>{roleReview?.label}</strong>
+            <small>{roleReview?.note}</small>
+            <div
+              aria-label="Evidence for synthetic session role"
+              className="sp-summary-center-card__role-evidence"
+            >
+              {roleReview?.evidenceReferences.map((reference) => (
+                <span
+                  className={`sp-evidence-chip${
+                    reference.available ? "" : " sp-evidence-chip--unavailable"
+                  }`}
+                  key={reference.id}
+                >
+                  {reference.label}
+                </span>
+              ))}
+            </div>
           </div>
           <div className="sp-summary-center-card__meta">
             <Badge tone="coral">{modeLabel(entryMode)}</Badge>
@@ -298,7 +315,9 @@ export function InterviewEvidenceReview({
       return;
     }
     try {
-      await navigator.clipboard.writeText(formatSummaryForCopy(summary, plan));
+      await navigator.clipboard.writeText(
+        formatSummaryForCopy(summary, plan, transcript),
+      );
       setCopyStatus("copied");
     } catch {
       setCopyStatus("failed");
@@ -355,6 +374,7 @@ export function InterviewEvidenceReview({
             siteKey={runtimeConfig.abuseProtection.siteKey}
             stage={stage}
             {...(summary ? { summary } : {})}
+            transcript={transcript}
           />
         }
         {...(cv ? { cv } : {})}

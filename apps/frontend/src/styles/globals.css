@@ -1815,6 +1815,17 @@ h3 {
   overflow-wrap: anywhere;
 }
 
+.sp-summary-center-card__role-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: var(--sp-space-1);
+  gap: var(--sp-space-2);
+}
+
+.sp-summary-center-card__role .sp-evidence-chip--unavailable {
+  color: var(--sp-warning);
+}
+
 .sp-summary-center-card__meta {
   display: flex;
   justify-content: center;

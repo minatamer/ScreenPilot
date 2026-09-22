@@ -422,11 +422,26 @@ describe("InterviewEvidenceReview", () => {
     const props = baseProps();
     render(<InterviewEvidenceReview {...props} />);
 
+    expect(
+      within(
+        screen.getByLabelText("Evidence for synthetic session role"),
+      ).getByText("Candidate · turn 2"),
+    ).toBeVisible();
+
     fireEvent.click(screen.getByRole("button", { name: "Copy summary" }));
     await waitFor(() => {
       expect(clipboard.writeText).toHaveBeenCalledWith(
         expect.stringContaining(
-          "AI-organized notes — human interpretation required.",
+          [
+            "AI-organized notes — human interpretation required.",
+            "",
+            SCREENING_SUMMARY_OVERVIEW,
+            "",
+            "Synthetic session role",
+            "- Graphic Designer",
+            "- Candidate-stated context for this session, not a real vacancy.",
+            "- Evidence: Candidate · turn 2",
+          ].join("\n"),
         ),
       );
     });
@@ -445,6 +460,98 @@ describe("InterviewEvidenceReview", () => {
     expect(props.onReturnHome).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole("button", { name: "Clear session" }));
     expect(props.onReturnHome).toHaveBeenCalledOnce();
+  });
+
+  it("keeps an absent partial-summary role distinct from an explicit undecided role", async () => {
+    const clipboard = { writeText: vi.fn().mockResolvedValue(undefined) };
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: clipboard,
+    });
+    const summaryWithoutRole = { ...summary };
+    Reflect.deleteProperty(summaryWithoutRole, "rolePreference");
+
+    render(
+      <InterviewEvidenceReview
+        {...baseProps()}
+        isPartial
+        summary={summaryWithoutRole}
+      />,
+    );
+
+    expect(screen.getByText("Not established")).toBeVisible();
+    expect(
+      screen.getByText(
+        "Role preference was not established in the available interview evidence.",
+      ),
+    ).toBeVisible();
+    expect(screen.getByText("Evidence unavailable")).toBeVisible();
+    expect(screen.queryByText("Undecided")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy summary" }));
+    await waitFor(() => {
+      expect(clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining(
+          [
+            "Synthetic session role",
+            "- Not established",
+            "- Role preference was not established in the available interview evidence.",
+            "- Evidence: Evidence unavailable",
+          ].join("\n"),
+        ),
+      );
+    });
+    expect(clipboard.writeText).not.toHaveBeenCalledWith(
+      expect.stringContaining("\n- Undecided\n"),
+    );
+  });
+
+  it("shows explicit undecided role evidence in the review and copied summary", async () => {
+    const clipboard = { writeText: vi.fn().mockResolvedValue(undefined) };
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: clipboard,
+    });
+
+    render(
+      <InterviewEvidenceReview
+        {...baseProps()}
+        summary={{
+          ...summary,
+          rolePreference: {
+            label: null,
+            status: "undecided",
+            evidenceTurnIds: [candidateTurn.id],
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Undecided")).toBeVisible();
+    expect(
+      screen.getByText(
+        "The candidate explicitly remained undecided for this session; no real vacancy is implied.",
+      ),
+    ).toBeVisible();
+    expect(
+      within(
+        screen.getByLabelText("Evidence for synthetic session role"),
+      ).getByText("Candidate · turn 2"),
+    ).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy summary" }));
+    await waitFor(() => {
+      expect(clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining(
+          [
+            "Synthetic session role",
+            "- Undecided",
+            "- The candidate explicitly remained undecided for this session; no real vacancy is implied.",
+            "- Evidence: Candidate · turn 2",
+          ].join("\n"),
+        ),
+      );
+    });
   });
 
   it("keeps CV-assisted provenance distinct without adding CV language to conversation-first", () => {

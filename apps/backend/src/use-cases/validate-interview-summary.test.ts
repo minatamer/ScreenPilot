@@ -22,6 +22,53 @@ function validationRuleIds(operation: () => unknown): readonly string[] {
 }
 
 describe("validateInterviewSummary", () => {
+  it("grounds role corrections by chronological instant across timezone offsets", () => {
+    const input = createSummaryFixtureInput();
+    const originalRoleInsight = input.insights.find(
+      (insight) => insight.category === "role_preference",
+    );
+    if (originalRoleInsight === undefined) {
+      throw new Error("The summary fixture requires a role insight.");
+    }
+    originalRoleInsight.createdAt = "2026-09-21T07:00:00Z";
+    originalRoleInsight.updatedAt = "2026-09-21T10:30:00+03:00";
+    input.transcript.push({
+      id: "turn-role-correction",
+      sequence: input.transcript.length + 1,
+      speaker: "candidate",
+      status: "final",
+      text: "I would like to use UX Researcher as the role for this session.",
+      occurredAt: "2026-09-21T08:00:00Z",
+    });
+    input.insights.push({
+      ...originalRoleInsight,
+      id: "insight-role-correction",
+      value: "UX Researcher",
+      evidenceTurnIds: ["turn-role-correction"],
+      createdAt: "2026-09-21T08:00:00Z",
+      updatedAt: "2026-09-21T08:00:00Z",
+    });
+    const summary = createSummaryFixture(input);
+
+    expect(summary.rolePreference).toMatchObject({
+      label: "UX Researcher",
+      evidenceTurnIds: ["turn-role-correction"],
+    });
+    expect(() => validateInterviewSummary(input, summary)).not.toThrow();
+    expect(
+      validationRuleIds(() =>
+        validateInterviewSummary(input, {
+          ...summary,
+          rolePreference: {
+            label: originalRoleInsight.value,
+            status: "candidate_stated",
+            evidenceTurnIds: originalRoleInsight.evidenceTurnIds,
+          },
+        }),
+      ),
+    ).toContain("candidate_role_mismatch");
+  });
+
   it.each([
     [
       "current context",

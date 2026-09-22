@@ -17,6 +17,7 @@ import type {
   InterviewSummaryInput,
   InterviewSummaryProviderResult,
 } from "../../use-cases/ports/interview-summarizer.js";
+import { selectLatestCandidateInsight } from "../../use-cases/select-latest-candidate-insight.js";
 
 export class FakeOpenAi
   implements CvAnalyzer<NormalizedCv>, InterviewSummarizer
@@ -48,22 +49,6 @@ export class FakeOpenAi
       };
     });
   }
-}
-
-function latestCandidateInsight(
-  input: InterviewSummaryInput,
-  category: InterviewSummaryInput["insights"][number]["category"],
-) {
-  return input.insights.reduce<
-    InterviewSummaryInput["insights"][number] | undefined
-  >((latest, insight) => {
-    if (insight.category !== category || insight.source === "CV") {
-      return latest;
-    }
-    return latest === undefined || insight.updatedAt >= latest.updatedAt
-      ? insight
-      : latest;
-  }, undefined);
 }
 
 function sentenceWithDetail(prefix: string, value: string): string {
@@ -114,7 +99,7 @@ function fakeInterviewSummaryValue(
   input: InterviewSummaryInput,
   includeCandidateDetail: boolean,
 ): unknown {
-  const roleInsight = latestCandidateInsight(input, "role_preference");
+  const roleInsight = selectLatestCandidateInsight(input, "role_preference");
   const confirmedFacts = input.insights.flatMap((insight) => {
     if (
       insight.source === "CV" ||
@@ -141,8 +126,14 @@ function fakeInterviewSummaryValue(
   const topicsNotCovered = input.plan.topics
     .map((topic) => topic.key)
     .filter((topicKey) => !coveredKeys.has(topicKey));
-  const compensationInsight = latestCandidateInsight(input, "compensation");
-  const availabilityInsight = latestCandidateInsight(input, "availability");
+  const compensationInsight = selectLatestCandidateInsight(
+    input,
+    "compensation",
+  );
+  const availabilityInsight = selectLatestCandidateInsight(
+    input,
+    "availability",
+  );
   const unresolvedInsights = input.insights.filter(
     (insight) =>
       insight.source !== "CV" &&

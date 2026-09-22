@@ -17,6 +17,19 @@ export type InsightEvidenceDetail = Readonly<{
   relatedSummaryNotes: readonly RelatedSummaryNote[];
 }>;
 
+export type SummaryRoleEvidenceReference = Readonly<{
+  available: boolean;
+  id: string;
+  label: string;
+}>;
+
+export type SummaryRoleReview = Readonly<{
+  evidenceReferences: readonly SummaryRoleEvidenceReference[];
+  label: string;
+  note: string;
+  status: "candidate_stated" | "undecided" | "unavailable";
+}>;
+
 function orderedFinalTurns(
   transcript: readonly TranscriptTurn[],
 ): readonly TranscriptTurn[] {
@@ -145,6 +158,61 @@ export function resolveInsightEvidenceDetail(
   };
 }
 
+export function resolveSummaryRoleReview(
+  summary: ScreeningSummary,
+  transcript: readonly TranscriptTurn[],
+): SummaryRoleReview {
+  const rolePreference = summary.rolePreference;
+  if (!rolePreference) {
+    return {
+      evidenceReferences: [
+        {
+          available: false,
+          id: "role-preference-unavailable",
+          label: "Evidence unavailable",
+        },
+      ],
+      label: "Not established",
+      note: "Role preference was not established in the available interview evidence.",
+      status: "unavailable",
+    };
+  }
+
+  const candidateTurns = new Map(
+    transcript
+      .filter((turn) => turn.speaker === "candidate" && turn.status === "final")
+      .map((turn) => [turn.id, turn] as const),
+  );
+  const evidenceReferences = rolePreference.evidenceTurnIds.map((turnId) => {
+    const turn = candidateTurns.get(turnId);
+    return turn
+      ? {
+          available: true,
+          id: turnId,
+          label: `Candidate · turn ${String(turn.sequence + 1)}`,
+        }
+      : {
+          available: false,
+          id: turnId,
+          label: "Evidence unavailable",
+        };
+  });
+
+  return rolePreference.status === "candidate_stated"
+    ? {
+        evidenceReferences,
+        label: rolePreference.label,
+        note: "Candidate-stated context for this session, not a real vacancy.",
+        status: "candidate_stated",
+      }
+    : {
+        evidenceReferences,
+        label: "Undecided",
+        note: "The candidate explicitly remained undecided for this session; no real vacancy is implied.",
+        status: "undecided",
+      };
+}
+
 function linesForItems(
   heading: string,
   values: readonly string[],
@@ -161,14 +229,12 @@ function linesForItems(
 export function formatSummaryForCopy(
   summary: ScreeningSummary,
   plan: ScreeningPlan,
+  transcript: readonly TranscriptTurn[],
 ): string {
   const topicTitles = new Map(
     plan.topics.map((topic) => [topic.key, topic.title] as const),
   );
-  const role =
-    summary.rolePreference?.status === "candidate_stated"
-      ? summary.rolePreference.label
-      : "Undecided";
+  const role = resolveSummaryRoleReview(summary, transcript);
 
   return [
     "ScreenPilot interview review",
@@ -177,7 +243,11 @@ export function formatSummaryForCopy(
     summary.overview,
     "",
     "Synthetic session role",
-    `- ${role}`,
+    `- ${role.label}`,
+    `- ${role.note}`,
+    `- Evidence: ${role.evidenceReferences
+      .map((reference) => reference.label)
+      .join(", ")}`,
     "",
     ...linesForItems(
       "Confirmed facts",

@@ -7,6 +7,7 @@ import {
 import type { z } from "zod";
 
 import type { InterviewSummaryInput } from "./ports/interview-summarizer.js";
+import { selectLatestCandidateInsight } from "./select-latest-candidate-insight.js";
 
 type SummaryValidationIssue = Readonly<{
   path: string;
@@ -34,23 +35,6 @@ function schemaIssues(error: z.ZodError): readonly SummaryValidationIssue[] {
     path: issue.path.length === 0 ? "$" : issue.path.join("."),
     ruleId: `schema_${issue.code}`,
   }));
-}
-
-function latestInsight(
-  input: InterviewSummaryInput,
-  category: InterviewSummaryInput["insights"][number]["category"],
-) {
-  return input.insights.reduce<
-    InterviewSummaryInput["insights"][number] | undefined
-  >((latest, insight) => {
-    if (insight.category !== category || insight.source === "CV") {
-      return latest;
-    }
-    if (latest === undefined || insight.updatedAt >= latest.updatedAt) {
-      return insight;
-    }
-    return latest;
-  }, undefined);
 }
 
 function evidenceCollections(summary: ScreeningSummary) {
@@ -183,7 +167,7 @@ export function validateInterviewSummary(
     }
   }
 
-  const roleInsight = latestInsight(input, "role_preference");
+  const roleInsight = selectLatestCandidateInsight(input, "role_preference");
   if (roleInsight === undefined && summary.rolePreference !== undefined) {
     issues.push({
       path: "rolePreference",
@@ -400,7 +384,7 @@ export function validateInterviewSummary(
   }
 
   for (const category of ["compensation", "availability"] as const) {
-    const insight = latestInsight(input, category);
+    const insight = selectLatestCandidateInsight(input, category);
     const output = summary[category];
     if (insight !== undefined && output === undefined) {
       issues.push({
