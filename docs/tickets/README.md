@@ -227,9 +227,11 @@ Execute in order unless the dependency column proves a later packet can safely p
 - Milestone 6: SP-027 — optional portfolio packaging.
 - Milestone 7: SP-028 — optional extended automation.
 
-SP-025A is the final required pre-deployment audit gate. SP-026 is the required
-deployment/release boundary, and it may deploy only the exact candidate audited
-by SP-025A. SP-027 and SP-028 do not block it.
+SP-025A is the final required pre-deployment audit gate and includes one
+deliberate behavior-preserving quality and efficiency iteration across the
+entire first-party codebase after SP-025 establishes the functional baseline.
+SP-026 is the required deployment/release boundary, and it may deploy only the
+exact candidate audited by SP-025A. SP-027 and SP-028 do not block it.
 
 ## Initial implementation runway
 

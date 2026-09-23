@@ -19,6 +19,13 @@ the current code, and the authoritative source of truth; fix every material
 code-quality, architecture, documentation, lifecycle, privacy, security, or
 incomplete-ticket issue found.
 
+After SP-025 has established that the product works as intended, perform one
+deliberate behavior-preserving quality and efficiency iteration across the
+entire first-party codebase. Find and correct concrete redundancy, weak or
+unclear structure, avoidable complexity, misplaced responsibility, missed
+reuse, and structurally obvious waste while preserving the accepted product,
+provider, privacy, and workflow behavior.
+
 This is the final code-and-evidence audit. It is not another product redesign,
 responsive matrix, provider smoke, or manual release-QA pass.
 
@@ -37,6 +44,9 @@ responsive matrix, provider smoke, or manual release-QA pass.
 - SP-026 may deploy only the exact commit/worktree state that passes this audit.
   Any material change after SP-025A invalidates the affected audit evidence and
   requires the smallest relevant re-audit before deployment.
+- Treat the SP-025-approved behavior as the baseline. Refactoring must preserve
+  it; a functional difference is allowed only when the audit proves an existing
+  defect, records the correction, and adds focused regression evidence.
 - Preserve the fixed dependency direction:
   `apps/frontend -> packages/contracts <- apps/backend`. Applications never
   import one another, and contracts remain browser-safe.
@@ -100,12 +110,28 @@ responsive matrix, provider smoke, or manual release-QA pass.
   external boundary; provider SDK details remain behind typed adapters; config
   and provider implementations are injected without import-time side effects.
 
-### 3. Duplication, dead code, dependencies, and maintainability
+### 3. Whole-codebase behavior-preserving quality and efficiency iteration
+
+- [ ] Capture the exact SP-025-approved candidate and its passing deterministic
+  baseline before refactoring. Define the externally visible workflow,
+  provider-call, persistence, privacy, error, and accessibility behavior that
+  must remain unchanged.
+- [ ] Review every first-party source, test, configuration, script, style, and
+  documentation area—not only recently changed files—for concrete code-quality
+  or efficiency findings. Exclude generated output, dependencies, ignored owner
+  files, and evidence already assigned to manual/provider dashboards.
 
 - [ ] Search for duplicate components, schemas, constants, styles, error/loading
   patterns, provider calls, workflow transitions, role normalization, evidence
   validation, and storage projections; consolidate only genuinely shared
   responsibilities.
+- [ ] Simplify oversized or mixed-responsibility modules, functions, hooks, and
+  components; improve naming, boundaries, composition, and data flow where the
+  current structure makes correctness or maintenance harder to reason about.
+- [ ] Prefer existing primitives and small domain-owned shared modules. Extract
+  reuse only when the shared contract is real; do not replace clear local code
+  with an abstract framework or configurable catch-all merely to reduce line
+  count.
 - [ ] Remove dead code, unused exports/imports/dependencies/assets, stale flags,
   unreachable branches, superseded implementations, debug routes/output,
   obsolete fixtures, and resolved/stale TODO/FIXME comments.
@@ -121,7 +147,8 @@ responsive matrix, provider smoke, or manual release-QA pass.
   browser/server footprint, and duplication of platform or existing capability.
 - [ ] Review bundle-sensitive PDF/voice imports, provider context size, repeated
   parsing/serialization, and high-frequency transcript/insight paths for obvious
-  waste without adding speculative memoization or abstractions.
+  waste. Improve measured or structurally evident inefficiency without adding
+  speculative memoization, caching, persistence, dependencies, or abstractions.
 
 ### 4. Lifecycle, cancellation, and provider-call correctness
 
@@ -181,6 +208,10 @@ responsive matrix, provider smoke, or manual release-QA pass.
 
 - [ ] Maintain a finding ledger with severity, affected ticket/guardrail,
   evidence, chosen correction, focused verification, and disposition.
+- [ ] Resolve every substantiated finding with a clear maintenance, correctness,
+  privacy, lifecycle, dependency, or efficiency benefit, including worthwhile
+  low-severity cleanup. Reject subjective churn and record why any concrete
+  finding is intentionally retained.
 - [ ] Fix every material finding within the owning module/ticket boundary;
   update contracts/source of truth/affected packets together when public
   behavior or architecture changes.
@@ -216,6 +247,12 @@ responsive matrix, provider smoke, or manual release-QA pass.
 - [ ] No known material dead/duplicate/obsolete implementation, unsafe
   diagnostic, lifecycle leak, provider-call duplication, secret exposure,
   stale dependency, or contradictory documentation remains.
+- [ ] The owner-approved product behavior remains unchanged except for explicit,
+  evidence-backed bug fixes; before/after regression evidence covers every
+  refactored critical path and provider-operation boundary.
+- [ ] Every first-party code area received the documented quality/efficiency
+  review, and the finding ledger distinguishes completed improvements from
+  rejected speculative or purely stylistic churn.
 - [ ] Every material audit finding is fixed with focused regression coverage or
   remains an explicit deployment blocker.
 - [ ] Formatting, lint, all typechecks, unit tests, production builds,
@@ -268,4 +305,5 @@ files, focused regressions, complete deterministic gate, dependency/security
 audit, architecture/secret/diff checks, and every remaining limitation or
 blocker. Identify the exact audited Git/worktree state SP-026 may deploy. Never
 claim a manual, live, credentialed, or externally blocked check that was not
-performed.
+performed. Include the pre-refactor baseline, the behavior-preservation evidence,
+and the disposition of every concrete whole-codebase quality/efficiency finding.

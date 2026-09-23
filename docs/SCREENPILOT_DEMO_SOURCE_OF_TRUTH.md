@@ -65,7 +65,12 @@ this source of truth; a ticket-named commit alone never proves completion. It
 then performs the repository-wide architecture, duplication/dead-code,
 lifecycle, privacy/security, contract/state/API, dependency, documentation, and
 deterministic final-gate audit, fixes every material finding, and records an
-honest per-ticket ledger.
+honest per-ticket ledger. After SP-025 establishes the accepted functional
+baseline, SP-025A also performs one deliberate behavior-preserving quality and
+efficiency iteration across every first-party code area: it removes concrete
+redundancy and weak structure, consolidates genuine shared responsibilities,
+simplifies avoidable complexity, and corrects measured or structurally obvious
+waste without redesigning the product or changing accepted behavior.
 
 SP-025A does not repeat SP-024's complete layout/device pass or SP-025's manual
 product matrix except to validate a concrete audit correction. It makes no paid
@@ -4369,7 +4374,10 @@ informational timing diagnostics.
 required prior ticket, Git history, current implementation, and this source of
 truth; every material code-quality, architecture, documentation, lifecycle,
 privacy/security, dependency, or incomplete-ticket issue is fixed and the full
-deterministic final gate passes.
+deterministic final gate passes. One owner-directed whole-codebase quality and
+efficiency iteration reviews every first-party code area and improves concrete
+redundancy, reuse, structure, clarity, lifecycle ownership, and obvious waste
+while preserving the SP-025-approved behavior except for documented bug fixes.
 
 **Depends on:** SP-025.
 
@@ -4386,6 +4394,13 @@ deterministic final gate passes.
 - [ ] Audit and fix material duplication, dead/obsolete code, unused exports and
   dependencies, stale flags/TODOs, unsafe casts/diagnostics, swallowed errors,
   provider-call duplication, and high-frequency/bundle-sensitive waste.
+- [ ] Establish the SP-025-approved behavioral baseline, review every first-party
+  source/test/configuration/script/style/documentation area, and resolve each
+  concrete quality or efficiency finding without speculative abstraction or an
+  unrecorded functional change.
+- [ ] Record before/after regression evidence for every refactored critical path
+  and document the disposition of worthwhile low-severity findings as well as
+  release-blocking material findings.
 - [ ] Audit cleanup and abort ownership for listeners, timers, requests, object
   URLs, microphone/media tracks, SDK subscriptions, voice sessions, retries,
   stale results, terminal transitions, and Clear & exit.
