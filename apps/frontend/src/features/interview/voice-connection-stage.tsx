@@ -50,11 +50,9 @@ import type {
   VoiceSessionAuthorization,
   VoiceSessionBridgeProps,
 } from "./voice-session-bridge";
+import type { VoiceProviderFailure } from "./voice-provider-failure";
 import { useVoiceSession } from "./use-voice-session";
-import type {
-  VoicePerformanceCollector,
-  VoicePerformanceTracker,
-} from "./voice-performance";
+import type { VoicePerformanceTracker } from "./voice-performance";
 
 const LazyElevenLabsVoiceSession = lazy(async () => {
   const voiceSession = await import("./elevenlabs-voice-session");
@@ -89,7 +87,6 @@ type VoiceConnectionStageProps = Readonly<{
   liveSessionBridge?: ComponentType<VoiceSessionBridgeProps>;
   liveVoiceEnabled: boolean;
   plan: ScreeningPlan;
-  performanceCollector?: VoicePerformanceCollector;
   performanceTracker?: VoicePerformanceTracker;
   requestToken?: VoiceTokenRequester;
   rolePreference?: RolePreference | undefined;
@@ -139,7 +136,6 @@ export function VoiceConnectionStage({
   liveSessionBridge: LiveSessionBridge = LazyElevenLabsVoiceSession,
   liveVoiceEnabled,
   plan,
-  performanceCollector,
   performanceTracker,
   requestToken = requestVoiceToken,
   rolePreference,
@@ -217,7 +213,7 @@ export function VoiceConnectionStage({
     initialRequestRef.current.onSensitiveValuesCleared();
   }, []);
   const handleConnectionFailure = useCallback(
-    (message: string) => {
+    (providerFailure: VoiceProviderFailure) => {
       if (connectMeasurementRef.current) {
         performanceTracker?.cancel(connectMeasurementRef.current);
         connectMeasurementRef.current = null;
@@ -226,9 +222,12 @@ export function VoiceConnectionStage({
       setSessionBridgeMounted(false);
       onFailure({
         stage: "connecting",
-        code: "VOICE_PROVIDER_REJECTED",
-        message: message || "The voice provider rejected the connection.",
-        retryable: true,
+        code:
+          providerFailure.class === "owner_action"
+            ? "VOICE_PROVIDER_OWNER_ACTION"
+            : "VOICE_PROVIDER_REJECTED",
+        message: providerFailure.message,
+        retryable: providerFailure.retryable,
       });
     },
     [onFailure, performanceTracker],
@@ -502,12 +501,7 @@ export function VoiceConnectionStage({
           }}
           onToggleMute={voiceSession.toggleMuted}
           phase={voiceSession.displayPhase}
-          {...(performanceCollector
-            ? {
-                performanceCollector,
-                performanceSource: liveVoiceEnabled ? "live" : "fake",
-              }
-            : {})}
+          performanceSource={liveVoiceEnabled ? "live" : "fake"}
           performanceTracker={performanceTracker}
           topicProgress={topicProgress}
           transcript={transcript}

@@ -95,6 +95,7 @@ const candidateSchema = z.strictObject({
 const assistantExchangeSchema = z.strictObject({
   text: z.string().min(1),
   toolCalls: z.array(toolCallSchema),
+  systemToolCalls: z.array(z.literal("end_call")).max(1).optional(),
 });
 const policyCaseSchema = z.strictObject({
   id: z.string().min(1),
@@ -488,7 +489,7 @@ describe("source-controlled interviewer prompt", () => {
   it("uses the configured first-message exception and a traceable policy version", () => {
     expect(INTERVIEWER_FIRST_MESSAGE).toBe("Hi, what's your name?");
     expect(INTERVIEWER_PROMPT_VERSION).toBe(VOICE_AGENT_POLICY_VERSION);
-    expect(INTERVIEWER_PROMPT_VERSION).toMatch(/^sp017-/);
+    expect(INTERVIEWER_PROMPT_VERSION).toMatch(/^sp021b-/);
     expect(INTERVIEWER_SYSTEM_PROMPT).toContain(
       `separately configured first message is "${INTERVIEWER_FIRST_MESSAGE}"`,
     );
@@ -551,7 +552,9 @@ describe("source-controlled interviewer prompt", () => {
     expect(INTERVIEWER_SYSTEM_PROMPT).toContain(
       "close briefly and call end_call immediately",
     );
-    expect(INTERVIEWER_SYSTEM_PROMPT).toContain("then call end_call");
+    expect(INTERVIEWER_SYSTEM_PROMPT).toContain(
+      "one brief closing and end_call in the same response",
+    );
     expect(INTERVIEWER_SYSTEM_PROMPT).toContain(
       UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK,
     );
@@ -600,6 +603,39 @@ describe("deterministic interviewer-policy graders", () => {
         ),
       ),
     ).toEqual(new Set([policyCase.candidate.id]));
+  });
+
+  it("keeps unsupported-question gap and terminal branches deterministic", () => {
+    const withGap = policyFixtures.cases.find(
+      (candidateCase) =>
+        candidateCase.id === "unsupported-onboarding-counterquestion",
+    );
+    const withoutGap = policyFixtures.cases.find(
+      (candidateCase) =>
+        candidateCase.id === "unsupported-question-without-remaining-gap",
+    );
+
+    expect(withGap?.assistant.text).toBe(
+      `${UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK} What matters most in your next role?`,
+    );
+    expect(withGap?.assistant.systemToolCalls).toBeUndefined();
+    expect(
+      withoutGap?.assistant.text.startsWith(
+        UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK,
+      ),
+    ).toBe(true);
+    expect(withoutGap?.assistant.text).not.toContain("?");
+    expect(withoutGap?.assistant.systemToolCalls).toEqual(["end_call"]);
+  });
+
+  it("closes exactly once with end_call when the final question is declined", () => {
+    const terminalCase = policyFixtures.cases.find(
+      (candidateCase) => candidateCase.id === "final-question-declined",
+    );
+
+    expect(terminalCase?.candidate.text).toBe("No.");
+    expect(terminalCase?.assistant.text).not.toContain("?");
+    expect(terminalCase?.assistant.systemToolCalls).toEqual(["end_call"]);
   });
 
   it.each(policyFixtures.cases)(

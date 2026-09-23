@@ -34,11 +34,11 @@ type MappedApiError = Readonly<{
 type ProviderDiagnostic = Readonly<{
   provider: "elevenlabs" | "openai" | "turnstile";
   providerDurationMs: number;
-  providerFailureCategory: string;
+  providerCode?: string;
+  providerFailureClass?: string;
   providerHttpStatus?: number;
-  providerSchemaMismatchCategory?: string;
-  providerValidationPaths?: readonly string[];
-  providerValidationRuleIds?: readonly string[];
+  providerRetryable?: boolean;
+  providerType: string;
 }>;
 
 function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
@@ -47,16 +47,11 @@ function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
     return {
       provider: "turnstile",
       providerDurationMs: providerError.durationMs,
-      providerFailureCategory: providerError.category,
+      providerRetryable: providerError.retryable,
+      providerType: providerError.category,
       ...(providerError.httpStatus === undefined
         ? {}
         : { providerHttpStatus: providerError.httpStatus }),
-      ...(providerError.schemaMismatchCategory === undefined
-        ? {}
-        : {
-            providerSchemaMismatchCategory:
-              providerError.schemaMismatchCategory,
-          }),
     };
   }
   if (
@@ -68,17 +63,24 @@ function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
     return {
       provider: "openai",
       providerDurationMs: providerError.durationMs,
-      providerFailureCategory: providerError.category,
+      providerRetryable:
+        providerError instanceof OpenAiRequestError
+          ? providerError.retryable
+          : false,
+      providerType:
+        providerError instanceof OpenAiRequestError
+          ? (providerError.providerType ?? providerError.category)
+          : providerError.category,
       ...(providerError instanceof OpenAiRequestError &&
       providerError.httpStatus !== undefined
         ? { providerHttpStatus: providerError.httpStatus }
         : {}),
-      ...(providerError instanceof OpenAiStructuredOutputError ||
-      providerError instanceof OpenAiCvValidationError ||
-      providerError instanceof OpenAiSummaryValidationError
+      ...(providerError instanceof OpenAiRequestError
         ? {
-            providerValidationPaths: providerError.validationPaths,
-            providerValidationRuleIds: providerError.validationRuleIds,
+            ...(providerError.providerCode === undefined
+              ? {}
+              : { providerCode: providerError.providerCode }),
+            providerFailureClass: providerError.providerFailureClass,
           }
         : {}),
     };
@@ -87,7 +89,12 @@ function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
     return {
       provider: "elevenlabs",
       providerDurationMs: providerError.durationMs,
-      providerFailureCategory: providerError.category,
+      ...(providerError.providerCode === undefined
+        ? {}
+        : { providerCode: providerError.providerCode }),
+      providerFailureClass: providerError.providerFailureClass,
+      providerRetryable: providerError.retryable,
+      providerType: providerError.providerType ?? providerError.category,
       ...(providerError.httpStatus === undefined
         ? {}
         : { providerHttpStatus: providerError.httpStatus }),

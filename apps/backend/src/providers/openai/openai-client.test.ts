@@ -271,6 +271,125 @@ describe("OpenAiHttpClient", () => {
     expect(String(failure)).not.toContain("private fetch detail");
   });
 
+  it.each([
+    "credit_balance_exhausted",
+    "organization_spend_limit_exceeded",
+    "project_spend_limit_exceeded",
+    "organization_usage_limit_exceeded",
+    "insufficient_quota",
+    "quota_exceeded",
+  ])("classifies permanent OpenAI code %s without Retry", async (code) => {
+    const quotaFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            code,
+            message: "PRIVATE ACCOUNT DETAIL",
+            type: "requests",
+          },
+        }),
+        { headers: { "retry-after": "60" }, status: 429 },
+      ),
+    );
+
+    const quotaFailure = await createClient(quotaFetch)
+      .createStructuredResponse(request())
+      .catch((error: unknown) => error);
+
+    expect(quotaFailure).toMatchObject({
+      category: "http_non_success",
+      httpStatus: 429,
+      providerCode: code,
+      providerFailureClass: "billing_or_quota",
+      providerType: "requests",
+      retryAfterSeconds: undefined,
+      retryable: false,
+    });
+    expect(String(quotaFailure)).not.toContain("PRIVATE ACCOUNT DETAIL");
+  });
+
+  it("keeps a genuine rate limit retryable with bounded Retry-After", async () => {
+    const transientFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error: {
+            code: "rate_limit_exceeded",
+            message: "PRIVATE RATE DETAIL",
+            type: "requests",
+          },
+        }),
+        { headers: { "retry-after": "42" }, status: 429 },
+      ),
+    );
+
+    const transientFailure = await createClient(transientFetch)
+      .createStructuredResponse(request())
+      .catch((error: unknown) => error);
+
+    expect(transientFailure).toMatchObject({
+      category: "http_non_success",
+      httpStatus: 429,
+      providerFailureClass: "transient",
+      retryAfterSeconds: 42,
+      retryable: true,
+    });
+    expect(String(transientFailure)).not.toContain("PRIVATE RATE DETAIL");
+  });
+
+  it.each([
+    ["zero", "0", undefined],
+    ["maximum", "86400", 86_400],
+    ["over maximum", "86401", 86_400],
+    ["malformed", "soon", undefined],
+  ] as const)(
+    "normalizes %s Retry-After safely",
+    async (_label, header, expected) => {
+      const fetchImplementation = vi.fn<typeof fetch>().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            error: { code: "rate_limit_exceeded", type: "requests" },
+          }),
+          { headers: { "retry-after": header }, status: 429 },
+        ),
+      );
+
+      const failure = await createClient(fetchImplementation)
+        .createStructuredResponse(request())
+        .catch((error: unknown) => error);
+
+      expect(failure).toMatchObject({
+        retryAfterSeconds: expected,
+        retryable: true,
+      });
+    },
+  );
+
+  it("classifies authentication failures as permanent without retaining provider text", async () => {
+    const fetchImplementation = vi.fn<typeof fetch>().mockResolvedValue(
+      response(
+        {
+          error: {
+            code: "invalid_api_key",
+            message: "PRIVATE CREDENTIAL DETAIL",
+            type: "invalid_request_error",
+          },
+        },
+        401,
+      ),
+    );
+
+    const failure = await createClient(fetchImplementation)
+      .createStructuredResponse(request())
+      .catch((error: unknown) => error);
+
+    expect(failure).toMatchObject({
+      httpStatus: 401,
+      providerFailureClass: "account_or_authentication",
+      retryable: false,
+    });
+    expect(String(failure)).not.toContain("PRIVATE CREDENTIAL DETAIL");
+  });
+
   it("aborts a timed-out provider request", async () => {
     const fetchImplementation = vi.fn<typeof fetch>();
     fetchImplementation.mockImplementation(

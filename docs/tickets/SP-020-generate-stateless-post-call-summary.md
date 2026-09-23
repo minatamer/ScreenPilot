@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-09-22<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-009, SP-010, SP-010A, SP-017, SP-019<br>
 Suggested commit: `SP-020: summarize local interview evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -87,6 +87,12 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 - Final fake-only verification passed the focused contracts suite (3 files / 18 tests), focused backend summary suite (4 files / 41 tests), complete contracts suite (6 files / 47 tests), and complete backend suite (23 files / 256 tests). Both package lint commands, both package builds, Prettier checking for the affected code, and `git diff --check` also passed. The local runtime reported Node 22.23.2 while the repository requires Node 24, but every invoked check completed successfully.
 - No credential was read, no provider network request was made, and no standalone paid summary was run. The first controlled real summary remains assigned to SP-021B after SP-021A.
 - Validation follow-up on 2026-09-22 replaced lexical ISO timestamp comparison with one shared chronological candidate-insight selector. Focused regressions use valid mixed-offset timestamps to prove both semantic grounding and fake summary output preserve the genuinely latest role correction. The follow-up passed the focused backend set (5 files / 48 tests), focused contracts set (3 files / 18 tests), backend typecheck, affected-file lint and Prettier checks, and `git diff --check`; no live verification claim changed.
+- Owner-directed rehearsal follow-up on 2026-09-23 makes **View summary** the
+  sole transition that may start Turnstile/OpenAI summary work. Merely reaching
+  `interview_complete` performs no summary operation; retry remains an explicit
+  fresh-token action. Local `summary_rehearsal` keeps conversation-first voice
+  deterministic while exercising the same live Turnstile/OpenAI summary route,
+  and it never falls back to the fake summarizer after a live failure.
 
 ## Commit boundary
 

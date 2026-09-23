@@ -2,7 +2,7 @@
 
 Status: Finalized by owner-approved bounded live smoke; deferred evidence moved to SP-021B<br>
 Milestone: Milestone 2 — browser voice experience<br>
-Last synchronized: 2026-09-22<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-014A, SP-018<br>
 Suggested commit: `SP-018A: verify live CV and voice integrations`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -15,7 +15,7 @@ Ticket index: [`README.md`](README.md)
 Safely activate the already-implemented live provider paths with owner-supplied
 credentials and exclusively synthetic candidate data. Establish a bounded live
 CV and private-voice compatibility checkpoint before same-session review work,
-while preserving every unperformed full-flow, performance, privacy, usage, and
+while preserving every unperformed full-flow, diagnostic, privacy, usage, and
 cost item for the consolidated SP-021B validation window.
 
 ## Why this ticket exists
@@ -26,8 +26,8 @@ cost item for the consolidated SP-021B validation window.
   provider latency, interruption, or dashboard/source synchronization.
 - SP-018 owns content-free instrumentation and the runtime behavior being
   measured. This packet owns the completed initial bounded live feedback loop;
-  SP-021B owns the transferred representative performance sample during the
-  consolidated complete-flow validation.
+  SP-021B first verifies the simplified diagnostics path in fake mode, then
+  observes the naturally occurring metrics during its two live complete flows.
 - SP-020 owns the live OpenAI summary route and SP-021 owns the browser
   summary/review/retry experience. Do not call or simulate a live summary in
   this ticket.
@@ -180,9 +180,9 @@ cost item for the consolidated SP-021B validation window.
   role-neutral, and free of direct OpenAI or ElevenLabs calls.
 - [ ] Confirm the resulting grant and dynamic context contain no CV provenance
   and begin with an undecided/open synthetic role when no role has been stated.
-- [ ] Run at least 50 content-free preparation measurements across the ticket's
-  normal/throttled and desktop/mobile profiles; p95 must be at most 500 ms and
-  release blocks above 1,000 ms.
+- [ ] Verify in fake mode that conversation preparation automatically creates a
+  content-free, source-labelled timing observation visible in the local raw
+  diagnostics before live testing begins.
 
 ### 4. Private ElevenLabs token and WebRTC connection
 
@@ -220,16 +220,19 @@ cost item for the consolidated SP-021B validation window.
   controls, and reduced-motion behavior at representative phone, tablet,
   laptop/desktop, large-monitor, and intermediate resized widths.
 
-### 6. SP-018 live performance and interruption sample
+### 6. SP-018 live performance observations and interruption behavior
 
-- [ ] Measure at least 50 representative live turns across desktop/mobile and
-  normal/throttled profiles using content-free measurement IDs.
-- [ ] TTFA, measured from candidate speech end to first substantive agent audio,
-  meets p50 at most 800 ms and p95 at most 1,500 ms; a filler never stops TTFA.
-- [ ] Connect-request-to-ready p95 is at most 3,000 ms.
-- [ ] Client-tool-to-card p95 is at most 300 ms.
-- [ ] Interruption-to-audio-stop p95 is at most 250 ms, with no overlapping
-  residual agent speech.
+- [ ] Before live activation, confirm fake mode automatically records eligible
+  preparation, connection, TTFA, interruption, and client-tool-to-card timings;
+  raw values are viewable/copyable/resettable and contain no candidate content.
+- [ ] During the two bounded live complete flows, confirm the same instrumentation
+  records every naturally eligible observation with source `live`. Do not repeat
+  a paid turn or session merely to increase a measurement count.
+- [ ] Review TTFA, connect-request-to-ready, client-tool-to-card, and
+  interruption-to-audio-stop values as informational troubleshooting data. A
+  filler never stops TTFA, and no observed percentile or count is a release
+  gate.
+- [ ] Confirm interruption produces no overlapping residual agent speech.
 - [ ] The existing Pilot status remains the only feedback from 0–800 ms,
   **Reviewing your answer…** appears from 800–1,500 ms, and the one allowed
   static **“Mm-hm…”** filler is eligible only above 1,500 ms.
@@ -239,10 +242,9 @@ cost item for the consolidated SP-021B validation window.
 - [ ] Run one explicitly authorized eight-minute synthetic session and confirm
   the hard stop ends voice, prevents further tool mutations, releases media,
   and preserves only the bounded partial local result.
-- [ ] Treat TTFA above 1,200 ms p50 or 2,000 ms p95, interruption above 400 ms
-  p95, card rendering above 600 ms p95, connection above 5,000 ms p95, or
-  preparation above 1,000 ms p95 as a blocking failure rather than weakening
-  the gate.
+- [ ] Investigate an obvious delay or behavioral regression found during the
+  bounded walkthrough, but do not convert the diagnostics into a statistical
+  release claim or add paid repetitions solely for timing confidence.
 
 ### 7. Privacy, retention, usage, and cleanup
 
@@ -262,11 +264,11 @@ cost item for the consolidated SP-021B validation window.
 - [ ] Confirm no secret or candidate/provider content appears in `git status`,
   `git diff`, documentation, screenshots, logs, shell history, or chat after the
   test.
-- [ ] Record a sanitized content-free report containing date, sample sizes,
-  browser/device/network profiles, provider/model/revision identifiers,
-  p50/p95 metrics, request counts, coarse usage/cost, pass/fail, outliers, and
-  blockers. Never include candidate text, audio, credentials, tokens, account
-  IDs, or secret-bearing screenshots.
+- [ ] Record an optional sanitized content-free diagnostic snapshot containing
+  date, observed counts, raw timings, browser/device/network context, and
+  provider/model/revision identifiers. Record request counts and coarse
+  usage/cost separately. Never include candidate text, audio, credentials,
+  tokens, account IDs, or secret-bearing screenshots.
 
 ## Immediate stop conditions
 
@@ -294,8 +296,9 @@ diagnostics if any of these occurs:
 - [ ] Live CV analysis, Turnstile validation, private token issuance, WebRTC
   voice, prompt behavior, five client tools, controls, and cleanup pass with
   synthetic data.
-- [ ] The 50-turn and 50-preparation measurement samples are real, content-free,
-  reproducible, and meet every SP-018 target and release-blocking threshold.
+- [ ] Fake mode proves the content-free diagnostics path before live activation;
+  the two live complete flows produce source-labelled observations naturally,
+  with no sample quota or percentile release gate.
 - [ ] Actual provider revision, retention, usage, and cost evidence is reviewed;
   no result is inferred from fake mode or configuration alone.
 - [ ] No live summary call is attempted and no SP-020/SP-021 behavior is claimed.
@@ -435,7 +438,7 @@ authorizes it.
   bounded duration, and optional HTTP status. OpenAI additionally distinguishes
   incomplete, failed, or unexpected response status and invalid structured
   output without retaining provider messages or generated content. The terminal
-  request log emits the normalized `provider`, `providerFailureCategory`,
+  request log emits the normalized `provider`, `providerFailureClass`,
   `providerDurationMs`, and optional `providerHttpStatus` fields through the
   use-case error boundary. It never logs response bodies, URLs, credentials,
   tokens, CV or transcript content, conversation credentials, agent IDs, or raw
@@ -556,7 +559,7 @@ authorizes it.
 - The caption and provider-owned ending corrections remain deterministically
   verified but not re-observed live. Their checklist items remain unchecked.
 - The second entry mode, all eight runtime variables, all five client tools,
-  negative/replay Turnstile behavior, the 50-turn and 50-preparation samples,
+  negative/replay Turnstile behavior, fake-first/live timing diagnostics,
   complete cleanup/privacy inspection, and provider revision/retention/usage/cost
   review remain unchecked. They move intact to the required SP-021B packet; this
   closure does not represent them as passed.
@@ -575,7 +578,7 @@ authorizes it.
 ## Precision references
 
 - [Authoritative live-provider setup runbook](../operations/live-provider-setup.md)
-- [Performance gates and latency policy](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#performance-gates)
+- [Performance diagnostics and latency policy](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#performance-diagnostics)
 - [Credential acquisition and paid live-test gate](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup)
 - [Provider data configuration](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#provider-data-configuration)
 - [Operational logs](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#operational-logs)

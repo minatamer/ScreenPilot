@@ -1,11 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
-import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
+import { summarizeInterviewRequestSchema } from "@screenpilot/contracts/api/interview-summary";
 import {
   SCREENING_SUMMARY_LIMITATIONS,
   SCREENING_SUMMARY_OVERVIEW,
 } from "@screenpilot/contracts/interview/screening-summary";
+
+import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
+import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
 
 import {
   analyzeCv,
@@ -32,7 +34,129 @@ function requestJsonBody(
   return JSON.parse(options.body) as Record<string, unknown>;
 }
 
+function realisticConversationFirstSummaryRequest() {
+  const plan = createConversationFirstPlanFixture();
+  const occurredAt = "2026-09-23T09:00:00.000Z";
+  const transcript = [
+    ["pilot-name", 0, "interviewer", "What would you like me to call you?"],
+    ["candidate-role", 1, "candidate", "Use Riley and a product role."],
+    ["pilot-question", 2, "interviewer", "What would you like clarified?"],
+    [
+      "candidate-question",
+      3,
+      "candidate",
+      "How large is the team and what onboarding is provided?",
+    ],
+    [
+      "pilot-fallback",
+      4,
+      "interviewer",
+      "A human recruiter must confirm that. What matters in your next role?",
+    ],
+    [
+      "candidate-motivation",
+      5,
+      "candidate",
+      "Clear priorities, mentorship, and collaborative work matter most.",
+    ],
+    ["pilot-final", 6, "interviewer", "Any final questions?"],
+    ["candidate-final-no", 7, "candidate", "No."],
+  ].map(([id, sequence, speaker, text]) => ({
+    id: String(id),
+    occurredAt,
+    sequence: Number(sequence),
+    speaker: speaker as "candidate" | "interviewer",
+    status: "final" as const,
+    text: String(text),
+  }));
+  const insight = (
+    id: string,
+    category:
+      | "role_preference"
+      | "candidate_question"
+      | "follow_up_needed"
+      | "motivation",
+    label: string,
+    value: string,
+    evidenceTurnId: string,
+    status: "confirmed" | "needs_clarification" = "confirmed",
+  ) => ({
+    category,
+    createdAt: occurredAt,
+    cvFactIds: [],
+    evidenceTurnIds: [evidenceTurnId],
+    id,
+    label,
+    source: "Candidate" as const,
+    status,
+    updatedAt: occurredAt,
+    value,
+  });
+  return {
+    entryMode: "conversation_first" as const,
+    insights: [
+      insight(
+        "role",
+        "role_preference",
+        "Role preference",
+        "Product role",
+        "candidate-role",
+      ),
+      insight(
+        "question",
+        "candidate_question",
+        "Candidate question",
+        "How large is the team and what onboarding is provided?",
+        "candidate-question",
+      ),
+      insight(
+        "followup",
+        "follow_up_needed",
+        "Human follow-up",
+        "A human recruiter must confirm team size and onboarding.",
+        "candidate-question",
+        "needs_clarification",
+      ),
+      insight(
+        "motivation",
+        "motivation",
+        "Motivation / next role",
+        "Clear priorities, mentorship, and collaborative work",
+        "candidate-motivation",
+      ),
+    ],
+    interviewGrant: "signed-interview-grant",
+    plan,
+    topicProgress: [
+      {
+        evidenceTurnIds: ["candidate-role"],
+        status: "covered" as const,
+        topicKey: "role_preference" as const,
+        updatedAt: occurredAt,
+      },
+      {
+        evidenceTurnIds: ["candidate-question"],
+        status: "covered" as const,
+        topicKey: "candidate_questions" as const,
+        updatedAt: occurredAt,
+      },
+      {
+        evidenceTurnIds: ["candidate-motivation"],
+        status: "covered" as const,
+        topicKey: "motivation_and_next_role" as const,
+        updatedAt: occurredAt,
+      },
+    ],
+    transcript,
+    turnstileToken: "single-use-summary-token",
+  };
+}
+
 describe("ScreenPilot browser API", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("validates bootstrap and uses the shared relative endpoint", async () => {
     const browserFetch = vi.fn<typeof fetch>().mockResolvedValue(
       jsonResponse({
@@ -47,6 +171,7 @@ describe("ScreenPilot browser API", () => {
           pdfBytes: 5_242_880,
           pdfPages: 8,
         },
+        effectiveMode: "deterministic_fake",
         paidOperationsEnabled: false,
         privacyNoticeVersion: "2026-09-11",
         providerMode: "fake",
@@ -228,6 +353,187 @@ describe("ScreenPilot browser API", () => {
       signal: controller.signal,
     });
   });
+
+  it("assembles the realistic failed-live scenario as one schema-valid POST", async () => {
+    const input = realisticConversationFirstSummaryRequest();
+    expect(summarizeInterviewRequestSchema.safeParse(input).success).toBe(true);
+    const responseBody = {
+      limitations: [SCREENING_SUMMARY_LIMITATIONS[0]],
+      summary: {
+        overview: SCREENING_SUMMARY_OVERVIEW,
+        confirmedFacts: [],
+        clarifications: [],
+        topicsCovered: [],
+        topicsNotCovered: [],
+        communicationNotes: [],
+        candidateQuestions: [
+          {
+            evidenceTurnIds: ["candidate-question"],
+            question: "How large is the team and what onboarding is provided?",
+          },
+        ],
+        humanFollowups: [
+          {
+            evidenceTurnIds: ["candidate-question"],
+            reason: "A human recruiter must confirm team size and onboarding.",
+          },
+        ],
+        limitations: [SCREENING_SUMMARY_LIMITATIONS[0]],
+      },
+      usage: {
+        cachedInputTokens: 0,
+        estimatedCostUsd: 0.001,
+        inputTokens: 400,
+        outputTokens: 180,
+      },
+    };
+    const browserFetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(jsonResponse(responseBody));
+
+    await expect(
+      summarizeInterview(input, new AbortController().signal, browserFetch),
+    ).resolves.toEqual(responseBody);
+    expect(browserFetch).toHaveBeenCalledOnce();
+    expect(browserFetch.mock.calls[0]?.[0]).toBe("/v1/interview/summary");
+    expect(requestJsonBody(browserFetch.mock.calls[0]?.[1])).toEqual(input);
+  });
+
+  it("classifies an invalid local summary request without sending candidate evidence", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {
+      // The assertion below inspects the intentionally content-free payload.
+    });
+    const browserFetch = vi.fn<typeof fetch>();
+    const plan = createConversationFirstPlanFixture();
+
+    const failure = await summarizeInterview(
+      {
+        entryMode: "conversation_first",
+        insights: [],
+        interviewGrant: "signed-interview-grant",
+        plan,
+        topicProgress: [],
+        transcript: [],
+        turnstileToken: "single-use-summary-token",
+      },
+      new AbortController().signal,
+      browserFetch,
+    ).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ScreenPilotApiError);
+    expect(failure).toMatchObject({
+      code: "INVALID_SUMMARY_REQUEST",
+      retryable: false,
+    });
+    expect(browserFetch).not.toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith(
+      "screenpilot_api_boundary_failure",
+      {
+        category: "request_validation",
+        operation: "interview_summary",
+      },
+    );
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain(
+      "single-use-summary-token",
+    );
+  });
+
+  it("classifies a summary network failure without logging the request", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {
+      // The assertion below inspects the intentionally content-free payload.
+    });
+    const browserFetch = vi
+      .fn<typeof fetch>()
+      .mockRejectedValue(new TypeError("PRIVATE NETWORK DETAIL"));
+    const plan = createConversationFirstPlanFixture();
+    const failure = await summarizeInterview(
+      {
+        entryMode: "conversation_first",
+        insights: [],
+        interviewGrant: "signed-interview-grant",
+        plan,
+        topicProgress: [],
+        transcript: [
+          {
+            id: "candidate-turn-network",
+            occurredAt: "2026-09-23T09:00:00.000Z",
+            sequence: 0,
+            speaker: "candidate",
+            status: "final",
+            text: "PRIVATE CANDIDATE EVIDENCE",
+          },
+        ],
+        turnstileToken: "single-use-summary-token",
+      },
+      new AbortController().signal,
+      browserFetch,
+    ).catch((error: unknown) => error);
+
+    expect(failure).toBeInstanceOf(ScreenPilotApiError);
+    expect(failure).toMatchObject({
+      code: "SUMMARY_UNREACHABLE",
+      retryable: true,
+    });
+    expect(consoleError).toHaveBeenCalledWith(
+      "screenpilot_api_boundary_failure",
+      { category: "fetch_failure", operation: "interview_summary" },
+    );
+    expect(JSON.stringify(consoleError.mock.calls)).not.toMatch(
+      /PRIVATE|single-use-summary-token/u,
+    );
+  });
+
+  it.each([
+    {
+      category: "response_envelope_invalid",
+      expectedCode: "INVALID_RESPONSE",
+      response: new Response("not-json", { status: 503 }),
+      retryable: true,
+    },
+    {
+      category: "backend_rejection",
+      expectedCode: "SUMMARY_FAILED",
+      response: jsonResponse(
+        {
+          error: {
+            code: "SUMMARY_FAILED",
+            message: "The summary service needs owner attention.",
+            requestId: "request-summary-permanent",
+            retryable: false,
+          },
+        },
+        503,
+      ),
+      retryable: false,
+    },
+    {
+      category: "response_validation",
+      expectedCode: "INVALID_SUMMARY_RESPONSE",
+      response: jsonResponse({ incomplete: true }),
+      retryable: true,
+    },
+  ])(
+    "classifies $category without logging evidence",
+    async ({ category, expectedCode, response, retryable }) => {
+      const consoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
+      const failure = await summarizeInterview(
+        realisticConversationFirstSummaryRequest(),
+        new AbortController().signal,
+        vi.fn<typeof fetch>().mockResolvedValue(response),
+      ).catch((error: unknown) => error);
+
+      expect(failure).toMatchObject({ code: expectedCode, retryable });
+      expect(consoleError).toHaveBeenCalledWith(
+        "screenpilot_api_boundary_failure",
+        expect.objectContaining({ category, operation: "interview_summary" }),
+      );
+      expect(JSON.stringify(consoleError.mock.calls)).not.toMatch(
+        /Riley|team size|onboarding is provided|single-use-summary-token/iu,
+      );
+    },
+  );
 
   it("rejects incomplete voice authorization responses", async () => {
     const browserFetch = vi

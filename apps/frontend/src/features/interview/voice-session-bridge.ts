@@ -1,6 +1,7 @@
 import type { ClientTools } from "@elevenlabs/react";
 
 import type { VoiceDynamicVariables } from "./voice-session-context";
+import type { VoiceProviderFailure } from "./voice-provider-failure";
 
 export type VoiceSessionAuthorization = Readonly<{
   conversationId: string;
@@ -45,11 +46,11 @@ export type VoiceSessionEvent =
     }>
   | Readonly<{
       type: "error";
-      message: string;
+      failure: VoiceProviderFailure;
     }>
   | Readonly<{
       type: "disconnected";
-      message?: string | undefined;
+      failure?: VoiceProviderFailure | undefined;
       reason: "agent" | "error" | "user";
     }>;
 

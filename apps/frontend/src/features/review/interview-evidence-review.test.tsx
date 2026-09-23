@@ -630,8 +630,44 @@ describe("InterviewEvidenceReview", () => {
     expect(
       screen.getByRole("button", { name: /Motivation \/ next role/u }),
     ).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Retry summary" }));
+    const retryButton = screen.getByRole("button", { name: "Retry summary" });
+    expect(retryButton.parentElement).toHaveClass("sp-error-panel__actions");
+    expect(retryButton.closest(".sp-error-panel")).toContainElement(
+      screen.getByRole("heading", { name: "The summary did not finish" }),
+    );
+    fireEvent.click(retryButton);
     expect(props.onRetry).toHaveBeenCalledOnce();
+  });
+
+  it("preserves evidence without offering retry for a permanent summary failure", () => {
+    const props = baseProps();
+    render(
+      <InterviewEvidenceReview
+        {...props}
+        failure={{
+          stage: "summarizing",
+          code: "SUMMARY_FAILED",
+          message:
+            "The demo owner must check the summary service before another attempt.",
+          retryable: false,
+        }}
+        stage="summarizing"
+        summary={undefined}
+      />,
+    );
+
+    expect(
+      screen.getByText(
+        "The demo owner must check the summary service before another attempt.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Retry summary" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(candidateTurn.text)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Motivation \/ next role/u }),
+    ).toBeVisible();
   });
 
   it("keeps evidence visible when the summary challenge fails", async () => {
@@ -740,6 +776,11 @@ describe("InterviewEvidenceReview", () => {
       />,
     );
 
+    expect(
+      screen.getByText(
+        "The voice connection ended before the interview was complete. The final answers and insight notes already captured in this browser are still available below.",
+      ),
+    ).toBeVisible();
     expect(screen.getByText("Not established")).toBeVisible();
     expect(
       screen.getByText(

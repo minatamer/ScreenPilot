@@ -12,15 +12,14 @@ import {
   CompletedInterviewControls,
   InterviewControls,
 } from "./interview-controls";
+import type { FillerPolicyState } from "./latency-filler-policy";
 import { LiveCaptions } from "./live-captions";
 import { MicrophoneIcon } from "./microphone-icon";
 import type { LiveCaption } from "./normalize-voice-event";
 import type { VoiceLatencyStage, VoiceSessionPhase } from "./use-voice-session";
-import type { FillerPolicyState } from "./latency-filler-policy";
 import { VoicePerformanceDiagnostics } from "./voice-performance-diagnostics";
 import type {
-  VoicePerformanceBatch,
-  VoicePerformanceCollector,
+  VoicePerformanceSource,
   VoicePerformanceTracker,
 } from "./voice-performance";
 import { VoiceStatusRail } from "./voice-status-rail";
@@ -40,8 +39,7 @@ type InterviewStageProps = Readonly<{
   onToggleMute?: (() => void) | undefined;
   onViewSummary?: (() => void) | undefined;
   phase?: VoiceSessionPhase | undefined;
-  performanceCollector?: VoicePerformanceCollector | undefined;
-  performanceSource?: VoicePerformanceBatch["source"] | undefined;
+  performanceSource?: VoicePerformanceSource | undefined;
   performanceTracker?: VoicePerformanceTracker | undefined;
   topicProgress: readonly TopicProgress[];
   transcript: readonly TranscriptTurn[];
@@ -66,7 +64,6 @@ export function InterviewStage({
   onToggleMute,
   onViewSummary,
   phase = "ended",
-  performanceCollector,
   performanceSource,
   performanceTracker,
   topicProgress,
@@ -147,14 +144,9 @@ export function InterviewStage({
           transcript={transcript}
         />
       </div>
-      {!completed &&
-      performanceCollector &&
-      performanceSource &&
-      performanceTracker &&
-      fillerPolicy ? (
+      {performanceSource && performanceTracker ? (
         <VoicePerformanceDiagnostics
-          collector={performanceCollector}
-          fillerPolicy={fillerPolicy}
+          {...(fillerPolicy ? { fillerPolicy } : {})}
           source={performanceSource}
           tracker={performanceTracker}
         />

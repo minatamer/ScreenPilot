@@ -8,7 +8,8 @@ import type { PrepareInterviewResponse } from "@screenpilot/contracts/api/interv
 import type { AnalyzeCvResponse } from "@screenpilot/contracts/api/cv-analysis";
 import {
   areInteractiveProviderOperationsEnabled,
-  areLiveProviderOperationsEnabled,
+  isLiveVoiceEnabled,
+  isSummaryRehearsal,
 } from "@screenpilot/contracts/api/public-runtime-config";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
@@ -17,10 +18,7 @@ import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progr
 import { CvStage } from "@/features/cv/cv-stage";
 import { createCvInsightSeeds } from "@/features/insights/seed-cv-insights";
 import { InterviewStage } from "@/features/interview/interview-stage";
-import {
-  createVoicePerformanceCollector,
-  createVoicePerformanceTracker,
-} from "@/features/interview/voice-performance";
+import { createVoicePerformanceTracker } from "@/features/interview/voice-performance";
 import type { VoiceStartRequest } from "@/features/interview/voice-connection-stage";
 import { CvPlanPreview } from "@/features/plan/cv-plan-preview";
 import { PreflightHandoff } from "@/features/preflight/preflight-handoff";
@@ -99,26 +97,30 @@ export function DemoExperience() {
     useState<VoiceStartRequest | null>(null);
   const [summaryRequestPending, setSummaryRequestPending] = useState(false);
   const [performanceTracker] = useState(createVoicePerformanceTracker);
-  const [performanceCollector] = useState(() =>
-    createVoicePerformanceCollector(performanceTracker),
-  );
   const { retryRuntimeConfig, runtimeConfigStatus } = useDemoBootstrap();
   const providerOperationsEnabled = Boolean(
     runtimeConfigStatus === "ready" &&
     state.runtimeConfig &&
     areInteractiveProviderOperationsEnabled(state.runtimeConfig),
   );
-  const liveProviderOperationsEnabled = Boolean(
+  const liveVoiceEnabled = Boolean(
     runtimeConfigStatus === "ready" &&
     state.runtimeConfig &&
-    areLiveProviderOperationsEnabled(state.runtimeConfig),
+    isLiveVoiceEnabled(state.runtimeConfig),
   );
+  const summaryRehearsal = Boolean(
+    runtimeConfigStatus === "ready" &&
+    state.runtimeConfig &&
+    isSummaryRehearsal(state.runtimeConfig),
+  );
+  const performanceSource = liveVoiceEnabled ? "live" : "fake";
 
   useEffect(() => {
     if (state.stage === "cleared") {
+      performanceTracker.reset();
       router.replace("/");
     }
-  }, [router, state.stage]);
+  }, [performanceTracker, router, state.stage]);
 
   const handlePrepared = useCallback(
     (response: PrepareInterviewResponse) => {
@@ -155,7 +157,10 @@ export function DemoExperience() {
     [dispatch],
   );
   const selectEntryMode = (entryMode: EntryMode) => {
-    if (entryMode === "cv_assisted" && !providerOperationsEnabled) {
+    if (
+      entryMode === "cv_assisted" &&
+      (!providerOperationsEnabled || summaryRehearsal)
+    ) {
       return;
     }
     dispatch({ type: "SELECT_ENTRY_MODE", entryMode });
@@ -227,6 +232,8 @@ export function DemoExperience() {
         onViewSummary={() => {
           dispatch({ type: "VIEW_SUMMARY" });
         }}
+        performanceSource={performanceSource}
+        performanceTracker={performanceTracker}
         topicProgress={state.topicProgress}
         transcript={state.transcript}
       />
@@ -266,7 +273,8 @@ export function DemoExperience() {
           title="Bring a CV, or start with a conversation."
         />
         <EntryModeChooser
-          cvAssistedEnabled={providerOperationsEnabled}
+          cvAssistedEnabled={providerOperationsEnabled && !summaryRehearsal}
+          summaryRehearsal={summaryRehearsal}
           onSelect={selectEntryMode}
         />
       </div>
@@ -456,9 +464,8 @@ export function DemoExperience() {
           dispatch({ type: "SET_TOPIC_PROGRESS", progress });
         }}
         insights={state.insights}
-        liveVoiceEnabled={liveProviderOperationsEnabled}
+        liveVoiceEnabled={liveVoiceEnabled}
         plan={state.screeningPlan}
-        performanceCollector={performanceCollector}
         performanceTracker={performanceTracker}
         {...(state.rolePreference
           ? { rolePreference: state.rolePreference }
@@ -501,8 +508,12 @@ export function DemoExperience() {
   const hasFinalCandidateEvidence = state.transcript.some(
     (turn) => turn.speaker === "candidate" && turn.status === "final",
   );
+  const summaryPreparationStage =
+    providerOperationsEnabled &&
+    (state.stage === "summarizing" ||
+      (state.stage === "interview_complete" && !summaryRehearsal));
   const summaryPreparationActive =
-    (state.stage === "interview_complete" || state.stage === "summarizing") &&
+    summaryPreparationStage &&
     Boolean(
       state.entryMode &&
       state.screeningPlan &&
@@ -512,7 +523,7 @@ export function DemoExperience() {
       !state.failure,
     );
   const summaryPreparation =
-    (state.stage === "interview_complete" || state.stage === "summarizing") &&
+    summaryPreparationStage &&
     state.entryMode &&
     state.screeningPlan &&
     state.runtimeConfig &&
@@ -582,6 +593,19 @@ export function DemoExperience() {
             data-stage={state.stage}
           >
             <div className="sp-demo-workspace__task">
+              {summaryRehearsal ? (
+                <aside
+                  aria-label="Summary rehearsal status"
+                  className="sp-summary-rehearsal-notice"
+                  role="status"
+                >
+                  <strong>Summary rehearsal</strong>
+                  <span>
+                    Interview voice is simulated. View summary can make one
+                    live, metered summary request after verification.
+                  </span>
+                </aside>
+              ) : null}
               {showRuntimeConfigFailure ? (
                 <ErrorPanel
                   actions={

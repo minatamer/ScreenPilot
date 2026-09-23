@@ -17,17 +17,28 @@ import {
   INTERVIEWER_SYSTEM_PROMPT,
 } from "../../ai/prompts/interviewer-prompt.js";
 
-export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp018-2026-09-16.1";
+export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp021b-2026-09-23.1";
 export const ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING = 160;
 export const ELEVENLABS_END_CALL_TOOL_DESCRIPTION =
   "End the conversation immediately after ScreenPilot's brief closing sentence when screening is complete, the final candidate-question opportunity is resolved or declined, or the candidate asks to stop. Never wait for another user turn after closing.";
 export const ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION =
   "sp017-2026-09-22.1";
 
+function agentPolicyRequiresDashboardSync(
+  sourcePolicyVersion: string,
+  publishedPolicyVersion: string,
+) {
+  return sourcePolicyVersion !== publishedPolicyVersion;
+}
+
 export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   agentConfigVersion: ELEVENLABS_AGENT_CONFIG_VERSION,
   agentRevisionId: "agtvrsn_8901m350e924f2ev7t4pwnvq38b1",
   agentRevisionPolicyVersion: ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
+  dashboardSyncRequired: agentPolicyRequiresDashboardSync(
+    VOICE_AGENT_POLICY_VERSION,
+    ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
+  ),
   clientTools: VOICE_CLIENT_TOOL_NAMES,
   clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
   conversation: {

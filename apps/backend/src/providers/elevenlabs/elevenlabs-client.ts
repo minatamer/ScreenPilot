@@ -14,6 +14,13 @@ type ElevenLabsFailureCategory =
   | "response_json_invalid"
   | "response_schema_mismatch";
 
+export type ElevenLabsProviderFailureClass =
+  | "account_or_authentication"
+  | "billing_or_quota"
+  | "request_configuration"
+  | "transient"
+  | "unclassified";
+
 type ElevenLabsResponseBodyFailureCategory = Extract<
   ElevenLabsFailureCategory,
   "response_body_empty" | "response_body_invalid" | "response_body_oversized"
@@ -55,13 +62,22 @@ export class ElevenLabsRequestError extends Error {
   readonly category: ElevenLabsFailureCategory;
   readonly durationMs: number;
   readonly httpStatus?: number;
-  readonly retryable = true;
+  readonly providerCode?: string;
+  readonly providerFailureClass: ElevenLabsProviderFailureClass;
+  readonly providerType?: string;
+  readonly retryAfterSeconds: number | undefined;
+  readonly retryable: boolean;
 
   constructor(input: {
     category: ElevenLabsFailureCategory;
     cause?: unknown;
     durationMs: number;
     httpStatus?: number;
+    providerCode?: string;
+    providerFailureClass?: ElevenLabsProviderFailureClass;
+    providerType?: string;
+    retryAfterSeconds?: number;
+    retryable?: boolean;
   }) {
     super(
       "The secure voice connection is temporarily unavailable. Try again.",
@@ -70,10 +86,162 @@ export class ElevenLabsRequestError extends Error {
     this.name = "ElevenLabsRequestError";
     this.category = input.category;
     this.durationMs = input.durationMs;
+    this.providerFailureClass = input.providerFailureClass ?? "unclassified";
+    this.retryAfterSeconds = input.retryAfterSeconds;
+    this.retryable = input.retryable ?? true;
     if (input.httpStatus !== undefined) {
       this.httpStatus = input.httpStatus;
     }
+    if (input.providerCode !== undefined) {
+      this.providerCode = input.providerCode;
+    }
+    if (input.providerType !== undefined) {
+      this.providerType = input.providerType;
+    }
   }
+}
+
+const providerMarkerSchema = z
+  .string()
+  .trim()
+  .max(128)
+  .regex(/^[A-Za-z0-9_.-]+$/)
+  .transform((value) => value.toLowerCase());
+
+const elevenLabsErrorFieldsSchema = z.object({
+  code: providerMarkerSchema.nullish(),
+  reason: providerMarkerSchema.nullish(),
+  status: providerMarkerSchema.nullish(),
+  type: providerMarkerSchema.nullish(),
+});
+
+const elevenLabsErrorEnvelopeSchema = z.object({
+  code: providerMarkerSchema.nullish(),
+  detail: elevenLabsErrorFieldsSchema.nullish(),
+  error: elevenLabsErrorFieldsSchema.nullish(),
+  reason: providerMarkerSchema.nullish(),
+  status: providerMarkerSchema.nullish(),
+  type: providerMarkerSchema.nullish(),
+});
+
+const BILLING_OR_QUOTA_MARKERS = new Set([
+  "billing_hard_limit_reached",
+  "billing_not_active",
+  "credit_balance_exhausted",
+  "insufficient_credit",
+  "insufficient_credits",
+  "insufficient_quota",
+  "payment_required",
+  "quota_exceeded",
+]);
+
+const ACCOUNT_OR_AUTHENTICATION_MARKERS = new Set([
+  "account_deactivated",
+  "forbidden",
+  "invalid_api_key",
+  "organization_deactivated",
+  "unauthorized",
+]);
+
+function parseRetryAfterSeconds(value: string | null): number | undefined {
+  if (value === null || !/^\d+$/.test(value)) {
+    return undefined;
+  }
+  const seconds = Number(value);
+  return Number.isSafeInteger(seconds) && seconds > 0
+    ? Math.min(seconds, 86_400)
+    : undefined;
+}
+
+function classifyHttpFailure(
+  response: Response,
+  responseText: string | null,
+): Readonly<{
+  providerCode?: string;
+  providerFailureClass: ElevenLabsProviderFailureClass;
+  providerType?: string;
+  retryAfterSeconds?: number;
+  retryable: boolean;
+}> {
+  let providerCode: string | undefined;
+  let providerType: string | undefined;
+  let markers: readonly string[] = [];
+  if (responseText !== null) {
+    try {
+      const parsed = elevenLabsErrorEnvelopeSchema.safeParse(
+        JSON.parse(responseText),
+      );
+      if (parsed.success) {
+        const envelope = parsed.data;
+        const fields = envelope.detail ?? envelope.error ?? envelope;
+        providerCode = fields.code ?? fields.status ?? undefined;
+        providerType = fields.type ?? fields.reason ?? undefined;
+        markers = [
+          envelope.code,
+          envelope.reason,
+          envelope.status,
+          envelope.type,
+          envelope.detail?.code,
+          envelope.detail?.reason,
+          envelope.detail?.status,
+          envelope.detail?.type,
+          envelope.error?.code,
+          envelope.error?.reason,
+          envelope.error?.status,
+          envelope.error?.type,
+        ].filter((value): value is string => typeof value === "string");
+      }
+    } catch {
+      // The bounded HTTP status remains sufficient for a safe classification.
+    }
+  }
+  if (markers.some((marker) => BILLING_OR_QUOTA_MARKERS.has(marker))) {
+    return {
+      ...(providerCode === undefined ? {} : { providerCode }),
+      providerFailureClass: "billing_or_quota",
+      ...(providerType === undefined ? {} : { providerType }),
+      retryable: false,
+    };
+  }
+  if (
+    response.status === 401 ||
+    response.status === 403 ||
+    markers.some((marker) => ACCOUNT_OR_AUTHENTICATION_MARKERS.has(marker))
+  ) {
+    return {
+      ...(providerCode === undefined ? {} : { providerCode }),
+      providerFailureClass: "account_or_authentication",
+      ...(providerType === undefined ? {} : { providerType }),
+      retryable: false,
+    };
+  }
+  if (
+    response.status === 408 ||
+    response.status === 409 ||
+    response.status === 425 ||
+    response.status === 429 ||
+    response.status >= 500
+  ) {
+    const retryAfterSeconds = parseRetryAfterSeconds(
+      response.headers.get("retry-after"),
+    );
+    return {
+      ...(providerCode === undefined ? {} : { providerCode }),
+      providerFailureClass: "transient",
+      ...(providerType === undefined ? {} : { providerType }),
+      ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+      retryable: true,
+    };
+  }
+  if (response.status >= 400 && response.status < 500) {
+    return {
+      ...(providerCode === undefined ? {} : { providerCode }),
+      providerFailureClass: "request_configuration",
+      ...(providerType === undefined ? {} : { providerType }),
+      retryable: false,
+    };
+  }
+  return { providerFailureClass: "unclassified", retryable: false };
 }
 
 async function readBoundedResponse(response: Response): Promise<string> {
@@ -163,7 +331,15 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
   #createRequestError(
     category: ElevenLabsFailureCategory,
     startedAt: number,
-    input: { cause?: unknown; httpStatus?: number } = {},
+    input: {
+      cause?: unknown;
+      httpStatus?: number;
+      providerCode?: string;
+      providerFailureClass?: ElevenLabsProviderFailureClass;
+      providerType?: string;
+      retryAfterSeconds?: number;
+      retryable?: boolean;
+    } = {},
   ): ElevenLabsRequestError {
     const elapsed = this.#clockMilliseconds() - startedAt;
     const durationMs = Number.isFinite(elapsed)
@@ -176,6 +352,19 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
       ...(input.httpStatus === undefined
         ? {}
         : { httpStatus: input.httpStatus }),
+      ...(input.providerCode === undefined
+        ? {}
+        : { providerCode: input.providerCode }),
+      ...(input.providerFailureClass === undefined
+        ? {}
+        : { providerFailureClass: input.providerFailureClass }),
+      ...(input.providerType === undefined
+        ? {}
+        : { providerType: input.providerType }),
+      ...(input.retryAfterSeconds === undefined
+        ? {}
+        : { retryAfterSeconds: input.retryAfterSeconds }),
+      ...(input.retryable === undefined ? {} : { retryable: input.retryable }),
     });
   }
 
@@ -204,9 +393,16 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
         signal: requestSignal,
       });
       if (!response.ok) {
-        await response.body?.cancel();
+        let responseText: string | null = null;
+        try {
+          responseText = await readBoundedResponse(response);
+        } catch {
+          responseText = null;
+        }
+        const classification = classifyHttpFailure(response, responseText);
         throw this.#createRequestError("http_non_success", startedAt, {
           httpStatus: response.status,
+          ...classification,
         });
       }
       const responseText = await readBoundedResponse(response);
@@ -241,10 +437,14 @@ export class ElevenLabsHttpClient implements ElevenLabsClient {
       if (timeoutSignal.aborted) {
         throw this.#createRequestError("request_timeout", startedAt, {
           cause: error,
+          providerFailureClass: "transient",
+          retryable: true,
         });
       }
       throw this.#createRequestError("fetch_failure", startedAt, {
         cause: error,
+        providerFailureClass: "transient",
+        retryable: true,
       });
     }
   }

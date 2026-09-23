@@ -7,6 +7,8 @@ import {
   prepareInterviewResponseSchema,
   type PrepareInterviewRequest,
 } from "@screenpilot/contracts/api/interview-preparation";
+import { summarizeInterviewResponseSchema } from "@screenpilot/contracts/api/interview-summary";
+import { voiceTokenResponseSchema } from "@screenpilot/contracts/api/voice-token";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 
@@ -23,6 +25,10 @@ import {
   CONVERSATION_FIRST_PLAN_VERSION,
   CONVERSATION_FIRST_PLAN,
 } from "./demo/conversation-first-plan.js";
+import {
+  createSummaryFixture,
+  createSummaryFixtureInput,
+} from "./test/interview-summary-fixtures.js";
 
 const ALLOWED_ORIGIN = "http://localhost:3000";
 const FIXED_NOW = new Date("2026-09-09T12:00:00.000Z");
@@ -51,6 +57,10 @@ function createProviderSpies() {
   };
   return {
     adapters,
+    analyzeCv,
+    createVoiceToken,
+    summarizeInterview,
+    verifyChallenge,
     operations: [
       verifyChallenge,
       analyzeCv,
@@ -84,6 +94,23 @@ function productionConfig(): BackendConfig {
     PAID_DEMO_ENABLED: "true",
     PROVIDER_MODE: "live",
     TURNSTILE_ALLOWED_HOSTNAMES: "demo.screenpilot.invalid",
+    TURNSTILE_SECRET_KEY: "not-a-real-turnstile-secret",
+    TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
+  });
+}
+
+function summaryRehearsalConfig(): BackendConfig {
+  return loadBackendConfig({
+    ALLOWED_ORIGINS: ALLOWED_ORIGIN,
+    ANONYMOUS_COOKIE_SECRET: SECURITY_SECRETS.anonymousCookieSecret,
+    APP_ENV: "local",
+    INTERVIEW_GRANT_SIGNING_SECRET:
+      SECURITY_SECRETS.interviewGrantSigningSecret,
+    LIVE_INTERVIEW_ENABLED: "false",
+    OPENAI_API_KEY: "not-a-real-openai-key",
+    PAID_DEMO_ENABLED: "true",
+    PROVIDER_MODE: "live",
+    TURNSTILE_ALLOWED_HOSTNAMES: "localhost",
     TURNSTILE_SECRET_KEY: "not-a-real-turnstile-secret",
     TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
   });
@@ -260,6 +287,104 @@ describe("ScreenPilot backend application", () => {
       }),
     ).toMatchObject({ entryMode: "conversation_first" });
     expectNoProviderCalls(providers.operations);
+  });
+
+  it("runs local summary rehearsal through fake voice and one live-style summary boundary", async () => {
+    const config = summaryRehearsalConfig();
+    const providers = createProviderSpies();
+    providers.verifyChallenge.mockImplementation(({ expectedAction }) =>
+      Promise.resolve({
+        action: expectedAction,
+        errorCodes: [],
+        hostname: "localhost",
+        success: true,
+      }),
+    );
+    providers.createVoiceToken.mockResolvedValue({
+      conversationId: "screenpilot-fake-conversation",
+      conversationToken: "screenpilot-fake-conversation-token",
+    });
+    providers.summarizeInterview.mockImplementation((input) =>
+      Promise.resolve({
+        summary: createSummaryFixture(input),
+        usage: {
+          cachedInputTokens: 0,
+          inputTokens: 1_000,
+          outputTokens: 500,
+        },
+      }),
+    );
+    const app = createApp({
+      clock: () => FIXED_NOW,
+      config,
+      idGenerator: randomUUID,
+      providerAdapters: providers.adapters,
+      securitySecrets: SECURITY_SECRETS,
+    });
+    const agent = request.agent(app);
+
+    const bootstrap = await agent
+      .get("/v1/demo/bootstrap")
+      .set("Origin", ALLOWED_ORIGIN)
+      .expect(200);
+    expect(bootstrapResponseSchema.parse(bootstrap.body)).toMatchObject({
+      effectiveMode: "summary_rehearsal",
+      paidOperationsEnabled: true,
+      providerMode: "live",
+    });
+
+    const preparation = await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(VALID_PREPARE_REQUEST)
+      .expect(200);
+    const interviewGrant = prepareInterviewResponseSchema.parse(
+      preparation.body,
+    ).interviewGrant;
+
+    const cvAttempt = await agent
+      .post("/v1/cv/analyze")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        clientRequestId: "00000000-0000-4000-8000-000000000011",
+        cvText: "Synthetic CV content. ".repeat(30),
+        turnstileToken: "unused-cv-challenge",
+      })
+      .expect(503);
+    expect(apiErrorSchema.parse(cvAttempt.body).error.code).toBe(
+      "CAPACITY_REACHED",
+    );
+    expect(providers.analyzeCv).not.toHaveBeenCalled();
+
+    const voiceAuthorization = await agent
+      .post("/v1/voice/token")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        interviewGrant,
+        turnstileToken: "single-use-voice-challenge",
+      })
+      .expect(200);
+    expect(voiceTokenResponseSchema.parse(voiceAuthorization.body)).toEqual({
+      conversationId: "screenpilot-fake-conversation",
+      conversationToken: "screenpilot-fake-conversation-token",
+    });
+
+    const summaryInput = createSummaryFixtureInput();
+    const summary = await agent
+      .post("/v1/interview/summary")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        interviewGrant,
+        turnstileToken: "single-use-summary-challenge",
+        ...summaryInput,
+      })
+      .expect(200);
+    expect(
+      summarizeInterviewResponseSchema.parse(summary.body).summary,
+    ).toEqual(createSummaryFixture(summaryInput));
+    expect(providers.verifyChallenge).toHaveBeenCalledTimes(2);
+    expect(providers.createVoiceToken).toHaveBeenCalledOnce();
+    expect(providers.summarizeInterview).toHaveBeenCalledOnce();
   });
 
   it("rejects missing correlation, disallowed origins, and unsafe body shapes", async () => {

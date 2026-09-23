@@ -2,7 +2,7 @@
 
 Status: Required final pre-deployment audit<br>
 Milestone: Milestone 4 — public-demo hardening<br>
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-025<br>
 Suggested commit: `SP-025A: audit release candidate`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -109,6 +109,11 @@ responsive matrix, provider smoke, or manual release-QA pass.
 - [ ] Remove dead code, unused exports/imports/dependencies/assets, stale flags,
   unreachable branches, superseded implementations, debug routes/output,
   obsolete fixtures, and resolved/stale TODO/FIXME comments.
+- [ ] Confirm the removed timing benchmark left no fixed-count constants,
+  minimum-sample or percentile-gate statuses, gate-only outlier/report branches,
+  obsolete batch-form UI, compatibility exports, or quota-specific tests and
+  fixtures. Retain only the bounded fake/live raw diagnostics behavior approved
+  by the 2026-09-23 owner decision.
 - [ ] Audit unsafe casts, non-null assertions, swallowed/empty catches,
   log-and-continue state corruption, unhandled promises, ad hoc error response
   shapes, and vague public types; fix every material instance.

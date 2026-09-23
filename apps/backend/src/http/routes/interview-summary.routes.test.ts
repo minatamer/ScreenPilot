@@ -9,7 +9,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createApp, type AppSecuritySecrets } from "../../app.js";
 import { loadBackendConfig } from "../../config/load-backend-config.js";
-import { OpenAiRequestError } from "../../providers/openai/openai-client.js";
+import {
+  OpenAiHttpClient,
+  OpenAiRequestError,
+} from "../../providers/openai/openai-client.js";
 import { createProviderAdapters } from "../../providers/provider-adapters.js";
 import {
   createSummaryFixture,
@@ -157,6 +160,61 @@ function correctedRoleFixture() {
   return input;
 }
 
+function failedLiveScenarioFixture() {
+  const input = createSummaryFixtureInput({ includeFollowup: true });
+  const questionTurn = input.transcript.find(
+    (turn) => turn.id === "turn-candidate_questions",
+  );
+  if (!questionTurn) {
+    throw new Error("The candidate-question fixture is incomplete.");
+  }
+  questionTurn.text =
+    "How large is the synthetic team and what onboarding is provided?";
+  for (const insight of input.insights) {
+    if (insight.category === "candidate_question") {
+      insight.value = questionTurn.text;
+    } else if (insight.category === "follow_up_needed") {
+      insight.value =
+        "A human recruiter must confirm synthetic team size and onboarding.";
+    }
+  }
+  input.transcript.push(
+    {
+      id: "pilot-fallback-and-next-question",
+      occurredAt: "2026-09-23T09:01:00.000Z",
+      sequence: 30,
+      speaker: "interviewer",
+      status: "final",
+      text: "A human recruiter must confirm that. What matters next?",
+    },
+    {
+      id: "candidate-continued-answer",
+      occurredAt: "2026-09-23T09:01:05.000Z",
+      sequence: 31,
+      speaker: "candidate",
+      status: "final",
+      text: "Mentorship and clear priorities matter most.",
+    },
+    {
+      id: "pilot-final-question",
+      occurredAt: "2026-09-23T09:01:10.000Z",
+      sequence: 32,
+      speaker: "interviewer",
+      status: "final",
+      text: "Any final questions?",
+    },
+    {
+      id: "candidate-final-no",
+      occurredAt: "2026-09-23T09:01:15.000Z",
+      sequence: 33,
+      speaker: "candidate",
+      status: "final",
+      text: "No.",
+    },
+  );
+  return input;
+}
+
 describe("POST /v1/interview/summary", () => {
   it("returns one no-store evidence-linked summary with coarse usage", async () => {
     const { app, providers } = createTestApp();
@@ -193,6 +251,42 @@ describe("POST /v1/interview/summary", () => {
     const providerInput = providers.summarizeInterview.mock.calls[0]?.[0];
     expect(providerInput).not.toHaveProperty("interviewGrant");
     expect(providerInput).not.toHaveProperty("turnstileToken");
+  });
+
+  it("accepts the realistic failed-live scenario and calls the fake summary adapter once", async () => {
+    const { app, providers } = createTestApp();
+    const agent = request.agent(app);
+    const input = summaryRequest(
+      await prepareGrant(agent),
+      failedLiveScenarioFixture(),
+    );
+
+    const result = await agent
+      .post("/v1/interview/summary")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect(200);
+
+    expect(
+      summarizeInterviewResponseSchema.safeParse(result.body).success,
+    ).toBe(true);
+    expect(providers.verifyChallenge).toHaveBeenCalledOnce();
+    expect(providers.summarizeInterview).toHaveBeenCalledOnce();
+    const providerInput = providers.summarizeInterview.mock.calls[0]?.[0];
+    expect(providerInput?.transcript.at(-1)).toMatchObject({
+      id: "candidate-final-no",
+      text: "No.",
+    });
+    expect(
+      providerInput?.insights.some(
+        (insight) => insight.category === "candidate_question",
+      ),
+    ).toBe(true);
+    expect(
+      providerInput?.insights.some(
+        (insight) => insight.category === "follow_up_needed",
+      ),
+    ).toBe(true);
   });
 
   it("rejects origin, cookie, grant binding, and invalid evidence before providers", async () => {
@@ -448,10 +542,101 @@ describe("POST /v1/interview/summary", () => {
       retryable: true,
     });
     const logs = logChunks.join("");
-    expect(logs).toContain('"providerFailureCategory":"request_timeout"');
+    expect(logs).toContain('"providerType":"request_timeout"');
+    expect(logs).toContain('"providerRetryable":true');
     expect(logs).not.toContain("PRIVATE SUMMARY TRANSCRIPT CONTENT");
     expect(logs).not.toContain(input.interviewGrant);
     expect(logs).not.toContain(input.turnstileToken);
+  });
+
+  it("maps a permanent provider account failure without a Retry-After header", async () => {
+    const destination = new PassThrough();
+    destination.setEncoding("utf8");
+    const logChunks: string[] = [];
+    destination.on("data", (chunk: string) => logChunks.push(chunk));
+    const config = fakeConfig({ APP_ENV: "local" });
+    const providers = providerSpies();
+    providers.summarizeInterview.mockRejectedValueOnce(
+      new OpenAiRequestError({
+        category: "http_non_success",
+        durationMs: 27,
+        httpStatus: 429,
+        providerFailureClass: "billing_or_quota",
+        retryable: false,
+      }),
+    );
+    const { app } = createTestApp(providers, {
+      config,
+      logger: createBackendLogger(config, destination),
+    });
+    const agent = request.agent(app);
+    const input = summaryRequest(await prepareGrant(agent));
+
+    const result = await agent
+      .post("/v1/interview/summary")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect(503);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    expect(apiErrorSchema.parse(result.body).error).toMatchObject({
+      code: "SUMMARY_FAILED",
+      retryable: false,
+    });
+    expect(result.headers["retry-after"]).toBeUndefined();
+    const logs = logChunks.join("");
+    expect(logs).toContain('"providerHttpStatus":429');
+    expect(logs).toContain('"providerFailureClass":"billing_or_quota"');
+    expect(logs).not.toContain(input.interviewGrant);
+    expect(logs).not.toContain(input.turnstileToken);
+  });
+
+  it("omits Retry-After zero through provider, use case, and JSON API mapping", async () => {
+    const providers = providerSpies();
+    const client = new OpenAiHttpClient({
+      apiKey: "unit-test-openai-key-not-real",
+      fetchImplementation: vi.fn<typeof fetch>().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            error: { code: "rate_limit_exceeded", type: "requests" },
+          }),
+          { headers: { "retry-after": "0" }, status: 429 },
+        ),
+      ),
+      model: "gpt-5.4-mini",
+      reasoning: "none",
+      store: false,
+      timeoutMs: 100,
+    });
+    providers.summarizeInterview.mockImplementationOnce(async () => {
+      await client.createStructuredResponse({
+        input: "synthetic summary input",
+        instructions: "Return the required structure.",
+        outputJsonSchema: { type: "object" },
+        outputSchemaName: "summary_retry_after_zero",
+        parseOutput: (value: unknown) => value,
+      });
+      throw new Error("Expected the synthetic provider failure.");
+    });
+    const { app } = createTestApp(providers);
+    const agent = request.agent(app);
+    const input = summaryRequest(await prepareGrant(agent));
+
+    const result = await agent
+      .post("/v1/interview/summary")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect("content-type", /json/u)
+      .expect(503);
+
+    const mappedError = apiErrorSchema.parse(result.body).error;
+    expect(mappedError).toMatchObject({
+      code: "SUMMARY_FAILED",
+      retryable: true,
+    });
+    expect(mappedError).not.toHaveProperty("retryAfterSeconds");
+    expect(result.headers["retry-after"]).toBeUndefined();
+    expect(providers.summarizeInterview).toHaveBeenCalledOnce();
   });
 
   it.each([

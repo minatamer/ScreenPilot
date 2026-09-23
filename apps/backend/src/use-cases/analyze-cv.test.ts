@@ -8,6 +8,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 import { FakeOpenAi } from "../providers/openai/fake-openai.js";
+import { OpenAiRequestError } from "../providers/openai/openai-client.js";
 import type { ProviderAdapters } from "../providers/provider-adapters.js";
 import {
   FAKE_TURNSTILE_PASS_TOKEN,
@@ -421,5 +422,39 @@ describe("analyzeCv", () => {
       retryable: true,
     });
     await expect(operation).rejects.not.toThrow("private provider failure");
+  });
+
+  it("maps a classified OpenAI account failure to safe owner action without Retry", async () => {
+    const cvText = await fixture("graduate.txt");
+    const sensitiveMessage =
+      "PRIVATE BILLING DETAIL acct_secret_candidate@example.invalid";
+    const analyzer: CvAnalyzer = {
+      analyzeCv: () =>
+        Promise.reject(
+          new OpenAiRequestError({
+            category: "http_non_success",
+            cause: new Error(sensitiveMessage),
+            durationMs: 18,
+            httpStatus: 429,
+            providerCode: "credit_balance_exhausted",
+            providerFailureClass: "billing_or_quota",
+            providerType: "requests",
+            retryable: false,
+          }),
+        ),
+    };
+
+    const failure = await createUseCase({ analyzer })(
+      requestFor(cvText),
+      ANONYMOUS_SESSION_ID,
+    ).catch((error: unknown) => error);
+
+    expect(failure).toMatchObject({
+      code: "PROVIDER_UNAVAILABLE",
+      message:
+        "CV analysis is unavailable right now. The demo owner must check the analysis service before another attempt.",
+      retryable: false,
+    });
+    expect(String(failure)).not.toContain(sensitiveMessage);
   });
 });

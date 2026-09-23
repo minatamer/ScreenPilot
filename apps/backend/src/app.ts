@@ -114,7 +114,8 @@ export function createApp(options: CreateAppOptions): Express {
     admission: options.cvAnalysisAdmission ?? (() => "allowed"),
     analyzer: options.providerAdapters.cvAnalyzer,
     enabled:
-      parsedConfig.providerMode === "fake" || parsedConfig.paidDemoEnabled,
+      parsedConfig.effectiveMode === "deterministic_fake" ||
+      parsedConfig.effectiveMode === "standard_live",
     grantService,
     grantTtlSeconds: parsedConfig.limits.interviewGrantTtlSeconds,
     idGenerator,
@@ -122,16 +123,14 @@ export function createApp(options: CreateAppOptions): Express {
   });
   const issueVoiceToken = createVoiceToken({
     admission: options.voiceTokenAdmission ?? (() => "allowed"),
-    enabled:
-      parsedConfig.providerMode === "fake" || parsedConfig.paidDemoEnabled,
+    enabled: parsedConfig.effectiveMode !== "paid_disabled",
     grantService,
     provider: options.providerAdapters.voiceTokenProvider,
     verifier: options.providerAdapters.challengeVerifier,
   });
   const generateInterviewSummary = createGenerateInterviewSummary({
     admission: options.summaryAdmission ?? (() => "allowed"),
-    enabled:
-      parsedConfig.providerMode === "fake" || parsedConfig.paidDemoEnabled,
+    enabled: parsedConfig.effectiveMode !== "paid_disabled",
     grantService,
     summarizer: options.providerAdapters.interviewSummarizer,
     verifier: options.providerAdapters.challengeVerifier,

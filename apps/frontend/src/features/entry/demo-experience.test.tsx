@@ -26,6 +26,42 @@ import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
 import { DemoExperience } from "./demo-experience";
 import { useDemoBootstrap } from "./use-demo-bootstrap";
 
+const controlledBrowserBoundaries = vi.hoisted(() => ({
+  elevenLabsBridge: vi.fn(() => null),
+  openMicrophone: vi.fn(),
+  stopMicrophone: vi.fn(),
+  turnstile: vi.fn(),
+}));
+
+vi.mock(
+  "@/features/abuse-protection/turnstile-client",
+  async (importOriginal) => {
+    const actual =
+      await importOriginal<
+        typeof import("@/features/abuse-protection/turnstile-client")
+      >();
+    return {
+      ...actual,
+      executeManagedTurnstileChallenge: controlledBrowserBoundaries.turnstile,
+    };
+  },
+);
+
+vi.mock("@/features/preflight/microphone-readiness", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/features/preflight/microphone-readiness")
+    >();
+  return {
+    ...actual,
+    openBrowserMicrophoneMonitor: controlledBrowserBoundaries.openMicrophone,
+  };
+});
+
+vi.mock("@/features/interview/elevenlabs-voice-session", () => ({
+  ElevenLabsVoiceSession: controlledBrowserBoundaries.elevenLabsBridge,
+}));
+
 const router = vi.hoisted(() => ({
   push: vi.fn(),
   replace: vi.fn(),
@@ -116,6 +152,7 @@ function bootstrapResponse() {
       pdfBytes: 5_242_880,
       pdfPages: 8,
     },
+    effectiveMode: "deterministic_fake",
     paidOperationsEnabled: false,
     privacyNoticeVersion: "2026-09-11",
     providerMode: "fake",
@@ -130,6 +167,7 @@ function bootstrapResponse() {
 function paidDisabledLiveBootstrapResponse() {
   return {
     ...bootstrapResponse(),
+    effectiveMode: "paid_disabled",
     providerMode: "live",
   } as const;
 }
@@ -141,7 +179,15 @@ function paidEnabledLiveBootstrapResponse() {
       ...paidDisabledLiveBootstrapResponse().abuseProtection,
       siteKey: "stale-public-site-key",
     },
+    effectiveMode: "standard_live",
     paidOperationsEnabled: true,
+  } as const;
+}
+
+function summaryRehearsalBootstrapResponse() {
+  return {
+    ...paidEnabledLiveBootstrapResponse(),
+    effectiveMode: "summary_rehearsal",
   } as const;
 }
 
@@ -151,6 +197,30 @@ function preparedResponse() {
     interviewGrant: "signed-conversation-first-grant",
     expiresAt: new Date(Date.now() + 15 * 60 * 1_000).toISOString(),
   };
+}
+
+function summaryResponse() {
+  const limitation = "These AI-organized notes require human review.";
+  return {
+    summary: {
+      overview: "Key conversation points, organized for review.",
+      confirmedFacts: [],
+      clarifications: [],
+      topicsCovered: [],
+      topicsNotCovered: [],
+      communicationNotes: [],
+      candidateQuestions: [],
+      humanFollowups: [],
+      limitations: [limitation],
+    },
+    usage: {
+      cachedInputTokens: 0,
+      inputTokens: 120,
+      outputTokens: 40,
+      estimatedCostUsd: 0.001,
+    },
+    limitations: [limitation],
+  } as const;
 }
 
 function storeRestoredPreflightSession(): void {
@@ -178,6 +248,52 @@ function storeRestoredPreflightSession(): void {
   );
 }
 
+function storeRestoredCompletedSession(
+  staleBootstrap = paidEnabledLiveBootstrapResponse(),
+): void {
+  const { demoContext, ...runtimeConfig } = staleBootstrap;
+  const preparation = preparedResponse();
+  const now = Date.now();
+  window.sessionStorage.setItem(
+    SESSION_STORAGE_KEY,
+    JSON.stringify({
+      schemaVersion: 3,
+      stage: "interview_complete",
+      entryMode: "conversation_first",
+      createdAt: new Date(now - 5 * 60 * 1_000).toISOString(),
+      expiresAt: new Date(now + 60 * 60 * 1_000).toISOString(),
+      runtimeConfig,
+      demoContext,
+      screeningPlan: preparation.plan,
+      interviewGrant: preparation.interviewGrant,
+      interviewGrantExpiresAt: preparation.expiresAt,
+      voice: {
+        conversationId: "restored-completed-conversation",
+        status: "ended",
+        startedAt: new Date(now - 2 * 60 * 1_000).toISOString(),
+        endedAt: new Date(now - 1_000).toISOString(),
+        endReason: "Interview completed by the interviewer.",
+      },
+      interviewCompletion: {
+        reason: "agent_completed",
+        elapsedSeconds: 119,
+      },
+      transcript: [
+        {
+          id: "restored-candidate-turn",
+          sequence: 0,
+          speaker: "candidate",
+          status: "final",
+          text: "I am looking for a collaborative product team.",
+          occurredAt: new Date(now - 60_000).toISOString(),
+        },
+      ],
+      insights: [],
+      topicProgress: [],
+    }),
+  );
+}
+
 function RestoredBootstrapStatus() {
   const { runtimeConfigStatus } = useDemoBootstrap();
 
@@ -189,6 +305,17 @@ function RestoredBootstrapStatus() {
 describe("DemoExperience preparation paths", () => {
   beforeEach(() => {
     vi.mocked(extractPdfText).mockReset();
+    controlledBrowserBoundaries.elevenLabsBridge.mockClear();
+    controlledBrowserBoundaries.stopMicrophone.mockReset();
+    controlledBrowserBoundaries.openMicrophone.mockReset();
+    controlledBrowserBoundaries.openMicrophone.mockResolvedValue({
+      deviceLabel: "Synthetic test microphone",
+      stop: controlledBrowserBoundaries.stopMicrophone,
+    });
+    controlledBrowserBoundaries.turnstile.mockReset();
+    controlledBrowserBoundaries.turnstile.mockResolvedValue(
+      FAKE_TURNSTILE_TOKEN,
+    );
   });
 
   afterEach(() => {
@@ -196,6 +323,255 @@ describe("DemoExperience preparation paths", () => {
     vi.clearAllMocks();
     window.sessionStorage.clear();
   });
+
+  it("labels summary rehearsal, disables CV entry, and keeps conversation preparation deterministic", async () => {
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      if (url === "/v1/demo/bootstrap") {
+        return Promise.resolve(
+          jsonResponse(summaryRehearsalBootstrapResponse()),
+        );
+      }
+      if (url === "/v1/interview/prepare") {
+        return Promise.resolve(jsonResponse(preparedResponse()));
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    const rehearsalStatus = await screen.findByRole("status", {
+      name: "Summary rehearsal status",
+    });
+    expect(rehearsalStatus).toHaveTextContent("Interview voice is simulated");
+    expect(rehearsalStatus).toHaveTextContent(
+      "View summary can make one live, metered summary request",
+    );
+    expect(
+      screen.getByRole("button", { name: "CV analysis unavailable" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(
+        "This local rehearsal uses the synthetic conversation-first fixture; CV analysis is disabled.",
+      ),
+    ).toBeVisible();
+
+    fireEvent.click(screen.getByRole("button", { name: "Start without a CV" }));
+    expect(
+      await screen.findByRole("heading", { name: "How the interview works" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("status", { name: "Summary rehearsal status" }),
+    ).toBeVisible();
+    expect(browserFetch.mock.calls.map(([input]) => requestUrl(input))).toEqual(
+      ["/v1/demo/bootstrap", "/v1/interview/prepare"],
+    );
+  });
+
+  it("runs summary rehearsal through fake voice and starts exactly one summary only after View summary", async () => {
+    window.history.replaceState({}, "", "/demo?diagnostics=timings");
+    const requestedUrls: string[] = [];
+    let summaryRequest: Record<string, unknown> | undefined;
+    const browserFetch = vi.fn<typeof fetch>((input, options) => {
+      const url = requestUrl(input);
+      requestedUrls.push(url);
+      if (url === "/v1/demo/bootstrap") {
+        return Promise.resolve(
+          jsonResponse(summaryRehearsalBootstrapResponse()),
+        );
+      }
+      if (url === "/v1/interview/prepare") {
+        return Promise.resolve(jsonResponse(preparedResponse()));
+      }
+      if (url === "/v1/voice/token") {
+        return Promise.resolve(
+          jsonResponse({
+            conversationId: "fake-summary-rehearsal-conversation",
+            conversationToken: "fake-summary-rehearsal-token",
+          }),
+        );
+      }
+      if (url === "/v1/interview/summary") {
+        summaryRequest = requestJsonBody(options);
+        return Promise.resolve(jsonResponse(summaryResponse()));
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    const rendered = render(
+      <StrictMode>
+        <DemoSessionProvider>
+          <DemoExperience />
+        </DemoSessionProvider>
+      </StrictMode>,
+    );
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Start without a CV" }),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "How the interview works" }),
+    ).toBeVisible();
+    fireEvent.click(
+      screen.getByRole("checkbox", {
+        name: /I understand how my microphone and answers will be used/u,
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Check microphone" }));
+    expect(await screen.findByText("Microphone ready")).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Start interview" }));
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "Pilot is interviewing",
+      }),
+    ).toBeVisible();
+    expect(controlledBrowserBoundaries.elevenLabsBridge).not.toHaveBeenCalled();
+
+    expect(
+      await screen.findByRole(
+        "heading",
+        { name: "Interview complete" },
+        { timeout: 12_000 },
+      ),
+    ).toBeVisible();
+    expect(
+      requestedUrls.filter((url) => url === "/v1/interview/summary"),
+    ).toHaveLength(0);
+    expect(
+      JSON.parse(
+        screen.getByLabelText<HTMLTextAreaElement>("Raw timing JSON").value,
+      ),
+    ).toMatchObject({ source: "fake" });
+
+    fireEvent.click(screen.getByRole("button", { name: "View summary" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Your conversation, organized as connected evidence.",
+      }),
+    ).toBeVisible();
+    await waitFor(() => {
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    });
+    expect(controlledBrowserBoundaries.turnstile).toHaveBeenCalledTimes(2);
+    expect(controlledBrowserBoundaries.elevenLabsBridge).not.toHaveBeenCalled();
+
+    expect(summaryRequest).toMatchObject({
+      entryMode: "conversation_first",
+      interviewGrant: "signed-conversation-first-grant",
+      plan: { entryMode: "conversation_first" },
+      turnstileToken: FAKE_TURNSTILE_TOKEN,
+    });
+    expect(summaryRequest).not.toHaveProperty("cv");
+    const transcript = summaryRequest?.["transcript"] as
+      Record<string, unknown>[] | undefined;
+    expect(transcript).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          speaker: "candidate",
+          status: "final",
+          text: "No, I do not have any other questions.",
+        }),
+      ]),
+    );
+    expect(
+      transcript?.filter((turn) => turn["speaker"] === "candidate"),
+    ).toHaveLength(7);
+    const unsupportedQuestionTurn = transcript?.find(
+      (turn) =>
+        turn["speaker"] === "candidate" &&
+        typeof turn["text"] === "string" &&
+        turn["text"].includes(
+          "What onboarding and work-arrangement details can a recruiter share?",
+        ),
+    );
+    expect(unsupportedQuestionTurn).toBeDefined();
+
+    const insights = summaryRequest?.["insights"] as
+      Record<string, unknown>[] | undefined;
+    expect(
+      insights?.every((insight) => insight["source"] === "Candidate"),
+    ).toBe(true);
+    expect(
+      insights?.every(
+        (insight) =>
+          Array.isArray(insight["cvFactIds"]) &&
+          insight["cvFactIds"].length === 0,
+      ),
+    ).toBe(true);
+    expect(insights).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          category: "candidate_question",
+          evidenceTurnIds: [unsupportedQuestionTurn?.["id"]],
+          source: "Candidate",
+          value:
+            "What onboarding and work-arrangement details can a recruiter share?",
+        }),
+        expect.objectContaining({
+          category: "follow_up_needed",
+          evidenceTurnIds: [unsupportedQuestionTurn?.["id"]],
+          source: "Candidate",
+          value:
+            "A human recruiter must confirm the unsupported onboarding and work-arrangement details.",
+        }),
+      ]),
+    );
+    const topicProgress = summaryRequest?.["topicProgress"] as
+      Record<string, unknown>[] | undefined;
+    expect(topicProgress).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          evidenceTurnIds: [unsupportedQuestionTurn?.["id"]],
+          status: "covered",
+          topicKey: "candidate_questions",
+        }),
+        expect.objectContaining({
+          evidenceTurnIds: [unsupportedQuestionTurn?.["id"]],
+          status: "needs_clarification",
+          topicKey: "clarifications_and_followups",
+        }),
+        expect.objectContaining({
+          status: "covered",
+          topicKey: "motivation_and_next_role",
+        }),
+      ]),
+    );
+    const plan = summaryRequest?.["plan"] as
+      | {
+          roleClarification?: { cvFactIds?: unknown[] };
+          topics?: { cvFactIds?: unknown[] }[];
+        }
+      | undefined;
+    expect(plan?.roleClarification?.cvFactIds).toEqual([]);
+    expect(plan?.topics?.every((topic) => topic.cvFactIds?.length === 0)).toBe(
+      true,
+    );
+
+    rendered.rerender(
+      <StrictMode>
+        <DemoSessionProvider>
+          <DemoExperience />
+        </DemoSessionProvider>
+      </StrictMode>,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Organized notes" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Evidence map" }));
+    await waitFor(() => {
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    });
+    expect(controlledBrowserBoundaries.elevenLabsBridge).not.toHaveBeenCalled();
+  }, 20_000);
 
   it("keeps live paid-disabled CV and voice actions unavailable", async () => {
     const browserFetch = vi.fn<typeof fetch>((input) => {
@@ -328,6 +704,7 @@ describe("DemoExperience preparation paths", () => {
       demoContext: bootstrapResponse().demoContext,
       runtimeConfig: {
         abuseProtection: bootstrapResponse().abuseProtection,
+        effectiveMode: "deterministic_fake",
         limits: bootstrapResponse().limits,
         paidOperationsEnabled: false,
         privacyNoticeVersion: bootstrapResponse().privacyNoticeVersion,
@@ -453,6 +830,252 @@ describe("DemoExperience preparation paths", () => {
     expect(browserFetch.mock.calls.map(([input]) => requestUrl(input))).toEqual(
       ["/v1/demo/bootstrap", "/v1/demo/bootstrap"],
     );
+  });
+
+  it("keeps a restored completed session summary-idle while runtime refresh is pending", async () => {
+    storeRestoredCompletedSession();
+    const refreshResponse = deferred<Response>();
+    const requestedUrls: string[] = [];
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      requestedUrls.push(url);
+      if (url === "/v1/demo/bootstrap") {
+        return refreshResponse.promise;
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    const rendered = render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Interview complete" }),
+    ).toBeVisible();
+    await waitFor(() => {
+      expect(browserFetch).toHaveBeenCalledOnce();
+    });
+    expect(requestedUrls).toEqual(["/v1/demo/bootstrap"]);
+    expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+
+    rendered.unmount();
+  });
+
+  it("keeps a restored summary rehearsal idle until View summary, then starts exactly once", async () => {
+    storeRestoredCompletedSession();
+    const requestedUrls: string[] = [];
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      requestedUrls.push(url);
+      if (url === "/v1/demo/bootstrap") {
+        return Promise.resolve(
+          jsonResponse(summaryRehearsalBootstrapResponse()),
+        );
+      }
+      if (url === "/v1/interview/summary") {
+        return Promise.resolve(jsonResponse(summaryResponse()));
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    const rendered = render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("status", {
+        name: "Summary rehearsal status",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("heading", { name: "Interview complete" }),
+    ).toBeVisible();
+    expect(requestedUrls).toEqual(["/v1/demo/bootstrap"]);
+    expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "View summary" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Your conversation, organized as connected evidence.",
+      }),
+    ).toBeVisible();
+    await waitFor(() => {
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    });
+    expect(controlledBrowserBoundaries.turnstile).toHaveBeenCalledOnce();
+
+    rendered.rerender(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+    await waitFor(() => {
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    });
+  });
+
+  it.each([
+    ["deterministic fake", bootstrapResponse()],
+    ["standard live", paidEnabledLiveBootstrapResponse()],
+  ] as const)(
+    "starts one restored %s background summary only after runtime refresh is ready",
+    async (_modeLabel, currentBootstrap) => {
+      storeRestoredCompletedSession();
+      const refreshResponse = deferred<Response>();
+      const requestedUrls: string[] = [];
+      const browserFetch = vi.fn<typeof fetch>((input) => {
+        const url = requestUrl(input);
+        requestedUrls.push(url);
+        if (url === "/v1/demo/bootstrap") {
+          return refreshResponse.promise;
+        }
+        if (url === "/v1/interview/summary") {
+          return Promise.resolve(jsonResponse(summaryResponse()));
+        }
+        return Promise.reject(new Error(`Unexpected request: ${url}`));
+      });
+      vi.stubGlobal("fetch", browserFetch);
+
+      render(
+        <DemoSessionProvider>
+          <DemoExperience />
+        </DemoSessionProvider>,
+      );
+
+      expect(
+        await screen.findByRole("heading", { name: "Interview complete" }),
+      ).toBeVisible();
+      await waitFor(() => {
+        expect(browserFetch).toHaveBeenCalledOnce();
+      });
+      expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+
+      await act(async () => {
+        refreshResponse.resolve(jsonResponse(currentBootstrap));
+        await Promise.resolve();
+      });
+      await waitFor(() => {
+        expect(
+          requestedUrls.filter((url) => url === "/v1/interview/summary"),
+        ).toHaveLength(1);
+      });
+      expect(controlledBrowserBoundaries.turnstile).toHaveBeenCalledOnce();
+
+      fireEvent.click(screen.getByRole("button", { name: "View summary" }));
+      expect(
+        await screen.findByRole("heading", {
+          name: "Your conversation, organized as connected evidence.",
+        }),
+      ).toBeVisible();
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    },
+  );
+
+  it("keeps a restored paid-disabled completion fully closed after refresh", async () => {
+    storeRestoredCompletedSession();
+    const requestedUrls: string[] = [];
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      requestedUrls.push(url);
+      if (url === "/v1/demo/bootstrap") {
+        return Promise.resolve(
+          jsonResponse(paidDisabledLiveBootstrapResponse()),
+        );
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Interview complete" }),
+    ).toBeVisible();
+    await waitFor(() => {
+      expect(window.sessionStorage.getItem(SESSION_STORAGE_KEY)).toContain(
+        '"effectiveMode":"paid_disabled"',
+      );
+    });
+    expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+    expect(requestedUrls).toEqual(["/v1/demo/bootstrap"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "View summary" }));
+    expect(
+      await screen.findByRole("heading", {
+        name: "Your conversation, organized as connected evidence.",
+      }),
+    ).toBeVisible();
+    expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+    expect(requestedUrls).toEqual(["/v1/demo/bootstrap"]);
+  });
+
+  it("keeps a failed completed-session refresh closed until an eligible retry succeeds", async () => {
+    storeRestoredCompletedSession();
+    const retryResponse = deferred<Response>();
+    const requestedUrls: string[] = [];
+    let bootstrapRequestCount = 0;
+    const browserFetch = vi.fn<typeof fetch>((input) => {
+      const url = requestUrl(input);
+      requestedUrls.push(url);
+      if (url === "/v1/demo/bootstrap") {
+        bootstrapRequestCount += 1;
+        return bootstrapRequestCount === 1
+          ? Promise.reject(new TypeError("Synthetic bootstrap outage."))
+          : retryResponse.promise;
+      }
+      if (url === "/v1/interview/summary") {
+        return Promise.resolve(jsonResponse(summaryResponse()));
+      }
+      return Promise.reject(new Error(`Unexpected request: ${url}`));
+    });
+    vi.stubGlobal("fetch", browserFetch);
+
+    render(
+      <DemoSessionProvider>
+        <DemoExperience />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        name: "The safety check could not refresh",
+      }),
+    ).toBeVisible();
+    expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+    expect(requestedUrls).toEqual(["/v1/demo/bootstrap"]);
+
+    fireEvent.click(screen.getByRole("button", { name: "Retry safety check" }));
+    await waitFor(() => {
+      expect(browserFetch).toHaveBeenCalledTimes(2);
+    });
+    expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+
+    await act(async () => {
+      retryResponse.resolve(jsonResponse(bootstrapResponse()));
+      await Promise.resolve();
+    });
+    await waitFor(() => {
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    });
+    expect(controlledBrowserBoundaries.turnstile).toHaveBeenCalledOnce();
   });
 
   it("uses only bootstrap and deterministic preparation before shared preflight", async () => {

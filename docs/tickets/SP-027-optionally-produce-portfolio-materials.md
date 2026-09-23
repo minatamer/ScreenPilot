@@ -2,7 +2,7 @@
 
 Status: Optional; cannot block release  
 Milestone: Milestone 6 — optional portfolio packaging  
-Last synchronized: 2026-09-22<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-018, SP-021B, SP-025A, SP-026<br>
 Suggested commit: `SP-027: prepare the ScreenPilot portfolio release`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -12,14 +12,16 @@ Ticket index: [`README.md`](README.md)
 
 ## Objective
 
-If explicitly approved after deployment, package the already-released demo so an Upwork visitor can understand the product, architecture, tool breadth, privacy boundary, measured performance, and responsive quality quickly.
+If explicitly approved after deployment, package the already-released demo so an Upwork visitor can understand the product, architecture, tool breadth, privacy boundary, and responsive quality quickly.
 
 ## Standalone implementation context
 
 - SP-026 already completes the releasable demo. This ticket is presentation work only and may be skipped.
 - The portfolio story shows two equal entry modes: focused CV-assisted screening and open conversation-first discovery, both converging on the same voice/insight/review experience.
 - Explain the real tool division: Next.js/React frontend, Express backend, browser PDF extraction, OpenAI intelligence, ElevenLabs voice loop, Turnstile abuse check, Cloud Run/Firebase deployment.
-- Use measured TTFA/cost figures with date/sample size; never publish estimates as observed results.
+- Do not publish a latency or unit-cost benchmark from the bounded release
+  walkthroughs. Timing diagnostics may be described qualitatively; cost may be
+  described only as a bounded observed test expense with its limitations.
 - The primary walkthrough is desktop, with a concise mobile walkthrough proving complete responsive parity.
 - Screenshots/videos must use synthetic data and avoid secrets, internal IDs, provider dashboards, or candidate content from real people.
 
@@ -38,7 +40,9 @@ If explicitly approved after deployment, package the already-released demo so an
 - [ ] Add a concise architecture diagram and a two-minute demo script.
 - [ ] Capture synthetic screenshots showing entry choice, focused/open preparation difference, active voice/insights, evidence review, and mobile parity.
 - [ ] Record the primary desktop walkthrough and concise mobile walkthrough.
-- [ ] Document measured TTFA, interruption, cost, and sample date/size with limitations.
+- [ ] Omit a public performance benchmark; if cost is mentioned, label it as the
+  bounded observed expense of the two controlled synthetic flows rather than a
+  representative unit-cost claim.
 - [ ] Explain statelessness, no audio recording, provider processing, Turnstile scope, and no hiring decisions.
 - [ ] Audit every Section 20 definition-of-done item.
 - [ ] Remove dead experiments, stale scope, debug UI, unused dependencies/assets, and accidental secrets/content.

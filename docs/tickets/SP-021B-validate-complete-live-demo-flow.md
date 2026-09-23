@@ -1,8 +1,8 @@
 # SP-021B — Validate the complete live demo flow
 
-Status: Required; deferred live evidence gate<br>
+Status: Required; 2026-09-23 live conversation-first attempt failed/incomplete and fake-only blocker fixes require provider synchronization before another authorized run<br>
 Milestone: Milestone 3 — same-session review<br>
-Last synchronized: 2026-09-22<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-018A, SP-019, SP-020, SP-021, SP-021A<br>
 Suggested commit: `SP-021B: validate the complete live demo flow`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -26,7 +26,7 @@ cost without paying for another partial pre-review smoke test.
   transition. Both defects were fixed and deterministically verified after the
   paid run, but were deliberately not re-observed in another partial paid run.
 - SP-018A's unperformed full tool/runtime-variable coverage, post-fix live
-  observation, performance samples, provider review, privacy audit, and cleanup
+  observation, timing diagnostics, provider review, privacy audit, and cleanup
   evidence remain explicitly unchecked. They move here; they are not converted
   into passes.
 - SP-020 and SP-021 must remain fake-first. Their first real summary and review
@@ -35,7 +35,9 @@ cost without paying for another partial pre-review smoke test.
 - SP-021A owns the visual-review ledger, the owner's explicit visual decisions,
   and deterministic implementation reconciliation for the accepted candidate-
   question fallback/evidence capture and completed-interview hold. Prompt 1 is
-  complete in source policy `sp017-2026-09-22.1`; Prompt 2 is implemented and
+  originated in published policy `sp017-2026-09-22.1`; blocker corrections are
+  now implemented in unpublished source policy `sp021b-2026-09-23.1`; Prompt 2 is
+  implemented and
   deterministically verified locally. SP-021B must not begin while either
   behavior or its record differs from the code/provider revision selected for
   live validation.
@@ -51,8 +53,9 @@ cost without paying for another partial pre-review smoke test.
 - The owner alone controls ignored local environment values and both runtime
   switches. The coding agent never reads or prints `.env.local`.
 - Agree a maximum number and duration of paid operations before activation.
-  Reuse each eligible full-flow turn for performance evidence and never repeat a
-  provider call merely to increase confidence without a defined acceptance gap.
+  Let the two required complete flows produce their timing observations
+  naturally; never repeat a provider call merely to increase a measurement
+  count or create a performance benchmark.
 - Direct OpenAI operations use the locked models/settings, structured output,
   and `store: false`. ElevenLabs audio saving and retention remain at the locked
   privacy settings.
@@ -62,21 +65,35 @@ cost without paying for another partial pre-review smoke test.
 
 ## Preconditions
 
-- [ ] Before any live-mode switch or paid provider operation, run a fresh
+- [ ] Before any future live-mode switch or paid provider operation, run a fresh
   deterministic fake-mode rehearsal of both SP-021A prompts against the exact
   release candidate. Prompt 1 must show the approved unsupported-employer
   fallback and the paired Candidate question/Human follow-up evidence through
   interview and review. Prompt 2 must show fake agent completion entering the
   disconnected read-only workspace and **View summary** reaching review without
   reconnecting voice or duplicating summary work. If either rehearsal fails,
-  stop, fix, document, and revalidate it in fake mode before continuing.
+  stop, fix, document, and revalidate it in fake mode before continuing. The
+  earlier run predates the post-live corrections and does not satisfy this gate.
+- [ ] In the same post-fix fake-mode rehearsal, prove that preparation, connection,
+  eligible TTFA, interruption, and client-tool-to-card observations are captured
+  automatically with source `fake`; raw numbers remain viewable after interview
+  completion, can be copied as content-free JSON and reset, and disappear on
+  refresh or **Clear & exit**. Use the implemented loopback-only
+  `/demo?diagnostics=timings` drawer; do not begin live testing until this manual
+  fake rehearsal passes.
+- [ ] Before that rehearsal, verify the implementation diff/search removed the
+  superseded fixed-count constants, minimum-sample and percentile-gate statuses,
+  gate-only outlier/report branches, obsolete batch-form UI, and their dedicated
+  tests/fixtures. Do not begin live testing with the old benchmark code merely
+  hidden from the screen.
 - [ ] SP-019, SP-020, and SP-021 are implemented and pass their focused fake-mode
   and deterministic verification without loading `.env.local` or reaching a
   provider.
 - [ ] SP-021A is complete: the visual-feedback ledger, resulting implementation
   record, owner decisions, documentation synchronization, and the two pre-live
   behavior specifications match the exact code selected for this paid window.
-- [x] Source policy `sp017-2026-09-22.1` was owner-published without Preview or
+- [ ] Source policy `sp021b-2026-09-23.1` is not yet provider-published. The last
+  verified policy `sp017-2026-09-22.1` was owner-published without Preview or
   a paid conversation to immutable ElevenLabs revision
   `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`. Historical `sp017-2026-09-16.1`
   revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains historical evidence
@@ -93,6 +110,31 @@ cost without paying for another partial pre-review smoke test.
 - [ ] Start with `PROVIDER_MODE=live` and `PAID_DEMO_ENABLED=false`; confirm the
   paid paths remain visibly and technically closed before the owner enables
   them.
+- [ ] If the owner elects to isolate summary validation first, use the documented
+  local-only `LIVE_INTERVIEW_ENABLED=false` summary rehearsal for exactly one
+  synthetic conversation-first run. Confirm its persistent label, disabled CV
+  path, fake-labelled voice diagnostics, zero ElevenLabs activity, explicit
+  **View summary** gate, and at most one real OpenAI summary. This evidence is
+  summary-only and does not satisfy any standard live voice acceptance item.
+  The flag is not an independent provider switch: the shared derived
+  `effectiveMode` keeps fake mode deterministic, keeps live + paid-disabled
+  closed, selects standard live by default for paid live, and selects rehearsal
+  only for local paid live with the explicit false override.
+
+Effective-mode behavior for this packet is fixed as follows. Persisted runtime
+configuration is never sufficient to activate a restored session; every row
+applies only after the current bootstrap refresh succeeds.
+
+| `effectiveMode` | Summary initiation | ElevenLabs | **View summary** |
+| --- | --- | --- | --- |
+| `deterministic_fake` | One background fake summary may start after normal disconnect. | Never reachable. | Exposes pending or ready review; does not initiate work. |
+| `paid_disabled` | Never; no Turnstile or summary request mounts. | Never reachable. | Cannot initiate provider work. |
+| `standard_live` | One protected live summary may start after normal disconnect. | Reachable only through the protected standard-live voice path. | Exposes pending or ready review; does not initiate work. |
+| `summary_rehearsal` | One protected live summary starts only after the explicit action. | Never reachable; voice is deterministic fake. | Initiates the summary lifecycle. |
+
+While a restored refresh is pending or failed, every provider control in this
+table remains closed. A failed refresh requires explicit safety-check retry;
+only a later successful eligible response may reopen its row.
 
 ## Consolidated live-validation checklist
 
@@ -102,6 +144,9 @@ cost without paying for another partial pre-review smoke test.
   two-prompt fake-mode rehearsal required above. Record the observed Prompt 1
   fallback/evidence path and Prompt 2 completed-workspace/View-summary path
   before changing either switch for live testing.
+- [ ] Inspect the post-fix fake-mode raw timing observations, copy one content-free JSON
+  snapshot, reset it, and confirm no candidate content, upload, automatic file,
+  browser storage, or backend persistence is created.
 - [ ] Review SP-021A's complete visual-feedback and defect ledger; do not repeat
   resolved visual iteration merely to recreate its history.
 - [ ] Confirm the owner-approved responsive review state, evidence interaction,
@@ -133,6 +178,8 @@ cost without paying for another partial pre-review smoke test.
   verify the question/follow-up evidence in Organized notes, linked review, and
   copied review text, and reach the complete review without provider transcript
   or audio retrieval.
+- [ ] Confirm the naturally occurring CV-assisted timings are labelled `live`
+  and remain available in the completed workspace without affecting the flow.
 
 ### 2. Conversation-first complete flow
 
@@ -148,6 +195,9 @@ cost without paying for another partial pre-review smoke test.
 - [ ] Observe the corrected captions and automatic ending, confirm the completed
   read-only workspace does not reconnect voice, then choose **View summary** and
   generate the conversation-first summary/review with no CV source language.
+- [ ] Confirm conversation preparation and the naturally occurring interview
+  timings are labelled `live`; do not add turns or another session solely to
+  increase the diagnostic count.
 
 ### 3. Review, retry, evidence, and cleanup
 
@@ -169,20 +219,21 @@ cost without paying for another partial pre-review smoke test.
   temporary files for secrets, tokens, candidate/provider content, or forbidden
   persistence.
 
-### 4. Retained performance, provider, and cost evidence
+### 4. Informational diagnostics, provider, and cost evidence
 
-- [ ] Collect the deferred 50 content-free conversation-preparation measurements
-  across the documented profiles; these remain free and deterministic.
-- [ ] Collect the deferred 50 eligible live-turn measurements during the bounded
-  complete-flow window, reusing turns across the approved synthetic sessions and
-  stopping when the agreed paid cap is reached. Do not invent missing samples or
-  weaken a threshold.
-- [ ] Evaluate TTFA, connection, client-tool-to-card, interruption, waiting-state,
-  filler, and eight-minute-stop evidence against SP-018's locked thresholds.
-- [ ] If the authorized cap ends before 50 live turns, report the actual sample
-  size, keep the 50-turn item unchecked, and leave SP-021B incomplete unless the
-  owner later makes an explicit scope decision; do not publish representative
-  p50/p95 claims from an undersized sample.
+- [ ] Confirm fake mode captured and exposed the same content-free metric types
+  before live activation, then retain only the naturally occurring raw timing
+  observations from the two authorized live complete flows.
+- [ ] Keep summary-rehearsal observations labelled `fake` for voice diagnostics
+  and record any OpenAI usage/cost separately as summary-only evidence; never
+  mix them into ElevenLabs or standard-live timing claims.
+- [ ] Review TTFA, connection, client-tool-to-card, interruption, waiting-state,
+  filler, and eight-minute-stop observations for obvious regressions. Counts and
+  p50/p95 aggregates are informational only; there is no minimum sample count,
+  pass/fail percentile, or permission to repeat paid work for metrics.
+- [ ] If useful for debugging, copy a sanitized in-memory JSON snapshot with its
+  fake/live source and observed count. Do not persist it automatically, upload
+  it, or present the bounded walkthrough as representative performance evidence.
 - [ ] Review the actual OpenAI and ElevenLabs operation counts, model/revision,
   duration, retention/audio state, coarse usage, and cost without copying
   provider content or account identifiers.
@@ -191,12 +242,13 @@ cost without paying for another partial pre-review smoke test.
 
 ### 5. Close the window
 
-- [ ] The owner restores `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake` and
-  explicitly confirms both values without exposing the ignored files.
+- [ ] The owner restores `LIVE_INTERVIEW_ENABLED=true`,
+  `PAID_DEMO_ENABLED=false`, and `PROVIDER_MODE=fake` and explicitly confirms
+  those values without exposing the ignored files.
 - [ ] Restart in fake mode, run the smallest affected deterministic checks, and
   confirm no secret or candidate/provider content appears in Git status/diff,
   documentation, logs, temporary artifacts, or chat.
-- [ ] Record a sanitized handoff with dates, profiles, sample sizes, provider
+- [ ] Record a sanitized handoff with dates, profiles, observed diagnostic counts, provider
   identifiers, request counts, coarse usage/cost, passes, failures, and every
   unperformed item.
 
@@ -219,11 +271,10 @@ cost without paying for another partial pre-review smoke test.
   unresolved placeholders, duplicate mutations, or invalid evidence.
 - [ ] Summary/retry/review behavior preserves local evidence and respects mode
   provenance; any deterministic rather than live retry evidence is labeled.
-- [ ] The 50-preparation and 50-live-turn content-free samples are complete and
-  meet SP-018's locked targets and release-blocking thresholds.
-- [ ] Retained performance evidence is reported honestly and every locked
-  release-blocking threshold is enforced; no undersized sample is represented
-  as complete.
+- [ ] The exact content-free diagnostics path is proven in fake mode before live
+  activation, and the two live flows expose their naturally occurring raw
+  observations without persistence, extra paid repetitions, or a benchmark
+  claim.
 - [ ] Provider revision, retention, privacy, usage, operation counts, and actual
   cost are reviewed with content-safe evidence.
 - [ ] Both safety switches are restored and fake mode is reverified.
@@ -242,6 +293,133 @@ cost without paying for another partial pre-review smoke test.
 - [ ] Re-run only the bounded scenario affected by a discovered defect. A new
   paid run requires a defined question, owner authorization, and remaining cap.
 
+## Historical pre-correction fake-mode rehearsal — 2026-09-23
+
+- The owner completed both required fake entry paths before enabling live mode.
+  The conversation-first run exercised the without-CV question fallback and the
+  normal completed-workspace/**View summary** handoff; the sample-CV run
+  exercised the CV-assisted interview path.
+- The loopback-only `/demo?diagnostics=timings` drawer captured automatic,
+  content-free timing observations in both runs with source `fake`. The
+  conversation-first snapshot included one preparation sample, one connection
+  sample, six TTFA samples, and ten client-tool-to-card samples. The sample-CV
+  snapshot correctly had no preparation sample and included one connection
+  sample, six TTFA samples, and ten client-tool-to-card samples.
+- Both snapshots contained only metric identifiers and numeric timings; no CV,
+  transcript, insight, credential, token, or provider payload appeared. The
+  owner confirmed the drawer's completed-state visibility, JSON copy, reset,
+  refresh/**Clear & exit** clearing, and end-to-review behavior.
+- Neither manual run included a candidate interruption, so the zero interruption
+  counts are expected and do not represent audible-overlap evidence. The
+  provider listening callback is deterministically covered; the audible
+  interruption and overlap check remains explicitly pending in the bounded live
+  window.
+- Fake timings validate capture behavior only. They are not presented as live
+  provider latency, a performance benchmark, or a release gate.
+- This rehearsal preceded policy `sp021b-2026-09-23.1`, the final-No fake trace,
+  summary-boundary/classifier changes, explicit clock origins, interruption-copy
+  correction, and responsive error layout. It remains historical evidence, not
+  acceptance of the current exact release candidate.
+
+## Required post-fix fake rehearsal before provider synchronization
+
+- [ ] Conversation-first unsupported employer/team-size question: exact
+  fallback, paired Candidate question/Human follow-up cards, and exactly one next
+  HR question in the same Pilot response without “Okay”.
+- [ ] Final No: one brief close, automatic agent disconnect, completed read-only
+  workspace, **View summary**, and `review_ready` without reconnect or duplicate
+  summary work.
+- [ ] Sample-CV path through summary/review with correct provenance.
+- [ ] Diagnostics JSON in fake mode: inspect/copy/reset, explicit
+  `performance_time_origin`/`unix_epoch`, no candidate content, and refresh/Clear
+  removal. No count or percentile is a gate.
+- [ ] Retryable and non-retryable summary failures: evidence preserved, Retry
+  only when retryable, and readable error layout at phone, tablet, desktop, and
+  one intermediate width.
+- [ ] Injected interruption: one stop/unmount, generic partial review with
+  evidence preserved, no page-refresh claim, fake fallback, automatic reconnect,
+  or duplicate operation.
+- [ ] Provider publication/synchronization and every paid live acceptance item
+  remain unchecked until separately authorized.
+
+## Deterministic restore and summary-payload closure — 2026-09-23
+
+- `DemoExperience` now treats fresh `runtimeConfigStatus === "ready"` plus an
+  eligible current `effectiveMode` as a prerequisite for mounting summary
+  preparation. A restored stale standard mode starts no Turnstile or summary
+  work while refresh is pending or failed; paid-disabled stays closed after a
+  successful refresh. Standard fake/live may begin one background preparation
+  only after readiness, while summary rehearsal remains idle until **View
+  summary**.
+- Restore-focused integration coverage exercises pending refresh, rehearsal,
+  both standard modes, paid-disabled, refresh failure, and explicit successful
+  retry through the real session provider/bootstrap boundary. It asserts zero
+  provider work in every closed state and exactly one summary in each eligible
+  state.
+- The complete summary-rehearsal browser test now inspects the synthesized
+  `/v1/interview/summary` body after the full fake trace. It verifies the
+  conversation-first plan and grant/challenge handoff, the final candidate No,
+  Candidate question and Human follow-up insights with shared evidence,
+  progressed topics, Candidate-only provenance, and absence of any CV payload
+  or CV fact reference.
+- Fake-only focused verification passed 12 frontend files / 149 tests, 10
+  backend files / 177 tests, and 1 contracts file / 7 tests. The previously
+  failing completion file also passed alone at 1 file / 6 tests. Frontend plus
+  contracts typecheck, targeted lint/formatting, and `git diff --check` passed.
+  No `.env.local`, live provider, manual browser rehearsal, provider
+  publication, or paid operation was used; every manual/live checklist item
+  remains unchecked.
+
+## Failed live conversation-first attempt — 2026-09-23
+
+This attempt is incomplete and does not replace the successful fake rehearsal.
+The owner restored `PROVIDER_MODE=fake`; no additional live/provider operation is
+authorized by this record.
+
+- Passed observations: the diagnostics source was `live`; preparation,
+  connection, TTFA, and card-render timings were captured; the unsupported
+  employer question and its follow-up evidence were retained; local evidence
+  survived the summary failure; and a visible Retry action was shown.
+- Content-free snapshot: 25 samples—preparation 25 ms, connection 2501.5 ms,
+  TTFA count 11 (p50 4225 ms, p95 10032 ms), interruption count 1 (0 ms), and
+  client-tool-to-card count 11 (p50 6.9 ms, p95 13.4 ms). The 0 ms
+  interruption is inconclusive. Samples now label `performance_time_origin` or
+  `unix_epoch` explicitly so raw timestamps are not falsely compared across
+  clocks.
+- Release blockers observed: the interviewer did not invoke `end_call` after a
+  declined final question; the unsupported-question fallback waited for an
+  acknowledgement before the next HR question; manual End reached the completed
+  workspace but summary generation showed `SUMMARY_UNREACHABLE`; TTFA was slow;
+  and the responsive summary error heading was squeezed beside Retry.
+- The retained backend log starts after the failed attempt because the restart
+  truncated the reused log file. No request/status/provider evidence survives,
+  so the root provider cause is **unknown** and must not be invented. The exact
+  UI copy proves only that a non-`ScreenPilotApiError` crossed the frontend
+  summary boundary; plausible layers were local request validation, browser
+  fetch/network, or another non-API exception—not proof that OpenAI was called.
+- Fake-only corrections: source policy `sp021b-2026-09-23.1` makes a final No a
+  same-response closing plus `end_call`, and makes the exact fallback continue
+  with one HR question or close/end in the same response. The published revision
+  remains mapped honestly to `sp017-2026-09-22.1` and is marked sync-required.
+  Fake trace coverage now exercises final question → No → one close → agent
+  disconnect. Summary boundaries emit only content-free categories; invalid
+  local state is non-retryable, network/transient failures remain retryable,
+  and permanent OpenAI billing/account/auth failures are non-retryable. The
+  summary error action now wraps below its heading.
+- No speculative provider tuning was made. `turnEagerness: normal`, the 12-second
+  timeout, provider-default buffering, Flash TTS, and disabled filler remain
+  unchanged; changing them requires a synchronized revision and a separately
+  authorized bounded live observation.
+- Synthetic mid-call failure coverage preserves transcript, insights, and topic
+  progress, stops/unmounts voice once, enters partial summarizing/review when
+  evidence is usable, and never switches to fake or reconnects automatically.
+  The prior incorrect page-refresh end reason is replaced with bounded generic
+  connection copy. If OpenAI remains available, partial evidence may still be
+  summarized; otherwise it remains local. The current SDK callback does not
+  reliably expose an allow-listed insufficient-credit code, so undetectable
+  credit exhaustion remains a generic interruption; provider-specific
+  ElevenLabs payment/credit classification remains explicitly owned by SP-022.
+
 ## Commit boundary
 
 Keep SP-021B reviewable as one logical consolidated live-validation and
@@ -253,7 +431,7 @@ unless the user asks or the active workflow already authorizes it.
 ## Precision references
 
 - [SP-018A bounded live-smoke record](SP-018A-verify-live-cv-and-voice-integrations.md)
-- [Performance gates](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#performance-gates)
+- [Performance diagnostics](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#performance-diagnostics)
 - [Live-provider setup](../operations/live-provider-setup.md)
 - [Summary and review](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#stage-9--end-and-summarize)
 - [Required manual acceptance](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#required-manual-acceptance-sheet)

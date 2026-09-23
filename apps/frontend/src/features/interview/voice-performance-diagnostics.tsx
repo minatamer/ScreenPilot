@@ -1,21 +1,33 @@
 "use client";
 
-import { useState, useSyncExternalStore, type SyntheticEvent } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
+
+import { Button } from "@/shared/ui/button";
 
 import type { FillerPolicyState } from "./latency-filler-policy";
-import type {
-  VoicePerformanceBatch,
-  VoicePerformanceCollector,
-  VoicePerformanceReport,
-  VoicePerformanceTracker,
+import {
+  createVoicePerformanceDiagnosticsExport,
+  type VoicePerformanceSource,
+  type VoicePerformanceTracker,
 } from "./voice-performance";
 
 type VoicePerformanceDiagnosticsProps = Readonly<{
-  collector: VoicePerformanceCollector;
-  fillerPolicy: FillerPolicyState;
-  source: VoicePerformanceBatch["source"];
+  fillerPolicy?: FillerPolicyState;
+  source: VoicePerformanceSource;
   tracker: VoicePerformanceTracker;
 }>;
+
+type DiagnosticsLocation = Readonly<{
+  hostname: string;
+  search: string;
+}>;
+
+const LOCAL_DIAGNOSTICS_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "::1",
+  "[::1]",
+]);
 
 const METRIC_LABELS = Object.freeze({
   conversation_preparation: "Conversation preparation",
@@ -29,8 +41,31 @@ function formatMilliseconds(value: number | null) {
   return value === null ? "\u2014" : `${String(Math.round(value))} ms`;
 }
 
+export function isVoicePerformanceDiagnosticsEnabled(
+  location: DiagnosticsLocation,
+) {
+  return (
+    LOCAL_DIAGNOSTICS_HOSTS.has(location.hostname.toLowerCase()) &&
+    new URLSearchParams(location.search).get("diagnostics") === "timings"
+  );
+}
+
+function subscribeToDiagnosticsLocation(listener: () => void) {
+  window.addEventListener("popstate", listener);
+  return () => {
+    window.removeEventListener("popstate", listener);
+  };
+}
+
+function getDiagnosticsLocationSnapshot() {
+  return isVoicePerformanceDiagnosticsEnabled(window.location);
+}
+
+function getServerDiagnosticsLocationSnapshot() {
+  return false;
+}
+
 export function VoicePerformanceDiagnostics({
-  collector,
   fillerPolicy,
   source,
   tracker,
@@ -40,56 +75,47 @@ export function VoicePerformanceDiagnostics({
     tracker.getSnapshot,
     tracker.getSnapshot,
   );
-  const [batchId, setBatchId] = useState("");
-  const [deviceProfile, setDeviceProfile] =
-    useState<VoicePerformanceBatch["deviceProfile"]>("desktop");
-  const [networkProfile, setNetworkProfile] =
-    useState<VoicePerformanceBatch["networkProfile"]>("normal");
-  const [providerRevision, setProviderRevision] = useState("");
-  const [sampleDate, setSampleDate] = useState("");
-  const [report, setReport] = useState<VoicePerformanceReport | null>(() =>
-    collector.getReport(),
+  const enabled = useSyncExternalStore(
+    subscribeToDiagnosticsLocation,
+    getDiagnosticsLocationSnapshot,
+    getServerDiagnosticsLocationSnapshot,
   );
-  const [reportError, setReportError] = useState<string | null>(null);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">(
+    "idle",
+  );
+  const diagnosticsExport = useMemo(
+    () => createVoicePerformanceDiagnosticsExport(source, snapshot),
+    [snapshot, source],
+  );
+  const rawJson = useMemo(
+    () => JSON.stringify(diagnosticsExport, null, 2),
+    [diagnosticsExport],
+  );
 
-  if (process.env.NODE_ENV === "production") {
+  if (!enabled) {
     return null;
   }
 
-  const captureBatch = (event: SyntheticEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const copyJson = async () => {
     try {
-      const nextReport = collector.captureBatch({
-        batchId: batchId.trim(),
-        deviceProfile,
-        networkProfile,
-        providerRevision: providerRevision.trim(),
-        sampleDate,
-        source,
-      });
-      setReport(nextReport);
-      setReportError(null);
-    } catch (error) {
-      setReportError(
-        error instanceof Error
-          ? error.message
-          : "The timing batch could not be captured.",
-      );
+      await navigator.clipboard.writeText(rawJson);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("failed");
     }
   };
 
-  const resetCapturedBatches = () => {
-    collector.reset();
-    setReport(null);
-    setReportError(null);
+  const resetTimings = () => {
+    tracker.reset();
+    setCopyStatus("idle");
   };
 
   return (
     <details className="sp-voice-performance-diagnostics">
       <summary>Local voice timing diagnostics</summary>
       <p>
-        Content-free browser timings only. Nothing in this panel is uploaded or
-        persisted.
+        Raw, content-free {source} timings for this tab only. Refreshing or
+        resetting clears them; nothing is uploaded or persisted.
       </p>
       <dl>
         {snapshot.aggregates.map((aggregate) => (
@@ -98,114 +124,39 @@ export function VoicePerformanceDiagnostics({
             <dd>
               {String(aggregate.count)} samples · p50{" "}
               {formatMilliseconds(aggregate.p50Ms)} · p95{" "}
-              {formatMilliseconds(aggregate.p95Ms)} · {aggregate.status}
+              {formatMilliseconds(aggregate.p95Ms)}
             </dd>
           </div>
         ))}
-        <div>
-          <dt>Static fillers observed</dt>
-          <dd>
-            {String(fillerPolicy.count)} ·{" "}
-            {fillerPolicy.reviewFailed ? "review failed" : "within policy"}
-          </dd>
-        </div>
-      </dl>
-      <form className="sp-voice-performance-report" onSubmit={captureBatch}>
-        <p>
-          Capture each device/network run before changing profiles. The report
-          includes only uncaptured timing samples and remains in memory until
-          selected and copied from this panel.
-        </p>
-        <div className="sp-voice-performance-report__fields">
-          <label>
-            Batch ID
-            <input
-              maxLength={64}
-              onChange={(event) => {
-                setBatchId(event.target.value);
-              }}
-              pattern="[a-z0-9][a-z0-9-]{0,63}"
-              placeholder="desktop-normal-01"
-              required
-              value={batchId}
-            />
-          </label>
-          <label>
-            Sample date
-            <input
-              onChange={(event) => {
-                setSampleDate(event.target.value);
-              }}
-              required
-              type="date"
-              value={sampleDate}
-            />
-          </label>
-          <label>
-            Device profile
-            <select
-              onChange={(event) => {
-                setDeviceProfile(
-                  event.target.value as VoicePerformanceBatch["deviceProfile"],
-                );
-              }}
-              value={deviceProfile}
-            >
-              <option value="desktop">Desktop</option>
-              <option value="mobile">Mobile</option>
-            </select>
-          </label>
-          <label>
-            Network profile
-            <select
-              onChange={(event) => {
-                setNetworkProfile(
-                  event.target.value as VoicePerformanceBatch["networkProfile"],
-                );
-              }}
-              value={networkProfile}
-            >
-              <option value="normal">Normal</option>
-              <option value="throttled">Throttled</option>
-            </select>
-          </label>
-          <label>
-            Provider revision ID
-            <input
-              maxLength={128}
-              onChange={(event) => {
-                setProviderRevision(event.target.value);
-              }}
-              pattern="[A-Za-z0-9][A-Za-z0-9._-]{0,127}"
-              placeholder="agtvrsn_…"
-              required
-              value={providerRevision}
-            />
-          </label>
-        </div>
-        <p>
-          Source: <strong>{source}</strong> · uncaptured samples:{" "}
-          <strong>{String(collector.getUncapturedSampleCount())}</strong>
-        </p>
-        <div className="sp-voice-performance-report__actions">
-          <button type="submit">Capture batch and build report</button>
-          <button onClick={resetCapturedBatches} type="button">
-            Reset captured batches
-          </button>
-        </div>
-        {reportError ? <p role="alert">{reportError}</p> : null}
-        {report ? (
-          <label>
-            Content-free performance report
-            <textarea
-              aria-label="Content-free performance report"
-              readOnly
-              rows={14}
-              value={JSON.stringify(report, null, 2)}
-            />
-          </label>
+        {fillerPolicy ? (
+          <div>
+            <dt>Static fillers observed</dt>
+            <dd>
+              {String(fillerPolicy.count)} ·{" "}
+              {fillerPolicy.reviewFailed ? "review needed" : "within policy"}
+            </dd>
+          </div>
         ) : null}
-      </form>
+      </dl>
+      <div className="sp-voice-performance-diagnostics__actions">
+        <Button onClick={() => void copyJson()} variant="secondary">
+          Copy JSON
+        </Button>
+        <Button onClick={resetTimings} variant="quiet">
+          Reset timings
+        </Button>
+        <span aria-live="polite">
+          {copyStatus === "copied"
+            ? "JSON copied."
+            : copyStatus === "failed"
+              ? "Copy failed; select the JSON below."
+              : ""}
+        </span>
+      </div>
+      <label>
+        Raw timing JSON
+        <textarea readOnly rows={12} value={rawJson} />
+      </label>
     </details>
   );
 }

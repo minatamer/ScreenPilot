@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 4 — public-demo hardening  
-Last synchronized: 2026-09-22<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024<br>
 Suggested commit: `SP-025: complete focused demo release checks`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -23,7 +23,10 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
   hostname, or release-candidate change invalidates that evidence.
 - The pre-measurement reserve is $0.80 per standard eight-minute flow or $1.40 if burst is deliberately enabled. The base estimate is about $0.70, but release evidence must use the provider dashboards rather than restating the estimate as measured fact.
 - All complete paths must be reviewed on phone, tablet, compact laptop, laptop/desktop, large monitor, and intermediate drag-resized widths.
-- Release requires measured latency gates, privacy/retention alignment, Turnstile recovery, provider failures, and natural HR-only conversation.
+- Release requires responsive conversational behavior, privacy/retention
+  alignment, Turnstile recovery, provider failures, and natural HR-only
+  conversation. Content-free timings are troubleshooting diagnostics, not a
+  minimum-sample or percentile release gate.
 
 ## Manual live-credential gate
 
@@ -36,7 +39,8 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 
 - Do not expand this into Playwright/visual/AI automation, a device lab, new features, or portfolio packaging.
 - Do not waive a release blocker because the happy path works on one desktop.
-- Do not use real applicant data or publish unmeasured latency/cost claims.
+- Do not use real applicant data or publish latency/cost claims from the bounded
+  validation observations.
 - Do not make uncontrolled repeated paid calls.
 - Do not turn QA fixes into unrelated refactors or adjacent ticket scope.
 - Do not absorb SP-025A's repository-wide code/ticket reconciliation, duplicate
@@ -67,8 +71,11 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
   provider revision, date, measured behavior, and cost; repeat only evidence
   invalidated by later release-candidate or provider/configuration changes.
 - [ ] Create `docs/operations/full-flow-cost-baseline.md` from a blank sanitized template and record each flow's date, mode, revision, connection duration, direct OpenAI usage, ElevenLabs standard/burst minute charge, live-LLM Detailed costs, credits/free minutes applied, infrastructure overage, and total.
-- [ ] Run at least three complete flows before publishing a portfolio unit-cost claim; compare estimated versus actual totals and explain any variance greater than 20%.
-- [ ] Record, fix, and retest every release-blocking functional, responsive, privacy, security, latency, and provider issue.
+- [ ] Treat the two controlled flows' cost evidence as a spend-safety sanity
+  check; do not publish a portfolio unit-cost claim from this bounded window.
+- [ ] Record, fix, and retest every release-blocking functional, responsive,
+  privacy, security, conversational-behavior, and provider issue. Timing values
+  may identify a defect but do not independently create a statistical gate.
 
 ## Acceptance criteria
 
@@ -77,7 +84,9 @@ Run the complete focused manual acceptance pass and one fast release gate, resol
 - [ ] Current controlled live evidence for both entry modes passes without
   retention/privacy/scope drift, whether reused from SP-021B or narrowly rerun
   because later changes invalidated it.
-- [ ] No release-blocking conversation, latency, evidence, Turnstile, responsive, accessibility, privacy, or provider defect remains.
+- [ ] No release-blocking conversation, evidence, Turnstile, responsive,
+  accessibility, privacy, or provider defect remains; any obvious timing problem
+  observed during the walkthrough is investigated as a functional UX defect.
 - [ ] Every required role-neutral scenario proves one universal HR screen, no allow-list/redirection, no profession-specific assessment, and no invented employer/vacancy fact.
 - [ ] Any non-blocking known limitation is documented honestly and does not contradict definition of done.
 - [ ] SP-025A receives the exact approved release candidate and complete manual
@@ -103,7 +112,7 @@ Keep SP-025 reviewable as one logical change represented by `test: complete focu
 ## Precision references
 
 - [Required manual acceptance sheet](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#required-manual-acceptance-sheet)
-- [Performance gates](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#performance-gates)
+- [Performance diagnostics](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#performance-diagnostics)
 - [Definition of done](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#20-definition-of-done)
 - [Lean verification rules](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#18-lean-verification-strategy)
 - [Credential acquisition and paid-test gate](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup)

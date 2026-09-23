@@ -2,7 +2,7 @@
 
 Status: Required; both prompts implemented and deterministically verified locally; Prompt 1 owner-published; live observation pending<br>
 Milestone: Milestone 3 — same-session review<br>
-Last synchronized: 2026-09-22<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-019, SP-020, SP-021<br>
 Suggested commit: `SP-021A: document owner visual review findings`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -303,9 +303,14 @@ Status: **Implemented and deterministically verified; live observation pending.*
    - Freeze elapsed time (`08:00` for the hard stop), remove dynamic voice and
      mute controls, state that the microphone is disconnected, and replace
      **End interview** with **View summary**.
-   - Allow summary preparation after disconnect while the workspace remains
-     visible, but make **View summary** reveal organizing/ready review state
-     without reconnecting voice or issuing duplicate summary calls.
+   - The original Prompt 2 target kept summary preparation idle after
+     disconnect and let **View summary** begin the single lifecycle. The later
+     owner-directed local summary-rehearsal decision narrowed that global rule:
+     only `summary_rehearsal` still waits to initiate work; freshly validated
+     standard fake/live may prepare once behind the hold, while paid-disabled,
+     pending, and failed runtime validation remain closed. **View summary**
+     always controls review exposure and never reconnects voice or duplicates a
+     summary call.
 3. **Align fake mode, restore behavior, and failure semantics.**
    - Emit an agent-owned fake disconnect after all final transcript/tool events
      and enter the same completed workspace.
@@ -339,9 +344,14 @@ Status: **Implemented and deterministically verified; live observation pending.*
   read-only, freezes elapsed time (`08:00` for the deadline), removes mute and
   dynamic voice status, states **Microphone disconnected**, and replaces End
   with **View summary**.
-- One managed summary-preparation lifecycle may start only after disconnect and
-  remains mounted across **View summary**. It reveals pending or ready review
-  state without reconnecting voice or issuing a duplicate summary request.
+- The original 2026-09-23 Prompt 2 implementation started its one managed
+  summary lifecycle only after disconnect plus explicit **View summary**. That
+  historical global rule was later superseded only as to initiation timing by
+  local summary rehearsal: freshly bootstrap-validated `deterministic_fake` and
+  `standard_live` may prepare once while the completed workspace remains
+  visible; `summary_rehearsal` still waits for **View summary**;
+  `paid_disabled`, pending, and failed refresh start nothing. **View summary**
+  continues to be the only action that exposes pending or ready review.
 - The fake trace emits an agent-owned disconnect after every final transcript
   and client-tool event. Restored completed state never requests a token or
   reconnects. Unexpected provider/network interruption still uses the existing
@@ -373,16 +383,20 @@ Status: **Implemented and deterministically verified; live observation pending.*
   **View summary**, and state that the microphone is disconnected.
 - **View summary** must never reconnect voice. It reveals the existing organizing
   state while summary work is pending or the completed review when ready.
-- Summary preparation may begin after voice disconnect while the completed
-  workspace remains visible so the existing 15-minute grant does not expire
-  unnecessarily. Preserve local evidence on summary failure/expiry and prevent
+- After fresh bootstrap validation, standard fake/live summary preparation may
+  begin after voice disconnect while the completed workspace remains visible so
+  the existing 15-minute grant does not expire unnecessarily. Summary rehearsal
+  begins only after **View summary**; paid-disabled, pending, and failed refresh
+  begin nothing. Preserve local evidence on summary failure/expiry and prevent
   duplicate summary calls.
 - After all final fake transcript/tool events, fake mode emits an agent-owned
   disconnect and enters the same completed workspace until **View summary**.
 - Unexpected provider/network interruption remains a distinct partial path.
-- Restoring the completed stage must never request a token or reconnect voice;
-  persistence remains allow-listed and excludes tokens, audio, provider objects,
-  and microphone state.
+- Restoring the completed stage must never request a token, reconnect voice, or
+  mount summary preparation from persisted configuration; fresh bootstrap
+  validation must authorize any standard background behavior. Persistence
+  remains allow-listed and excludes tokens, audio, provider objects, and
+  microphone state.
 
 ### Documentation synchronization required with implementation
 

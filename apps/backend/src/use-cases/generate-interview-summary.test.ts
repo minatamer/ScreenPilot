@@ -2,6 +2,7 @@ import type { SummarizeInterviewRequest } from "@screenpilot/contracts/api/inter
 import { describe, expect, it, vi } from "vitest";
 
 import { TURNSTILE_ACTIONS } from "../config/provider-mode.js";
+import { OpenAiRequestError } from "../providers/openai/openai-client.js";
 import {
   createInterviewGrantService,
   hashInterviewGrantValue,
@@ -175,5 +176,49 @@ describe("generateInterviewSummary", () => {
     ).rejects.toMatchObject({ code: "SUMMARY_FAILED", retryable: true });
     expect(fixture.request.transcript).toEqual(originalTranscript);
     expect(fixture.request.insights).not.toHaveLength(0);
+  });
+
+  it("does not offer retry for a permanent provider account failure", async () => {
+    const fixture = dependencies();
+    fixture.summarizeInterview.mockRejectedValueOnce(
+      new OpenAiRequestError({
+        category: "http_non_success",
+        durationMs: 12,
+        httpStatus: 429,
+        providerFailureClass: "billing_or_quota",
+        retryable: false,
+      }),
+    );
+
+    await expect(
+      fixture.generate(fixture.request, ANONYMOUS_SESSION_ID),
+    ).rejects.toMatchObject({
+      code: "SUMMARY_FAILED",
+      message:
+        "The conversation could not be organized right now. The demo owner must check the summary service before another attempt.",
+      retryable: false,
+    });
+  });
+
+  it("propagates a bounded retry delay for a transient provider failure", async () => {
+    const fixture = dependencies();
+    fixture.summarizeInterview.mockRejectedValueOnce(
+      new OpenAiRequestError({
+        category: "http_non_success",
+        durationMs: 12,
+        httpStatus: 429,
+        providerFailureClass: "transient",
+        retryAfterSeconds: 37,
+        retryable: true,
+      }),
+    );
+
+    await expect(
+      fixture.generate(fixture.request, ANONYMOUS_SESSION_ID),
+    ).rejects.toMatchObject({
+      code: "SUMMARY_FAILED",
+      retryAfterSeconds: 37,
+      retryable: true,
+    });
   });
 });

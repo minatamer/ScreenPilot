@@ -29,6 +29,30 @@ import {
 
 type BrowserFetch = typeof fetch;
 
+type SummaryBoundaryFailureCategory =
+  | "backend_rejection"
+  | "fetch_failure"
+  | "request_validation"
+  | "response_envelope_invalid"
+  | "response_validation";
+
+function reportSummaryBoundaryFailure(
+  category: SummaryBoundaryFailureCategory,
+  detail: Readonly<{
+    apiCode?: string;
+    httpStatus?: number;
+    retryable?: boolean;
+  }> = {},
+) {
+  // Intentionally exclude request bodies, candidate evidence, response bodies,
+  // credentials, and thrown error objects from browser diagnostics.
+  console.error("screenpilot_api_boundary_failure", {
+    category,
+    operation: "interview_summary",
+    ...detail,
+  });
+}
+
 type ScreenPilotApiErrorInput = Readonly<{
   code: string;
   message: string;
@@ -222,22 +246,65 @@ export async function summarizeInterview(
   signal: AbortSignal,
   browserFetch: BrowserFetch = fetch,
 ): Promise<SummarizeInterviewResponse> {
-  const request = summarizeInterviewRequestSchema.parse(input);
-  const response = await browserFetch("/v1/interview/summary", {
-    body: JSON.stringify(request),
-    cache: "no-store",
-    credentials: "same-origin",
-    headers: {
-      accept: "application/json",
-      "content-type": "application/json",
-    },
-    method: "POST",
-    signal,
-  });
-  const parsed = summarizeInterviewResponseSchema.safeParse(
-    await requireSuccessfulBody(response),
-  );
+  const parsedRequest = summarizeInterviewRequestSchema.safeParse(input);
+  if (!parsedRequest.success) {
+    reportSummaryBoundaryFailure("request_validation");
+    throw new ScreenPilotApiError({
+      code: "INVALID_SUMMARY_REQUEST",
+      message:
+        "The saved interview evidence could not be prepared for summary. It remains available for review.",
+      retryable: false,
+    });
+  }
+  let response: Response;
+  try {
+    response = await browserFetch("/v1/interview/summary", {
+      body: JSON.stringify(parsedRequest.data),
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+      },
+      method: "POST",
+      signal,
+    });
+  } catch (error: unknown) {
+    if (signal.aborted || isAbortError(error)) {
+      throw error;
+    }
+    reportSummaryBoundaryFailure("fetch_failure");
+    throw new ScreenPilotApiError({
+      code: "SUMMARY_UNREACHABLE",
+      message:
+        "ScreenPilot could not reach the summary service. Your local evidence is still available.",
+      retryable: true,
+    });
+  }
+
+  let responseBody: unknown;
+  try {
+    responseBody = await requireSuccessfulBody(response);
+  } catch (error: unknown) {
+    if (error instanceof ScreenPilotApiError) {
+      reportSummaryBoundaryFailure(
+        error.code === "INVALID_RESPONSE"
+          ? "response_envelope_invalid"
+          : "backend_rejection",
+        {
+          apiCode: error.code,
+          httpStatus: response.status,
+          retryable: error.retryable,
+        },
+      );
+    }
+    throw error;
+  }
+  const parsed = summarizeInterviewResponseSchema.safeParse(responseBody);
   if (!parsed.success) {
+    reportSummaryBoundaryFailure("response_validation", {
+      httpStatus: response.status,
+    });
     throw new ScreenPilotApiError({
       code: "INVALID_SUMMARY_RESPONSE",
       message: "ScreenPilot received an incomplete interview summary.",

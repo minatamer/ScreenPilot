@@ -362,16 +362,14 @@ describe("POST /v1/cv/analyze", () => {
       .split("\n")
       .map((entry) => JSON.parse(entry) as Record<string, unknown>);
     expect(
-      logEntries.find(
-        (entry) => entry["providerFailureCategory"] !== undefined,
-      ),
+      logEntries.find((entry) => entry["provider"] === "turnstile"),
     ).toMatchObject({
       code: "TURNSTILE_UNAVAILABLE",
       msg: "request_failed",
       provider: "turnstile",
       providerDurationMs: 614,
-      providerFailureCategory: "response_schema_mismatch",
-      providerSchemaMismatchCategory: "success",
+      providerRetryable: true,
+      providerType: "response_schema_mismatch",
       requestId: publicError.requestId,
     });
     const logs = logChunks.join("");
@@ -438,8 +436,9 @@ describe("POST /v1/cv/analyze", () => {
       msg: "request_failed",
       provider: "openai",
       providerDurationMs: 22_100,
-      providerFailureCategory: "http_non_success",
       providerHttpStatus: 429,
+      providerRetryable: true,
+      providerType: "http_non_success",
       requestId: publicError.requestId,
     });
     const logs = logChunks.join("");
@@ -501,9 +500,8 @@ describe("POST /v1/cv/analyze", () => {
     ).toMatchObject({
       provider: "openai",
       providerDurationMs: 12_460,
-      providerFailureCategory: "structured_output_invalid",
-      providerValidationPaths: ["cv.facts.0.category"],
-      providerValidationRuleIds: ["schema_invalid_value"],
+      providerRetryable: false,
+      providerType: "structured_output_invalid",
     });
     const logs = logChunks.join("");
     expect(logs).not.toContain(privateGeneratedValue);

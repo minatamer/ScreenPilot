@@ -8,6 +8,12 @@ export const PUBLIC_RUNTIME_LIMITS = Object.freeze({
 } as const);
 
 export const PUBLIC_PROVIDER_MODES = ["fake", "live"] as const;
+export const EFFECTIVE_RUNTIME_MODES = [
+  "deterministic_fake",
+  "paid_disabled",
+  "standard_live",
+  "summary_rehearsal",
+] as const;
 
 export const publicRuntimeConfigSchema = z
   .strictObject({
@@ -22,6 +28,7 @@ export const publicRuntimeConfigSchema = z
       pdfBytes: z.literal(PUBLIC_RUNTIME_LIMITS.pdfBytes),
       pdfPages: z.literal(PUBLIC_RUNTIME_LIMITS.pdfPages),
     }),
+    effectiveMode: z.enum(EFFECTIVE_RUNTIME_MODES),
     paidOperationsEnabled: z.boolean(),
     privacyNoticeVersion: z
       .string()
@@ -29,21 +36,27 @@ export const publicRuntimeConfigSchema = z
     providerMode: z.enum(PUBLIC_PROVIDER_MODES),
   })
   .superRefine((runtimeConfig, context) => {
-    const paidLiveMode =
-      runtimeConfig.providerMode === "live" &&
-      runtimeConfig.paidOperationsEnabled;
-
+    const expectedProviderBoundary = {
+      deterministic_fake: { paid: false, provider: "fake" },
+      paid_disabled: { paid: false, provider: "live" },
+      standard_live: { paid: true, provider: "live" },
+      summary_rehearsal: { paid: true, provider: "live" },
+    } as const;
+    const expected = expectedProviderBoundary[runtimeConfig.effectiveMode];
     if (
-      runtimeConfig.providerMode === "fake" &&
-      runtimeConfig.paidOperationsEnabled
+      runtimeConfig.providerMode !== expected.provider ||
+      runtimeConfig.paidOperationsEnabled !== expected.paid
     ) {
       context.addIssue({
         code: "custom",
-        message: "Paid operations cannot be enabled in fake mode.",
-        path: ["paidOperationsEnabled"],
+        message: "The effective mode does not match the provider safety gates.",
+        path: ["effectiveMode"],
       });
     }
 
+    const paidLiveMode =
+      runtimeConfig.effectiveMode === "standard_live" ||
+      runtimeConfig.effectiveMode === "summary_rehearsal";
     if (!paidLiveMode && runtimeConfig.abuseProtection.siteKey !== "") {
       context.addIssue({
         code: "custom",
@@ -67,15 +80,26 @@ export type PublicRuntimeConfig = z.infer<typeof publicRuntimeConfigSchema>;
 export function areInteractiveProviderOperationsEnabled(
   runtimeConfig: PublicRuntimeConfig,
 ): boolean {
-  return (
-    runtimeConfig.providerMode === "fake" || runtimeConfig.paidOperationsEnabled
-  );
+  return runtimeConfig.effectiveMode !== "paid_disabled";
 }
 
 export function areLiveProviderOperationsEnabled(
   runtimeConfig: PublicRuntimeConfig,
 ): boolean {
   return (
-    runtimeConfig.providerMode === "live" && runtimeConfig.paidOperationsEnabled
+    runtimeConfig.effectiveMode === "standard_live" ||
+    runtimeConfig.effectiveMode === "summary_rehearsal"
   );
+}
+
+export function isLiveVoiceEnabled(
+  runtimeConfig: PublicRuntimeConfig,
+): boolean {
+  return runtimeConfig.effectiveMode === "standard_live";
+}
+
+export function isSummaryRehearsal(
+  runtimeConfig: PublicRuntimeConfig,
+): boolean {
+  return runtimeConfig.effectiveMode === "summary_rehearsal";
 }

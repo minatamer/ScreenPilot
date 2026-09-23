@@ -1,12 +1,16 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { InterviewStage } from "./interview-stage";
 import { createFillerPolicyState } from "./latency-filler-policy";
-import {
-  createVoicePerformanceCollector,
-  createVoicePerformanceTracker,
-} from "./voice-performance";
+import { createVoicePerformanceTracker } from "./voice-performance";
+import { isVoicePerformanceDiagnosticsEnabled } from "./voice-performance-diagnostics";
 
 function getStatusRail(label: string): HTMLElement {
   const statusRail = screen
@@ -20,6 +24,10 @@ function getStatusRail(label: string): HTMLElement {
 }
 
 describe("InterviewStage", () => {
+  afterEach(() => {
+    window.history.replaceState({}, "", "/");
+  });
+
   it("shows an understandable status, final caption, timer, and controls", () => {
     const onEnd = vi.fn();
     const onToggleMute = vi.fn();
@@ -294,57 +302,73 @@ describe("InterviewStage", () => {
     ).toBeInTheDocument();
   });
 
-  it("captures an app-reachable content-free performance report", () => {
+  it("keeps local raw timing diagnostics available after fake completion", async () => {
+    window.history.replaceState({}, "", "/?diagnostics=timings");
     let now = 100;
     const performanceTracker = createVoicePerformanceTracker(() => now);
     const measurementId = performanceTracker.begin("connect_request_to_ready");
     now = 450;
     performanceTracker.complete(measurementId);
-    const performanceCollector =
-      createVoicePerformanceCollector(performanceTracker);
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
 
     render(
       <InterviewStage
-        caption={null}
+        completed
         elapsedSeconds={12}
         entryMode="conversation_first"
         fillerPolicy={createFillerPolicyState()}
         insights={[]}
-        isMuted={false}
-        onEnd={vi.fn()}
-        onToggleMute={vi.fn()}
-        performanceCollector={performanceCollector}
-        performanceSource="live"
+        onViewSummary={vi.fn()}
+        performanceSource="fake"
         performanceTracker={performanceTracker}
-        phase="listening"
         topicProgress={[]}
         transcript={[]}
       />,
     );
 
-    fireEvent.change(screen.getByLabelText("Batch ID"), {
-      target: { value: "desktop-normal-01" },
-    });
-    fireEvent.change(screen.getByLabelText("Sample date"), {
-      target: { value: "2026-09-15" },
-    });
-    fireEvent.change(screen.getByLabelText("Provider revision ID"), {
-      target: { value: "agtvrsn_synthetic018" },
-    });
-    fireEvent.click(screen.getByText("Capture batch and build report"));
+    expect(
+      await screen.findByText("Local voice timing diagnostics"),
+    ).toBeVisible();
 
-    const report = JSON.parse(
-      screen.getByLabelText<HTMLTextAreaElement>(
-        "Content-free performance report",
-      ).value,
+    const diagnostics = JSON.parse(
+      screen.getByLabelText<HTMLTextAreaElement>("Raw timing JSON").value,
     ) as {
-      batches: readonly { sampleCount: number }[];
+      sampleCount: number;
       source: string;
     };
-    expect(report).toMatchObject({
-      batches: [{ sampleCount: 1 }],
-      source: "live",
+    expect(diagnostics).toMatchObject({
+      sampleCount: 1,
+      source: "fake",
     });
-    expect(JSON.stringify(report)).not.toMatch(/candidate|transcript|cvText/i);
+    expect(JSON.stringify(diagnostics)).not.toMatch(
+      /candidate|transcript|cvText/i,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy JSON" }));
+    await waitFor(() => {
+      expect(writeText).toHaveBeenCalledWith(
+        expect.stringContaining('"source": "fake"'),
+      );
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Reset timings" }));
+    expect(
+      JSON.parse(
+        screen.getByLabelText<HTMLTextAreaElement>("Raw timing JSON").value,
+      ),
+    ).toMatchObject({ sampleCount: 0, source: "fake" });
+  });
+
+  it("keeps the timing query disabled away from loopback hosts", () => {
+    expect(
+      isVoicePerformanceDiagnosticsEnabled({
+        hostname: "demo.example.com",
+        search: "?diagnostics=timings",
+      }),
+    ).toBe(false);
   });
 });

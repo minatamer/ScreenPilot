@@ -81,30 +81,35 @@ describe("ElevenLabsHttpClient", () => {
       jsonResponse({ private: "failure" }, 401),
       "http_non_success",
       401,
+      false,
     ],
     [
       "empty response body",
       new Response(null, { status: 200 }),
       "response_body_empty",
       undefined,
+      true,
     ],
     [
       "invalid response body",
       new Response(new Uint8Array([0xc3, 0x28]), { status: 200 }),
       "response_body_invalid",
       undefined,
+      true,
     ],
     [
       "invalid JSON",
       new Response("not-json", { status: 200 }),
       "response_json_invalid",
       undefined,
+      true,
     ],
     [
       "invalid shape",
       jsonResponse({ token: "missing-conversation-identifier" }),
       "response_schema_mismatch",
       undefined,
+      true,
     ],
     [
       "declared oversized response",
@@ -115,10 +120,11 @@ describe("ElevenLabsHttpClient", () => {
       ),
       "response_body_oversized",
       undefined,
+      true,
     ],
   ] as const)(
-    "maps %s to a safe retryable error",
-    async (_label, response, category, httpStatus) => {
+    "maps %s to a safe classified error",
+    async (_label, response, category, httpStatus, retryable) => {
       const providerFetch = vi.fn<typeof fetch>().mockResolvedValue(response);
       const clockMilliseconds = vi
         .fn<() => number>()
@@ -135,11 +141,43 @@ describe("ElevenLabsHttpClient", () => {
         code: "PROVIDER_UNAVAILABLE",
         durationMs: 14,
         ...(httpStatus === undefined ? {} : { httpStatus }),
-        retryable: true,
+        retryable,
       });
       expect(String(failure)).not.toContain("private");
     },
   );
+
+  it("classifies a bounded billing envelope without retaining its sensitive message", async () => {
+    const sensitiveMessage =
+      "Account acct_secret_candidate@example.invalid has no credit for sk-live-secret";
+    const providerFetch = vi.fn<typeof fetch>().mockResolvedValue(
+      jsonResponse(
+        {
+          detail: {
+            code: "insufficient_credits",
+            message: sensitiveMessage,
+            type: "payment_required",
+          },
+        },
+        402,
+      ),
+    );
+
+    const failure = await createClient(providerFetch)
+      .createConversationToken({ agentId: AGENT_ID })
+      .catch((error: unknown) => error);
+
+    expect(failure).toMatchObject({
+      category: "http_non_success",
+      httpStatus: 402,
+      providerCode: "insufficient_credits",
+      providerFailureClass: "billing_or_quota",
+      providerType: "payment_required",
+      retryable: false,
+    });
+    expect(JSON.stringify(failure)).not.toContain(sensitiveMessage);
+    expect(String(failure)).not.toContain(sensitiveMessage);
+  });
 
   it("categorizes fetch failure and timeout without exposing their causes", async () => {
     const fetchFailure = vi.fn<typeof fetch>();

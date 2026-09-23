@@ -51,6 +51,24 @@ const createFakeProviderAdapters = (): ProviderAdapters => {
   });
 };
 
+function createLiveVoiceTokenProvider(
+  config: BackendConfig,
+): VoiceTokenProvider {
+  if (config.effectiveMode === "summary_rehearsal") {
+    return new FakeElevenLabs();
+  }
+
+  const agentId = requireLiveValue(config.providers.elevenLabs.agentId);
+  return new ElevenLabsVoiceTokenProvider({
+    agentId,
+    client: new ElevenLabsHttpClient({
+      agentId,
+      apiKey: requireLiveValue(config.providers.elevenLabs.apiKey),
+      timeoutMs: config.limits.providerRequestTimeoutMs,
+    }),
+  });
+}
+
 const createLiveProviderAdapters = (
   config: BackendConfig,
 ): ProviderAdapters => {
@@ -59,14 +77,6 @@ const createLiveProviderAdapters = (
     model: config.providers.openAi.model,
     reasoning: config.providers.openAi.reasoning,
     store: config.providers.openAi.store,
-    timeoutMs: config.limits.providerRequestTimeoutMs,
-  });
-  const elevenLabsAgentId = requireLiveValue(
-    config.providers.elevenLabs.agentId,
-  );
-  const elevenLabsClient = new ElevenLabsHttpClient({
-    agentId: elevenLabsAgentId,
-    apiKey: requireLiveValue(config.providers.elevenLabs.apiKey),
     timeoutMs: config.limits.providerRequestTimeoutMs,
   });
   return Object.freeze({
@@ -78,10 +88,7 @@ const createLiveProviderAdapters = (
     }),
     cvAnalyzer: new OpenAiCvAnalyzer(openAiClient),
     interviewSummarizer: new OpenAiInterviewSummarizer(openAiClient),
-    voiceTokenProvider: new ElevenLabsVoiceTokenProvider({
-      agentId: elevenLabsAgentId,
-      client: elevenLabsClient,
-    }),
+    voiceTokenProvider: createLiveVoiceTokenProvider(config),
   });
 };
 
@@ -89,7 +96,7 @@ export const createProviderAdapters = (
   config: BackendConfig,
   liveAdapters?: ProviderAdapters,
 ): ProviderAdapters => {
-  if (config.providerMode === "fake") {
+  if (config.effectiveMode === "deterministic_fake") {
     return createFakeProviderAdapters();
   }
 

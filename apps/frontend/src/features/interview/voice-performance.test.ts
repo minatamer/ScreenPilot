@@ -1,36 +1,26 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   aggregateVoicePerformance,
-  createVoicePerformanceCollector,
-  createVoicePerformanceReport,
+  createVoicePerformanceDiagnosticsExport,
   createVoicePerformanceTracker,
   type VoicePerformanceMetric,
   type VoicePerformanceSample,
 } from "./voice-performance";
 
-function samples(
+function sample(
   metric: VoicePerformanceMetric,
   durationMs: number,
-  count = 50,
-): readonly VoicePerformanceSample[] {
-  return Array.from({ length: count }, (_, index) => ({
+  index: number,
+): VoicePerformanceSample {
+  return {
     completedAtMs: durationMs,
+    clockOrigin: "performance_time_origin",
     durationMs,
-    id: `voice-performance-${metric}-${String(index + 1)}`,
+    id: `voice-performance-${metric}-${String(index)}`,
     metric,
     startedAtMs: 0,
-  }));
-}
-
-function aggregateFor(
-  metric: VoicePerformanceMetric,
-  durationMs: number,
-  count = 50,
-) {
-  return aggregateVoicePerformance(samples(metric, durationMs, count)).find(
-    (aggregate) => aggregate.metric === metric,
-  );
+  };
 }
 
 describe("voice performance measurements", () => {
@@ -39,17 +29,19 @@ describe("voice performance measurements", () => {
     const tracker = createVoicePerformanceTracker(() => now);
     const measurementId = tracker.begin("ttfa");
     now = 420;
-    const sample = tracker.complete(measurementId);
+    const completedSample = tracker.complete(measurementId);
 
     expect(measurementId).toBe("voice-performance-ttfa-1");
-    expect(sample).toEqual({
+    expect(completedSample).toEqual({
       completedAtMs: 420,
+      clockOrigin: "performance_time_origin",
       durationMs: 320,
       id: "voice-performance-ttfa-1",
       metric: "ttfa",
       startedAtMs: 100,
     });
-    expect(Object.keys(sample ?? {}).sort()).toEqual([
+    expect(Object.keys(completedSample ?? {}).sort()).toEqual([
+      "clockOrigin",
       "completedAtMs",
       "durationMs",
       "id",
@@ -58,222 +50,106 @@ describe("voice performance measurements", () => {
     ]);
   });
 
-  it("requires the full deployed sample before assigning a release status", () => {
-    expect(aggregateFor("ttfa", 700, 49)?.status).toBe("insufficient_sample");
-    expect(aggregateFor("conversation_preparation", 400, 49)?.status).toBe(
-      "insufficient_sample",
+  it("labels provider event timings with their Unix-epoch clock origin", () => {
+    const tracker = createVoicePerformanceTracker();
+    const measurementId = tracker.begin(
+      "ttfa",
+      1_790_155_000_000,
+      "unix_epoch",
     );
+
+    expect(tracker.complete(measurementId, 1_790_155_004_225)).toMatchObject({
+      clockOrigin: "unix_epoch",
+      durationMs: 4_225,
+    });
   });
 
-  it("evaluates event gates without inventing a 50-event requirement", () => {
-    expect(aggregateFor("connect_request_to_ready", 3_000, 1)?.status).toBe(
-      "target",
-    );
-    expect(aggregateFor("interruption_to_audio_stop", 401, 1)?.status).toBe(
-      "release_blocked",
-    );
-  });
+  it("reports informational aggregates for however many samples exist", () => {
+    const aggregates = aggregateVoicePerformance([
+      sample("ttfa", 900, 1),
+      sample("ttfa", 100, 2),
+      sample("ttfa", 500, 3),
+      sample("conversation_preparation", 250, 4),
+    ]);
 
-  it("applies TTFA target and release-blocker boundaries exactly", () => {
-    expect(aggregateFor("ttfa", 800)?.status).toBe("target");
-    expect(aggregateFor("ttfa", 801)?.status).toBe("needs_tuning");
-    expect(aggregateFor("ttfa", 1_200)?.status).toBe("needs_tuning");
-    expect(aggregateFor("ttfa", 1_201)?.status).toBe("release_blocked");
-
-    const p95BlockedSamples = [
-      ...samples("ttfa", 700, 47),
-      ...samples("ttfa", 2_001, 3),
-    ];
+    expect(aggregates.find(({ metric }) => metric === "ttfa")).toEqual({
+      count: 3,
+      metric: "ttfa",
+      p50Ms: 500,
+      p95Ms: 900,
+    });
     expect(
-      aggregateVoicePerformance(p95BlockedSamples).find(
-        (aggregate) => aggregate.metric === "ttfa",
-      ),
-    ).toMatchObject({ p50Ms: 700, p95Ms: 2_001, status: "release_blocked" });
+      aggregates.find(({ metric }) => metric === "conversation_preparation"),
+    ).toEqual({
+      count: 1,
+      metric: "conversation_preparation",
+      p50Ms: 250,
+      p95Ms: 250,
+    });
+    expect(
+      aggregates.find(({ metric }) => metric === "client_tool_to_card"),
+    ).toEqual({
+      count: 0,
+      metric: "client_tool_to_card",
+      p50Ms: null,
+      p95Ms: null,
+    });
   });
 
-  it.each([
-    ["conversation_preparation", 500, 1_000],
-    ["connect_request_to_ready", 3_000, 5_000],
-    ["interruption_to_audio_stop", 250, 400],
-    ["client_tool_to_card", 300, 600],
-  ] as const)(
-    "applies the %s p95 boundaries",
-    (metric, targetMs, releaseBlockerMs) => {
-      expect(aggregateFor(metric, targetMs)?.status).toBe("target");
-      expect(aggregateFor(metric, targetMs + 1)?.status).toBe("needs_tuning");
-      expect(aggregateFor(metric, releaseBlockerMs)?.status).toBe(
-        "needs_tuning",
-      );
-      expect(aggregateFor(metric, releaseBlockerMs + 1)?.status).toBe(
-        "release_blocked",
-      );
-    },
-  );
+  it("exports source-labelled raw timings without a quota or release verdict", () => {
+    const tracker = createVoicePerformanceTracker();
+    const measurementId = tracker.begin("connect_request_to_ready", 100);
+    tracker.complete(measurementId, 450);
 
-  it("builds a repeatable profile report without candidate content", () => {
-    const report = createVoicePerformanceReport([
-      {
-        batchId: "desktop-normal-01",
-        deviceProfile: "desktop",
-        networkProfile: "normal",
-        providerRevision: "agtvrsn_synthetic018",
-        sampleDate: "2026-09-15",
-        samples: [
-          ...samples("ttfa", 800),
-          ...samples("conversation_preparation", 500),
-          ...samples("connect_request_to_ready", 3_001, 1),
-          ...samples("interruption_to_audio_stop", 401, 1),
-          ...samples("client_tool_to_card", 300, 1),
-        ],
-        source: "live",
-      },
-    ]);
-
-    expect(report).toMatchObject({
-      batches: [
-        {
-          batchId: "desktop-normal-01",
-          deviceProfile: "desktop",
-          networkProfile: "normal",
-          providerRevision: "agtvrsn_synthetic018",
-          sampleDate: "2026-09-15",
-        },
-      ],
-      source: "live",
-      status: "release_blocked",
-    });
-    expect(report.outliers).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          metric: "connect_request_to_ready",
-          severity: "above_target",
-        }),
-        expect.objectContaining({
-          metric: "interruption_to_audio_stop",
-          severity: "release_blocker",
-        }),
-      ]),
+    const diagnosticsExport = createVoicePerformanceDiagnosticsExport(
+      "fake",
+      tracker.getSnapshot(),
     );
-    expect(JSON.stringify(report)).not.toMatch(
-      /candidateText|transcript|cvText|insightValue|credential|token|payload/i,
-    );
-  });
 
-  it("captures each completed timing sample into exactly one in-memory batch", () => {
-    let now = 100;
-    const tracker = createVoicePerformanceTracker(() => now);
-    const collector = createVoicePerformanceCollector(tracker);
-    const firstMeasurement = tracker.begin("connect_request_to_ready");
-    now = 450;
-    tracker.complete(firstMeasurement);
-
-    const firstReport = collector.captureBatch({
-      batchId: "desktop-normal-01",
-      deviceProfile: "desktop",
-      networkProfile: "normal",
-      providerRevision: "agtvrsn_synthetic018",
-      sampleDate: "2026-09-15",
-      source: "fake",
-    });
-
-    expect(firstReport.batches).toEqual([
-      expect.objectContaining({
-        batchId: "desktop-normal-01",
-        sampleCount: 1,
-        samples: [
-          expect.objectContaining({
-            durationMs: 350,
-            id: "voice-performance-connect_request_to_ready-1",
-          }),
-        ],
-      }),
-    ]);
-    expect(collector.getUncapturedSampleCount()).toBe(0);
-
-    const secondMeasurement = tracker.begin("client_tool_to_card");
-    now = 700;
-    tracker.complete(secondMeasurement);
-    const secondReport = collector.captureBatch({
-      batchId: "desktop-throttled-01",
-      deviceProfile: "desktop",
-      networkProfile: "throttled",
-      providerRevision: "agtvrsn_synthetic018",
-      sampleDate: "2026-09-15",
-      source: "fake",
-    });
-
-    expect(secondReport.batches).toHaveLength(2);
-    expect(secondReport.batches[1]).toMatchObject({
-      batchId: "desktop-throttled-01",
+    expect(diagnosticsExport).toMatchObject({
       sampleCount: 1,
+      source: "fake",
       samples: [
-        expect.objectContaining({
-          id: "voice-performance-client_tool_to_card-2",
-        }),
+        {
+          durationMs: 350,
+          id: "voice-performance-connect_request_to_ready-1",
+        },
       ],
     });
-    expect(collector.getBatches()[0]?.samples).toHaveLength(1);
-    expect(collector.getUncapturedSampleCount()).toBe(0);
+    expect(JSON.stringify(diagnosticsExport)).not.toMatch(
+      /candidateText|transcript|cvText|insightValue|credential|token|payload|quota|release_blocked|insufficient_sample|status/i,
+    );
   });
 
-  it("refuses to blend fake samples into a live report", () => {
-    const baseBatch = {
-      batchId: "desktop-normal-01",
-      deviceProfile: "desktop" as const,
-      networkProfile: "normal" as const,
-      providerRevision: "agtvrsn_synthetic018",
-      sampleDate: "2026-09-15",
-      samples: samples("ttfa", 800),
-    };
+  it("clears observed samples while allowing an active timing to finish", () => {
+    const tracker = createVoicePerformanceTracker();
+    const listener = vi.fn();
+    tracker.subscribe(listener);
+    const completedMeasurement = tracker.begin("ttfa", 100);
+    tracker.complete(completedMeasurement, 200);
+    const activeMeasurement = tracker.begin("ttfa", 300);
 
-    expect(() =>
-      createVoicePerformanceReport([
-        { ...baseBatch, source: "fake" },
-        { ...baseBatch, batchId: "desktop-normal-02", source: "live" },
-      ]),
-    ).toThrow("Fake and live measurement batches cannot be mixed.");
+    tracker.reset();
+
+    expect(tracker.getSnapshot().samples).toEqual([]);
+    expect(listener).toHaveBeenCalledTimes(2);
+    expect(tracker.complete(activeMeasurement, 550)?.durationMs).toBe(250);
+    expect(tracker.getSnapshot().samples).toHaveLength(1);
   });
 
-  it("rejects content-bearing IDs and incoherent timing samples", () => {
-    const baseBatch = {
-      batchId: "desktop-normal-01",
-      deviceProfile: "desktop" as const,
-      networkProfile: "normal" as const,
-      providerRevision: "agtvrsn_synthetic018",
-      sampleDate: "2026-09-15",
-      source: "fake" as const,
-    };
-    const [ttfaSample] = samples("ttfa", 800, 1);
-    if (!ttfaSample) {
-      throw new Error("Expected a deterministic TTFA sample fixture.");
+  it("bounds retained timings and ignores canceled measurements", () => {
+    const tracker = createVoicePerformanceTracker();
+    for (let index = 0; index < 321; index += 1) {
+      const measurementId = tracker.begin("client_tool_to_card", index);
+      tracker.complete(measurementId, index + 1);
     }
+    const canceledMeasurement = tracker.begin("ttfa", 1_000);
+    tracker.cancel(canceledMeasurement);
 
-    expect(() =>
-      createVoicePerformanceReport([
-        {
-          ...baseBatch,
-          samples: [
-            {
-              ...ttfaSample,
-              id: "candidate-answer-was-great",
-            },
-          ],
-        },
-      ]),
-    ).toThrow("Invalid content-free measurement ID.");
-
-    expect(() =>
-      createVoicePerformanceReport([
-        {
-          ...baseBatch,
-          samples: [
-            {
-              ...ttfaSample,
-              durationMs: 801,
-            },
-          ],
-        },
-      ]),
-    ).toThrow("Invalid voice-performance timing sample.");
+    expect(tracker.complete(canceledMeasurement, 1_500)).toBeNull();
+    expect(tracker.getSnapshot().samples).toHaveLength(320);
+    expect(tracker.getSnapshot().samples[0]?.id).toBe(
+      "voice-performance-client_tool_to_card-2",
+    );
   });
 });

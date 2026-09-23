@@ -10,6 +10,10 @@ import type {
   VoiceSessionBridgeProps,
   VoiceSessionEvent,
 } from "./voice-session-bridge";
+import {
+  classifyVoiceProviderFailure,
+  VOICE_SESSION_IDENTITY_FAILURE,
+} from "./voice-provider-failure";
 
 type FakeVoiceEventTraceEntry = Readonly<{
   afterMs: number;
@@ -22,7 +26,7 @@ type FakeVoiceToolTraceEntry = Readonly<{
   parameters: Record<string, unknown>;
 }>;
 
-export const FAKE_AGENT_DISCONNECT_AFTER_MS = 7_650;
+export const FAKE_AGENT_DISCONNECT_AFTER_MS = 8_650;
 
 const fakeFinalTurn = (
   afterMs: number,
@@ -190,8 +194,20 @@ export const FAKE_VOICE_EVENT_TRACE: readonly FakeVoiceEventTraceEntry[] = [
     "Structured onboarding, mentorship, and room to grow matter most.",
   ),
   ...fakeFinalTurn(
-    7_450,
+    7_250,
     12,
+    "interviewer",
+    "Do you have any final questions or anything else you would like to add?",
+  ),
+  ...fakeFinalTurn(
+    7_750,
+    13,
+    "candidate",
+    "No, I do not have any other questions.",
+  ),
+  ...fakeFinalTurn(
+    8_450,
+    14,
     "interviewer",
     "Thanks, Riley. I have enough context to organize this conversation for your review.",
   ),
@@ -460,7 +476,7 @@ export function FakeVoiceSession({
       ) {
         initialSession.onEvent({
           type: "error",
-          message: "The fake voice-session identifier could not be verified.",
+          failure: VOICE_SESSION_IDENTITY_FAILURE,
         });
         return;
       }
@@ -490,7 +506,7 @@ export function FakeVoiceSession({
           if (!clientTool) {
             initialSession.onEvent({
               type: "error",
-              message: "The fake client-tool registration is incomplete.",
+              failure: classifyVoiceProviderFailure(),
             });
             return;
           }
@@ -498,13 +514,13 @@ export function FakeVoiceSession({
             void Promise.resolve(clientTool(toolEntry.parameters)).catch(() => {
               initialSession.onEvent({
                 type: "error",
-                message: "The fake client-tool update failed.",
+                failure: classifyVoiceProviderFailure(),
               });
             });
           } catch {
             initialSession.onEvent({
               type: "error",
-              message: "The fake client-tool update failed.",
+              failure: classifyVoiceProviderFailure(),
             });
           }
         }, toolEntry.afterMs);

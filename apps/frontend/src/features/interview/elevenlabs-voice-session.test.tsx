@@ -138,7 +138,12 @@ describe("ElevenLabsVoiceSession", () => {
 
     expect(onEvent).toHaveBeenCalledWith({
       type: "error",
-      message: "The voice-session identifier could not be verified.",
+      failure: {
+        class: "owner_action",
+        message:
+          "The secure voice connection could not be verified. The demo owner must check the voice service before another attempt.",
+        retryable: false,
+      },
     });
     expect(sdk.endSession).toHaveBeenCalledOnce();
   });
@@ -203,9 +208,54 @@ describe("ElevenLabsVoiceSession", () => {
       {
         type: "disconnected",
         reason: "error",
-        message: "Connection lost.",
+        failure: {
+          class: "unclassified",
+          message:
+            "The secure voice connection could not start. Check the connection and try again.",
+          retryable: true,
+        },
       },
     ]);
+  });
+
+  it("discards sensitive SDK messages and maps allow-listed owner-action context", async () => {
+    const sensitiveMessage =
+      "payment_required for acct_secret_candidate@example.invalid key sk-live-secret";
+    const onEvent = vi.fn<(event: VoiceSessionEvent) => void>();
+    render(<ElevenLabsVoiceSession {...props({ onEvent })} />);
+    await waitFor(() => {
+      expect(sdk.startSession).toHaveBeenCalledOnce();
+    });
+
+    emitProviderCallback("onConnect", {
+      conversationId: "conversation-014",
+    });
+
+    act(() => {
+      sdk.providerProps?.["onError"]?.(
+        sensitiveMessage as never,
+        {
+          code: "payment_required",
+          message: sensitiveMessage,
+        } as never,
+      );
+    });
+    emitProviderCallback("onDisconnect", {
+      message: sensitiveMessage,
+      reason: "error",
+    });
+
+    expect(onEvent).toHaveBeenCalledWith({
+      type: "error",
+      failure: {
+        class: "owner_action",
+        message:
+          "The voice interview cannot start right now. The demo owner must check the voice service before another attempt.",
+        retryable: false,
+      },
+    });
+    expect(JSON.stringify(onEvent.mock.calls)).not.toContain(sensitiveMessage);
+    expect(sdk.endSession).toHaveBeenCalledOnce();
   });
 
   it("ends the SDK session once when the UI requests completion", async () => {

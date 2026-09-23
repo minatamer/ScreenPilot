@@ -80,13 +80,13 @@ describe("FakeVoiceSession", () => {
       events.filter(
         (event) => event.type === "message" && event.stability === "final",
       ),
-    ).toHaveLength(13);
+    ).toHaveLength(15);
     expect(timeline.filter((entry) => entry.startsWith("tool:"))).toHaveLength(
       createFakeVoiceToolTrace("conversation_first").length,
     );
     const disconnectIndex = timeline.indexOf("event:disconnected:agent");
     expect(disconnectIndex).toBeGreaterThan(
-      timeline.lastIndexOf("event:message:12:final"),
+      timeline.lastIndexOf("event:message:14:final"),
     );
     expect(disconnectIndex).toBeGreaterThan(
       timeline.findLastIndex((entry) => entry.startsWith("tool:")),
@@ -99,5 +99,23 @@ describe("FakeVoiceSession", () => {
       type: "disconnected",
       reason: "agent",
     });
+    expect(
+      events.filter(
+        (event) =>
+          event.type === "message" &&
+          event.stability === "final" &&
+          event.speaker === "candidate" &&
+          event.text === "No, I do not have any other questions.",
+      ),
+    ).toHaveLength(1);
+    expect(
+      events.filter(
+        (event) =>
+          event.type === "message" &&
+          event.stability === "final" &&
+          event.speaker === "interviewer" &&
+          event.text.includes("organize this conversation"),
+      ),
+    ).toHaveLength(1);
   });
 });

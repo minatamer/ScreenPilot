@@ -5,6 +5,7 @@ import {
 } from "@screenpilot/contracts/api/voice-token";
 
 import { TURNSTILE_ACTIONS } from "../config/provider-mode.js";
+import { ElevenLabsRequestError } from "../providers/elevenlabs/elevenlabs-client.js";
 import type { InterviewGrantService } from "../security/interview-grant.js";
 import type { ChallengeVerifier } from "./ports/challenge-verifier.js";
 import type { VoiceTokenProvider } from "./ports/voice-token-provider.js";
@@ -83,10 +84,21 @@ export function createVoiceToken(input: {
       });
     } catch (error: unknown) {
       signal?.throwIfAborted();
+      const providerRequestError =
+        error instanceof ElevenLabsRequestError ? error : null;
+      const retryable = providerRequestError?.retryable ?? true;
       throw new UseCaseError(
         "PROVIDER_UNAVAILABLE",
-        "The secure voice connection is temporarily unavailable. Try again.",
-        { cause: error, retryable: true },
+        retryable
+          ? "The secure voice connection is temporarily unavailable. Try again."
+          : "The voice interview cannot start right now. The demo owner must check the voice service before another attempt.",
+        {
+          cause: error,
+          ...(providerRequestError?.retryAfterSeconds === undefined
+            ? {}
+            : { retryAfterSeconds: providerRequestError.retryAfterSeconds }),
+          retryable,
+        },
       );
     }
   };

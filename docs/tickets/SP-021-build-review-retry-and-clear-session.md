@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-09-22<br>
+Last synchronized: 2026-09-23<br>
 Depends on: SP-005, SP-006, SP-010A, SP-019, SP-020<br>
 Suggested commit: `SP-021: complete disposable session review`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -16,7 +16,13 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 
 ## Standalone implementation context
 
-- After normal voice cleanup enters the read-only completed workspace, obtain a fresh managed Turnstile token for `interview_summary`, then request the SP-020 summary while preserving all local evidence. Keep that request single-flight when the user chooses **View summary**.
+- After normal voice cleanup enters the read-only completed workspace, preserve
+  all local evidence and keep summary preparation single-flight. Once fresh
+  bootstrap validation succeeds, standard deterministic-fake/live mode may
+  prepare behind the hold; local summary rehearsal waits for explicit **View
+  summary**; paid-disabled, pending, and failed validation mounts no Turnstile
+  or summary request. **View summary** alone exposes pending or ready review and
+  never reconnects voice.
 - The review includes overview, role nuance, facts, clarifications, coverage/gaps, compensation/availability, candidate questions, human follow-ups, limitations, and bounded evidence excerpts. It does not render the full transcript as a user-facing section.
 - The role section shows the candidate-stated synthetic session role or an explicit evidence-backed undecided state; when a partial summary omits role preference entirely, it says **Not established** with unavailable evidence rather than inventing an undecided answer. It never presents a fixed vacancy match or real-employer opening. Compound labels remain candidate wording.
 - Label notes as AI-organized and requiring human interpretation; never present a hiring recommendation.
@@ -112,11 +118,15 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - Deterministic verification passed the focused review/fake-provider set (6 files / 36 tests), the complete frontend suite (35 files / 247 tests), the complete backend suite (23 files / 256 tests), frontend/backend lint and typecheck, frontend/backend production builds, targeted formatting checks, and `git diff --check`. After the completion-validation fixes, the focused privacy/evidence/ending regression set passed again (6 files / 65 tests), together with frontend lint and typecheck. The local runtime reported Node 22.23.2 while the repository requires Node 24, but every direct package check completed successfully; the root wrapper scripts could not be used because they resolve an older global pnpm inside nested scripts, so the pinned Corepack package commands were invoked directly.
 - No credential was read and no paid/provider request was made. Provider-owned completion and manual pending-shutdown behavior are covered deterministically at the hook/component boundary; a new live visual observation of automatic ending was not performed. The broad live end-to-end matrix, storage inspection in a credentialed complete flow, named-role fixture walkthroughs, screen-reader pass, 200% zoom/landscape/large-monitor acceptance, and provider evidence remain explicitly deferred to SP-021B/SP-024/SP-025 as assigned below; they are not claimed as passed here.
 - Owner visual feedback removed the staged ending page and its artificial 420 ms morph. Manual shutdown preserves the interview layout with a disabled spinner CTA until provider cleanup or the bounded fallback completes. Agent/manual/deadline completion then retains that layout read-only with a frozen timer, disconnected microphone, and **View summary**; it no longer advances directly to review.
-- SP-021A Prompt 2 adds one persistent summary-preparation owner across the
-  completed workspace and review handoff. Preparation starts only after voice
-  disconnect, survives **View summary**, and cannot issue a second request.
-  Completed-state persistence is allow-listed and restore never requests a
-  voice token or mounts the provider bridge.
+- SP-021A Prompt 2 added one summary-preparation owner for the review handoff.
+  Its 2026-09-23 global View-summary-only record is preserved as the decision at
+  that point, then narrowed by the later owner-directed local summary-rehearsal
+  mode: only `summary_rehearsal` waits for **View summary** to initiate work;
+  freshly validated `deterministic_fake` and `standard_live` may prepare once in
+  the background, while `paid_disabled`, pending, and failed refresh remain
+  closed. Completed-state persistence is allow-listed, never authorizes work by
+  itself, and restore never requests a voice token or mounts the provider
+  bridge.
 - The 2026-09-22 SP-021A documentation review found that the review center card and copied summary collapsed an omitted partial-summary `rolePreference` into **Undecided** and hid role evidence. The follow-up now derives both surfaces from one role-review resolver: omitted means **Not established** plus unavailable evidence, **Undecided** requires the explicit summary state, and candidate-stated/undecided roles expose their bounded final-candidate-turn references. Focused regression coverage exercises missing partial role data, explicit undecided data, evidence-backed stated-role copy, and matching UI/copy evidence wording; owner visual acceptance remains documented in SP-021A and live acceptance remains deferred to SP-021B.
 - Owner review feedback replaced the vertically stacked evidence map and organized-notes workspace with a themed, keyboard-operable two-tab switch. A later refinement moved that switch into the former header-tag position, vertically centered against the step/title block on wide screens and stacked full-width only on narrow screens. Both panels stay mounted so map selection state survives a switch, while the inactive panel is removed from page flow to bound review-page height.
 - The phone tab switcher now resets the desktop row-axis flex basis after the heading stacks vertically. It renders as a content-height, full-width segmented control with two single-line 44 px tabs instead of allowing the desktop `30rem` width basis to become an oversized mobile height.

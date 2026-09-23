@@ -11,6 +11,7 @@ import {
   type InterviewGrantService,
 } from "../security/interview-grant.js";
 import { estimateOpenAiCostUsd } from "./openai-usage-cost.js";
+import { OpenAiRequestError } from "../providers/openai/openai-client.js";
 import type { ChallengeVerifier } from "./ports/challenge-verifier.js";
 import type {
   InterviewSummarizer,
@@ -113,10 +114,23 @@ export function createGenerateInterviewSummary(input: {
       });
     } catch (error: unknown) {
       signal?.throwIfAborted();
+      const providerRequestError =
+        error instanceof OpenAiRequestError ? error : null;
+      const retryable = providerRequestError?.retryable ?? true;
       throw new UseCaseError(
         "SUMMARY_FAILED",
-        "The conversation could not be organized. Try the summary again.",
-        { cause: error, retryable: true },
+        retryable
+          ? "The conversation could not be organized. Try the summary again."
+          : "The conversation could not be organized right now. The demo owner must check the summary service before another attempt.",
+        {
+          cause: error,
+          ...(providerRequestError?.retryAfterSeconds === undefined
+            ? {}
+            : {
+                retryAfterSeconds: providerRequestError.retryAfterSeconds,
+              }),
+          retryable,
+        },
       );
     }
   };

@@ -48,6 +48,12 @@ function summaryFailure(error: unknown): SessionFailure {
       retryable: error.retryable,
     };
   }
+  // Do not log the thrown value: injected requesters may include candidate or
+  // provider content. This category is enough to locate the failing boundary.
+  console.error("screenpilot_api_boundary_failure", {
+    category: "unclassified",
+    operation: "interview_summary",
+  });
   return {
     stage: "summarizing",
     code: "SUMMARY_UNREACHABLE",

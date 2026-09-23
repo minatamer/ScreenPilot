@@ -982,6 +982,27 @@ h3 {
   gap: clamp(var(--sp-space-4), 2vw, var(--sp-space-6));
 }
 
+.sp-summary-rehearsal-notice {
+  display: flex;
+  width: 100%;
+  padding: var(--sp-space-3) var(--sp-space-4);
+  border: 1px solid rgb(253 232 228 / 20%);
+  border-radius: var(--sp-radius-card);
+  background: rgb(242 107 91 / 10%);
+  color: var(--sp-color-dark-text);
+  flex-wrap: wrap;
+  gap: var(--sp-space-2) var(--sp-space-3);
+  line-height: var(--sp-text-body-line);
+}
+
+.sp-summary-rehearsal-notice strong {
+  color: var(--sp-color-coral-300);
+}
+
+.sp-summary-rehearsal-notice span {
+  color: var(--sp-color-dark-muted);
+}
+
 .sp-demo-shell .sp-entry-card {
   position: relative;
   min-height: clamp(14rem, 31dvh, 18.5rem);
@@ -1828,6 +1849,14 @@ h3 {
   text-align: left;
 }
 
+.sp-summary-center-card .sp-error-panel {
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.sp-summary-center-card .sp-error-panel__actions {
+  grid-column: 1 / -1;
+}
+
 .sp-evidence-map__empty {
   margin: 0;
   padding: var(--sp-space-5);
@@ -2428,6 +2457,35 @@ h3 {
 .sp-voice-performance-diagnostics dd {
   margin: 0;
   overflow-wrap: anywhere;
+}
+
+.sp-voice-performance-diagnostics__actions {
+  display: flex;
+  margin: var(--sp-space-4) 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-space-3);
+}
+
+.sp-voice-performance-diagnostics label {
+  display: grid;
+  gap: var(--sp-space-2);
+  color: var(--sp-color-dark-text);
+  font-weight: var(--sp-weight-semibold);
+}
+
+.sp-voice-performance-diagnostics textarea {
+  width: 100%;
+  min-height: 12rem;
+  resize: vertical;
+  padding: var(--sp-space-3);
+  border: 1px solid var(--sp-color-dark-line);
+  border-radius: var(--sp-radius-control);
+  background: var(--sp-color-ink-900);
+  color: var(--sp-color-dark-text);
+  font-family: var(--sp-font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 .sp-interview-signal {

@@ -133,6 +133,7 @@ describe("CvStage", () => {
         providerOperationsEnabled={false}
         runtimeConfig={{
           ...TEST_PUBLIC_RUNTIME_CONFIG,
+          effectiveMode: "paid_disabled",
           providerMode: "live",
         }}
         stage="awaiting_cv"

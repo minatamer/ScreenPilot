@@ -1,7 +1,7 @@
 # ScreenPilot standalone ticket index
 
 Status: execution-packet index  
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-23<br>
 Parent source of truth: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
 
 ---
@@ -99,13 +99,25 @@ owner-approved SP-018A scope decision on 2026-09-21:
 - SP-016 is implemented, locally verified without credentials or paid calls, and represented by commit `13fc434`. Its schemas, five-tool dispatcher, evidence validation, correction-history preservation, CV seeding, strict session synchronization, aligned height-matched Insight Board, responsive connector treatment, and safety cases have focused coverage; published-agent callbacks and an owner/browser reduced-motion visual check remain explicitly pending.
 - SP-016A is implemented, locally verified, and represented by commit `08ff846`. Every currently reachable `/demo` step fits practical tablet and laptop browser viewports through height-aware density, responsive composition, concise copy, bottom-anchored action footers, and bounded inner scrolling; the final compact-anchor evidence uses the real `/demo` flow from asserted top-of-page state, reduced motion is computed and checked, and the production build ran in a zero-local-environment snapshot. The fake-mode End interview path now enters a reducer-owned, scrubbed, non-persistable placeholder stage. Remaining owner/live observations are carried by the consolidated live-validation gate.
 - SP-017 is locally implemented and verified at policy version `sp017-2026-09-22.1`. Its source-controlled prompt, eight-variable provider-config wiring, bounded reconnect state/time context, deterministic/semantic fixtures, and synchronization runbook are complete. On 2026-09-22 the owner published the exact Prompt 1 policy and changed candidate-question/follow-up tool descriptions to the existing private ScreenPilot/Main branch without Preview or a paid conversation. Immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` is recorded for the current policy; historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to `sp017-2026-09-16.1`. Live behavior observation remains in SP-021B.
-- SP-018 is implemented and deterministically verified; SP-018A's no-spend
+- SP-018's core instrumentation and runtime behavior are implemented and
+  deterministically verified; SP-018A's no-spend
   caption/termination correction advances the provider-config target to
   `sp018-2026-09-16.1`. Its bounded content-free timing tracker, source-labelled
-  profile reports, p50/p95 release gates, visual wait states,
+  raw diagnostics, visual wait states,
   substantive-audio/filler separation, filler review limits, card-render boundary,
-  and exact eight-minute stop are complete without a live call. Empirical
-  provider tuning and all credentialed/live acceptance remain outside SP-018.
+  and exact eight-minute stop are complete without a live call. On 2026-09-23
+  the owner removed fixed timing-sample quotas and percentile release gates.
+  The accepted pre-SP-021B follow-up is implemented: the existing automatic
+  metrics are exposed at `/demo?diagnostics=timings` on loopback hosts as
+  fake/live-labelled, memory-only raw JSON with copy/reset access in active and
+  completed interviews. The superseded fixed-quota, gate-status/outlier,
+  collector/batch-form, and quota-test code is deleted. Focused fake/integration
+  coverage, changed-file lint, frontend/contracts typechecks, both builds, local
+  health checks, and a fake preparation-to-preflight browser smoke pass. The
+  current host warns that Node 22 is outside the required Node 24 range, and the
+  in-app browser blocked microphone access; active/completed responsive visual
+  observation, empirical provider observation, and all credentialed/live
+  acceptance remain outside SP-018.
 - SP-018A is finalized by explicit owner scope decision and represented by
   commit `3add8d1`. Its bounded live smoke proved one synthetic CV analysis and
   one private CV-assisted WebRTC interview; the two defects found in that run
@@ -113,7 +125,7 @@ owner-approved SP-018A scope decision on 2026-09-21:
   evidence as sufficient to unlock SP-019 and confirmed the local runtime is
   restored to `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake`. Post-fix live
   observation, the second entry mode, complete tool/runtime-variable coverage,
-  the 50-turn and 50-preparation samples, cleanup/privacy inspection, and
+  fake-first/live timing diagnostics, cleanup/privacy inspection, and
   provider revision/retention/usage/cost review remain explicitly unchecked and
   move intact to required SP-021B after SP-021A. No public/release readiness is
   claimed by this closure.
@@ -131,8 +143,9 @@ owner-approved SP-018A scope decision on 2026-09-21:
   and fresh summary Turnstile action before GPT; its structured adapter permits
   only one repair, returns content-free token usage, and fails closed on
   unsupported citations or forbidden assessment/employer claims. SP-022 still
-  owns the production route/source rate and capacity limiter; the first
-  controlled real summary remains deferred to SP-021B and SP-021 is eligible.
+  owns the production route/source rate and capacity limiter. Summary work now
+  begins only after explicit **View summary**; the first controlled real summary
+  remains deferred to SP-021B.
 - SP-021 is implemented and deterministically verified without credentials or
   a provider call. Manual, automatic, and interrupted endings now converge on
   one in-place review transition; the right board collapses as the interview
@@ -142,12 +155,24 @@ owner-approved SP-018A scope decision on 2026-09-21:
   minimizing restores the overview. No model/provider name or full transcript
   timeline appears in review. Fresh summary Turnstile/retry, correct provenance,
   complete summary sections, copy, and deliberate clear behavior have focused
-  coverage. Engineering browser inspection is not the owner's visual pass; the
-  owner's mandatory visual feedback, resulting bounded adjustments, and explicit
-  approval now belong to documentation-only SP-021A. Its accepted pre-live
-  behavior decisions must be implemented before the broader credentialed/live
-  matrix runs in SP-021B; SP-024 and SP-025 retain their later scopes. SP-021A
-  is now eligible.
+  coverage. Engineering browser inspection did not substitute for the owner's
+  later visual pass; that feedback and its resulting changes are recorded by
+  completed SP-021A.
+- SP-021A is implemented, deterministically verified, documented, and
+  represented by commit `9ea7702`. Its 46-item owner-feedback ledger, published
+  unsupported-employer fallback/evidence behavior, completed-interview hold,
+  explicit **View summary** transition, responsive corrections, and fake-mode
+  evidence are reconciled. Live observation remains in SP-021B.
+- SP-021B remains open after the 2026-09-23 conversation-first live attempt.
+  The diagnostics and evidence-preservation paths worked, but missing
+  `end_call`, a fallback stall, `SUMMARY_UNREACHABLE`, slow TTFA, inconclusive
+  interruption timing, and responsive error layout blocked acceptance. Fake-only
+  source fixes use unpublished policy `sp021b-2026-09-23.1`; another provider
+  synchronization or live run requires the documented post-fix manual fake
+  rehearsal plus fresh owner action/authorization. A local-only
+  `summary_rehearsal` mode may isolate one live OpenAI summary behind real
+  Turnstile while CV and ElevenLabs stay disabled/fake; it is clearly labelled
+  and cannot satisfy standard live voice acceptance.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

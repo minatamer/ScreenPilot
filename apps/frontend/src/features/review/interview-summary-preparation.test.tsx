@@ -1,5 +1,5 @@
 import { render, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ExecuteTurnstileChallenge } from "@/features/abuse-protection/turnstile-client";
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
@@ -10,6 +10,10 @@ import {
 } from "./interview-summary-preparation";
 
 describe("InterviewSummaryPreparation", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("keeps one request alive while the completed workspace changes to review", async () => {
     const executeChallenge = vi.fn<ExecuteTurnstileChallenge>(() =>
       Promise.resolve("fresh-summary-token"),
@@ -63,5 +67,59 @@ describe("InterviewSummaryPreparation", () => {
 
     rendered.unmount();
     expect(requestSignal?.aborted).toBe(true);
+  });
+
+  it("preserves evidence and records only a sanitized category for an unknown requester failure", async () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {
+      // The assertion below inspects the intentionally content-free payload.
+    });
+    const executeChallenge = vi.fn<ExecuteTurnstileChallenge>(() =>
+      Promise.resolve("fresh-summary-token"),
+    );
+    const summarize = vi.fn<SummaryRequester>(() =>
+      Promise.reject(new Error("PRIVATE PROVIDER OR CANDIDATE DETAIL")),
+    );
+    const onFailure = vi.fn();
+
+    render(
+      <InterviewSummaryPreparation
+        active
+        entryMode="conversation_first"
+        executeChallenge={executeChallenge}
+        insights={[]}
+        interviewGrant="signed-interview-grant"
+        onFailure={onFailure}
+        onSummarySucceeded={vi.fn()}
+        plan={createConversationFirstPlanFixture()}
+        siteKey="test-site-key"
+        summarize={summarize}
+        topicProgress={[]}
+        transcript={[
+          {
+            id: "candidate-turn-1",
+            occurredAt: "2026-09-23T09:00:00.000Z",
+            sequence: 0,
+            speaker: "candidate",
+            status: "final",
+            text: "PRIVATE CANDIDATE EVIDENCE",
+          },
+        ]}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onFailure).toHaveBeenCalledWith({
+        code: "SUMMARY_UNREACHABLE",
+        message:
+          "ScreenPilot could not organize the conversation. Your local evidence is still available.",
+        retryable: true,
+        stage: "summarizing",
+      });
+    });
+    expect(consoleError).toHaveBeenCalledWith(
+      "screenpilot_api_boundary_failure",
+      { category: "unclassified", operation: "interview_summary" },
+    );
+    expect(JSON.stringify(consoleError.mock.calls)).not.toContain("PRIVATE");
   });
 });

@@ -8,6 +8,7 @@ import { OpenAiCvAnalyzer } from "./openai/openai-cv-analyzer.js";
 import { OpenAiInterviewSummarizer } from "./openai/openai-interview-summarizer.js";
 import { CloudflareTurnstileVerifier } from "./turnstile/cloudflare-turnstile-verifier.js";
 import { FAKE_TURNSTILE_PASS_TOKEN } from "./turnstile/fake-turnstile-verifier.js";
+import { FakeElevenLabs } from "./elevenlabs/fake-elevenlabs.js";
 import { ElevenLabsVoiceTokenProvider } from "./elevenlabs/elevenlabs-token-provider.js";
 
 const fakeConfig = loadBackendConfig({
@@ -27,6 +28,22 @@ const liveConfig = loadBackendConfig({
   PAID_DEMO_ENABLED: "false",
   PROVIDER_MODE: "live",
   TURNSTILE_ALLOWED_HOSTNAMES: "test.screenpilot.invalid",
+  TURNSTILE_SECRET_KEY: "not-a-real-turnstile-secret",
+  TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
+});
+const summaryRehearsalConfig = loadBackendConfig({
+  ALLOWED_ORIGINS: "http://localhost:3000",
+  ANONYMOUS_COOKIE_SECRET: "unit-test-cookie-secret-000000000000",
+  APP_ENV: "local",
+  ELEVENLABS_AGENT_ID: "",
+  ELEVENLABS_API_KEY: "",
+  ELEVENLABS_VOICE_ID: "",
+  INTERVIEW_GRANT_SIGNING_SECRET: "unit-test-grant-secret-0000000000000",
+  LIVE_INTERVIEW_ENABLED: "false",
+  OPENAI_API_KEY: "not-a-real-openai-key",
+  PAID_DEMO_ENABLED: "true",
+  PROVIDER_MODE: "live",
+  TURNSTILE_ALLOWED_HOSTNAMES: "localhost",
   TURNSTILE_SECRET_KEY: "not-a-real-turnstile-secret",
   TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
 });
@@ -229,6 +246,27 @@ describe("provider adapter composition", () => {
     expect(adapters.interviewSummarizer).toBeInstanceOf(
       OpenAiInterviewSummarizer,
     );
+  });
+
+  it("uses fake voice without constructing an ElevenLabs client in summary rehearsal", async () => {
+    const adapters = createProviderAdapters(summaryRehearsalConfig);
+
+    expect(adapters.cvAnalyzer).toBeInstanceOf(OpenAiCvAnalyzer);
+    expect(adapters.challengeVerifier).toBeInstanceOf(
+      CloudflareTurnstileVerifier,
+    );
+    expect(adapters.interviewSummarizer).toBeInstanceOf(
+      OpenAiInterviewSummarizer,
+    );
+    expect(adapters.voiceTokenProvider).toBeInstanceOf(FakeElevenLabs);
+    await expect(
+      adapters.voiceTokenProvider.createVoiceToken({
+        requestId: "summary-rehearsal-request",
+      }),
+    ).resolves.toEqual({
+      conversationId: "screenpilot-fake-conversation",
+      conversationToken: "screenpilot-fake-conversation-token",
+    });
   });
 
   it("uses explicitly injected adapters in live mode", () => {

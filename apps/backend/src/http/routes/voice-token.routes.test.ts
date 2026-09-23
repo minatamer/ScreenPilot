@@ -324,6 +324,8 @@ describe("POST /v1/voice/token", () => {
         cause: new Error(privateCause),
         durationMs: 742,
         httpStatus: 403,
+        providerFailureClass: "account_or_authentication",
+        retryable: false,
       }),
     );
     const { app } = createTestApp(providers, {
@@ -343,9 +345,9 @@ describe("POST /v1/voice/token", () => {
     expect(publicError).toEqual({
       code: "PROVIDER_UNAVAILABLE",
       message:
-        "The secure voice connection is temporarily unavailable. Try again.",
+        "The voice interview cannot start right now. The demo owner must check the voice service before another attempt.",
       requestId: publicError.requestId,
-      retryable: true,
+      retryable: false,
     });
     const logEntries = logChunks
       .join("")
@@ -359,8 +361,10 @@ describe("POST /v1/voice/token", () => {
       msg: "request_failed",
       provider: "elevenlabs",
       providerDurationMs: 742,
-      providerFailureCategory: "http_non_success",
+      providerFailureClass: "account_or_authentication",
       providerHttpStatus: 403,
+      providerRetryable: false,
+      providerType: "http_non_success",
       requestId: publicError.requestId,
     });
     const logs = logChunks.join("");

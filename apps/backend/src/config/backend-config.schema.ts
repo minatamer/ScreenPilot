@@ -1,6 +1,8 @@
 import {
+  EFFECTIVE_RUNTIME_MODES,
   PUBLIC_RUNTIME_LIMITS,
   publicRuntimeConfigSchema,
+  type PublicRuntimeConfig,
 } from "@screenpilot/contracts/api/public-runtime-config";
 import { z } from "zod";
 
@@ -144,6 +146,7 @@ export const backendEnvironmentSchema = z
     INTERVIEW_GRANT_TTL_SECONDS: integerEnvironmentValue(60, 3_600).default(
       900,
     ),
+    LIVE_INTERVIEW_ENABLED: booleanEnvironmentValue.default(true),
     OPENAI_API_KEY: blankableSecret.default(""),
     PAID_DEMO_ENABLED: booleanEnvironmentValue.default(false),
     PORT: integerEnvironmentValue(1, 65_535).default(3_001),
@@ -193,16 +196,34 @@ export const backendEnvironmentSchema = z
       });
     }
 
+    if (
+      !environment.LIVE_INTERVIEW_ENABLED &&
+      ((environment.PROVIDER_MODE === "live" &&
+        environment.PAID_DEMO_ENABLED &&
+        environment.APP_ENV !== "local") ||
+        environment.APP_ENV === "production")
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "LIVE_INTERVIEW_ENABLED=false can select summary rehearsal only in local paid live mode and is forbidden in production.",
+        path: ["LIVE_INTERVIEW_ENABLED"],
+      });
+    }
+
     if (requiresLiveConfiguration) {
       const requiredLiveFields = [
         "OPENAI_API_KEY",
-        "ELEVENLABS_API_KEY",
-        "ELEVENLABS_AGENT_ID",
-        "ELEVENLABS_VOICE_ID",
         "TURNSTILE_SITE_KEY",
         "TURNSTILE_SECRET_KEY",
         "INTERVIEW_GRANT_SIGNING_SECRET",
         "ANONYMOUS_COOKIE_SECRET",
+      ] as const;
+
+      const requiredVoiceFields = [
+        "ELEVENLABS_API_KEY",
+        "ELEVENLABS_AGENT_ID",
+        "ELEVENLABS_VOICE_ID",
       ] as const;
 
       for (const field of requiredLiveFields) {
@@ -212,6 +233,21 @@ export const backendEnvironmentSchema = z
             message: "Required in live or production mode.",
             path: [field],
           });
+        }
+      }
+      if (
+        environment.PROVIDER_MODE === "live" &&
+        environment.PAID_DEMO_ENABLED &&
+        environment.LIVE_INTERVIEW_ENABLED
+      ) {
+        for (const field of requiredVoiceFields) {
+          if (environment[field] === "") {
+            context.addIssue({
+              code: "custom",
+              message: "Required when the live interview is enabled.",
+              path: [field],
+            });
+          }
         }
       }
 
@@ -296,8 +332,28 @@ export const backendEnvironmentSchema = z
 
 const nullableSecretSchema = z.string().nullable();
 
+type EffectiveRuntimeMode = PublicRuntimeConfig["effectiveMode"];
+
+export function deriveEffectiveRuntimeMode(
+  environment: Pick<
+    BackendEnvironment,
+    "LIVE_INTERVIEW_ENABLED" | "PAID_DEMO_ENABLED" | "PROVIDER_MODE"
+  >,
+): EffectiveRuntimeMode {
+  if (environment.PROVIDER_MODE === "fake") {
+    return "deterministic_fake";
+  }
+  if (!environment.PAID_DEMO_ENABLED) {
+    return "paid_disabled";
+  }
+  return environment.LIVE_INTERVIEW_ENABLED
+    ? "standard_live"
+    : "summary_rehearsal";
+}
+
 export const backendConfigSchema = z.strictObject({
   appEnvironment: z.enum(APP_ENVIRONMENTS),
+  effectiveMode: z.enum(EFFECTIVE_RUNTIME_MODES),
   limits: z.strictObject({
     anonymousCookieTtlSeconds: z.number().int().min(300).max(86_400),
     httpJsonBodyBytes: z.number().int().min(1_024).max(1_048_576),
@@ -362,67 +418,72 @@ export type BackendEnvironment = z.infer<typeof backendEnvironmentSchema>;
 
 export const createBackendConfigCandidate = (
   environment: BackendEnvironment,
-): BackendConfig => ({
-  appEnvironment: environment.APP_ENV,
-  limits: {
-    anonymousCookieTtlSeconds: environment.ANONYMOUS_COOKIE_TTL_SECONDS,
-    httpJsonBodyBytes: environment.HTTP_JSON_BODY_MAX_BYTES,
-    interviewGrantTtlSeconds: environment.INTERVIEW_GRANT_TTL_SECONDS,
-    providerRequestTimeoutMs: environment.PROVIDER_REQUEST_TIMEOUT_MS,
-    rateLimit: {
-      bootstrapRequests: environment.RATE_LIMIT_BOOTSTRAP_REQUESTS,
-      cvAnalyzeRequests: environment.RATE_LIMIT_CV_ANALYZE_REQUESTS,
-      maxEntries: environment.RATE_LIMIT_MAX_ENTRIES,
-      prepareRequests: environment.RATE_LIMIT_PREPARE_REQUESTS,
-      summaryRequests: environment.RATE_LIMIT_SUMMARY_REQUESTS,
-      voiceTokenRequests: environment.RATE_LIMIT_VOICE_TOKEN_REQUESTS,
-      windowSeconds: environment.RATE_LIMIT_WINDOW_SECONDS,
+): BackendConfig => {
+  const effectiveMode = deriveEffectiveRuntimeMode(environment);
+  return {
+    appEnvironment: environment.APP_ENV,
+    effectiveMode,
+    limits: {
+      anonymousCookieTtlSeconds: environment.ANONYMOUS_COOKIE_TTL_SECONDS,
+      httpJsonBodyBytes: environment.HTTP_JSON_BODY_MAX_BYTES,
+      interviewGrantTtlSeconds: environment.INTERVIEW_GRANT_TTL_SECONDS,
+      providerRequestTimeoutMs: environment.PROVIDER_REQUEST_TIMEOUT_MS,
+      rateLimit: {
+        bootstrapRequests: environment.RATE_LIMIT_BOOTSTRAP_REQUESTS,
+        cvAnalyzeRequests: environment.RATE_LIMIT_CV_ANALYZE_REQUESTS,
+        maxEntries: environment.RATE_LIMIT_MAX_ENTRIES,
+        prepareRequests: environment.RATE_LIMIT_PREPARE_REQUESTS,
+        summaryRequests: environment.RATE_LIMIT_SUMMARY_REQUESTS,
+        voiceTokenRequests: environment.RATE_LIMIT_VOICE_TOKEN_REQUESTS,
+        windowSeconds: environment.RATE_LIMIT_WINDOW_SECONDS,
+      },
     },
-  },
-  origins: { allowed: environment.ALLOWED_ORIGINS },
-  paidDemoEnabled: environment.PAID_DEMO_ENABLED,
-  port: environment.PORT,
-  providerMode: environment.PROVIDER_MODE,
-  providers: {
-    elevenLabs: {
-      agentId: environment.ELEVENLABS_AGENT_ID || null,
-      agentPlatform: LOCKED_PROVIDER_SETTINGS.elevenLabsAgentPlatform,
-      apiKey: environment.ELEVENLABS_API_KEY || null,
-      sttModel: LOCKED_PROVIDER_SETTINGS.elevenLabsSttModel,
-      ttsModel: LOCKED_PROVIDER_SETTINGS.elevenLabsTtsModel,
-      voiceId: environment.ELEVENLABS_VOICE_ID || null,
-    },
-    openAi: {
-      apiKey: environment.OPENAI_API_KEY || null,
-      model: LOCKED_PROVIDER_SETTINGS.openAiModel,
-      reasoning: LOCKED_PROVIDER_SETTINGS.openAiReasoning,
-      store: LOCKED_PROVIDER_SETTINGS.openAiStore,
-    },
-    turnstile: {
-      actions: TURNSTILE_ACTIONS,
-      allowedHostnames: environment.TURNSTILE_ALLOWED_HOSTNAMES,
-      secretKey: environment.TURNSTILE_SECRET_KEY || null,
-      siteKey: environment.TURNSTILE_SITE_KEY || null,
-      verificationUrl: LOCKED_PROVIDER_SETTINGS.turnstileVerificationUrl,
-    },
-  },
-  publicRuntime: {
-    abuseProtection: {
-      appearance: LOCKED_PROVIDER_SETTINGS.turnstileAppearance,
-      provider: LOCKED_PROVIDER_SETTINGS.turnstileProvider,
-      siteKey:
-        environment.PROVIDER_MODE === "live" && environment.PAID_DEMO_ENABLED
-          ? environment.TURNSTILE_SITE_KEY
-          : "",
-    },
-    limits: PUBLIC_RUNTIME_LIMITS,
-    paidOperationsEnabled: environment.PAID_DEMO_ENABLED,
-    privacyNoticeVersion: "2026-08-31",
+    origins: { allowed: environment.ALLOWED_ORIGINS },
+    paidDemoEnabled: environment.PAID_DEMO_ENABLED,
+    port: environment.PORT,
     providerMode: environment.PROVIDER_MODE,
-  },
-  security: {
-    anonymousCookieSecret: environment.ANONYMOUS_COOKIE_SECRET || null,
-    interviewGrantSigningSecret:
-      environment.INTERVIEW_GRANT_SIGNING_SECRET || null,
-  },
-});
+    providers: {
+      elevenLabs: {
+        agentId: environment.ELEVENLABS_AGENT_ID || null,
+        agentPlatform: LOCKED_PROVIDER_SETTINGS.elevenLabsAgentPlatform,
+        apiKey: environment.ELEVENLABS_API_KEY || null,
+        sttModel: LOCKED_PROVIDER_SETTINGS.elevenLabsSttModel,
+        ttsModel: LOCKED_PROVIDER_SETTINGS.elevenLabsTtsModel,
+        voiceId: environment.ELEVENLABS_VOICE_ID || null,
+      },
+      openAi: {
+        apiKey: environment.OPENAI_API_KEY || null,
+        model: LOCKED_PROVIDER_SETTINGS.openAiModel,
+        reasoning: LOCKED_PROVIDER_SETTINGS.openAiReasoning,
+        store: LOCKED_PROVIDER_SETTINGS.openAiStore,
+      },
+      turnstile: {
+        actions: TURNSTILE_ACTIONS,
+        allowedHostnames: environment.TURNSTILE_ALLOWED_HOSTNAMES,
+        secretKey: environment.TURNSTILE_SECRET_KEY || null,
+        siteKey: environment.TURNSTILE_SITE_KEY || null,
+        verificationUrl: LOCKED_PROVIDER_SETTINGS.turnstileVerificationUrl,
+      },
+    },
+    publicRuntime: {
+      abuseProtection: {
+        appearance: LOCKED_PROVIDER_SETTINGS.turnstileAppearance,
+        provider: LOCKED_PROVIDER_SETTINGS.turnstileProvider,
+        siteKey:
+          environment.PROVIDER_MODE === "live" && environment.PAID_DEMO_ENABLED
+            ? environment.TURNSTILE_SITE_KEY
+            : "",
+      },
+      limits: PUBLIC_RUNTIME_LIMITS,
+      effectiveMode,
+      paidOperationsEnabled: environment.PAID_DEMO_ENABLED,
+      privacyNoticeVersion: "2026-08-31",
+      providerMode: environment.PROVIDER_MODE,
+    },
+    security: {
+      anonymousCookieSecret: environment.ANONYMOUS_COOKIE_SECRET || null,
+      interviewGrantSigningSecret:
+        environment.INTERVIEW_GRANT_SIGNING_SECRET || null,
+    },
+  };
+};

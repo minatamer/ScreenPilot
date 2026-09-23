@@ -22,6 +22,7 @@ import {
 } from "./normalize-voice-event";
 import { INTERVIEW_HARD_STOP_MS } from "./interview-timer";
 import type { VoiceSessionEvent } from "./voice-session-bridge";
+import type { VoiceProviderFailure } from "./voice-provider-failure";
 import type { VoicePerformanceTracker } from "./voice-performance";
 
 export type VoiceSessionPhase =
@@ -135,7 +136,7 @@ type UseVoiceSessionOptions = Readonly<{
   hardStopAtMs?: number;
   now?: () => number;
   onConnected: (voice: VoiceMetadata) => void;
-  onConnectionFailure: (message: string) => void;
+  onConnectionFailure: (failure: VoiceProviderFailure) => void;
   onEnded: (voice: VoiceMetadata, completion: InterviewCompletion) => void;
   onEnding: (completion: InterviewCompletion) => void;
   onFinalTranscriptTurn: (turn: TranscriptTurn) => void;
@@ -278,7 +279,8 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
         measurementId:
           input.speechEndedAtMs === null
             ? null
-            : (tracker?.begin("ttfa", input.speechEndedAtMs) ?? null),
+            : (tracker?.begin("ttfa", input.speechEndedAtMs, "unix_epoch") ??
+              null),
         sequence,
         speechEndedAtMs: input.speechEndedAtMs,
         substantiveMessageSeen: false,
@@ -344,7 +346,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
   );
 
   const handleUnexpectedTerminalEvent = useCallback(
-    (message: string) => {
+    (failure: VoiceProviderFailure) => {
       if (completedRef.current) {
         return;
       }
@@ -359,7 +361,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       if (connectedRef.current) {
         callbacksRef.current.onInterrupted();
       } else {
-        callbacksRef.current.onConnectionFailure(message);
+        callbacksRef.current.onConnectionFailure(failure);
       }
     },
     [cancelPendingMeasurements, finishEnd],
@@ -513,6 +515,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
                 callbacksRef.current.performanceTracker?.begin(
                   "interruption_to_audio_stop",
                   eventTime,
+                  "unix_epoch",
                 ) ?? null;
             }
             return;
@@ -564,6 +567,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
             callbacksRef.current.performanceTracker?.begin(
               "interruption_to_audio_stop",
               eventTime,
+              "unix_epoch",
             ) ?? null;
           if (
             pendingInterruptionRef.current &&
@@ -580,11 +584,7 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
           return;
         }
         case "error":
-          handleUnexpectedTerminalEvent(
-            event.message.trim()
-              ? event.message
-              : "The voice provider rejected the connection.",
-          );
+          handleUnexpectedTerminalEvent(event.failure);
           return;
         case "disconnected":
           if (
@@ -602,9 +602,12 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
             return;
           }
           handleUnexpectedTerminalEvent(
-            event.message?.trim()
-              ? event.message
-              : "The voice session disconnected unexpectedly.",
+            event.failure ?? {
+              class: "unclassified",
+              message:
+                "The secure voice connection ended unexpectedly. Check the connection and try again.",
+              retryable: true,
+            },
           );
           return;
       }

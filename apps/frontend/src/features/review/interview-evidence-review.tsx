@@ -309,6 +309,14 @@ export function InterviewEvidenceReview({
         </p>
       ) : null}
 
+      {isPartial ? (
+        <p className="sp-review-storage-warning" role="status">
+          The voice connection ended before the interview was complete. The
+          final answers and insight notes already captured in this browser are
+          still available below.
+        </p>
+      ) : null}
+
       <div
         {...(summary
           ? {

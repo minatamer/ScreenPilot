@@ -8,6 +8,7 @@ type EntryModeChooserProps = Readonly<{
   cvAssistedEnabled?: boolean;
   disabled?: boolean;
   onSelect: (entryMode: EntryMode) => void;
+  summaryRehearsal?: boolean;
 }>;
 
 function DocumentIcon() {
@@ -51,6 +52,7 @@ export function EntryModeChooser({
   cvAssistedEnabled = true,
   disabled = false,
   onSelect,
+  summaryRehearsal = false,
 }: EntryModeChooserProps) {
   return (
     <div className="sp-entry-choice-grid">
@@ -75,7 +77,9 @@ export function EntryModeChooser({
         description={
           cvAssistedEnabled
             ? "Bring a CV for more focused follow-up questions. It stays in this tab."
-            : "CV selection and analysis stay disabled while external actions are paused."
+            : summaryRehearsal
+              ? "This local rehearsal uses the synthetic conversation-first fixture; CV analysis is disabled."
+              : "CV selection and analysis stay disabled while external actions are paused."
         }
         icon={<DocumentIcon />}
         title="Use a CV"

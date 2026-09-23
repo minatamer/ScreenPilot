@@ -17,10 +17,7 @@ import {
   type VoiceTokenRequester,
 } from "./voice-connection-stage";
 import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
-import {
-  createVoicePerformanceCollector,
-  createVoicePerformanceTracker,
-} from "./voice-performance";
+import { createVoicePerformanceTracker } from "./voice-performance";
 import {
   createFakeVoiceToolTrace,
   FAKE_VOICE_EVENT_TRACE,
@@ -63,7 +60,15 @@ function FakeSessionBridge({
       </button>
       <button
         onClick={() => {
-          onEvent({ type: "error", message: "Synthetic SDK failure." });
+          onEvent({
+            type: "error",
+            failure: {
+              class: "unclassified",
+              message:
+                "The secure voice connection could not start. Check the connection and try again.",
+              retryable: true,
+            },
+          });
         }}
         type="button"
       >
@@ -120,11 +125,13 @@ function stageProps(requestToken: VoiceTokenRequester) {
 
 describe("VoiceConnectionStage", () => {
   beforeEach(() => {
+    window.history.replaceState({}, "", "/");
     window.sessionStorage.clear();
     connectedBridgeCleanup.mockClear();
   });
 
   afterEach(() => {
+    window.history.replaceState({}, "", "/");
     vi.restoreAllMocks();
   });
 
@@ -250,20 +257,18 @@ describe("VoiceConnectionStage", () => {
   });
 
   it("uses the deterministic fake bridge when paid live voice is disabled", async () => {
+    window.history.replaceState({}, "", "/?diagnostics=timings");
     const requestToken = vi.fn<VoiceTokenRequester>().mockResolvedValue({
       conversationId: "fake-conversation-014",
       conversationToken: "fake-conversation-token",
     });
     const liveSessionBridge = vi.fn(() => null);
     const performanceTracker = createVoicePerformanceTracker();
-    const performanceCollector =
-      createVoicePerformanceCollector(performanceTracker);
     const props = {
       ...stageProps(requestToken),
       liveSessionBridge,
       liveVoiceEnabled: false,
       onConnected: vi.fn(),
-      performanceCollector,
       performanceTracker,
     };
     const rendered = render(
@@ -298,6 +303,11 @@ describe("VoiceConnectionStage", () => {
     expect(
       props.onFinalTranscriptTurn.mock.calls.map(([turn]) => turn.speaker),
     ).toEqual(["interviewer", "candidate", "interviewer"]);
+    expect(
+      performanceTracker
+        .getSnapshot()
+        .samples.some((sample) => sample.metric === "ttfa"),
+    ).toBe(true);
     await waitFor(() => {
       expect(props.onInsight).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -321,7 +331,11 @@ describe("VoiceConnectionStage", () => {
         <VoiceConnectionStage {...props} stage="live" />
       </StrictMode>,
     );
-    expect(screen.getByText("fake")).toBeInTheDocument();
+    expect(
+      JSON.parse(
+        screen.getByLabelText<HTMLTextAreaElement>("Raw timing JSON").value,
+      ),
+    ).toMatchObject({ sampleCount: 2, source: "fake" });
     fireEvent.click(screen.getByRole("button", { name: "End interview" }));
     await waitFor(
       () => {
@@ -428,7 +442,8 @@ describe("VoiceConnectionStage", () => {
     });
     expect(props.onFailure).toHaveBeenCalledWith({
       code: "VOICE_PROVIDER_REJECTED",
-      message: "Synthetic SDK failure.",
+      message:
+        "The secure voice connection could not start. Check the connection and try again.",
       retryable: true,
       stage: "connecting",
     });
@@ -496,6 +511,36 @@ describe("VoiceConnectionStage", () => {
     });
     expect(props.onSensitiveValuesCleared).toHaveBeenCalledOnce();
     expect(screen.queryByTestId("fake-session-bridge")).not.toBeInTheDocument();
+  });
+
+  it("does not offer Retry for an owner-action voice failure", () => {
+    const requestToken = vi.fn<VoiceTokenRequester>();
+    const props = {
+      ...stageProps(requestToken),
+      failure: {
+        code: "VOICE_PROVIDER_OWNER_ACTION",
+        message:
+          "The voice interview cannot start right now. The demo owner must check the voice service before another attempt.",
+        retryable: false,
+        stage: "connecting" as const,
+      },
+      startRequest: null,
+    };
+
+    render(<VoiceConnectionStage {...props} />);
+
+    expect(
+      screen.getByText(
+        "The voice interview cannot start right now. The demo owner must check the voice service before another attempt.",
+      ),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Retry from preflight" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Return to preflight" }),
+    ).toBeVisible();
+    expect(requestToken).not.toHaveBeenCalled();
   });
 
   it("aborts an unfinished request when connection cancellation unmounts the stage", async () => {

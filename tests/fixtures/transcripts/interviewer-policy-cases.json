@@ -1,5 +1,5 @@
 {
-  "fixtureVersion": "sp017-2026-09-22.1",
+  "fixtureVersion": "sp021b-2026-09-23.1",
   "cases": [
     {
       "id": "terse-complete-answer",
@@ -93,6 +93,67 @@
         "neutralDirect": true
       },
       "allowDetailedAnswer": true,
+      "expectedFailures": []
+    },
+    {
+      "id": "unsupported-question-without-remaining-gap",
+      "entryMode": "conversation_first",
+      "candidate": {
+        "id": "turn-candidate-final-unsupported-question",
+        "status": "final",
+        "clarity": "clear",
+        "text": "What onboarding and work-arrangement details can a recruiter share?",
+        "kind": "counterquestion",
+        "evidence": {
+          "candidateQuestionMeaningTokens": ["onboarding", "work-arrangement"],
+          "followupMeaningTokens": ["onboarding", "work-arrangement"]
+        }
+      },
+      "assistant": {
+        "text": "I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review. I have enough context to close this screen.",
+        "toolCalls": [
+          {
+            "name": "recordCandidateQuestion",
+            "arguments": {
+              "question": "What onboarding and work-arrangement details can a recruiter share?"
+            },
+            "attachedTurnId": "turn-candidate-final-unsupported-question"
+          },
+          {
+            "name": "requestFollowup",
+            "arguments": {
+              "reason": "A human recruiter must confirm the unsupported onboarding and work-arrangement details"
+            },
+            "attachedTurnId": "turn-candidate-final-unsupported-question"
+          }
+        ],
+        "systemToolCalls": ["end_call"]
+      },
+      "semantic": {
+        "directAnswerTerms": ["confirmed onboarding", "human recruiter"],
+        "neutralDirect": true
+      },
+      "allowDetailedAnswer": true,
+      "expectedFailures": []
+    },
+    {
+      "id": "final-question-declined",
+      "entryMode": "conversation_first",
+      "candidate": {
+        "id": "turn-candidate-final-question-declined",
+        "status": "final",
+        "clarity": "clear",
+        "text": "No.",
+        "kind": "refusal"
+      },
+      "assistant": {
+        "text": "I have enough context to organize this conversation for your review.",
+        "toolCalls": [],
+        "systemToolCalls": ["end_call"]
+      },
+      "semantic": {
+        "neutralDirect": true
+      },
       "expectedFailures": []
     },
     {

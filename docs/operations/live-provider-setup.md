@@ -2,7 +2,7 @@
 
 **Ticket:** SP-014A<br>
 **Last verified against first-party documentation:** 2026-09-14<br>
-**Last synchronized with ticket sequencing:** 2026-09-21<br>
+**Last synchronized with ticket sequencing:** 2026-09-23<br>
 **Scope:** local setup and live-provider readiness only
 
 This is the single owner runbook for preparing ScreenPilot's credentialed local
@@ -61,6 +61,7 @@ billing and ElevenLabs billing as separate accounts and separate budgets.
 
    - `PROVIDER_MODE=fake`
    - `PAID_DEMO_ENABLED=false`
+   - `LIVE_INTERVIEW_ENABLED=true`
 
 4. Generate the two application secrets locally. Run this command twice:
 
@@ -89,6 +90,7 @@ unrelated safety limits.
 | `PORT` | `3001` | Existing local backend port. |
 | `PROVIDER_MODE` | Keep `fake` until the complete readiness gate passes | Switching to `live` changes which adapters may be called. |
 | `PAID_DEMO_ENABLED` | Keep `false` until the final owner-authorized live test | This is the kill switch for paid operations. |
+| `LIVE_INTERVIEW_ENABLED` | `true` by default | `false` selects summary rehearsal only after local live + paid-enabled gates resolve; fake and paid-disabled modes ignore it, while production rejects it. |
 | `ALLOWED_ORIGINS` | `http://localhost:3000` | Must match the local frontend origin. |
 | `OPENAI_API_KEY` | OpenAI project key | Backend only. |
 | `ELEVENLABS_API_KEY` | Narrow ElevenLabs key | Backend only. |
@@ -127,6 +129,7 @@ either ignored `.env.local` file and did not contact a provider.
 | `TURNSTILE_ALLOWED_HOSTNAMES` | The backend compares Siteverify's returned hostname against this exact allow-list. | Implemented by SP-009; `localhost` is the current local-only value. |
 | `INTERVIEW_GRANT_SIGNING_SECRET` | The backend HMAC-signs and verifies short-lived stateless interview grants. | Implemented by SP-009 and used by preparation, CV analysis, voice-token authorization, and SP-020 summary plan binding. |
 | `ANONYMOUS_COOKIE_SECRET` | Express `cookie-parser` verifies the signed, HttpOnly, content-free anonymous-session cookie and signs replacements. | Implemented by SP-009 and used by bootstrap plus protected routes. |
+| `LIVE_INTERVIEW_ENABLED` | Backend configuration folds it into one public `effectiveMode`; the browser never reads the environment variable directly. | Global gates dominate: fake remains `deterministic_fake`, live + paid disabled remains `paid_disabled`, live + paid enabled defaults to `standard_live`, and only local live + paid enabled + `false` becomes `summary_rehearsal`. |
 
 The audit found two activation defects, both corrected on 2026-09-14:
 
@@ -139,12 +142,46 @@ The audit found two activation defects, both corrected on 2026-09-14:
    frontend therefore uses its deterministic no-network proof in fake mode;
    live mode alone receives the configured public site key.
 
-`PAID_DEMO_ENABLED=false` disables the current CV-analysis and voice-token use
-cases before either provider is called. Selecting `PROVIDER_MODE=live` creates
+`PAID_DEMO_ENABLED=false` disables CV analysis, voice-token issuance, and
+summary before a paid provider is called. Standard `PROVIDER_MODE=live` creates
 the real clients and validates the complete credential group, but does not by
-itself make a network request. The fixes above make loading the populated local
-file safe in fake mode, but they do not authorize the still-unchecked live-mode
-readiness or provider tests.
+itself make a network request. Local summary rehearsal deliberately requires
+live/paid-enabled configuration while omitting ElevenLabs client construction;
+it remains a paid OpenAI/Turnstile path and never authorizes itself. The fixes
+above make loading the populated local file safe in fake mode, but they do not
+authorize any unchecked live-mode readiness or provider test.
+
+### Local summary-only rehearsal
+
+Use this only when the owner explicitly wants to validate the live summary
+boundary without paying for another ElevenLabs interview. It is not the default
+fake rehearsal and does not count as a complete live voice pass.
+
+1. Use only the checked-in synthetic conversation-first scenario. Confirm the
+   OpenAI/Turnstile project, balance/caps, allowed `localhost` hostname, and the
+   maximum of one intended summary operation.
+2. In the ignored backend environment, the owner sets `APP_ENV=local`,
+   `PROVIDER_MODE=live`, `PAID_DEMO_ENABLED=true`, and
+   `LIVE_INTERVIEW_ENABLED=false`. OpenAI, Turnstile, and both application
+   secrets remain required. ElevenLabs values are not required by this mode.
+3. Restart both applications with the canonical production-like local startup.
+   Confirm the persistent **Summary rehearsal** notice, disabled CV action, and
+   available conversation-first path. Stop if the notice or mode differs.
+4. Complete the deterministic fake interview. Its diagnostics must say `fake`;
+   no ElevenLabs client, WebRTC session, speech operation, or voice charge is
+   expected. Voice authorization still consumes a real `voice_token` Turnstile
+   challenge before returning the deterministic local authorization.
+5. Confirm no summary request occurs merely because the interview ended. Click
+   **View summary** once to run the real `interview_summary` Turnstile check and
+   one metered OpenAI summary. Retry only through the visible explicit action
+   after a retryable failure; never refresh or repeat for metrics.
+6. Review only sanitized request count, coarse usage/cost, and provider status.
+   This evidence validates summary behavior only, not ElevenLabs or live voice.
+7. When finished, the owner restores `LIVE_INTERVIEW_ENABLED=true`,
+   `PAID_DEMO_ENABLED=false`, and `PROVIDER_MODE=fake`, then restarts both apps.
+
+Automated tests always override their process to fake/paid-disabled and never
+load the ignored local file, regardless of these owner-selected runtime values.
 
 ### Canonical local startup — no stale processes
 
@@ -414,7 +451,7 @@ control; do not improvise a different behavior.
 | --- | --- |
 | Product and template | ElevenAgents (`elevenagents`), one private Blank agent |
 | First message | `Hi, what's your name?` |
-| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts`. Policy `sp017-2026-09-22.1` is owner-published to private Main at immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`; live conversation behavior remains unobserved. Historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to `sp017-2026-09-16.1`. |
+| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts`. Source policy `sp021b-2026-09-23.1` contains post-live blocker fixes and is **not published**. Immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped only to last-published `sp017-2026-09-22.1`; do not run live until the owner deliberately synchronizes and records a new revision. |
 | Language | English only |
 | Native LLM | GPT-5.4 Mini (`gpt-5.4-mini`) through ElevenLabs |
 | Reasoning | None / reasoning budget 0 |
@@ -474,16 +511,19 @@ Do this only after the local SP-017 prompt tests pass. The TypeScript constant
 is the prose source of truth; the dashboard is a deployed copy and must never
 be edited as an independent prompt draft.
 
-Current synchronization status: source policy `sp017-2026-09-22.1` contains the
-SP-021A Prompt 1 candidate-question fallback/evidence behavior and has passed
-deterministic fake/provider-shaped verification. On 2026-09-22 the owner copied
-the exact rendered prompt to the existing private ScreenPilot/Main branch,
-saved the two changed client-tool descriptions, and published without Preview
-at immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`. This records
-dashboard synchronization only; no live conversation behavior is claimed. The
-historical `sp017-2026-09-16.1` revision
-`agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains historical evidence and was not
-relabelled.
+Current synchronization status: source policy `sp021b-2026-09-23.1` passed
+deterministic fake/provider-shaped verification but is not published. It fixes
+same-response fallback continuation and final-question decline → closing +
+`end_call`. The 2026-09-22 immutable revision
+`agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains honestly mapped to
+`sp017-2026-09-22.1`; it must not be relabelled. Publishing, recording a new
+immutable revision, and any live retest require fresh owner action and
+authorization.
+
+Before synchronization, complete SP-021B's post-fix manual fake checklist. The
+earlier 2026-09-23 fake walkthrough predates the corrected prompt, terminal
+trace, summary boundaries, timing clock origins, interruption copy, and error
+layout and therefore is historical evidence only.
 
 1. Run the focused prompt suite in fake mode. Do not start a Preview
    conversation.
@@ -620,7 +660,7 @@ not applicable, or deferred to a named later ticket.
 | Knowledge base / RAG | Disabled or empty |
 | Workflows, branches, sub-agents, transfer rules | Disabled or not applicable |
 | Evaluation criteria, post-call analysis, data collection, sentiment | Disabled or empty |
-| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation belongs to SP-017 and deterministic timing behavior to SP-018. SP-018A completed the bounded initial smoke; SP-021B owns the remaining consolidated complete-flow validation and representative live sample. |
+| Dashboard testing, simulation, and test suites | No live/dashboard run in SP-014A; synthetic policy evaluation belongs to SP-017 and deterministic timing behavior to SP-018. SP-018A completed the bounded initial smoke; SP-021B first proves the memory-only diagnostics in fake mode, then runs the two consolidated live complete flows without a timing-sample quota. |
 | Initiation and post-call webhooks | Disabled |
 | Experiments, traffic splits, alternate versions | Disabled; one active Main version |
 | Server-to-client and client-to-server events | Only events required by the private WebRTC bridge and exact client tools; normalization and handlers are deferred to SP-015 and SP-016 |

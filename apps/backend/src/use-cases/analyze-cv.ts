@@ -8,6 +8,7 @@ import { cvAnalysisOutputSchema } from "@screenpilot/contracts/ai/cv-analysis-ou
 import { normalizedCvSchema } from "@screenpilot/contracts/interview/normalized-cv";
 
 import { TURNSTILE_ACTIONS } from "../config/provider-mode.js";
+import { OpenAiRequestError } from "../providers/openai/openai-client.js";
 import { createCvAssistedPlan } from "../demo/cv-assisted-plan.js";
 import {
   hashInterviewGrantValue,
@@ -179,10 +180,21 @@ export function createAnalyzeCv(input: {
       );
     } catch (error: unknown) {
       signal?.throwIfAborted();
+      const providerRequestError =
+        error instanceof OpenAiRequestError ? error : null;
+      const retryable = providerRequestError?.retryable ?? true;
       throw new UseCaseError(
         "PROVIDER_UNAVAILABLE",
-        "CV analysis is temporarily unavailable. Try again.",
-        { cause: error, retryable: true },
+        retryable
+          ? "CV analysis is temporarily unavailable. Try again."
+          : "CV analysis is unavailable right now. The demo owner must check the analysis service before another attempt.",
+        {
+          cause: error,
+          ...(providerRequestError?.retryAfterSeconds === undefined
+            ? {}
+            : { retryAfterSeconds: providerRequestError.retryAfterSeconds }),
+          retryable,
+        },
       );
     }
 

@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-09-22<br>
+Last revised: 2026-09-23<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -36,8 +36,10 @@ operation. Required SP-021A records the owner's complete visual-feedback/fix
 ledger, explicit visual decisions, and two accepted pre-live behavior
 specifications: evidence-backed handling of candidate questions and a post-
 disconnect interview-complete hold before the user chooses View summary. The
-candidate-question behavior is implemented and deterministically verified in
-source policy `sp017-2026-09-22.1`; the reducer-owned completion hold is also
+candidate-question behavior originated in published policy
+`sp017-2026-09-22.1`; the 2026-09-23 live attempt exposed completion and
+same-response continuation defects now corrected and deterministically verified
+in unpublished source policy `sp021b-2026-09-23.1`. The reducer-owned completion hold is also
 implemented and deterministically verified in the browser lifecycle. On
 2026-09-22 the owner published the exact Prompt 1 source policy to the existing
 private ScreenPilot/Main branch without Preview at immutable revision
@@ -157,7 +159,9 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - A visitor can start with the bundled sample in under 15 seconds.
 - A visitor can upload a valid synthetic CV and reach the plan preview without leaving the main demo flow.
 - A visitor can choose **Start without a CV** and reach preflight without uploading a document or triggering a CV-analysis provider call.
-- Conversation-first preparation feels immediate: deployed `POST /v1/interview/prepare` p95 is at most 500 ms under normal conditions, excluding the visitor's later consent/microphone actions.
+- Conversation-first preparation feels immediate; local content-free diagnostics
+  show its observed duration without making a minimum-sample or public latency
+  claim.
 - Both entry paths reach the same quality of live interview, insight capture, review, error recovery, desktop layout, and mobile layout.
 - Two materially different CV fixtures produce visibly different facts and interview topics.
 - No paid voice connection starts before disclosure, consent, microphone permission, and the final Start button.
@@ -274,13 +278,15 @@ landing
 live/interviewing -> unexpected interruption -> summarizing or review_ready (partial review)
 ```
 
-Summary preparation may run single-flight behind `interview_complete`, but the
-user remains in the read-only completed workspace until **View summary** exposes
-the pending or ready review. Any blocking failure remains attached to its
-current stage and offers a specific retry or reset. No later stage is shown as
-successful when its prerequisite failed. Unexpected provider/network
-interruption remains the separate partial-review path rather than normal
-completion.
+After a fresh bootstrap validates the current boundary, standard fake/live
+summary preparation may run single-flight behind `interview_complete`; local
+summary rehearsal remains idle until **View summary**, and paid-disabled,
+pending, or failed runtime validation starts no summary work. The user remains
+in the read-only completed workspace until **View summary** exposes the pending
+or ready review. Any blocking failure remains attached to its current stage and
+offers a specific retry or reset. No later stage is shown as successful when its
+prerequisite failed. Unexpected provider/network interruption remains the
+separate partial-review path rather than normal completion.
 
 ### 4.4 Detailed stage contracts
 
@@ -354,7 +360,7 @@ completion.
 - **Visible behavior:** one **Start interview** button aligned at the lower right. Clicking it executes Turnstile in managed, interaction-only mode; a legitimate visitor normally moves directly into the connecting animation, while any required interaction appears inline without leaving preflight. This infrastructure detail is not narrated in candidate-facing copy.
 - **API:** `POST /v1/voice/token` verifies the signed grant and one memory-only `turnstileToken`, applies backend/provider capacity gates, and returns a short-lived private conversation token.
 - **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, role-neutral synthetic-demo disclosure, the universal screening plan, optional normalized CV/fact-linked role suggestion, candidate-stated role or undecided state, and registered client tools. All candidate content is bounded and delimited as untrusted data.
-- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Its bounded synthetic interview trace follows the bundled Riley Vale sample context—junior software-development direction, accessible workflow internship, distributed collaboration, logistics, and onboarding/mentorship priorities—then exercises the same client-tool and evidence-linking paths as live mode. Conversation-first still records Candidate-only provenance, while the sample-CV path confirms/corrects the matching seeded CV insight. The fake summary adapter preserves safe candidate-stated detail in its evidence-linked sections, with a cautious generic fallback if a supplied value would violate the summary boundary. Bootstrap exposes the non-secret provider mode and paid-operation state. Fake mode keeps its deterministic CV/voice paths, while live mode exposes CV, microphone, Turnstile, token, SDK, and WebRTC controls only when `paidOperationsEnabled: true`. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
+- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Its bounded synthetic interview trace follows the bundled Riley Vale sample context—junior software-development direction, accessible workflow internship, distributed collaboration, logistics, and onboarding/mentorship priorities—then exercises the same client-tool and evidence-linking paths as live mode. Conversation-first still records Candidate-only provenance, while the sample-CV path confirms/corrects the matching seeded CV insight. The fake summary adapter preserves safe candidate-stated detail in its evidence-linked sections, with a cautious generic fallback if a supplied value would violate the summary boundary. Bootstrap exposes the non-secret provider mode, paid-operation state, and one derived `effectiveMode`; backend route gates and frontend adapter selection consume that same value. `deterministic_fake` keeps deterministic CV/voice/summary paths, `paid_disabled` closes every provider-backed action without substituting fake output, `standard_live` enables the paid live path, and local-only `summary_rehearsal` keeps interview voice deterministic while its summary remains live and metered. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary; a restored CV-assisted session is cleared back to the entry chooser if the refreshed mode permits conversation-first only. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
 - **Output state:** `interviewing` only after the SDK reports connected.
 - **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider. A terminal SDK error, rejected conversation identifier, or unrecoverable interruption ends the provider session once and unmounts the session bridge before recovery UI remains available.
 
@@ -368,17 +374,24 @@ completion.
 - **Output state:** `ending` on agent completion, user End action, or time limit; a normal terminal disconnect then advances to `interview_complete`. An unrecoverable unexpected disconnect follows the separate partial-review path. Agent completion is a provider-owned terminal signal: after its brief spoken close the policy calls ElevenLabs' sole enabled `end_call` system tool, the SDK emits typed disconnect reason `agent`, and the reducer preserves that first terminal reason exactly once. Never infer completion by matching farewell wording.
 - **Failure:** brief reconnect attempt only while SDK supports it; otherwise preserve local transcript and proceed to partial review.
 
-**Candidate-question behavior (SP-021A; implemented and provider-published, live observation pending):** source policy `sp017-2026-09-22.1` uses the exact bounded response, “I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review.” For the same eligible final candidate turn, the browser records the complete candidate question with `recordCandidateQuestion` and a bounded human reason with `requestFollowup`; full question-segment matching accepts a verbatim question inside a compound turn while rejecting arbitrary fragments. Duplicate callbacks remain idempotent. Candidate question and Human follow-up cards render during the interview and remain linked to final-transcript evidence in Organized notes, the evidence map, summary validation, and copied review text. Summary validation requires the exact captured value and complete insight evidence-ID set for every captured question/follow-up; a model paraphrase that merely cites the right turn receives a content-safe mismatch rule, gets the one existing bounded repair opportunity, and otherwise fails closed. Fake traces and provider-shaped contracts follow the same state path without durable storage or provider transcript retrieval. Owner-confirmed dashboard synchronization maps this policy to immutable private-Main revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`; no Preview or paid conversation occurred, so live behavior remains an SP-021B acceptance item.
+**Candidate-question behavior (SP-021A/SP-021B; source-corrected, provider synchronization pending):** policy `sp021b-2026-09-23.1` begins unsupported employer answers with the exact bounded response, “I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review.” It records `recordCandidateQuestion` plus `requestFollowup`, then asks exactly one remaining HR question in the same response without waiting for acknowledgement; with no gap it briefly closes and calls `end_call` in that response. A resolved or declined final-question opportunity, including No, likewise produces exactly one closing plus `end_call` in the same turn. Completion remains explicit provider state/tool behavior, never farewell-string matching. Immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped only to published `sp017-2026-09-22.1`; the new source policy is marked dashboard-sync-required and no publication or paid retest has occurred.
 
 #### Stage 9 — end and summarize
 
 - **Input state:** local final transcript and insight state; no recording artifact is expected.
 - **Termination:** agent `end_call`, candidate-selected **End interview**, and the absolute eight-minute deadline enter one idempotent shutdown path. The first terminal reason wins. Provider/WebRTC/media work, authorization, timers, requests, and content-free measurements are released immediately; the provider bridge unmounts, while the existing bounded two-second fallback completes local shutdown if no terminal disconnect arrives. During that short pending interval, manual End loses its stop icon, shows a continuous spinner, and cannot be clicked again; mute is disabled.
-- **Completed workspace:** after normal shutdown the reducer enters `interview_complete`, retaining the transcript and Insight Board read-only. Elapsed time is frozen (`08:00` for the hard stop), the status rail says **Interview complete** and **Microphone disconnected**, speaking/listening/reconnect UI and mute are absent, and **View summary** replaces End. Fake mode emits its agent-owned disconnect only after every final transcript and client-tool event. A restored completed session remains completed and never requests a voice token or reconnects.
-- **Summary handoff:** summary preparation may begin once voice is disconnected while the completed workspace remains visible. A single managed Turnstile/request lifecycle survives the `interview_complete` → `summarizing` transition, so **View summary** reveals the genuine **Organizing this conversation** state when pending or the ready review when already complete without a second provider call. The action never reconnects voice.
+- **Completed workspace:** after normal shutdown the reducer enters `interview_complete`, retaining the transcript and Insight Board read-only. Elapsed time is frozen (`08:00` for the hard stop), the status rail says **Interview complete** and **Microphone disconnected**, speaking/listening/reconnect UI and mute are absent, and **View summary** replaces End. Standard fake/live mode may prepare one summary in the background while this hold remains visible; summary rehearsal deliberately waits for **View summary** before beginning its one live summary operation. Fake voice emits its agent-owned disconnect only after every final transcript and client-tool event. A restored completed session remains completed and never requests a voice token or reconnects.
+- **Summary handoff:** no restored session mounts Turnstile or starts summary work from its persisted runtime configuration. A fresh successful bootstrap must first validate the current `effectiveMode`; pending or failed refresh stays closed, and paid-disabled stays closed after success. Once validated, standard fake/live mode may begin one background Turnstile/request lifecycle without exposing review or altering the completed workspace; **View summary** advances to the already-ready review or the genuine **Organizing this conversation** state. In local summary rehearsal, disconnect begins no Turnstile or summary work: the explicit **View summary** action advances `interview_complete` to `summarizing` and only then starts at most one live summary lifecycle. Retry is explicit, obtains a fresh Turnstile token, and never reconnects voice or duplicates an in-flight/completed summary operation.
 - **API:** `POST /v1/interview/summary` sends the bounded local transcript, plan, insight cards, and a memory-only `turnstileToken`; after Siteverify succeeds, GPT-5.4 mini returns structured evidence-linked notes using `store: false`.
 - **Output state:** explicit **View summary** advances to `summarizing` or `review_ready`; unexpected provider/network interruption remains the distinct partial-review path.
-- **Failure:** Turnstile or summary failure preserves the transcript and cards; Retry summary obtains a fresh token and is allowed while the browser session exists.
+- **Failure:** Turnstile or summary failure preserves the transcript and cards. Retry appears only for retryable failures and obtains a fresh token; local request-shape and provider billing/account/auth/configuration failures require owner action and do not offer Retry. Browser diagnostics record only a content-free boundary category, while backend diagnostics retain only sanitized provider class/status/timing metadata.
+
+OpenAI owner-action classification includes bounded exact codes
+`credit_balance_exhausted`, `organization_spend_limit_exceeded`,
+`project_spend_limit_exceeded`, `organization_usage_limit_exceeded`, and legacy
+billing/quota markers. They remain non-retryable even with HTTP 429. A numeric
+`Retry-After` is honored only from 1 through 86,400 seconds; zero and malformed
+values are omitted rather than violating the positive shared API contract.
 
 #### Stage 10 — local review and clear
 
@@ -1075,6 +1088,53 @@ ElevenLabs transcript/client-tool events
 
 This is the only live voice path. Do not add a second transcription/audio architecture, browser recording, webhook tool, post-call webhook, or server transcript stream.
 
+### Local summary rehearsal boundary
+
+`LIVE_INTERVIEW_ENABLED=false` is a narrow owner-controlled local mode for
+isolating the first live OpenAI summary from ElevenLabs cost and variability.
+It selects rehearsal only after the global provider and paid gates already
+resolve to local paid live mode; it cannot turn fake mode live or reopen a
+paid-disabled runtime. Production rejects the false override.
+
+| `PROVIDER_MODE` | `PAID_DEMO_ENABLED` | `LIVE_INTERVIEW_ENABLED` | Derived `effectiveMode` |
+| --- | --- | --- | --- |
+| `fake` | `false` | absent, `true`, or `false` | `deterministic_fake` |
+| `live` | `false` | absent, `true`, or `false` | `paid_disabled` |
+| `live` | `true` | absent or `true` | `standard_live` |
+| `live` + `APP_ENV=local` | `true` | `false` | `summary_rehearsal` |
+| `live` outside local | `true` | `false` | configuration rejected |
+
+| `effectiveMode` | Summary start after a freshly validated bootstrap | ElevenLabs reachable | Does **View summary** initiate summary work? |
+| --- | --- | --- | --- |
+| `deterministic_fake` | One deterministic background preparation may start after normal disconnect. | No; token/session and summary adapters are fake. | No; it only exposes pending or ready review. |
+| `paid_disabled` | Never. Provider-backed controls, Turnstile, and summary remain closed. | No. | No. |
+| `standard_live` | One protected live background preparation may start after normal disconnect. | Yes, only through the protected live voice path. | No; it only exposes pending or ready review. |
+| `summary_rehearsal` | No work at disconnect; one protected live summary may start only after the explicit action. | No; voice remains deterministic fake. | Yes. |
+
+Fake mode with paid operations enabled remains invalid. Bootstrap exposes the
+derived `effectiveMode` without exposing the raw environment flag. Backend
+route gates, provider construction, browser action availability, and voice
+bridge selection all use that one mode. In summary rehearsal, CV analysis is closed,
+conversation-first preparation remains deterministic, voice authorization still
+requires the real Turnstile boundary, and the backend/browser use the fake
+ElevenLabs token/session path with fake-labelled in-memory diagnostics. The
+ElevenLabs HTTP client and React session are not constructed or called. The
+completed workspace waits for **View summary**; that explicit action performs a
+fresh real Turnstile check and at most one live metered OpenAI summary request.
+No automatic retry or fake-summary fallback is allowed.
+
+Persisted runtime configuration is never activation authority. A restored
+completed session mounts no summary challenge or request while bootstrap refresh
+is pending or failed. After a successful refresh, only the row above may reopen
+its documented behavior; an explicit safety-check retry is required after
+refresh failure.
+
+The UI displays a persistent **Summary rehearsal** label. This mode can prove
+the live summary boundary, evidence flow, retry classification, and OpenAI
+usage/cost in isolation. It is not evidence of live voice, ElevenLabs token,
+WebRTC, speech, interruption, retention, or voice cost, and it does not replace
+SP-021B's separately authorized standard live voice acceptance.
+
 ### Token issuance
 
 - The ElevenLabs API key remains backend-only.
@@ -1094,7 +1154,7 @@ This is the only live voice path. Do not add a second transcription/audio archit
 - A persisted `review_ready` projection is valid only with terminal voice metadata whose status is `ended` or `failed`. Missing or still-active voice state is corrupt restore data and must be cleared rather than presented as a complete interview; restored `failed` metadata always produces the concise **Partial review** state while keeping the bounded transcript internal until a node is selected.
 - The local transcript is review evidence, not a certified verbatim record.
 
-### Performance gates
+### Performance diagnostics
 
 TTFA means candidate speech end to first substantive agent audio. The browser
 timestamps speech end from the provider `vad_score` speaking-to-not-speaking
@@ -1102,29 +1162,52 @@ transition at the locked 0.5 threshold. A later final-transcript callback does
 not replace that boundary; when VAD is unavailable the latency interval may
 continue but no TTFA sample is recorded. A filler does not stop the timer.
 
-| Metric | Target | Release blocker |
-| --- | ---: | ---: |
-| TTFA p50 | ≤ 800 ms | > 1,200 ms |
-| TTFA p95 | ≤ 1,500 ms | > 2,000 ms |
-| Interruption-to-audio-stop p95 | ≤ 250 ms | > 400 ms |
-| Client-tool-to-card p95 | ≤ 300 ms | > 600 ms |
-| Connect request to ready p95 | ≤ 3,000 ms | > 5,000 ms |
-| Conversation-first preparation response p95 | ≤ 500 ms | > 1,000 ms |
+The timing boundaries below are engineering reference points for spotting an
+obvious regression during a controlled fake or live walkthrough. They are not a
+minimum-sample benchmark, a statistical product claim, or a release gate.
 
-Measure at least 50 representative deployed turns and 50 conversation-preparation requests across desktop and mobile reference devices under normal and throttled profiles before publishing latency claims.
+| Metric | Useful reference | Investigate an observed regression above |
+| --- | ---: | ---: |
+| TTFA p50 | ≤ 800 ms | 1,200 ms |
+| TTFA p95 | ≤ 1,500 ms | 2,000 ms |
+| Interruption-to-audio-stop p95 | ≤ 250 ms | 400 ms |
+| Client-tool-to-card p95 | ≤ 300 ms | 600 ms |
+| Connect request to ready p95 | ≤ 3,000 ms | 5,000 ms |
+| Conversation-first preparation response p95 | ≤ 500 ms | 1,000 ms |
+
+There is no required timing-sample count. Do not repeat a paid interview or
+provider action merely to increase a measurement count. SP-021B first proves in
+fake mode that the exact content-free instrumentation path captures and exposes
+raw preparation, connection, eligible TTFA, interruption, and client-tool timing
+observations. The two authorized live complete flows then record whatever
+eligible observations occur naturally.
 
 SP-018 measures these boundaries with a bounded browser-memory tracker. A
-sample contains only a content-free measurement ID, metric name, numeric start
+sample contains only a content-free measurement ID, metric name, explicit
+`performance_time_origin` or `unix_epoch` clock origin, numeric start
 and completion timestamps, and duration; it is never persisted, uploaded, added
 to application analytics, or combined with CV, transcript, audio, or insight
-content. TTFA and conversation-preparation aggregates remain explicitly
-`insufficient_sample` below 50 samples. A report records its fake/live source,
-batch ID, sample date, desktop/mobile profile, normal/throttled profile, provider
-revision, raw content-free timing samples, p50/p95 results, gate status, and
-content-free target/blocker outliers; fake and live batches cannot be combined.
-The local developer/test interview diagnostics form captures uncaptured samples
-into batches and renders the report JSON for copying. The collector remains in
-browser memory and has no persistence or upload path.
+content. A diagnostic snapshot records its fake/live source, raw content-free
+timing observations, counts, and informational p50/p95 aggregates; fake and live
+observations remain visibly distinguishable. On a loopback host, the explicit
+`/demo?diagnostics=timings` opt-in exposes raw numbers plus **Copy JSON** and
+**Reset** during the active and completed interview workspaces. It works in the
+canonical local production build but remains unavailable on a public hostname.
+It is browser-memory-only: no backend route, analytics transport, automatic
+download, `sessionStorage`, or other persistence is added, and refresh or
+**Clear & exit** removes it.
+
+**Owner scope update — implemented 2026-09-23:** fixed measurement quotas and
+release-blocking percentile statuses are removed from the demo plan and code.
+The superseded fixed-count constants, minimum-sample branches,
+`insufficient_sample`/`release_blocked` status types and rendering, overall
+pass/fail report status, gate-only outlier classification, manual batch metadata
+form, collector/batch abstraction, and quota/gate-only tests were deleted. The
+bounded tracker now directly supplies the accepted diagnostics target above.
+Focused fake-mode coverage proves capture, source labelling, raw display, JSON
+copy, reset, active/completed access, loopback-only gating, and the absence of
+candidate-content fields. SP-021B still owns the manual fake rehearsal before
+the two authorized live flows.
 
 Interruption timing starts when candidate VAD becomes active while agent audio is
 speaking and ends when the provider returns to listening. The bridge tolerates
@@ -1156,7 +1239,7 @@ observation.
 - Eight-minute hard stop.
 - One live connection per browser session.
 - Normal completion disconnects the live voice session before the post-call summary gate; the completed hold cannot extend connected voice billing or reconnect the provider.
-- Summary preparation is single-flight across the completed hold and **View summary** transition so one completion cannot create duplicate paid summary operations.
+- Summary preparation is single-flight across the completed hold and **View summary** transition so one completion cannot create duplicate paid summary operations. A restored session cannot mount the summary challenge or request until fresh bootstrap validation succeeds; pending, failed, and paid-disabled states remain closed.
 - Cloudflare Turnstile Free verification immediately before every provider-backed paid request: CV analysis, voice-token issuance, and post-call summary.
 - Best-effort bounded backend route/source limits on bootstrap, conversation preparation, CV analysis, voice token, and summary; counters are memory-only per instance and are not represented as durable identity enforcement.
 - Backend-configured paid-demo kill switch.
@@ -1167,6 +1250,9 @@ observation.
 - Cloud Run maximum-instance/concurrency bounds plus provider account spend alerts/caps provide the hard financial ceiling that memory-only limits cannot guarantee.
 - Bounded prompt/context/output sizes.
 - Paid smoke tests never run in default CI.
+- Local summary rehearsal cannot run in production, cannot enable CV analysis,
+  and cannot contact ElevenLabs. It retains the live Turnstile/OpenAI summary
+  gates and therefore remains an explicitly owner-authorized paid operation.
 
 ---
 
@@ -1935,8 +2021,9 @@ no-spend live-wiring phase fail closed in the browser as well as the backend.
 voice-token use cases before provider calls. In live mode it also disables CV
 selection/analysis, microphone permission, both Turnstile actions, voice-token
 issuance, the ElevenLabs SDK bridge, and WebRTC in the browser. A restored tab
-cannot reuse an older capability state: provider controls stay disabled until a
-fresh bootstrap succeeds. Only the active refresh generation may apply a
+cannot reuse an older capability state: provider controls, including completed-
+session summary preparation, stay disabled until a fresh bootstrap succeeds.
+Only the active refresh generation may apply a
 response; cleanup-aborted and stale responses are ignored, safe stage changes
 do not replace the current request, and a failed refresh requires an explicit
 fresh retry. `PROVIDER_MODE=live` validates and constructs the live clients but
@@ -2526,7 +2613,8 @@ For each flow:
 2. record ElevenLabs connected minutes, standard-versus-burst status, remaining included minutes, live-LLM **Detailed costs**, and the final credit/currency deduction;
 3. check Cloud Billing for Cloud Run, Hosting, Secret Manager, and Artifact Registry overages rather than assuming every free quota applied;
 4. calculate estimated and actual totals with the formulas above and explain any variance greater than 20%; and
-5. use the measured median/maximum only after at least three complete flows before publishing a portfolio cost claim.
+5. keep the observed cost as a per-flow engineering sanity check; do not publish
+   a portfolio unit-cost claim from this bounded validation window.
 
 The evidence quality is intentionally explicit: OpenAI unit rates, ElevenLabs voice rates, and infrastructure quotas are provider-published; token volumes are ScreenPilot estimates; the live native-model amount is a proxy until measured. Removing database/storage services reduces infrastructure baseline and implementation overhead, but it does not materially change the voice-minute cost, which dominates a normal paid run.
 
@@ -2818,7 +2906,9 @@ choosing_entry_mode -> Use a CV -> awaiting_cv
 choosing_entry_mode -> Start without a CV -> preparing_conversation -> preflight
 awaiting_cv -> local extract/status -> SP-012 analysis -> plan_ready -> preflight
 preflight -> SP-013 consent/readiness -> ready/connecting -> live -> ending -> interview_complete
-interview_complete -> background single-flight summary preparation while the read-only completed workspace remains visible
+interview_complete -> freshly validated standard fake/live -> background single-flight summary preparation while the read-only completed workspace remains visible
+interview_complete -> pending/failed/paid-disabled refresh -> no Turnstile or summary request
+interview_complete -> summary rehearsal -> View summary initiates one summary lifecycle
 interview_complete -> explicit View summary -> summarizing or review_ready
 summarizing -> review_ready
 live -> unexpected provider/network interruption -> summarizing or review_ready (partial review)
@@ -3111,7 +3201,12 @@ They may not contain CV text, transcript text, insight values, names, salary val
 
 ### Browser diagnostics
 
-A development-only diagnostics drawer may display local event order, TTFA measurements, connection states, and client-tool timings. It is disabled in the public production build and never uploads candidate content.
+An explicit local-testing diagnostics drawer may display raw content-free
+preparation, TTFA, connection, interruption, and client-tool timings during the
+active and completed interview workspaces. It must work for the canonical local
+fake-first/live test flow while remaining disabled in the public deployment. It
+offers copy/reset only, never uploads or persists its data, and never contains
+candidate content.
 
 ---
 
@@ -3889,7 +3984,7 @@ without an HTTP request, browser load, provider operation, or paid action.
 
 **Depends on:** SP-014, SP-015, SP-017.
 
-**Suggested commit:** `SP-018: enforce conversational latency gates`
+**Suggested commit:** `SP-018: simplify local voice diagnostics`
 
 **Checklist:**
 
@@ -3897,13 +3992,22 @@ without an HTTP request, browser load, provider operation, or paid action.
 - [x] Tune prompt size, context bounds, turn eagerness, and TTS settings.
 - [x] Implement bounded latency feedback and one static soft-timeout filler; the initial interval uses the integrated transcript status rail without a separate ornament.
 - [x] Enforce filler frequency rules and 8-minute hard stop.
-- [x] Provide repeatable content-free aggregation for 50 live turns plus 50 conversation-preparation requests across desktop/mobile and normal/throttled profiles.
-- [x] Encode documented release thresholds as failures; SP-021B owns the deferred live sample and must not weaken them.
+- [x] Provide bounded content-free aggregation with explicit fake/live source
+  metadata and no candidate content.
+- [x] Apply the 2026-09-23 simplification before SP-021B: remove fixed sample
+  minima and release-gate statuses, then expose memory-only raw diagnostics with
+  copy/reset access in both active and completed fake/live interview workspaces.
+- [x] Remove every implementation artifact that exists only for the superseded
+  benchmark: fixed-count constants, gate-status/outlier branches and types,
+  obsolete report/batch UI, and quota/gate-only tests and fixtures. Do not leave
+  dead compatibility code behind.
 
-**Implementation evidence (2026-09-15):** Browser-only instrumentation now
-covers every named boundary, emits bounded content-free samples, and exposes an
-in-app developer/test batch collector with source-labelled JSON reports, raw
-timing samples, exact p50/p95 gates, and outlier output. TTFA begins at the
+**Implementation evidence (2026-09-15, updated 2026-09-23):** Browser-only
+instrumentation covers every named boundary and emits bounded content-free
+samples. The 2026-09-23 simplification removed the original batch collector,
+profile form, fixed minimums, percentile verdicts, outliers, and gate-only tests.
+The tracker now exposes source-labelled raw JSON, counts, and informational
+p50/p95 values directly through the loopback-only diagnostics drawer. TTFA begins at the
 provider-VAD speech-end transition rather than the final-transcript callback and
 is omitted when that boundary is unavailable. Interruption callback ordering,
 the visual 0/800 ms states, substantive-audio/filler separation, static-filler
@@ -3915,8 +4019,16 @@ soft timeout remains off until empirical measurement warrants it. No live
 provider sample or active-session acceptance is claimed by SP-018. Post-fix
 verification passed repository lint, every package typecheck, 221 frontend tests,
 201 backend tests, 62 contract tests, and a final focused 3-file/24-test collector
-and UI integration run. No production build or microphone/browser acceptance is
-claimed by this verification.
+and UI integration run. The 2026-09-23 follow-up passed changed-file lint,
+frontend/contracts typechecks, 35 focused fake/integration tests, and both
+production-like application builds. The detached local backend returned 200 for
+live/readiness health, the frontend served the loopback diagnostics URL, and a
+fake conversation-first preparation reached preflight. The host emitted its
+known unsupported-engine warning because it currently runs Node 22 instead of
+the repository's required Node 24. The in-app browser blocked microphone access,
+so the active/completed manual drawer and responsive visual pass remain for the
+owner's normal browser rehearsal in SP-021B. No live provider acceptance is
+claimed by the follow-up.
 
 #### [SP-018A — Verify live CV and voice integrations](tickets/SP-018A-verify-live-cv-and-voice-integrations.md)
 
@@ -3932,7 +4044,9 @@ claimed by this verification.
 - [x] Boot with `PROVIDER_MODE=live` and `PAID_DEMO_ENABLED=false`; prove paid routes fail closed and no provider, Turnstile, microphone, or WebRTC operation occurs.
 - [x] With explicit owner authorization, temporarily enable the paid gate and verify real Turnstile plus one bounded OpenAI CV-analysis operation.
 - [ ] Verify private ElevenLabs token issuance, WebRTC voice, all eight runtime variables, both entry modes, adaptive HR behavior, five client tools, controls, and cleanup with synthetic data.
-- [ ] Collect the real 50-turn and 50-preparation content-free performance sample; treat every documented blocking threshold as a failure.
+- [ ] Prove automatic content-free timing capture and raw diagnostics in fake
+  mode first, then retain the naturally occurring observations from the two
+  bounded live complete flows without a sample quota or percentile release gate.
 - [ ] Review provider revision, retention, usage, and actual cost; immediately restore paid false/fake mode and record sanitized evidence only.
 - [ ] Do not call live summary, use real-person data, invite external testers, or claim public/release readiness.
 
@@ -3966,7 +4080,7 @@ acceptance: candidate captions rendered but completed Pilot messages did not,
 and the agent's verbal close neither ended the provider session nor dispatched
 the canonical transition into the existing scrubbed Review placeholder. Those
 two defects, the second entry mode, complete client-tool/runtime-variable
-coverage, live performance samples, cleanup, provider usage/cost, and final
+coverage, live timing observations, cleanup, provider usage/cost, and final
 safety-switch restoration remained open at that checkpoint. The owner later
 confirmed both switches were restored; the other unchecked items transfer to
 SP-021B.
@@ -3995,7 +4109,7 @@ bounded live CV/voice smoke as sufficient to begin SP-019 and intentionally
 declined another paid partial interview before summary and review exist. The
 caption/automatic-end fixes remain deterministically verified but not re-
 observed live. The second entry mode, all eight runtime variables, all five
-client tools, the 50-turn and 50-preparation samples, full cleanup/privacy
+client tools, fake-first/live timing diagnostics, full cleanup/privacy
 inspection, and provider revision/retention/usage/cost review remain unchecked
 and move intact to SP-021B. The owner explicitly confirms the local runtime is
 restored to `PAID_DEMO_ENABLED=false` and `PROVIDER_MODE=fake`; the coding agent
@@ -4115,8 +4229,8 @@ publication of Prompt 1 is recorded at immutable revision
 **Outcome:** After SP-021A's accepted visual and pre-live decisions are fully
 implemented and reconciled, one consolidated owner-authorized paid window
 validates both entry modes through corrected voice behavior, summary, evidence-
-linked review, retry behavior, cleanup, provider evidence, and retained
-performance sampling.
+linked review, retry behavior, cleanup, provider evidence, and fake-first
+informational timing diagnostics.
 
 **Depends on:** SP-018A, SP-019, SP-020, SP-021, SP-021A.
 
@@ -4131,7 +4245,8 @@ performance sampling.
   agent completion, disconnected read-only workspace, and **View summary**
   handoff without voice reconnection or duplicate summary work. Any failure
   keeps SP-021B closed until it is fixed, documented, and revalidated in fake
-  mode.
+  mode. The earlier checked run is historical pre-correction evidence only and
+  does not satisfy this current release-candidate gate.
 - [ ] Reconcile the exact unchecked SP-018A ledger without converting any
   unperformed item into a pass.
 - [ ] Confirm SP-021A's two accepted behavior specifications and all owner-
@@ -4144,10 +4259,19 @@ performance sampling.
   automatic ending after their deterministic SP-018A fixes.
 - [ ] Verify all eight runtime variables, all five client tools, mode-specific
   provenance, evidence navigation, retry behavior, Clear & exit, and cleanup.
-- [ ] Collect the deferred 50 free preparation measurements and 50 eligible live
-  turns under a pre-agreed cap; report actual sample size and leave an incomplete
-  target unchecked and SP-021B open rather than weakening thresholds or
-  inventing evidence.
+- [x] Before live testing, verify in both fake entry paths that applicable
+  preparation and interview timing observations are captured, source-labelled,
+  viewable as raw numbers, copyable as content-free JSON, resettable, and
+  cleared on refresh/exit. The owner completed this rehearsal on 2026-09-23;
+  zero interruption samples were expected because neither run included a manual
+  interruption.
+- [ ] Retain the naturally occurring observations from the two bounded live
+  flows without repeating a paid action for metrics or applying a sample-count
+  gate; complete the remaining audible interruption/overlap observation there.
+- [ ] Confirm the pre-live implementation removed all fixed-quota and
+  percentile-gate code, UI copy, tests, fixtures, and dead report abstractions;
+  repository search must find no obsolete benchmark path masquerading as unused
+  compatibility code.
 - [ ] Review provider revision, retention/audio state, operation counts, coarse
   usage, and actual cost with sanitized evidence only.
 - [ ] Restore paid false/fake mode, reverify the smallest affected deterministic
@@ -4325,7 +4449,9 @@ deterministic final gate passes.
 - [ ] Link the approved HTML Design System Reference and explain how its tokens map to the shared React styling.
 - [ ] Add a two-minute demo script and concise architecture diagram.
 - [ ] Demonstrate both equal entry modes and explain focused-from-CV versus open-discovery behavior in portfolio materials.
-- [ ] Document measured TTFA and cost with date/sample size.
+- [ ] Include timing observations only when clearly labelled as a bounded
+  non-representative walkthrough; omit a public performance claim. Document the
+  two controlled flows' sanitized cost evidence separately.
 - [ ] Record the primary desktop portfolio walkthrough and include a concise mobile walkthrough proving full responsive parity.
 - [ ] Audit every Section 20 definition-of-done item.
 - [ ] Remove dead experiments, stale scope, debug UI, and unused dependencies.
@@ -4384,7 +4510,8 @@ deterministic final gate passes.
 - [ ] Both modes may adapt the phrasing and ordering of universal profession-neutral HR questions after a candidate confirms a role label; the label never introduces role-specific question categories, technical depth, or professional assessment, and conversation-first never creates a CV source or claims CV verification.
 - [ ] Both modes remain role-agnostic recruiter-style HR screens, use the universal HR intent library, fill the same prioritized HR field checklist—including synthesized experience and separate team/work style—ask at most one broad role-context clarification, and never branch into technical, portfolio, competency, roleplay, professional-knowledge, suitability, personality, or culture-fit assessment.
 - [ ] Client tools produce evidence-linked insight cards locally.
-- [ ] Interruption and TTFA meet release gates.
+- [ ] Content-free interruption and TTFA observations are captured in fake and
+  live modes and reviewed as informational diagnostics without a sample quota.
 - [ ] Audio saving/retention and UI disclosure match.
 
 ### Review
@@ -4438,7 +4565,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Sample-CV path | In scope | Keep because it demonstrates focused CV-grounded behavior with safe fixture data; conversation-first now serves visitors who want no document. Do not add a fully prerecorded sample interview. |
 | Desktop/mobile parity | Locked, non-negotiable | Preserve every core stage, action, state, and visual identity on both; adapt composition rather than hiding features on mobile. |
 | Custom animated voice signal | In scope | Use a restrained CSS/canvas component. Cut advanced audio-reactive shaders or 3D/WebGL work. |
-| Latency filler | Conditional | Keep the policy, but enable the audible filler only if measured p95 latency needs it. Do not build a library of filler phrases. |
+| Latency filler | Conditional | Keep the policy, but enable the audible filler only if the bounded fake/live walkthroughs show a recurring user-facing wait that warrants it. Do not build a library of filler phrases or require a statistical sample. |
 | Automated AI eval suite | Optional SP-028 | Manual scripted review and narrow safety tests are enough for release; automate the full role-neutral scenario/persona matrix only if the extra confidence is worth the time. |
 | HTML Design System Reference | In scope and intentionally lightweight | Keep fonts, typography, colors, spacing, surfaces, icons, and compact component/state examples; do not turn it into full-screen mockups, Storybook, or another app. |
 | Figma design system/prototype | Future optional, out of demo scope | Do not block implementation or add tickets for Figma. Revisit only if the portfolio later benefits from a formal design artifact. |

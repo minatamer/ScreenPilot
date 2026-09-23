@@ -16,6 +16,10 @@ import { MAX_LOCAL_TRANSCRIPT_TURNS } from "@/features/transcript/transcript-lim
 import { isStaticLatencyFiller } from "./latency-filler-policy";
 import { MAX_LIVE_CAPTION_CHARACTERS } from "./normalize-voice-event";
 import type { VoiceSessionBridgeProps } from "./voice-session-bridge";
+import {
+  classifyVoiceProviderFailure,
+  VOICE_SESSION_IDENTITY_FAILURE,
+} from "./voice-provider-failure";
 
 type MessagePayload = Parameters<NonNullable<HookCallbacks["onMessage"]>>[0];
 type AgentChatResponsePartPayload = Parameters<
@@ -107,7 +111,7 @@ function VoiceSessionStarter({
           initialSession.endSessionOnce();
           initialSession.onEvent({
             type: "error",
-            message: "The voice session could not start.",
+            failure: classifyVoiceProviderFailure(),
           });
         }
       }, 0);
@@ -164,7 +168,7 @@ export function ElevenLabsVoiceSession({
         terminationRef.current?.();
         onEvent({
           type: "error",
-          message: "The voice-session identifier could not be verified.",
+          failure: VOICE_SESSION_IDENTITY_FAILURE,
         });
         return;
       }
@@ -181,16 +185,20 @@ export function ElevenLabsVoiceSession({
         }
         return;
       }
-      const message =
-        details.reason === "error"
-          ? details.message
-          : "The voice provider ended the session.";
-      onEvent({ type: "disconnected", reason: details.reason, message });
+      onEvent({
+        type: "disconnected",
+        reason: details.reason,
+        ...(details.reason === "error"
+          ? {
+              failure: classifyVoiceProviderFailure(details.context),
+            }
+          : {}),
+      });
     },
     [onEvent],
   );
   const handleError = useCallback(
-    (message: string) => {
+    (_message: string, context?: unknown) => {
       if (failedRef.current) {
         return;
       }
@@ -198,7 +206,7 @@ export function ElevenLabsVoiceSession({
       terminationRef.current?.();
       onEvent({
         type: "error",
-        message: message || "The voice provider rejected the connection.",
+        failure: classifyVoiceProviderFailure(context),
       });
     },
     [onEvent],

@@ -23,6 +23,7 @@ describe("source-controlled ElevenLabs agent configuration", () => {
     expect(SCREENPILOT_ELEVENLABS_AGENT_CONFIG).toMatchObject({
       agentRevisionId: "agtvrsn_8901m350e924f2ev7t4pwnvq38b1",
       agentRevisionPolicyVersion: "sp017-2026-09-22.1",
+      dashboardSyncRequired: true,
       clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
       conversation: {
         clientEvents: [
@@ -78,7 +79,7 @@ describe("source-controlled ElevenLabs agent configuration", () => {
       voiceIdEnvironmentVariable: "ELEVENLABS_VOICE_ID",
     });
     expect(ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING).toBe(160);
-    expect(ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION).toBe(
+    expect(ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION).not.toBe(
       VOICE_AGENT_POLICY_VERSION,
     );
   });

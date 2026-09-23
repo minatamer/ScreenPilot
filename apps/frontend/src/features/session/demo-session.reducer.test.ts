@@ -54,9 +54,21 @@ const runtimeConfig: PublicRuntimeConfig = {
     pdfBytes: 5_242_880,
     pdfPages: 8,
   },
+  effectiveMode: "deterministic_fake",
   paidOperationsEnabled: false,
   privacyNoticeVersion: "2026-09-11",
   providerMode: "fake",
+};
+
+const summaryRehearsalRuntimeConfig: PublicRuntimeConfig = {
+  ...runtimeConfig,
+  abuseProtection: {
+    ...runtimeConfig.abuseProtection,
+    siteKey: "public-summary-rehearsal-site-key",
+  },
+  effectiveMode: "summary_rehearsal",
+  paidOperationsEnabled: true,
+  providerMode: "live",
 };
 
 const demoContext: PublicRoleNeutralDemoContext = {
@@ -184,6 +196,52 @@ function cvPreparationState(
 }
 
 describe("demoSessionReducer", () => {
+  it("allows only conversation-first entry in summary rehearsal", () => {
+    const rehearsalState = demoSessionReducer(bootstrappedState(), {
+      type: "RUNTIME_CONFIG_REFRESHED",
+      demoContext,
+      runtimeConfig: summaryRehearsalRuntimeConfig,
+    });
+
+    expect(() =>
+      demoSessionReducer(rehearsalState, {
+        type: "SELECT_ENTRY_MODE",
+        entryMode: "cv_assisted",
+      }),
+    ).toThrow(InvalidSessionTransitionError);
+    expect(
+      demoSessionReducer(rehearsalState, {
+        type: "SELECT_ENTRY_MODE",
+        entryMode: "conversation_first",
+      }),
+    ).toMatchObject({
+      entryMode: "conversation_first",
+      stage: "preparing_conversation",
+    });
+  });
+
+  it("clears a restored CV-assisted path when runtime refresh enters summary rehearsal", () => {
+    const cvState = cvPreparationState("plan_ready");
+
+    const reconciledState = demoSessionReducer(cvState, {
+      type: "RUNTIME_CONFIG_REFRESHED",
+      demoContext,
+      runtimeConfig: summaryRehearsalRuntimeConfig,
+    });
+
+    expect(reconciledState).toMatchObject({
+      entryMode: null,
+      runtimeConfig: summaryRehearsalRuntimeConfig,
+      stage: "choosing_entry_mode",
+      transcript: [],
+      insights: [],
+      topicProgress: [],
+    });
+    expect(reconciledState.cv).toBeUndefined();
+    expect(reconciledState.screeningPlan).toBeUndefined();
+    expect(reconciledState.interviewGrant).toBeUndefined();
+  });
+
   it("converges both preparation branches on the same preflight stage", () => {
     const conversationState = conversationPreflightState();
 
@@ -651,6 +709,32 @@ describe("demoSessionReducer", () => {
       type: "ADD_FINAL_TRANSCRIPT_TURN",
       turn: finalCandidateTurn,
     });
+    const retainedQuestionInsight = {
+      category: "candidate_question" as const,
+      createdAt: LATER,
+      cvFactIds: [],
+      evidenceTurnIds: [finalCandidateTurn.id],
+      id: "candidate-question-summary-lifecycle",
+      label: "Candidate question",
+      source: "Candidate" as const,
+      status: "confirmed" as const,
+      updatedAt: LATER,
+      value: "Asked about synthetic team size and onboarding",
+    };
+    state = demoSessionReducer(state, {
+      type: "UPSERT_INSIGHT",
+      insight: retainedQuestionInsight,
+    });
+    const retainedTopicProgress = {
+      evidenceTurnIds: [finalCandidateTurn.id],
+      status: "covered" as const,
+      topicKey: "candidate_questions" as const,
+      updatedAt: LATER,
+    };
+    state = demoSessionReducer(state, {
+      type: "SET_TOPIC_PROGRESS",
+      progress: retainedTopicProgress,
+    });
     const persistedSession = projectPersistedDemoSession(state);
     if (!persistedSession) {
       throw new Error("Expected the active test session to be persistable.");
@@ -935,7 +1019,45 @@ describe("demoSessionReducer", () => {
     ).toBe(completed);
   });
 
-  it("prepares one summary behind the completed workspace and reveals it on request", () => {
+  it("preserves usable evidence after a live provider interruption without claiming a refresh", () => {
+    let state = demoSessionReducer(conversationPreflightState(), {
+      type: "PREFLIGHT_READY",
+    });
+    state = demoSessionReducer(state, { type: "VOICE_CONNECTING" });
+    state = demoSessionReducer(state, {
+      type: "VOICE_CONNECTED",
+      voice: {
+        conversationId: "conversation-provider-interruption",
+        status: "connected",
+        startedAt: LATER,
+      },
+    });
+    state = demoSessionReducer(state, {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: finalCandidateTurn,
+    });
+
+    const interrupted = demoSessionReducer(state, {
+      type: "VOICE_INTERRUPTED",
+      now: "2026-09-09T09:20:00.000Z",
+    });
+
+    expect(interrupted).toMatchObject({
+      stage: "summarizing",
+      restoreNotice: "call_interrupted",
+      transcript: [finalCandidateTurn],
+      voice: {
+        endReason:
+          "The voice connection ended before the interview was complete.",
+        status: "failed",
+      },
+    });
+    expect(interrupted.voice?.endReason).not.toMatch(
+      /refresh|credit|provider/iu,
+    );
+  });
+
+  it("requires View summary before accepting one completed summary", () => {
     let state = demoSessionReducer(conversationPreflightState(), {
       type: "PREFLIGHT_READY",
     });
@@ -948,6 +1070,32 @@ describe("demoSessionReducer", () => {
       type: "ADD_FINAL_TRANSCRIPT_TURN",
       turn: finalCandidateTurn,
     });
+    const retainedQuestionInsight = {
+      category: "candidate_question" as const,
+      createdAt: LATER,
+      cvFactIds: [],
+      evidenceTurnIds: [finalCandidateTurn.id],
+      id: "candidate-question-summary-lifecycle",
+      label: "Candidate question",
+      source: "Candidate" as const,
+      status: "confirmed" as const,
+      updatedAt: LATER,
+      value: "Asked about synthetic team size and onboarding",
+    };
+    state = demoSessionReducer(state, {
+      type: "UPSERT_INSIGHT",
+      insight: retainedQuestionInsight,
+    });
+    const retainedTopicProgress = {
+      evidenceTurnIds: [finalCandidateTurn.id],
+      status: "covered" as const,
+      topicKey: "candidate_questions" as const,
+      updatedAt: LATER,
+    };
+    state = demoSessionReducer(state, {
+      type: "SET_TOPIC_PROGRESS",
+      progress: retainedTopicProgress,
+    });
     state = demoSessionReducer(state, {
       type: "VOICE_ENDING",
       completion: candidateCompletion,
@@ -958,19 +1106,50 @@ describe("demoSessionReducer", () => {
       voice: { status: "ended", endedAt: LATER },
     });
 
-    const preparedBehindWorkspace = demoSessionReducer(state, {
+    const backgroundPrepared = demoSessionReducer(state, {
       type: "SUMMARY_SUCCEEDED",
       summary: completedSummary,
     });
-    expect(preparedBehindWorkspace).toMatchObject({
+    expect(backgroundPrepared).toMatchObject({
       stage: "interview_complete",
       summary: completedSummary,
     });
+    expect(
+      demoSessionReducer(backgroundPrepared, { type: "VIEW_SUMMARY" }).stage,
+    ).toBe("review_ready");
 
-    const review = demoSessionReducer(preparedBehindWorkspace, {
+    const rehearsalState = {
+      ...state,
+      runtimeConfig: summaryRehearsalRuntimeConfig,
+    };
+    expect(() =>
+      demoSessionReducer(rehearsalState, {
+        type: "SUMMARY_SUCCEEDED",
+        summary: completedSummary,
+      }),
+    ).toThrow(InvalidSessionTransitionError);
+
+    const summarizing = demoSessionReducer(rehearsalState, {
       type: "VIEW_SUMMARY",
     });
-    expect(review.stage).toBe("review_ready");
+    expect(summarizing).toMatchObject({
+      insights: [retainedQuestionInsight],
+      stage: "summarizing",
+      topicProgress: [retainedTopicProgress],
+      transcript: [finalCandidateTurn],
+    });
+
+    const review = demoSessionReducer(summarizing, {
+      type: "SUMMARY_SUCCEEDED",
+      summary: completedSummary,
+    });
+    expect(review).toMatchObject({
+      insights: [retainedQuestionInsight],
+      stage: "review_ready",
+      summary: completedSummary,
+      topicProgress: [retainedTopicProgress],
+      transcript: [finalCandidateTurn],
+    });
     expect(demoSessionReducer(review, { type: "VIEW_SUMMARY" })).toBe(review);
   });
 

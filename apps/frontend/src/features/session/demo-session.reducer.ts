@@ -1,6 +1,7 @@
 import type { InterviewGrant } from "@screenpilot/contracts/api/interview-preparation";
 import type { ProviderUsage } from "@screenpilot/contracts/api/cv-analysis";
 import {
+  isSummaryRehearsal,
   publicRuntimeConfigSchema,
   type PublicRuntimeConfig,
 } from "@screenpilot/contracts/api/public-runtime-config";
@@ -188,9 +189,26 @@ function clearModeSpecificState(state: DemoSessionState): DemoSessionState {
   };
 }
 
+function reconcileRuntimeConfig(
+  state: DemoSessionState,
+  runtimeConfig: PublicRuntimeConfig,
+  demoContext: PublicRoleNeutralDemoContext,
+): DemoSessionState {
+  const refreshedState = {
+    ...state,
+    runtimeConfig,
+    demoContext,
+  };
+
+  return isSummaryRehearsal(runtimeConfig) && state.entryMode === "cv_assisted"
+    ? clearModeSpecificState(refreshedState)
+    : refreshedState;
+}
+
 function interruptedSession(
   session: PersistedDemoSession,
   now: string,
+  cause: "page_refresh" | "provider_connection" = "page_refresh",
 ): DemoSessionState {
   const hasUsableEvidence =
     session.transcript.length > 0 || session.insights.length > 0;
@@ -206,7 +224,10 @@ function interruptedSession(
     status: "failed",
     ...(session.voice?.startedAt ? { startedAt: session.voice.startedAt } : {}),
     endedAt: new Date(now).toISOString(),
-    endReason: "Voice session was interrupted by a page refresh.",
+    endReason:
+      cause === "page_refresh"
+        ? "Voice session was interrupted by a page refresh."
+        : "The voice connection ended before the interview was complete.",
   };
 
   return {
@@ -291,6 +312,16 @@ export function restoreDemoSession(
   session: PersistedDemoSession,
   now: string,
 ): DemoSessionState {
+  if (
+    isSummaryRehearsal(session.runtimeConfig) &&
+    session.entryMode === "cv_assisted"
+  ) {
+    return clearModeSpecificState({
+      ...session,
+      hydrationStatus: "ready",
+    });
+  }
+
   if (session.stage === "extracting_cv" || session.stage === "analyzing_cv") {
     return interruptedCvProcessingSession(session);
   }
@@ -450,14 +481,21 @@ export function demoSessionReducer(
       if (!parsedRuntimeConfig.success) {
         throw new TypeError("The public demo configuration is invalid.");
       }
-      return {
-        ...state,
-        demoContext: parsedDemoContext.data,
-        runtimeConfig: parsedRuntimeConfig.data,
-      };
+      return reconcileRuntimeConfig(
+        state,
+        parsedRuntimeConfig.data,
+        parsedDemoContext.data,
+      );
     }
     case "SELECT_ENTRY_MODE":
       assertStage(state, event.type, ["choosing_entry_mode"]);
+      if (
+        event.entryMode === "cv_assisted" &&
+        state.runtimeConfig &&
+        isSummaryRehearsal(state.runtimeConfig)
+      ) {
+        throw new InvalidSessionTransitionError(state.stage, event.type);
+      }
       return {
         ...state,
         entryMode: event.entryMode,
@@ -634,7 +672,11 @@ export function demoSessionReducer(
         if (!persistedSession) {
           throw new InvalidSessionTransitionError(state.stage, event.type);
         }
-        return interruptedSession(persistedSession, event.now);
+        return interruptedSession(
+          persistedSession,
+          event.now,
+          "provider_connection",
+        );
       }
     case "VIEW_SUMMARY":
       assertStage(state, event.type, [
@@ -657,6 +699,12 @@ export function demoSessionReducer(
       };
     case "SUMMARY_SUCCEEDED":
       assertStage(state, event.type, ["interview_complete", "summarizing"]);
+      if (
+        state.stage === "interview_complete" &&
+        (!state.runtimeConfig || isSummaryRehearsal(state.runtimeConfig))
+      ) {
+        throw new InvalidSessionTransitionError(state.stage, event.type);
+      }
       return {
         ...state,
         stage:

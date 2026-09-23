@@ -20,6 +20,13 @@ type OpenAiFailureCategory =
   | "response_status_unexpected"
   | "structured_output_invalid";
 
+export type OpenAiProviderFailureClass =
+  | "account_or_authentication"
+  | "billing_or_quota"
+  | "request_configuration"
+  | "transient"
+  | "unclassified";
+
 type OpenAiResponseBodyFailureCategory = Extract<
   OpenAiFailureCategory,
   "response_body_empty" | "response_body_invalid" | "response_body_oversized"
@@ -64,13 +71,22 @@ export class OpenAiRequestError extends Error {
   >;
   readonly durationMs: number;
   readonly httpStatus?: number;
-  readonly retryable = true;
+  readonly providerCode?: string;
+  readonly providerFailureClass: OpenAiProviderFailureClass;
+  readonly providerType?: string;
+  readonly retryAfterSeconds: number | undefined;
+  readonly retryable: boolean;
 
   constructor(input: {
     category: Exclude<OpenAiFailureCategory, "structured_output_invalid">;
     cause?: unknown;
     durationMs: number;
     httpStatus?: number;
+    providerCode?: string;
+    providerFailureClass?: OpenAiProviderFailureClass;
+    providerType?: string;
+    retryAfterSeconds?: number;
+    retryable?: boolean;
   }) {
     super(
       "CV analysis is temporarily unavailable. Try again.",
@@ -79,10 +95,146 @@ export class OpenAiRequestError extends Error {
     this.name = "OpenAiRequestError";
     this.category = input.category;
     this.durationMs = input.durationMs;
+    this.providerFailureClass = input.providerFailureClass ?? "unclassified";
+    this.retryAfterSeconds = input.retryAfterSeconds;
+    this.retryable = input.retryable ?? true;
     if (input.httpStatus !== undefined) {
       this.httpStatus = input.httpStatus;
     }
+    if (input.providerCode !== undefined) {
+      this.providerCode = input.providerCode;
+    }
+    if (input.providerType !== undefined) {
+      this.providerType = input.providerType;
+    }
   }
+}
+
+const providerMarkerSchema = z
+  .string()
+  .trim()
+  .max(128)
+  .regex(/^[A-Za-z0-9_.-]+$/)
+  .transform((value) => value.toLowerCase());
+
+const openAiErrorEnvelopeSchema = z.object({
+  error: z.object({
+    code: providerMarkerSchema.nullish(),
+    type: providerMarkerSchema.nullish(),
+  }),
+});
+
+const PERMANENT_BILLING_OR_QUOTA_MARKERS = [
+  "billing",
+  "billing_hard_limit_reached",
+  "billing_not_active",
+  "credit_balance_exhausted",
+  "insufficient_quota",
+  "organization_spend_limit_exceeded",
+  "organization_usage_limit_exceeded",
+  "project_spend_limit_exceeded",
+  "quota_exceeded",
+] as const;
+
+const PERMANENT_ACCOUNT_OR_AUTHENTICATION_MARKERS = [
+  "account_deactivated",
+  "invalid_api_key",
+  "organization_deactivated",
+] as const;
+
+function parseRetryAfterSeconds(value: string | null): number | undefined {
+  if (value === null || !/^\d+$/.test(value)) {
+    return undefined;
+  }
+  const seconds = Number(value);
+  return Number.isSafeInteger(seconds) && seconds > 0
+    ? Math.min(seconds, 86_400)
+    : undefined;
+}
+
+function includesMarker(
+  values: readonly (string | null | undefined)[],
+  markers: readonly string[],
+): boolean {
+  return values.some((value) => {
+    const normalized = value?.toLowerCase() ?? "";
+    return markers.includes(normalized);
+  });
+}
+
+function classifyHttpFailure(
+  response: Response,
+  responseText: string | null,
+): Readonly<{
+  providerFailureClass: OpenAiProviderFailureClass;
+  providerCode?: string;
+  providerType?: string;
+  retryAfterSeconds?: number;
+  retryable: boolean;
+}> {
+  let providerCode: string | null | undefined;
+  let providerType: string | null | undefined;
+  if (responseText !== null) {
+    try {
+      const parsed = openAiErrorEnvelopeSchema.safeParse(
+        JSON.parse(responseText),
+      );
+      if (parsed.success) {
+        providerCode = parsed.data.error.code;
+        providerType = parsed.data.error.type;
+      }
+    } catch {
+      // The HTTP status remains sufficient for a privacy-safe fallback class.
+    }
+  }
+  const providerMarkers = [providerCode, providerType];
+  if (includesMarker(providerMarkers, PERMANENT_BILLING_OR_QUOTA_MARKERS)) {
+    return {
+      ...(providerCode == null ? {} : { providerCode }),
+      providerFailureClass: "billing_or_quota",
+      ...(providerType == null ? {} : { providerType }),
+      retryable: false,
+    };
+  }
+  if (
+    response.status === 401 ||
+    response.status === 403 ||
+    includesMarker(providerMarkers, PERMANENT_ACCOUNT_OR_AUTHENTICATION_MARKERS)
+  ) {
+    return {
+      providerFailureClass: "account_or_authentication",
+      ...(providerCode == null ? {} : { providerCode }),
+      ...(providerType == null ? {} : { providerType }),
+      retryable: false,
+    };
+  }
+  if (
+    response.status === 408 ||
+    response.status === 409 ||
+    response.status === 425 ||
+    response.status === 429 ||
+    response.status >= 500
+  ) {
+    const retryAfterSeconds = parseRetryAfterSeconds(
+      response.headers.get("retry-after"),
+    );
+    return {
+      providerFailureClass: "transient",
+      ...(providerCode == null ? {} : { providerCode }),
+      ...(providerType == null ? {} : { providerType }),
+      ...(retryAfterSeconds === undefined ? {} : { retryAfterSeconds }),
+      retryable: true,
+    };
+  }
+  if (response.status >= 400 && response.status < 500) {
+    return {
+      providerFailureClass: "request_configuration",
+      ...(providerCode == null ? {} : { providerCode }),
+      ...(providerType == null ? {} : { providerType }),
+      retryable: false,
+    };
+  }
+  return { providerFailureClass: "unclassified", retryable: false };
 }
 
 export class OpenAiStructuredOutputError extends Error {
@@ -313,7 +465,15 @@ export class OpenAiHttpClient implements OpenAiClient {
   #createRequestError(
     category: Exclude<OpenAiFailureCategory, "structured_output_invalid">,
     startedAt: number,
-    input: { cause?: unknown; httpStatus?: number } = {},
+    input: {
+      cause?: unknown;
+      httpStatus?: number;
+      providerCode?: string;
+      providerFailureClass?: OpenAiProviderFailureClass;
+      providerType?: string;
+      retryAfterSeconds?: number;
+      retryable?: boolean;
+    } = {},
   ): OpenAiRequestError {
     return new OpenAiRequestError({
       category,
@@ -322,6 +482,19 @@ export class OpenAiHttpClient implements OpenAiClient {
       ...(input.httpStatus === undefined
         ? {}
         : { httpStatus: input.httpStatus }),
+      ...(input.providerCode === undefined
+        ? {}
+        : { providerCode: input.providerCode }),
+      ...(input.providerFailureClass === undefined
+        ? {}
+        : { providerFailureClass: input.providerFailureClass }),
+      ...(input.providerType === undefined
+        ? {}
+        : { providerType: input.providerType }),
+      ...(input.retryAfterSeconds === undefined
+        ? {}
+        : { retryAfterSeconds: input.retryAfterSeconds }),
+      ...(input.retryable === undefined ? {} : { retryable: input.retryable }),
     });
   }
 
@@ -363,9 +536,16 @@ export class OpenAiHttpClient implements OpenAiClient {
         signal: requestSignal,
       });
       if (!response.ok) {
-        await response.body?.cancel();
+        let responseText: string | null = null;
+        try {
+          responseText = await readBoundedResponse(response);
+        } catch {
+          responseText = null;
+        }
+        const classification = classifyHttpFailure(response, responseText);
         throw this.#createRequestError("http_non_success", startedAt, {
           httpStatus: response.status,
+          ...classification,
         });
       }
 
@@ -441,10 +621,14 @@ export class OpenAiHttpClient implements OpenAiClient {
       if (timeoutSignal.aborted) {
         throw this.#createRequestError("request_timeout", startedAt, {
           cause: error,
+          providerFailureClass: "transient",
+          retryable: true,
         });
       }
       throw this.#createRequestError("fetch_failure", startedAt, {
         cause: error,
+        providerFailureClass: "transient",
+        retryable: true,
       });
     }
   }

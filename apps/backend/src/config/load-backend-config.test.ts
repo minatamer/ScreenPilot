@@ -40,6 +40,17 @@ const liveEnvironment = {
   TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
 } as const;
 
+const summaryRehearsalEnvironment = {
+  ...liveEnvironment,
+  ALLOWED_ORIGINS: "http://localhost:3000",
+  APP_ENV: "local",
+  ELEVENLABS_AGENT_ID: "",
+  ELEVENLABS_API_KEY: "",
+  ELEVENLABS_VOICE_ID: "",
+  LIVE_INTERVIEW_ENABLED: "false",
+  TURNSTILE_ALLOWED_HOSTNAMES: "localhost",
+} as const;
+
 const publishedTurnstileTestSiteKeys = [
   "1x00000000000000000000AA",
   "2x00000000000000000000AB",
@@ -63,6 +74,11 @@ describe("loadBackendConfig", () => {
     const config = loadBackendConfig(environment);
 
     expect(config.appEnvironment).toBe(environment.APP_ENV);
+    expect(config.effectiveMode).toBe(
+      environment.PROVIDER_MODE === "fake"
+        ? "deterministic_fake"
+        : "standard_live",
+    );
     expect(config.providerMode).toBe(environment.PROVIDER_MODE);
     expect(config.providers.openAi.model).toBe("gpt-5.4-mini");
     expect(config.providers.openAi.reasoning).toBe("none");
@@ -79,7 +95,108 @@ describe("loadBackendConfig", () => {
     expect(config.providers.turnstile.secretKey).toBeNull();
     expect(config.security.anonymousCookieSecret).toBeNull();
     expect(config.publicRuntime.abuseProtection.siteKey).toBe("");
+    expect(config.publicRuntime.effectiveMode).toBe("deterministic_fake");
   });
+
+  it("loads local summary rehearsal without ElevenLabs configuration", () => {
+    const config = loadBackendConfig(summaryRehearsalEnvironment);
+
+    expect(config.effectiveMode).toBe("summary_rehearsal");
+    expect(config.publicRuntime).toMatchObject({
+      effectiveMode: "summary_rehearsal",
+      paidOperationsEnabled: true,
+      providerMode: "live",
+    });
+    expect(config.providers.elevenLabs).toMatchObject({
+      agentId: null,
+      apiKey: null,
+      voiceId: null,
+    });
+    expect(config.providers.openAi.apiKey).not.toBeNull();
+    expect(config.providers.turnstile.secretKey).not.toBeNull();
+  });
+
+  it.each([
+    [
+      "test live mode",
+      {
+        ...summaryRehearsalEnvironment,
+        APP_ENV: "test",
+      },
+    ],
+    [
+      "production live mode",
+      {
+        ...liveEnvironment,
+        LIVE_INTERVIEW_ENABLED: "false",
+      },
+    ],
+  ])("rejects summary rehearsal in %s", (_name, environment) => {
+    expect(() => loadBackendConfig(environment)).toThrow(
+      /summary rehearsal only in local paid live mode/i,
+    );
+  });
+
+  it.each([
+    ["absent", undefined],
+    ["true", "true"],
+    ["false", "false"],
+  ] as const)(
+    "keeps fake mode deterministic when the interview flag is %s",
+    (_name, liveInterviewEnabled) => {
+      const config = loadBackendConfig({
+        ...fakeEnvironment,
+        ...(liveInterviewEnabled === undefined
+          ? {}
+          : { LIVE_INTERVIEW_ENABLED: liveInterviewEnabled }),
+      });
+
+      expect(config.effectiveMode).toBe("deterministic_fake");
+      expect(config.publicRuntime.effectiveMode).toBe("deterministic_fake");
+    },
+  );
+
+  it.each([
+    ["absent", undefined],
+    ["true", "true"],
+    ["false", "false"],
+  ] as const)(
+    "keeps paid-disabled live mode closed when the interview flag is %s",
+    (_name, liveInterviewEnabled) => {
+      const config = loadBackendConfig({
+        ...summaryRehearsalEnvironment,
+        PAID_DEMO_ENABLED: "false",
+        ...(liveInterviewEnabled === undefined
+          ? { LIVE_INTERVIEW_ENABLED: undefined }
+          : { LIVE_INTERVIEW_ENABLED: liveInterviewEnabled }),
+      });
+
+      expect(config.effectiveMode).toBe("paid_disabled");
+      expect(config.publicRuntime.effectiveMode).toBe("paid_disabled");
+    },
+  );
+
+  it.each([
+    ["absent", undefined, "standard_live"],
+    ["true", "true", "standard_live"],
+    ["false", "false", "summary_rehearsal"],
+  ] as const)(
+    "derives the expected local paid live mode when the flag is %s",
+    (_flagName, liveInterviewEnabled, expectedMode) => {
+      const config = loadBackendConfig({
+        ...liveEnvironment,
+        ALLOWED_ORIGINS: "http://localhost:3000",
+        APP_ENV: "local",
+        TURNSTILE_ALLOWED_HOSTNAMES: "localhost",
+        ...(liveInterviewEnabled === undefined
+          ? { LIVE_INTERVIEW_ENABLED: undefined }
+          : { LIVE_INTERVIEW_ENABLED: liveInterviewEnabled }),
+      });
+
+      expect(config.effectiveMode).toBe(expectedMode);
+      expect(config.publicRuntime.effectiveMode).toBe(expectedMode);
+    },
+  );
 
   it("projects the Turnstile site key only when paid live mode is enabled", () => {
     const fakeConfig = loadBackendConfig({
@@ -179,6 +296,7 @@ describe("loadBackendConfig", () => {
   it.each([
     ["invalid provider enum", { PROVIDER_MODE: "automatic" }],
     ["invalid application enum", { APP_ENV: "preview" }],
+    ["invalid live-interview flag", { LIVE_INTERVIEW_ENABLED: "sometimes" }],
     ["malformed port", { PORT: "three-thousand" }],
     ["out-of-range body limit", { HTTP_JSON_BODY_MAX_BYTES: "1023" }],
     ["out-of-range rate limit", { RATE_LIMIT_VOICE_TOKEN_REQUESTS: "0" }],
@@ -232,6 +350,7 @@ describe("loadBackendConfig", () => {
     expect(serializedPublicConfig).not.toContain("ANONYMOUS_COOKIE_SECRET");
     expect(Object.keys(config.publicRuntime).sort()).toEqual([
       "abuseProtection",
+      "effectiveMode",
       "limits",
       "paidOperationsEnabled",
       "privacyNoticeVersion",

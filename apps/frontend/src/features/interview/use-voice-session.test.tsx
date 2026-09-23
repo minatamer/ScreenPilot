@@ -121,11 +121,20 @@ describe("useVoiceSession", () => {
       result.current.onSessionEvent({
         type: "disconnected",
         reason: "error",
-        message: "Synthetic network loss.",
+        failure: {
+          class: "transient",
+          message:
+            "The secure voice connection was interrupted. Check the connection and try again.",
+          retryable: true,
+        },
       });
       result.current.onSessionEvent({
         type: "error",
-        message: "Late duplicate error.",
+        failure: {
+          class: "unclassified",
+          message: "Safe duplicate error.",
+          retryable: true,
+        },
       });
     });
     expect(result.current.phase).toBe("failed");
@@ -557,13 +566,21 @@ describe("useVoiceSession", () => {
       result.current.markConnecting();
       result.current.onSessionEvent({
         type: "error",
-        message: "Synthetic provider rejection.",
+        failure: {
+          class: "unclassified",
+          message:
+            "The secure voice connection could not start. Check the connection and try again.",
+          retryable: true,
+        },
       });
     });
 
     expect(result.current.phase).toBe("failed");
     expect(events.onConnectionFailure).toHaveBeenCalledWith(
-      "Synthetic provider rejection.",
+      expect.objectContaining({
+        class: "unclassified",
+        retryable: true,
+      }),
     );
     expect(events.onInterrupted).not.toHaveBeenCalled();
   });
