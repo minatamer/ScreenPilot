@@ -4433,37 +4433,113 @@ manual matrix stay open.
 
 #### [SP-024 — Harden accessibility, responsiveness, and frontend performance](tickets/SP-024-harden-accessibility-responsiveness-and-performance.md)
 
-**Outcome:** The complete portfolio path adapts fluidly and remains equally polished and functionally complete from small phones through tablets, compact/standard laptops, desktops, and large monitors, including keyboard, safe-area, and reduced-motion behavior.
+**Outcome:** Phase A produces a comprehensive, evidence-backed frontend audit
+and individually addressable correction proposal without changing product code.
+Only after explicit owner approval does Phase B implement the approved finding
+IDs so the complete portfolio path adapts fluidly and remains equally polished
+and functionally complete from small phones through tablets, compact/standard
+laptops, desktops, and large monitors, including keyboard, safe-area, and
+reduced-motion behavior.
 
 **Depends on:** SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-016A, SP-021.
 
-**Suggested commit:** `SP-024: harden demo quality`
+**Suggested Phase A commit:** `SP-024: document frontend audit proposal`
+
+**Suggested Phase B commit:** `SP-024: implement approved frontend hardening`
+
+**Approval gate:** Phase A is read-only inspection, measurement, and
+documentation. It may create `docs/operations/sp-024-frontend-audit.md` and
+disposable local evidence, but it must not change application code, CSS, design
+tokens, the HTML design reference, tests/snapshots, dependencies, hooks,
+configuration, or product behavior. The report assigns stable P0–P3 finding
+IDs, includes precise proposed edits and verification, and initializes every
+owner decision as `Pending`. Phase B begins only when the owner explicitly
+approves named IDs or the whole proposal; new or materially changed advice
+returns to that gate.
+
+The owner's personal Codex installation may explicitly invoke
+`$impeccable audit`, `$improve-animations deep accessibility`, and
+`$review-animations` as
+advisory Phase A review tools. `$design-taste-frontend` is optional and limited
+to a read-only landing-page critique because its own scope excludes multi-step
+product UI. These skills are not repository dependencies or design authority;
+ScreenPilot instructions, privacy/accessibility requirements, the approved Deep
+Ink + Warm Coral direction, and measured evidence take precedence. Do not run
+skill hooks, live editing, plan execution, auto-fixes, `$gpt-taste`, or
+`$design-taste-frontend-v1` during Phase A.
+
+**Known reduced-motion diagnostic:** preserve the exact observation, “Found it:
+your system/browser is exposing reduced-motion preference, and the global
+accessibility rule was collapsing every animation to one frame.” The frontend's
+global reduced-motion rule currently collapses general durations to `1ms`, its
+motion tokens also collapse to `1ms`, and the HTML design reference uses an
+equivalent `0.01ms` rule while later component rules express intentional
+alternatives/exceptions. Audit both explicit `no-preference` and `reduce`
+states, record the active browser/OS preference, trace the winning CSS/JS rule,
+and distinguish a preference-driven one-frame result from an unrelated defect.
+Every proposed exemption must be narrow, justified by comprehension rather than
+decoration, specify its movement/repetition and non-motion alternative, and
+remain unimplemented until the owner approves it. Never weaken the global rule
+or restore spatial, scaling, parallax, spring, or perpetual motion merely
+because a third-party skill recommends it.
 
 **Checklist:**
 
-- [ ] Complete keyboard/focus/ARIA/caption behavior.
-- [ ] Run automated accessibility checks and manual keyboard review.
-- [ ] Tune and visually regress 320 px small phone, 360 × 800/390 × 844 phone, 768/820 px tablet, 1024 × 768 compact laptop/tablet landscape, 1280 × 800/1440 × 900 laptop/desktop, and 1920 × 1080/2560 × 1440 large-monitor anchors.
-- [ ] Drag-resize through intermediate widths and verify components reflow continuously without horizontal overflow, clipped actions, breakpoint dead zones, or duplicated device-specific implementations.
-- [ ] On large monitors, constrain reading widths and use deliberate whitespace/expanded composition instead of indiscriminately stretching controls, copy, and cards.
-- [ ] Verify the two landing entry cards have equal visual priority and that both preparation paths converge without duplicated desktop/mobile implementations.
-- [ ] Verify portrait, landscape, safe-area insets, dynamic viewport height, virtual keyboard, and sticky interview controls.
-- [ ] Verify browser PDF extraction, animation, captions, and insight updates remain responsive under a representative mid-range mobile CPU/network profile.
-- [ ] Optimize fonts, bundles, browser PDF parsing assets, and motion.
-- [ ] Test slow network, reduced motion, long text, and 200% zoom.
-- [ ] Fix all release-blocking visual and performance defects.
+- [ ] Phase A records the exact revision, environment/tool matrix, all responsive
+  anchors and intermediate widths, explicit paired motion preferences,
+  accessibility/keyboard evidence, device/input evidence, and representative
+  mobile performance profiles without editing implementation.
+- [ ] Audit keyboard/focus/ARIA/captions, continuous responsive behavior,
+  portrait/landscape, safe areas, dynamic viewport/keyboard, Turnstile fallback,
+  long content, 200% zoom, PDF extraction, captions/insights, render churn,
+  fonts, bundles, PDF assets, and motion.
+- [ ] Consolidate skill/tool findings, verify every cited location, reject false
+  positives or advice that conflicts with approved ScreenPilot constraints, and
+  document positive findings and evidence gaps.
+- [ ] Produce `docs/operations/sp-024-frontend-audit.md` with stable finding IDs,
+  affected-user impact, evidence, proposed files/edits, risk, acceptance
+  criteria, smallest verification plan, reduced-motion exemption matrix, and a
+  `Pending` owner-decision table.
+- [ ] Stop after presenting Phase A. Do not implement in the same run unless the
+  owner reviews the proposal and explicitly authorizes Phase B.
+- [ ] In Phase B, freeze the owner-approved IDs, implement only that set, add the
+  smallest required tests, verify both motion modes for every approved
+  exemption, and return new or changed proposals to the approval gate.
+- [ ] Synchronize any owner-approved accessibility-driven token or visual-rule
+  correction with the HTML design reference and this source of truth.
 
 #### [SP-025 — Complete focused manual release QA](tickets/SP-025-complete-focused-manual-release-qa.md)
 
-**Outcome:** The complete demo is manually approved across phone, tablet, compact-laptop, laptop/desktop, and large-monitor layouts and passes the fast essential checks without requiring the extended automation suite.
+**Outcome:** The exact owner-approved SP-024 result is manually approved across
+phone, tablet, compact-laptop, laptop/desktop, and large-monitor layouts and
+passes the fast essential checks without requiring the extended automation
+suite. SP-025 validates the approved result; it is not another design iteration
+or implicit approval of deferred SP-024 advice.
 
 **Depends on:** SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024.
 
 **Suggested commit:** `SP-025: complete focused demo release checks`
 
+**SP-024 handoff gate:** SP-025 requires the completed Phase A report, the
+owner's decision for every finding ID, the exact Phase B approved set, the
+implemented revision, and evidence for that set. Personal design skills may be
+used explicitly only to compare the candidate with approved IDs; their
+auto-fix, live-editing, hook, redesign, and plan-execution modes stay off. A new
+accessibility, responsive, motion, or frontend-performance finding is recorded
+and returned to the owner gate. A P0/P1 may block release, but does not authorize
+an unapproved implementation or reduced-motion exemption.
+
 **Checklist:**
 
 - [ ] Complete every Section 18 manual acceptance scenario across the responsive size anchors and spot-check intermediate drag-resized widths.
+- [ ] Verify the SP-024 handoff and cross-check that only owner-approved finding
+  IDs were implemented; do not treat deferred or rejected skill advice as a
+  release defect.
+- [ ] Force and record both `prefers-reduced-motion: no-preference` and `reduce`
+  rather than relying on the system default; distinguish the known global
+  one-frame-collapse symptom from an application defect and verify every
+  surviving exception maps to an approved finding or pre-existing source-of-
+  truth decision.
 - [ ] Verify distinct CV fixtures produce distinct grounded plans.
 - [ ] Verify conversation-first skips CV/provider preparation, begins with open discovery, progressively focuses, and produces a Candidate-only review.
 - [ ] Manually verify Graphic Designer, Customer Support Representative, CV-suggested Product Manager, Backend without technical questions, Full Stack without redirection, correction, compound wording, undecided role, unsupported employer questions, and missing/incorrect-name handling.
@@ -4475,7 +4551,10 @@ manual matrix stay open.
   release-candidate change invalidates that evidence.
 - [ ] Create `docs/operations/full-flow-cost-baseline.md`; reconcile direct OpenAI usage, ElevenLabs connected minutes/live-LLM Detailed costs, free allowances, and infrastructure overages without candidate/account/secret content, and explain estimate variance above 20%.
 - [ ] Manually verify real production-hostname Turnstile checks for CV analysis, voice start, and summary plus recovery from one forced/replayed challenge failure without losing local candidate state.
-- [ ] Record and resolve release-blocking functional, responsive, privacy, and provider issues.
+- [ ] Record and resolve release-blocking functional, privacy, and provider
+  issues through their authorized scope. Route new SP-024-class responsive,
+  accessibility, motion, or performance proposals back through the owner
+  decision ledger before implementation.
 
 #### [SP-025A — Audit release-candidate code and ticket completion](tickets/SP-025A-audit-release-candidate-code-and-ticket-completion.md)
 
