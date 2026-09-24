@@ -69,7 +69,7 @@ function props(overrides: Partial<PreflightProps> = {}): PreflightProps {
 function acceptDisclosure(): void {
   fireEvent.click(
     screen.getByRole("checkbox", {
-      name: /I understand how my microphone and answers will be used/iu,
+      name: /I understand how AI voice, my microphone, transcription, and notes will be used/iu,
     }),
   );
 }
@@ -163,6 +163,7 @@ describe("shared voice preflight", () => {
     expect(
       screen.getByText(/does not record or save your audio/iu),
     ).toBeVisible();
+    expect(screen.getByText(/require human review/iu)).toBeVisible();
     expect(screen.getByText(/lasts up to eight minutes/iu)).toBeVisible();
     expect(screen.getByText(/only for this demo session/iu)).toBeVisible();
     expect(screen.getByRole("checkbox")).not.toBeChecked();

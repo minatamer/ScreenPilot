@@ -109,6 +109,12 @@ describe("ElevenLabsVoiceSession", () => {
       sessionProps.clientTools,
     );
     expect(sdk.providerProps?.["isMuted"]).toBe(false);
+    expect(sdk.providerProps?.["libsampleratePath"]).toBe(
+      "/worklets/libsamplerate.worklet.js",
+    );
+    expect(sdk.providerProps?.["workletPaths"]).toEqual({
+      rawAudioProcessor: "/worklets/elevenlabs-raw-audio-processor.js",
+    });
     expect(sdk.providerProps).not.toHaveProperty("onDebug");
     expect(sdk.providerProps).not.toHaveProperty("onIncomingEvent");
     expect(JSON.stringify(sdk.startSession.mock.calls)).not.toMatch(

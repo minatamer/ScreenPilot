@@ -7,8 +7,8 @@ import type { NormalizedCv } from "@screenpilot/contracts/interview/normalized-c
 import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
 import {
-  type CSSProperties,
   type PointerEventHandler,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -48,6 +48,7 @@ type CarouselDirection = "next" | "previous";
 
 type CarouselSwipeOptions = Readonly<{
   currentSlide: number;
+  includesPageGap?: boolean;
   onSlideChange: (slide: number) => void;
   totalSlides: number;
 }>;
@@ -60,38 +61,6 @@ interface CarouselPointerGesture {
   startY: number;
 }
 
-type CarouselViewportStyle = CSSProperties & {
-  "--sp-carousel-page-gap-offset"?: string;
-  "--sp-carousel-slide-offset": string;
-};
-
-function carouselViewportStyle(
-  activeSlide: number,
-  includesPageGap = false,
-): CarouselViewportStyle {
-  return {
-    ...(includesPageGap
-      ? {
-          "--sp-carousel-page-gap-offset":
-            activeSlide === 0
-              ? "0px"
-              : `calc(0px${" - var(--sp-space-2)".repeat(activeSlide)})`,
-        }
-      : {}),
-    "--sp-carousel-slide-offset": `${String(activeSlide * -100)}%`,
-  };
-}
-
-function topicCarouselPosition(topicIndex: number): CSSProperties {
-  const topicIndexWithinSlide = topicIndex % MOBILE_TOPICS_PER_SLIDE;
-  const slideIndex = Math.floor(topicIndex / MOBILE_TOPICS_PER_SLIDE);
-
-  return {
-    gridColumn: slideIndex * 2 + (topicIndexWithinSlide % 2) + 1,
-    gridRow: Math.floor(topicIndexWithinSlide / 2) + 1,
-  };
-}
-
 function isCarouselInteractiveTarget(target: EventTarget | null): boolean {
   return (
     target instanceof Element &&
@@ -99,23 +68,43 @@ function isCarouselInteractiveTarget(target: EventTarget | null): boolean {
   );
 }
 
+function carouselDragTransform(
+  activeSlide: number,
+  dragX: number,
+  includesPageGap: boolean,
+): string {
+  const slideOffset = activeSlide * -100;
+  const pageGapOffset =
+    includesPageGap && activeSlide > 0
+      ? " - var(--sp-space-2)".repeat(activeSlide)
+      : "";
+  return `translate3d(calc(${String(slideOffset)}%${pageGapOffset} + ${String(dragX)}px), 0, 0)`;
+}
+
 function useCarouselSwipe<TElement extends HTMLElement>({
   currentSlide,
+  includesPageGap = false,
   onSlideChange,
   totalSlides,
 }: CarouselSwipeOptions) {
   const carouselViewportRef = useRef<TElement>(null);
+  const dragAnimationRef = useRef<Animation | null>(null);
   const pointerGesture = useRef<CarouselPointerGesture | undefined>(undefined);
 
   const resetDragVisuals = () => {
-    const carouselViewport = carouselViewportRef.current;
-    if (!carouselViewport) {
-      return;
+    if (carouselViewportRef.current) {
+      carouselViewportRef.current.dataset["dragging"] = "false";
     }
-
-    carouselViewport.dataset["dragging"] = "false";
-    carouselViewport.style.setProperty("--sp-carousel-drag-x", "0px");
+    dragAnimationRef.current?.cancel();
+    dragAnimationRef.current = null;
   };
+
+  useEffect(
+    () => () => {
+      dragAnimationRef.current?.cancel();
+    },
+    [],
+  );
 
   const onPointerDown: PointerEventHandler<TElement> = (event) => {
     if (
@@ -176,15 +165,25 @@ function useCarouselSwipe<TElement extends HTMLElement>({
         ? horizontalDistance * CAROUSEL_EDGE_RESISTANCE
         : horizontalDistance;
 
-    const carouselViewport = carouselViewportRef.current;
-    if (!carouselViewport) {
+    const carouselSurface = carouselViewportRef.current?.firstElementChild;
+    if (!carouselSurface || typeof carouselSurface.animate !== "function") {
       return;
     }
-
-    carouselViewport.dataset["dragging"] = "true";
-    carouselViewport.style.setProperty(
-      "--sp-carousel-drag-x",
-      `${String(gesture.dragX)}px`,
+    dragAnimationRef.current?.cancel();
+    if (carouselViewportRef.current) {
+      carouselViewportRef.current.dataset["dragging"] = "true";
+    }
+    dragAnimationRef.current = carouselSurface.animate(
+      [
+        {
+          transform: carouselDragTransform(
+            currentSlide,
+            gesture.dragX,
+            includesPageGap,
+          ),
+        },
+      ],
+      { duration: 1, fill: "forwards" },
     );
   };
 
@@ -479,6 +478,7 @@ export function InsightBoard({
   });
   const topicSwipeHandlers = useCarouselSwipe<HTMLDivElement>({
     currentSlide: activeTopicSlide,
+    includesPageGap: true,
     onSlideChange: selectTopicSlide,
     totalSlides: topicSlideCount,
   });
@@ -514,8 +514,8 @@ export function InsightBoard({
           aria-live="polite"
           className="sp-insight-board__rail"
           data-carousel-direction={insightSlideDirection}
+          data-carousel-slide={activeInsightSlide}
           role="list"
-          style={carouselViewportStyle(activeInsightSlide)}
         >
           <div className="sp-insight-board__rail-track">
             {orderedInsights.map((insight, index) => (
@@ -559,7 +559,7 @@ export function InsightBoard({
             {...topicSwipeHandlers}
             className="sp-insight-board__topics-viewport"
             data-carousel-direction={topicSlideDirection}
-            style={carouselViewportStyle(activeTopicSlide, true)}
+            data-carousel-slide={activeTopicSlide}
           >
             <ul aria-label="Interview topic progress">
               {topicProgress.map((progress, index) => (
@@ -570,9 +570,9 @@ export function InsightBoard({
                       ? "true"
                       : "false"
                   }
+                  data-carousel-index={index}
                   data-status={progress.status}
                   key={progress.topicKey}
-                  style={topicCarouselPosition(index)}
                 >
                   <span>{topicLabel(progress.topicKey)}</span>
                   <small>{topicStatusLabel(progress.status)}</small>

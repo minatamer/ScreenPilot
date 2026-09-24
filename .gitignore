@@ -8,6 +8,8 @@ dist/
 out/
 coverage/
 *.tsbuildinfo
+apps/frontend/public/worklets/elevenlabs-raw-audio-processor.js
+apps/frontend/public/worklets/libsamplerate.worklet.js
 
 # Test and browser-run artifacts
 playwright-report/
@@ -44,4 +46,3 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
-

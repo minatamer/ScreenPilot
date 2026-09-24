@@ -34,6 +34,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "**/out/**",
       "**/next-env.d.ts",
+      "apps/frontend/public/worklets/**",
     ],
   },
   eslint.configs.recommended,

@@ -252,7 +252,7 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-021A | [Document owner visual feedback and pre-live decisions](SP-021A-document-owner-visual-feedback-and-pre-live-decisions.md) | SP-019, SP-020, SP-021 | Required |
 | SP-021B | [Validate the complete live demo flow](SP-021B-validate-complete-live-demo-flow.md) | SP-018A, SP-019, SP-020, SP-021, SP-021A | Required |
 | SP-022 | [Add public abuse and spend controls](SP-022-add-public-abuse-and-spend-controls.md) | SP-003, SP-009, SP-010, SP-014, SP-020, SP-021 | Required |
-| SP-023 | [Harden privacy, headers, and logging](SP-023-harden-privacy-headers-and-logging.md) | SP-006, SP-009, SP-010, SP-014, SP-020 | Required |
+| SP-023 | [Harden privacy, headers, and logging](SP-023-harden-privacy-headers-and-logging.md) | SP-006, SP-009, SP-010, SP-014, SP-020, SP-022 | Required |
 | SP-024 | [Harden accessibility, responsiveness, and performance](SP-024-harden-accessibility-responsiveness-and-performance.md) | SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-016A, SP-021 | Required; gated audit then approved implementation |
 | SP-025 | [Complete focused manual release QA](SP-025-complete-focused-manual-release-qa.md) | SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024 | Required |
 | SP-025A | [Audit release-candidate code and ticket completion](SP-025A-audit-release-candidate-code-and-ticket-completion.md) | SP-025 | Required |

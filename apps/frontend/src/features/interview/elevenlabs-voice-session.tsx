@@ -21,6 +21,11 @@ import {
   VOICE_SESSION_IDENTITY_FAILURE,
 } from "./voice-provider-failure";
 
+const ELEVENLABS_AUDIO_WORKLET_PATHS = Object.freeze({
+  rawAudioProcessor: "/worklets/elevenlabs-raw-audio-processor.js",
+});
+const ELEVENLABS_LIBSAMPLERATE_PATH = "/worklets/libsamplerate.worklet.js";
+
 type MessagePayload = Parameters<NonNullable<HookCallbacks["onMessage"]>>[0];
 type AgentChatResponsePartPayload = Parameters<
   NonNullable<HookCallbacks["onAgentChatResponsePart"]>
@@ -359,6 +364,7 @@ export function ElevenLabsVoiceSession({
     <ConversationProvider
       clientTools={clientTools}
       isMuted={isMuted}
+      libsampleratePath={ELEVENLABS_LIBSAMPLERATE_PATH}
       onAgentChatResponsePart={handleAgentChatResponsePart}
       onAudio={handleAudio}
       onConnect={handleConnect}
@@ -369,6 +375,7 @@ export function ElevenLabsVoiceSession({
       onModeChange={handleModeChange}
       onStatusChange={handleStatusChange}
       onVadScore={handleVadScore}
+      workletPaths={ELEVENLABS_AUDIO_WORKLET_PATHS}
     >
       <VoiceSessionStarter
         authorization={authorization}

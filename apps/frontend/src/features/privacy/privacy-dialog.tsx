@@ -4,6 +4,9 @@ import { useId, useRef } from "react";
 
 import { Button } from "@/shared/ui/button";
 
+import { PRIVACY_NOTICE_COPY } from "./privacy-copy";
+import { PrivacyNotice } from "./privacy-notice";
+
 type PrivacyDialogProps = Readonly<{
   clearActionLabel?: "Clear session" | "Clear & exit";
   triggerClassName?: string;
@@ -71,8 +74,8 @@ export function PrivacyDialog({
         <div className="sp-privacy-dialog__content">
           <div className="sp-privacy-dialog__heading">
             <div>
-              <p className="sp-eyebrow">Your privacy</p>
-              <h2 id={titleId}>What happens to your information</h2>
+              <p className="sp-eyebrow">{PRIVACY_NOTICE_COPY.eyebrow}</p>
+              <h2 id={titleId}>{PRIVACY_NOTICE_COPY.title}</h2>
             </div>
             <Button
               autoFocus
@@ -84,33 +87,11 @@ export function PrivacyDialog({
               Close
             </Button>
           </div>
-          <div className="sp-privacy-dialog__body" id={descriptionId}>
-            <p>
-              ScreenPilot does not create an account or candidate profile. Demo
-              notes stay in this browser tab for at most two hours and are
-              removed when you choose {clearActionLabel}.
-            </p>
-            <ul>
-              <li>
-                A CV and its extracted text stay in memory only while preparing
-                the screening; the original file is never uploaded or saved by
-                ScreenPilot.
-              </li>
-              <li>
-                If you start without a CV, Pilot learns only from the answers
-                you give during the conversation.
-              </li>
-              <li>
-                Before voice begins, the demo separately explains AI voice,
-                transcription, provider processing, microphone access, and the
-                eight-minute limit.
-              </li>
-              <li>
-                ScreenPilot does not record audio or make an automated hiring
-                decision.
-              </li>
-            </ul>
-          </div>
+          <PrivacyNotice
+            clearActionLabel={clearActionLabel}
+            id={descriptionId}
+            variant="details"
+          />
         </div>
       </dialog>
     </>

@@ -434,7 +434,7 @@ describe("DemoExperience preparation paths", () => {
     ).toBeVisible();
     fireEvent.click(
       screen.getByRole("checkbox", {
-        name: /I understand how my microphone and answers will be used/u,
+        name: /I understand how AI voice, my microphone, transcription, and notes will be used/u,
       }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Check microphone" }));

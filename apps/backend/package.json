@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "tsc --watch --preserveWatchOutput",
-    "build": "tsc -p tsconfig.json",
+    "prebuild": "node ../../scripts/clean-backend-build.mjs",
+    "build": "tsc -p tsconfig.build.json",
     "start": "node --enable-source-maps dist/server.js",
     "start:local": "node --env-file=.env.local --enable-source-maps dist/server.js",
     "typecheck": "tsc --noEmit",

@@ -1,5 +1,4 @@
 import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
-import type { CSSProperties } from "react";
 import { useLayoutEffect, useMemo, useRef } from "react";
 
 import type { LiveCaption } from "./normalize-voice-event";
@@ -21,15 +20,12 @@ function renderCaptionWords(caption: LiveCaption) {
       caption.stability === "final"
         ? Math.min(index * FINAL_WORD_DELAY_MS, MAX_FINAL_WORD_DELAY_MS)
         : (index % TENTATIVE_WORD_GROUP_SIZE) * FINAL_WORD_DELAY_MS;
-    const style = {
-      "--sp-caption-word-delay": `${String(delayMs)}ms`,
-    } as CSSProperties;
+    const delayStep = Math.floor(delayMs / FINAL_WORD_DELAY_MS);
 
     return (
       <span
-        className="sp-live-captions__word"
+        className={`sp-live-captions__word sp-live-captions__word--delay-${String(delayStep)}`}
         key={`${caption.turnId}-${String(index)}-${word.trim()}`}
-        style={style}
       >
         {word}
       </span>

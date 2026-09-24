@@ -35,6 +35,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Scan tracked files for credentials
+        run: pnpm security:scan
+
+      - name: Audit production dependencies
+        run: pnpm security:audit:dependencies
+
       - name: Check formatting
         run: pnpm format:check
 

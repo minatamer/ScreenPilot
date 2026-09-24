@@ -102,6 +102,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      '@alexanderolsen/libsamplerate-js':
+        specifier: 2.1.2
+        version: 2.1.2
       '@elevenlabs/react':
         specifier: 1.12.3
         version: 1.12.3(@types/dom-mediacapture-record@1.0.22)(react@19.2.8)
@@ -141,6 +144,9 @@ packages:
 
   '@adobe/css-tools@4.5.0':
     resolution: {integrity: sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==}
+
+  '@alexanderolsen/libsamplerate-js@2.1.2':
+    resolution: {integrity: sha512-pIXQDX/DZIgz6pKInUddDd6Tnq/s2E9g4ZITkKX60kxM/nAuZcxYa/z0y/jwJbjyp/oKe+8/qHLSqMzQ18xSiQ==}
 
   '@asamuzakjp/css-color@6.0.7':
     resolution: {integrity: sha512-vC/bk1Lz7Tn/EfU9/apOTBk80/8dyGyWMowPoV1tJ52muDGsDqt2HPT2klrFUiY60MQmQv9q8yIht15JnBgDGw==}
@@ -2818,6 +2824,8 @@ packages:
 snapshots:
 
   '@adobe/css-tools@4.5.0': {}
+
+  '@alexanderolsen/libsamplerate-js@2.1.2': {}
 
   '@asamuzakjp/css-color@6.0.7':
     dependencies:

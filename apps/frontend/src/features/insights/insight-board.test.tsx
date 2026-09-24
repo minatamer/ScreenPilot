@@ -1,11 +1,18 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createCvAnalysisResponseFixture } from "@/test/cv-analysis.fixture";
 
 import { InsightBoard } from "./insight-board";
 
 const NOW = "2026-09-15T08:00:00.000Z";
+const cancelCarouselAnimation = vi.fn();
+const animateCarousel = vi.fn(
+  () =>
+    ({
+      cancel: cancelCarouselAnimation,
+    }) as unknown as Animation,
+);
 
 function parentElementOf(element: HTMLElement): HTMLElement {
   const parentElement = element.parentElement;
@@ -16,6 +23,18 @@ function parentElementOf(element: HTMLElement): HTMLElement {
 }
 
 describe("InsightBoard", () => {
+  beforeEach(() => {
+    Object.defineProperty(Element.prototype, "animate", {
+      configurable: true,
+      value: animateCarousel,
+    });
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(Element.prototype, "animate");
+    vi.clearAllMocks();
+  });
+
   it("presents a purposeful conversation-first empty state", () => {
     render(
       <InsightBoard
@@ -124,7 +143,11 @@ describe("InsightBoard", () => {
       pointerId: 1,
     });
     expect(insightViewport).toHaveAttribute("data-dragging", "true");
-    expect(insightViewport).toHaveStyle("--sp-carousel-drag-x: -80px");
+    expect(insightViewport).not.toHaveAttribute("style");
+    expect(animateCarousel).toHaveBeenCalledWith(
+      [{ transform: "translate3d(calc(0% + -80px), 0, 0)" }],
+      { duration: 1, fill: "forwards" },
+    );
     fireEvent.pointerUp(insightViewport, {
       button: 0,
       clientX: 180,
@@ -134,8 +157,9 @@ describe("InsightBoard", () => {
     expect(cards[0]).toHaveAttribute("data-carousel-active", "false");
     expect(cards[1]).toHaveAttribute("data-carousel-active", "true");
     expect(insightViewport).toHaveAttribute("data-carousel-direction", "next");
+    expect(insightViewport).toHaveAttribute("data-carousel-slide", "1");
     expect(insightViewport).toHaveAttribute("data-dragging", "false");
-    expect(insightViewport).toHaveStyle("--sp-carousel-drag-x: 0px");
+    expect(insightViewport).not.toHaveAttribute("style");
     expect(within(slideshowControls).getByText("2 of 2")).toBeVisible();
 
     fireEvent.click(
@@ -197,11 +221,10 @@ describe("InsightBoard", () => {
     expect(
       topics.map((topic) => topic.getAttribute("data-carousel-active")),
     ).toEqual(["true", "true", "true", "true", "false"]);
-    expect(topics[0]).toHaveStyle("grid-column: 1; grid-row: 1");
-    expect(topics[1]).toHaveStyle("grid-column: 2; grid-row: 1");
-    expect(topics[2]).toHaveStyle("grid-column: 1; grid-row: 2");
-    expect(topics[3]).toHaveStyle("grid-column: 2; grid-row: 2");
-    expect(topics[4]).toHaveStyle("grid-column: 3; grid-row: 1");
+    expect(
+      topics.map((topic) => topic.getAttribute("data-carousel-index")),
+    ).toEqual(["0", "1", "2", "3", "4"]);
+    expect(topics.every((topic) => !topic.hasAttribute("style"))).toBe(true);
 
     const slideshowControls = screen.getByRole("group", {
       name: "coverage topics slideshow controls",
@@ -223,7 +246,7 @@ describe("InsightBoard", () => {
       pointerId: 2,
     });
     expect(topicViewport).toHaveAttribute("data-dragging", "true");
-    expect(topicViewport).toHaveStyle("--sp-carousel-drag-x: -80px");
+    expect(topicViewport).not.toHaveAttribute("style");
     fireEvent.pointerUp(topicViewport, {
       button: 0,
       clientX: 170,
@@ -234,6 +257,8 @@ describe("InsightBoard", () => {
       topics.map((topic) => topic.getAttribute("data-carousel-active")),
     ).toEqual(["false", "false", "false", "false", "true"]);
     expect(topicViewport).toHaveAttribute("data-carousel-direction", "next");
+    expect(topicViewport).toHaveAttribute("data-carousel-slide", "1");
+    expect(topicViewport).toHaveAttribute("data-dragging", "false");
     expect(within(slideshowControls).getByText("2 of 2")).toBeVisible();
 
     fireEvent.click(

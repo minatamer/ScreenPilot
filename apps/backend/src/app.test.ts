@@ -182,6 +182,17 @@ describe("ScreenPilot backend application", () => {
     );
     expect(bootstrap.headers["cache-control"]).toBe("no-store");
     expect(bootstrap.headers["x-content-type-options"]).toBe("nosniff");
+    expect(bootstrap.headers["content-security-policy"]).toContain(
+      "default-src 'none'",
+    );
+    expect(bootstrap.headers["content-security-policy"]).toContain(
+      "frame-ancestors 'none'",
+    );
+    expect(bootstrap.headers["content-security-policy"]).not.toContain("*");
+    expect(bootstrap.headers["referrer-policy"]).toBe("no-referrer");
+    expect(bootstrap.headers["permissions-policy"]).toBe(
+      "camera=(), geolocation=(), microphone=(), browsing-topics=()",
+    );
     expect(bootstrap.headers["x-powered-by"]).toBeUndefined();
     expect(bootstrapResponseSchema.parse(bootstrap.body)).toMatchObject({
       demoContext: {
@@ -692,5 +703,32 @@ describe("ScreenPilot backend application", () => {
     expect(logs).not.toContain("127.0.0.1");
     expect(logs).not.toContain(SECURITY_SECRETS.anonymousCookieSecret);
     expectNoProviderCalls(providers.operations);
+  });
+
+  it("redacts sensitive root and nested fields from defensive logger calls", async () => {
+    const config = testConfig({ APP_ENV: "local" });
+    const destination = new PassThrough();
+    destination.setEncoding("utf8");
+    const logChunks: string[] = [];
+    destination.on("data", (chunk: string) => logChunks.push(chunk));
+    const logger = createBackendLogger(config, destination);
+
+    logger.info({
+      apiKey: "usable-provider-key",
+      conversationToken: "usable-conversation-token",
+      nested: {
+        cvText: "PRIVATE CV TEXT",
+        interviewGrant: "signed-interview-grant",
+        remoteAddress: "203.0.113.9",
+        turnstileToken: "one-time-challenge-token",
+      },
+    });
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    const logs = logChunks.join("");
+    expect(logs).toContain("[REDACTED]");
+    expect(logs).not.toMatch(
+      /usable-provider-key|usable-conversation-token|PRIVATE CV TEXT|signed-interview-grant|203\.0\.113\.9|one-time-challenge-token/,
+    );
   });
 });

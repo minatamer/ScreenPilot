@@ -49,7 +49,8 @@ describe("LiveCaptions", () => {
     const words =
       pilotMessage?.querySelectorAll(".sp-live-captions__word") ?? [];
     expect(words).toHaveLength(6);
-    expect(words[5]?.getAttribute("style")).toContain("375ms");
+    expect(words[5]).toHaveClass("sp-live-captions__word--delay-5");
+    expect(words[5]).not.toHaveAttribute("style");
     expect(
       candidateMessage?.querySelectorAll(".sp-live-captions__word"),
     ).toHaveLength(0);

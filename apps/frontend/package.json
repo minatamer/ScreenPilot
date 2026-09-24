@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ../../scripts/prepare-elevenlabs-worklets.mjs",
     "dev": "next dev",
+    "prebuild": "node ../../scripts/prepare-elevenlabs-worklets.mjs",
     "build": "next build",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
@@ -12,6 +14,7 @@
     "test:unit": "vitest run"
   },
   "dependencies": {
+    "@alexanderolsen/libsamplerate-js": "2.1.2",
     "@elevenlabs/react": "1.12.3",
     "@screenpilot/contracts": "workspace:*",
     "next": "^16.0.0",

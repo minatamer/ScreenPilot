@@ -8,6 +8,8 @@ import {
   TURNSTILE_ACTIONS,
   type ExecuteTurnstileChallenge,
 } from "@/features/abuse-protection/turnstile-client";
+import { PRIVACY_NOTICE_COPY } from "@/features/privacy/privacy-copy";
+import { PrivacyNotice } from "@/features/privacy/privacy-notice";
 import { ProviderOperationsUnavailable } from "@/features/session/provider-operations-unavailable";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
@@ -254,31 +256,10 @@ function EnabledPreflightHandoff({
               <p className="sp-preflight-kicker">02 · Permission</p>
               <h2 id="voice-consent-title">Your privacy and consent</h2>
             </div>
-            <div className="sp-preflight-privacy-summary">
-              <span className="sp-preflight-fact__icon">
-                <svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
-                  <path
-                    d="M12 3.5 19 6v5.5c0 4.4-2.7 7.4-7 9-4.3-1.6-7-4.6-7-9V6l7-2.5Z"
-                    stroke="currentColor"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="m9 12 2 2 4-4"
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </span>
-              <div>
-                <p>
-                  Nothing starts until you check your microphone. ScreenPilot
-                  does not record or save your audio; notes stay only in this
-                  tab.
-                </p>
-                <p>Use made-up information. {roleDisclosure(rolePreference)}</p>
-              </div>
-            </div>
+            <PrivacyNotice
+              roleDisclosure={roleDisclosure(rolePreference)}
+              variant="preflight"
+            />
             <label className="sp-preflight-consent__control">
               <input
                 checked={consentChecked}
@@ -288,10 +269,7 @@ function EnabledPreflightHandoff({
                 }}
                 type="checkbox"
               />
-              <span>
-                I understand how my microphone and answers will be used for this
-                demo.
-              </span>
+              <span>{PRIVACY_NOTICE_COPY.preflight.consent}</span>
             </label>
 
             {microphone.state.status === "ready" ? (
@@ -303,19 +281,17 @@ function EnabledPreflightHandoff({
                     <span>{microphone.state.deviceLabel}</span>
                   </div>
                 </div>
-                <div
+                <meter
                   aria-label="Microphone input level"
                   aria-valuemax={100}
                   aria-valuemin={0}
                   aria-valuenow={Math.round(microphoneLevel * 100)}
                   aria-valuetext={`${String(Math.round(microphoneLevel * 100))} percent`}
                   className="sp-microphone-meter"
-                  role="meter"
-                >
-                  <span
-                    style={{ transform: `scaleX(${String(microphoneLevel)})` }}
-                  />
-                </div>
+                  max={1}
+                  min={0}
+                  value={microphoneLevel}
+                />
               </div>
             ) : null}
 

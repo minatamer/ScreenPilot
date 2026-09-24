@@ -11,6 +11,10 @@ export const metadata: Metadata = {
     "Run consistent AI voice screening interviews and turn candidate answers into clear notes for your hiring team to review.",
 };
 
+// Per-request rendering lets Next apply the nonce supplied by src/proxy.ts to
+// its framework scripts and styles instead of permitting unsafe inline code.
+export const dynamic = "force-dynamic";
+
 type RootLayoutProps = Readonly<{
   children: ReactNode;
 }>;

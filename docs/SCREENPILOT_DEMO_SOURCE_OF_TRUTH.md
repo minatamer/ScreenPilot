@@ -1623,7 +1623,7 @@ The comments show the first ticket that owns each file or group. Co-located `*.t
 screen-pilot/
 ├─ .github/
 │  └─ workflows/
-│     └─ ci.yml                                  # SP-002; extended by SP-026
+│     └─ ci.yml                                  # SP-002; extended by SP-023/SP-026
 ├─ .editorconfig                                 # SP-001
 ├─ .gitattributes                                # SP-001
 ├─ .gitignore                                    # SP-001
@@ -1640,6 +1640,12 @@ screen-pilot/
 ├─ pnpm-workspace.yaml                           # SP-001
 ├─ prettier.config.mjs                           # SP-002
 ├─ tsconfig.base.json                            # SP-001
+├─ scripts/
+│  ├─ audit-production-dependencies.mjs          # SP-023
+│  ├─ check-browser-inline-styles.mjs            # SP-023
+│  ├─ check-tracked-secrets.mjs                  # SP-023
+│  ├─ clean-backend-build.mjs                    # SP-023
+│  └─ prepare-elevenlabs-worklets.mjs            # SP-023
 ├─ apps/
 │  ├─ frontend/
 │  │  ├─ .env.example                            # SP-003; no secrets
@@ -1650,9 +1656,15 @@ screen-pilot/
 │  │  ├─ tsconfig.json                           # SP-001
 │  │  ├─ vitest.config.ts                        # SP-002
 │  │  ├─ public/
-│  │  │  └─ fixtures/
-│  │  │     └─ screenpilot-sample-cv.pdf         # SP-007/SP-010A
+│  │  │  ├─ fixtures/
+│  │  │  │  └─ screenpilot-sample-cv.pdf         # SP-007/SP-010A
+│  │  │  └─ worklets/
+│  │  │     ├─ elevenlabs-raw-audio-processor.js # SP-023; generated from pinned SDK
+│  │  │     └─ libsamplerate.worklet.js          # SP-023; generated from pinned package
 │  │  └─ src/
+│  │     ├─ proxy.ts                             # SP-023; nonce CSP/security headers
+│  │     ├─ security/
+│  │     │  └─ browser-security-policy.ts        # SP-023
 │  │     ├─ app/
 │  │     │  ├─ layout.tsx                        # SP-001; final shell SP-005
 │  │     │  ├─ page.tsx                          # SP-001; foundation harness SP-005; landing composition SP-011
@@ -1729,6 +1741,7 @@ screen-pilot/
 │  │     │  │  ├─ session-clear-dialog.tsx       # SP-021
 │  │     │  │  └─ interview-evidence-review.test.tsx # SP-021
 │  │     │  └─ privacy/
+│  │     │     ├─ privacy-dialog.tsx              # SP-021/SP-023
 │  │     │     ├─ privacy-notice.tsx              # SP-023; landing/preflight reuse
 │  │     │     └─ privacy-copy.ts                 # SP-023
 │  │     ├─ shared/
@@ -1761,6 +1774,7 @@ screen-pilot/
 │     ├─ Dockerfile                              # SP-026
 │     ├─ package.json                            # SP-001
 │     ├─ tsconfig.json                           # SP-001
+│     ├─ tsconfig.build.json                     # SP-023; production excludes tests
 │     ├─ vitest.config.ts                        # SP-002
 │     └─ src/
 │        ├─ app.ts                               # SP-009; factory/composition root
@@ -3223,17 +3237,21 @@ Present this as a high-quality UI concept for composition and visual direction. 
 - Request bodies are not logged.
 - Disable proxy/body debug logging in production.
 - Use bounded streaming/body parsers and release buffers after response.
+- The production backend build cleans only its generated `dist` directory and excludes tests/test fixtures so synthetic credential and candidate canaries cannot enter a deployment artifact.
 - Every OpenAI direct call sets `store: false`.
 - Every provider response is schema-validated before returning to the browser.
 
 ### Browser security
 
-- Strict Content Security Policy compatible with the required ElevenLabs connection and Cloudflare Turnstile script/frame requests, using only the documented exact provider origins rather than broad wildcards.
+- Every rendered page receives a fresh nonce through the Next proxy and a strict Content Security Policy. Production uses exact `challenges.cloudflare.com`, ElevenLabs API, and ElevenLabs LiveKit HTTP/WebSocket origins; `script-src-attr` and `style-src-attr` are `none`; no wildcard or `unsafe-inline` allowance exists. Development adds only the Next evaluator required by the local framework runtime.
+- Page rendering stays dynamic so the request nonce reaches Next's own scripts. Candidate-bearing page responses are `no-store` and also set no-referrer, MIME-sniffing, frame, opener, DNS-prefetch, permissions, and production HSTS controls.
+- ElevenLabs audio processors are served same-origin. The build copies the raw processor from pinned `@elevenlabs/client@1.19.1` and the sample-rate fallback from pinned `@alexanderolsen/libsamplerate-js@2.1.2`; the client passes both explicit paths, so mute/sample-rate behavior does not depend on a blob/data script or an unlisted CDN.
+- Application UI source does not create inline style attributes. Bounded carousel positions and caption delays use source-controlled CSS/data selectors; touch drag feedback uses the Web Animations API without writing a style attribute. CI scans browser source for reintroduction of inline style attributes or DOM style mutation.
 - `Secure`, `HttpOnly`, `SameSite=Lax` signed safety cookie with no candidate content.
 - CSRF/origin checks on paid mutations.
 - No third-party analytics scripts on `/demo`.
 - Escape all transcript/model text; never render provider HTML.
-- Dependencies locked and audited.
+- Dependencies are locked, the production dependency audit blocks high/critical advisories, and credential-pattern scanning covers committed/untracked non-ignored files; the manual history command covers every reachable Git commit without printing matching values.
 
 ### Abuse protection
 
@@ -3291,6 +3309,8 @@ Frontend and backend logs remain separate by service. Backend structured logs ma
 - rate-limit outcome without raw IP.
 
 They may not contain CV text, transcript text, insight values, names, salary values, cookies, grants, provider tokens, full URLs, or raw request/response bodies.
+
+The logger therefore uses an allow-listed request-completion event rather than serializing Express request objects. Pino redaction also covers root and one-level nested authorization, API keys, cookie/session identifiers, CV text, grants, Turnstile/conversation/provider/access/refresh tokens, secrets, hostnames, and raw IP/address fields. Redaction tests use synthetic canaries and assert that only `[REDACTED]` survives.
 
 ### Browser diagnostics
 
@@ -4425,19 +4445,21 @@ manual matrix stay open.
 
 **Outcome:** Candidate content stays out of application persistence, logs, URLs, and unsafe browser surfaces.
 
-**Depends on:** SP-006, SP-009, SP-010, SP-014, SP-020.
+**Depends on:** SP-006, SP-009, SP-010, SP-014, SP-020, SP-022.
 
 **Suggested commit:** `SP-023: harden stateless data handling`
 
+**Implementation state:** Repository hardening, deterministic Node 24 verification, and both production-local strict-CSP browser paths completed on 2026-09-24 without paid calls. Network, console, completion, reload, and Clear-session behavior passed. Direct raw `sessionStorage` key inspection was unavailable through browser automation; the owner accepted the deterministic bounded-storage coverage because the relevant concern is the verified absence of an application database or other server-side candidate persistence. OpenAI input/output sharing remains a selected-project synthetic-only exception that must be set to **Disabled** before real-data, external-tester, or public use.
+
 **Checklist:**
 
-- [ ] Apply CSP—including the exact ElevenLabs and Cloudflare Turnstile script/frame/connect origins—plus origin/CSRF, secure cookie, no-store, and security headers without broad wildcard allowances.
-- [ ] Disable request/response body logging and redact secrets/content fields.
-- [ ] Verify no PDF/raw text/audio write path exists.
-- [ ] Audit both entry modes so conversation-first stores only the same bounded session/transcript/insight structures and never receives CV provenance.
-- [ ] Verify provider retention/audio settings match disclosure.
-- [ ] Add dependency/secret scanning and prompt-injection fixtures.
-- [ ] Perform a browser-storage and logs privacy audit.
+- [x] Apply CSP—including the exact ElevenLabs and Cloudflare Turnstile script/frame/connect origins—plus origin/CSRF, secure cookie, no-store, and security headers without broad wildcard allowances.
+- [x] Disable request/response body logging and redact secrets/content fields.
+- [x] Verify no PDF/raw text/audio write path exists.
+- [x] Audit both entry modes so conversation-first stores only the same bounded session/transcript/insight structures and never receives CV provenance.
+- [x] Verify provider retention/audio settings match disclosure for the synthetic-only operating boundary; input/output sharing must still be disabled before real/public use.
+- [x] Add dependency/secret scanning and prompt-injection fixtures.
+- [x] Complete both strict-CSP browser paths with clean network/console behavior, expected security headers, successful review/reload behavior, and Clear-session removal. Direct raw `sessionStorage` key inspection was unavailable through browser automation and was explicitly accepted by the owner based on deterministic bounded-storage tests and the verified absence of database/server-side candidate persistence.
 
 #### [SP-024 — Harden accessibility, responsiveness, and frontend performance](tickets/SP-024-harden-accessibility-responsiveness-and-performance.md)
 
