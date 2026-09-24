@@ -64,14 +64,17 @@ question flow, Team/work-style question flow, brief close plus provider-owned
 automatic ending, completed-workspace handoff, and live summary/review all
 worked. Content-free backend evidence records exactly one successful
 `cv_analyze`, `voice_token`, and `interview_summary` request for that run. The
-conversation-first live path and remaining failure, cleanup, diagnostics,
+owner recalls a conversation-first live path succeeding, but retained evidence
+does not distinguish a complete `standard_live` ElevenLabs voice flow from the
+successful fake-voice/live-summary rehearsals; it is context, not a log-
+corroborated full-live pass. Remaining failure, cleanup, diagnostics,
 provider/cost, responsive, privacy, and safety-restoration checks remain open.
-SP-021B covers both entry modes through
-corrected voice behavior, summary, evidence-linked review, retry behavior,
-cleanup, provider usage/cost, and the retained performance ledger. SP-025 reuses
-current SP-021B live evidence and repeats only evidence invalidated by later
-code, provider, configuration, hostname, or release-candidate changes. Both
-SP-021A and SP-021B remain required pre-release gates through SP-025; this
+SP-025 closes the complete free/manual matrix, quick gate, preliminary sanitized
+cost record, local safety restoration, and deployable-candidate approval without
+another paid local run. SP-025A then audits that exact candidate. SP-026 owns
+definitive paid acceptance after deployment: exactly one materially different
+synthetic/licensed text-PDF CV-assisted production flow and one conversation-
+first production flow unless a concrete defect narrowly requires a rerun. This
 sequencing reduces duplicate provider spend without weakening or misreporting
 acceptance evidence.
 
@@ -1906,7 +1909,7 @@ screen-pilot/
    ├─ assets/
    │  └─ screenpilot-active-interview-concept.png # SP-004
    ├─ operations/
-   │  ├─ full-flow-cost-baseline.md              # SP-025; sanitized measured usage/cost only
+   │  ├─ full-flow-cost-baseline.md              # SP-025 template; SP-026 final measured production usage/cost
    │  └─ release-candidate-audit.md               # SP-025A; per-ticket/finding/final-gate ledger
    └─ tickets/
       ├─ README.md
@@ -2710,7 +2713,26 @@ The likely cash requirement for the first base flow in a fresh ElevenLabs Free m
 
 ### Measurement and reconciliation protocol
 
-SP-025 creates `docs/operations/full-flow-cost-baseline.md` from a blank, non-secret template and records at least one controlled CV-assisted flow plus one conversation-first flow. It records only date, environment, mode, agent/model revision, connected duration, token counts, provider cost categories, free-credit/minute application, and totals—never CV text, transcript text, candidate identifiers, API keys, account IDs, Turnstile tokens, or billing screenshots containing secrets.
+SP-025 creates `docs/operations/full-flow-cost-baseline.md` from a blank,
+non-secret template and records existing content-free local evidence plus every
+unknown honestly. The owner's conversation-first success recollection is
+retained as context but cannot be used as measured evidence because the
+available records do not distinguish a complete standard-live voice flow from
+the fake-voice/live-summary rehearsals. SP-025 performs no additional paid local
+run.
+
+SP-026 finalizes the baseline after the audited deployment is reachable by
+running exactly two controlled production flows unless a concrete defect
+narrowly requires a documented rerun: one CV-assisted flow using an owner-
+selected wholly synthetic text PDF or explicitly licensed public-template text
+PDF with no real person's data, materially different from the bundled sample,
+and one conversation-first flow. Do not use a random real person's Internet CV
+or add a third bundled-sample paid flow merely to duplicate the CV branch. The
+file records only date, environment, mode, deployed Git SHA, agent/model
+revision, connected duration, token counts, provider cost categories, free-
+credit/minute application, infrastructure overage, and totals—never CV text,
+transcript text, candidate identifiers, API keys, account IDs, Turnstile tokens,
+or billing screenshots containing secrets.
 
 For each flow:
 
@@ -4354,8 +4376,11 @@ one successful `cv_analyze`, `voice_token`, and `interview_summary` route
 response. Exact sample-CV provenance assertions not covered by that owner
 report, deliberately injected summary error/retry and interruption scenarios,
 the post-reconciliation fake Team/work-style sequencing check, the
-conversation-first live path, provider usage/cost audit, and the remaining
-manual matrix stay open.
+conversation-first log-corroborated live path, provider usage/cost audit, and
+the remaining manual matrix stay open. The owner recalls conversation-first
+live success, but retained records cannot distinguish it from the fake-voice/
+live-summary rehearsals. Do not convert that recollection into a pass or buy a
+duplicate local run; SP-026 owns the definitive production observation.
 
 **Depends on:** SP-018A, SP-019, SP-020, SP-021, SP-021A.
 
@@ -4388,8 +4413,10 @@ manual matrix stay open.
   `SCREENPILOT_ELEVENLABS_AGENT_CONFIG.systemTools.endCall.description`.
 - [x] Run one bounded synthetic CV-assisted complete flow through automatic
   ending and live summary/review.
-- [ ] Run one bounded synthetic conversation-first complete flow through
-  summary and review.
+- [ ] Preserve the owner's conversation-first success recollection without
+  calling it a log-corroborated local pass; satisfy the definitive complete-flow
+  requirement through SP-026's single controlled production conversation-first
+  flow rather than another paid local run.
 - [ ] Independently observe the corrected Pilot captions after their
   deterministic SP-018A fix.
 - [x] Independently observe the provider-owned automatic ending after its
@@ -4561,11 +4588,27 @@ because a third-party skill recommends it.
 phone, tablet, compact-laptop, laptop/desktop, and large-monitor layouts and
 passes the fast essential checks without requiring the extended automation
 suite. SP-025 validates the approved result; it is not another design iteration
-or implicit approval of deferred SP-024 advice.
+or implicit approval of deferred SP-024 advice. Its approval sends a deployable
+candidate to SP-025A; public-release approval remains SP-026's production
+boundary.
 
 **Depends on:** SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024.
 
 **Suggested commit:** `SP-025: complete focused demo release checks`
+
+**Evidence state (2026-09-24):** The canonical
+[SP-025 manual release QA ledger](operations/sp-025-manual-release-qa.md)
+reconciles every required manual scenario and release gate against current Git,
+provider, ticket, and owner evidence. SP-024 is handed off at `8136bac`; one
+current CV-assisted standard-live flow is reusable. The owner recalls a
+conversation-first live success, but retained records cannot identify it as a
+complete standard-live voice flow rather than a fake-voice/live-summary
+rehearsal, so it is not promoted to corroborated acceptance. By owner decision,
+SP-025 performs no further paid local run. Its remaining boundary is the free/
+manual matrix, quick gate, preliminary cost record, local safety restoration,
+and deployable-candidate approval. SP-026 owns the exact two-flow production
+acceptance, cost finalization, sharing-off, production Turnstile, and public-
+release safety gates.
 
 **SP-024 handoff gate:** SP-025 requires the completed Phase A report, the
 owner's decision for every finding ID, the exact Phase B approved set, the
@@ -4579,7 +4622,7 @@ an unapproved implementation or reduced-motion exemption.
 **Checklist:**
 
 - [ ] Complete every Section 18 manual acceptance scenario across the responsive size anchors and spot-check intermediate drag-resized widths.
-- [ ] Verify the SP-024 handoff and cross-check that only owner-approved finding
+- [x] Verify the SP-024 handoff and cross-check that only owner-approved finding
   IDs were implemented; do not treat deferred or rejected skill advice as a
   release defect.
 - [ ] Force and record both `prefers-reduced-motion: no-preference` and `reduce`
@@ -4593,11 +4636,23 @@ an unapproved implementation or reduced-motion exemption.
 - [ ] Manually verify both modes remain role-agnostic HR screens: prioritized fields, multi-field answer credit, normal 8–10-prompt budget, at most one broad role-context clarification, and zero profession-specific assessment chains.
 - [ ] Run the smallest targeted unit/backend checks for release-critical logic.
 - [ ] Run the complete fast default command set once.
-- [ ] Review and reuse current SP-021B live evidence for both entry modes; repeat
-  a paid flow only when a later code, provider, configuration, hostname, or
-  release-candidate change invalidates that evidence.
-- [ ] Create `docs/operations/full-flow-cost-baseline.md`; reconcile direct OpenAI usage, ElevenLabs connected minutes/live-LLM Detailed costs, free allowances, and infrastructure overages without candidate/account/secret content, and explain estimate variance above 20%.
-- [ ] Manually verify real production-hostname Turnstile checks for CV analysis, voice start, and summary plus recovery from one forced/replayed challenge failure without losing local candidate state.
+- [x] Reconcile SP-021B evidence without another paid local flow: retain the
+  successful CV-assisted result and record the owner's conversation-first
+  recollection without presenting it as a distinguishable log-corroborated
+  standard-live pass.
+- [x] Create the preliminary sanitized
+  `docs/operations/full-flow-cost-baseline.md`, recording existing request-count/
+  timing evidence and explicit unknowns. SP-026 appends the exact two production
+  measurements and final variance.
+- [x] Hand SP-026 exactly two definitive controlled production flows unless a
+  named defect narrowly requires a rerun: one materially different synthetic/
+  licensed text-PDF CV-assisted flow and one conversation-first flow. Do not add
+  a redundant bundled-sample paid flow.
+- [ ] Reuse the current local real-widget success and deterministic negative
+  Turnstile evidence, and complete any remaining free local recovery check.
+  Hand real production-hostname widget/application verification to SP-026 after
+  the canonical hostname exists; do not fabricate a production-host pass from
+  localhost evidence.
 - [ ] Record and resolve release-blocking functional, privacy, and provider
   issues through their authorized scope. Route new SP-024-class responsive,
   accessibility, motion, or performance proposals back through the owner
@@ -4656,7 +4711,10 @@ while preserving the SP-025-approved behavior except for documented bug fixes.
 
 #### [SP-026 — Deploy frontend and backend](tickets/SP-026-deploy-frontend-and-backend.md)
 
-**Outcome:** A green GitHub Actions pipeline securely publishes two independently deployable stateless Cloud Run services behind one low-cost custom HTTPS domain with secrets and abuse controls.
+**Outcome:** A green GitHub Actions pipeline securely publishes two independently
+deployable stateless Cloud Run services behind one low-cost custom HTTPS domain
+with secrets and abuse controls, then the exact two controlled production flows
+close paid end-to-end and public-release acceptance.
 
 **Depends on:** SP-022, SP-023, SP-025A.
 
@@ -4676,7 +4734,18 @@ while preserving the SP-025-approved behavior except for documented bug fixes.
 - [ ] Configure secrets, origins, headers, health checks, max instances, and paid-demo switch, including the public Turnstile site key, server-only Siteverify secret in Google Secret Manager, canonical allowed hostname, and the three expected actions.
 - [ ] Create/restrict the free production Turnstile widget, configure best-effort backend route/source limits and provider caps, and verify no paid Cloudflare proxy/WAF/Bot Fight Mode dependency was introduced.
 - [ ] Confirm there is no application database, candidate-data object storage, queue, or worker deployment; Artifact Registry contains deployment images only.
-- [ ] Make the workflow run liveness/readiness checks against the direct services and bounded unpaid routing/security smoke checks through the custom domain, including frontend refresh routing, backend `/v1` routing, apex/`www`, certificate, first-party cookie, public Turnstile configuration, and canonical-URL checks. Do not automate a real paid provider flow or introduce a production Turnstile bypass; manually run sample-CV, uploaded-CV, and conversation-first flows after deployment.
+- [ ] Make the workflow run liveness/readiness checks against the direct services and bounded unpaid routing/security smoke checks through the custom domain, including frontend refresh routing, backend `/v1` routing, apex/`www`, certificate, first-party cookie, public Turnstile configuration, and canonical-URL checks. Do not automate a real paid provider flow or introduce a production Turnstile bypass.
+- [ ] After unpaid production smokes pass, manually run exactly two controlled
+  paid production flows: one CV-assisted flow using an owner-selected synthetic
+  or explicitly licensed public-template text PDF with no real person's data,
+  materially different from the bundled sample, and one conversation-first
+  flow. Do not use a random Internet CV or require a third bundled-sample flow;
+  rerun only when a named defect invalidates evidence.
+- [ ] Within that bounded pair, verify production Turnstile/hostname/actions,
+  sharing-off, current provider revision/tools and caps, automatic `end_call`,
+  summary/review, cleanup/no reconnect, dashboard usage/cost and retention, and
+  restored paid-demo/provider kill switches. Finalize the cost baseline before
+  declaring SP-026 or public release complete.
 - [ ] Verify the frontend-only `?diagnostics=timings` opt-in remains unavailable
   on every non-loopback deployment hostname, including the canonical domain and
   direct frontend Cloud Run URL: no diagnostics drawer, raw timing view, **Copy
@@ -4794,9 +4863,12 @@ while preserving the SP-025-approved behavior except for documented bug fixes.
 - [ ] The manually selected custom domain stays under the renewal-price guardrail, Firebase Hosting serves valid managed HTTPS, apex/`www` canonicalization works, and same-origin `/v1` requests reach the backend without exposing direct service URLs to visitors.
 - [ ] Optional SP-027 portfolio packaging is explicitly not required for deployment or release approval.
 - [ ] Optional SP-028 automation is explicitly not required for deployment or release approval.
-- [ ] Current SP-021B controlled live evidence for both entry modes passes; any
-  evidence invalidated by later release-candidate or provider/configuration
-  changes is narrowly rerun before approval.
+- [ ] SP-026's exact two controlled production flows pass on the deployed SP-
+  025A-audited candidate: one materially different synthetic/licensed text-PDF
+  CV-assisted flow and one conversation-first flow. Production Turnstile,
+  current provider revision/tools, auto-ending, summary/review, cleanup,
+  dashboard usage/cost, sharing-off, caps, and restored kill switches are all
+  evidenced; only a named defect may justify a narrow rerun.
 - [ ] Full phone, tablet, laptop/desktop, and large-monitor flows plus keyboard, reduced-motion, orientation, safe-area, intermediate resizing, and provider failure paths are verified.
 - [ ] Cloudflare Turnstile Free, best-effort backend route/source limits, Cloud Run/provider caps, and the paid-demo kill switch work without a database, paid WAF, or Cloudflare proxy.
 

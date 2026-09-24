@@ -1,12 +1,13 @@
 # SP-025 — Complete focused manual release QA
 
-Status: Required — blocked until SP-024's owner-approved Phase B scope is implemented and handed off<br>
+Status: Evidence reconciled — SP-024 and production acceptance are handed off; free/manual gates, the final quick gate, safety restoration, and deployable-candidate approval remain open<br>
 Milestone: Milestone 4 — public-demo hardening  
 Last synchronized: 2026-09-24<br>
 Depends on: SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024<br>
 Suggested commit: `SP-025: complete focused demo release checks`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
 Ticket index: [`README.md`](README.md)
+Evidence ledger: [`../operations/sp-025-manual-release-qa.md`](../operations/sp-025-manual-release-qa.md)
 
 ---
 
@@ -14,18 +15,31 @@ Ticket index: [`README.md`](README.md)
 
 Run the complete focused manual acceptance pass and one fast release gate
 against the exact owner-approved SP-024 result, resolve release blockers through
-their authorized ticket workflow, and approve the demo without requiring the
-optional comprehensive automation suite. SP-025 validates approved work; it is
-not a new frontend redesign or an implicit approval of deferred SP-024 advice.
+their authorized ticket workflow, and approve a deployable candidate for
+SP-025A without requiring the optional comprehensive automation suite. SP-025
+validates approved work; it is not public-release approval, another frontend
+redesign, or implicit approval of deferred SP-024 advice. SP-026 closes public
+release only after its bounded production acceptance.
 
 ## Standalone implementation context
 
 - Manual approval is intentionally primary. SP-028 remains optional and cannot block release.
 - Run the smallest relevant targeted checks while investigating; run the full quick gate once at this release boundary.
-- Current SP-021B evidence supplies the controlled live flow for each entry mode.
-  Repeat a paid flow here only when a later code, provider, configuration,
-  hostname, or release-candidate change invalidates that evidence.
-- The pre-measurement reserve is $0.80 per standard eight-minute flow or $1.40 if burst is deliberately enabled. The base estimate is about $0.70, but release evidence must use the provider dashboards rather than restating the estimate as measured fact.
+- Current SP-021B evidence supplies one successful post-fix CV-assisted
+  controlled live flow. The owner also recalls a conversation-first live path
+  succeeding, but retained evidence cannot distinguish a complete
+  `standard_live` ElevenLabs voice flow from the successful fake-voice/live-
+  summary rehearsals. Preserve that recollection without treating it as a log-
+  corroborated live pass.
+- By owner decision, SP-025 makes no further paid local call. Definitive paid
+  acceptance moves to SP-026 after deployment: exactly one CV-assisted
+  production flow using a materially different owner-selected synthetic or
+  explicitly licensed public-template text PDF with no real person's data, and
+  exactly one conversation-first production flow. A narrow defect may justify
+  a documented rerun; otherwise do not add a third bundled-sample flow.
+- The pre-measurement reserve remains a planning aid only. SP-025 creates the
+  sanitized preliminary cost template and records existing evidence; SP-026
+  appends measured production usage/cost from the bounded two-flow set.
 - All complete paths must be reviewed on phone, tablet, compact laptop, laptop/desktop, large monitor, and intermediate drag-resized widths.
 - Release requires responsive conversational behavior, privacy/retention
   alignment, Turnstile recovery, provider failures, and natural HR-only
@@ -64,12 +78,20 @@ not a new frontend redesign or an implicit approval of deferred SP-024 advice.
   spatial, scaling, parallax, spring, or perpetual motion for reduced-motion
   users.
 
-## Manual live-credential gate
+## Production paid-flow handoff
 
-- Run all unpaid/fake release checks before asking for live values. The controlled live pass needs the complete user-supplied OpenAI, ElevenLabs, Turnstile, signing, and cookie groups plus explicit permission to incur provider charges.
-- Confirm both local `.env.local` paths are ignored and absent from `git status` before the user fills the backend file. Never record secret values in the manual matrix, defect evidence, screenshots, network exports, or provider-revision notes.
-- Before any real candidate content, external tester, or public release, explicitly warn the owner if OpenAI input/output sharing is enabled, require `Organization settings > Data controls > Share inputs and outputs with OpenAI` to be **Disabled**, and record only the project name, disabled state, and verification date. Localhost and `store: false` do not waive this gate.
-- If credentials, account balance, production widget, or paid-test permission are unavailable when SP-021B evidence must be refreshed, do not fake a live pass. Record every unpaid result, mark the invalidated live evidence blocked, and withhold release approval until the manual gate is satisfied.
+- Run and close every unpaid/fake/manual SP-025 gate without asking for another
+  local live window. SP-025 approves a deployable candidate, not public release.
+- Hand the exact approved candidate and preliminary sanitized cost file through
+  SP-025A. SP-026 alone receives production credentials/identifiers and explicit
+  permission for the bounded two-flow production acceptance.
+- Never record secret values in the manual matrix, cost file, defect evidence,
+  screenshots, network exports, or provider-revision notes.
+- Before the production flows or any real candidate content, external tester,
+  or public release, require OpenAI input/output sharing to be **Disabled** and
+  record only the project name, disabled state, and verification date. The
+  production flows remain synthetic; sharing-off, `store: false`, and synthetic
+  data are separate requirements.
 
 ## Scope boundaries
 
@@ -89,10 +111,10 @@ not a new frontend redesign or an implicit approval of deferred SP-024 advice.
 
 ## Implementation checklist
 
-- [ ] Confirm the SP-024 handoff names the audited revision, owner decision for
+- [x] Confirm the SP-024 handoff names the audited revision, owner decision for
   every finding ID, approved Phase B scope, implemented revision, and passing
   evidence; stop if the approval record is missing or ambiguous.
-- [ ] Cross-check the release candidate against only the owner-approved SP-024
+- [x] Cross-check the release candidate against only the owner-approved SP-024
   finding IDs and confirm no deferred/rejected advice was implemented
   opportunistically.
 - [ ] Verify sample CV → local extraction → protected analysis → grounded plan preview → shared preflight.
@@ -116,12 +138,19 @@ not a new frontend redesign or an implicit approval of deferred SP-024 advice.
 - [ ] Verify normal 8–10-prompt HR coverage, multi-field answer credit, one broad role-context clarification maximum, and zero technical, portfolio, competency, roleplay, professional-knowledge, or suitability chains.
 - [ ] Verify unsupported employer/vacancy questions become human follow-up without blocking completion and that no selected role invents responsibilities, qualifications, salary, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines.
 - [ ] Run the smallest targeted release-critical unit/backend checks, then the complete fast default commands once.
-- [ ] Review SP-021B's controlled live flow for each entry mode and record its
-  provider revision, date, measured behavior, and cost; repeat only evidence
-  invalidated by later release-candidate or provider/configuration changes.
-- [ ] Create `docs/operations/full-flow-cost-baseline.md` from a blank sanitized template and record each flow's date, mode, revision, connection duration, direct OpenAI usage, ElevenLabs standard/burst minute charge, live-LLM Detailed costs, credits/free minutes applied, infrastructure overage, and total.
-- [ ] Treat the two controlled flows' cost evidence as a spend-safety sanity
-  check; do not publish a portfolio unit-cost claim from this bounded window.
+- [x] Reconcile SP-021B evidence honestly: retain the successful CV-assisted
+  live result, record the owner's conversation-first success recollection as
+  uncorroborated by a distinguishable full-live operation ledger, and require no
+  additional paid local flow.
+- [x] Create `docs/operations/full-flow-cost-baseline.md` as a sanitized
+  preliminary template containing existing request-count/timing evidence and
+  explicit unknown cost fields. SP-026 appends the two definitive production
+  flow measurements.
+- [x] Confirm the SP-026 handoff requires exactly two controlled production
+  flows unless a defect narrowly requires a rerun: one materially different
+  synthetic/licensed text-PDF CV-assisted flow and one conversation-first flow.
+  Treat their cost evidence as a spend-safety sanity check, not a portfolio
+  unit-cost claim.
 - [ ] Record, fix, and retest every release-blocking functional, privacy,
   security, conversational-behavior, and provider issue within its authorized
   scope. Timing values may identify a defect but do not independently create a
@@ -134,9 +163,10 @@ not a new frontend redesign or an implicit approval of deferred SP-024 advice.
 
 - [ ] Every required Section 18 manual scenario has a recorded pass across the relevant responsive matrix.
 - [ ] The complete quick gate passes once on the release candidate.
-- [ ] Current controlled live evidence for both entry modes passes without
-  retention/privacy/scope drift, whether reused from SP-021B or narrowly rerun
-  because later changes invalidated it.
+- [x] Existing live evidence and its limitations are recorded without a new
+  paid local call; the definitive two-entry-mode paid acceptance, production
+  Turnstile/hostname checks, and measured cost finalization are handed to
+  SP-026 as public-release gates.
 - [ ] No release-blocking conversation, evidence, Turnstile, responsive,
   accessibility, privacy, or provider defect remains; any obvious timing problem
   observed during the walkthrough is investigated as a functional UX defect.
@@ -159,9 +189,13 @@ not a new frontend redesign or an implicit approval of deferred SP-024 advice.
   run a paired `no-preference`/`reduce` comparison rather than relying on the
   system default.
 - [ ] Re-run the smallest affected scenario/check after each fix and the complete quick gate only at the final boundary.
-- [ ] Review provider dashboards/logs/browser storage after controlled live smokes for cost and privacy expectations.
-- [ ] Verify OpenAI input/output sharing is disabled before any real-data or public run; block release if the dashboard state cannot be confirmed.
-- [ ] Verify the cost file contains no CV/transcript text, candidate identity, API key, account ID, Turnstile token, or secret-bearing billing screenshot.
+- [x] Reconcile existing content-free provider logs into the preliminary cost
+  file without inventing token counts, connected duration, or measured cost.
+- [x] Record OpenAI input/output sharing as an SP-026 pre-flow/public-release
+  gate. It must be disabled before any external/public or non-synthetic use and
+  before the two controlled production flows begin.
+- [x] Verify the cost file contains no CV/transcript text, candidate identity,
+  API key, account ID, Turnstile token, or secret-bearing billing screenshot.
 - [ ] Obtain explicit user approval of the release candidate and unresolved non-blocking limitations.
 - [ ] Hand the exact approved candidate, manual matrix, current SP-021B evidence,
   cost baseline, fixed defects, and every remaining limitation/blocker to

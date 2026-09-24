@@ -15,7 +15,8 @@ Ticket index: [`README.md`](README.md)
 Deploy the exact SP-025A-audited candidate by extending the one GitHub Actions
 pipeline to build independently versioned frontend/backend Cloud Run services
 behind one low-cost Firebase Hosting custom HTTPS domain with keyless identity,
-secrets, abuse controls, smoke checks, and rollback.
+secrets, abuse controls, smoke checks, and rollback, then close public-release
+acceptance with the exact two controlled production flows defined below.
 
 ## Standalone implementation context
 
@@ -31,6 +32,15 @@ secrets, abuse controls, smoke checks, and rollback.
 - If Cloudflare manages DNS, Firebase records remain DNS-only permanently. Do not enable the proxy, Bot Fight Mode, paid WAF, or a second CDN.
 - Create one free production Turnstile widget restricted to canonical apex/`www`; public site key is browser-safe, secret stays in Google Secret Manager.
 - SP-026 is the release boundary. SP-027 portfolio packaging and SP-028 extended automation are optional.
+- SP-025 deliberately performs no additional paid local flow. After the exact
+  SP-025A-audited deployment is reachable, SP-026 owns the definitive paid end-
+  to-end acceptance: exactly two controlled production flows unless a concrete
+  defect narrowly requires a documented rerun.
+- The production pair is (1) CV-assisted using an owner-selected wholly
+  synthetic text PDF or explicitly licensed public-template text PDF with no
+  real person's data, materially different from the bundled sample, and (2)
+  conversation-first. Do not use a random real person's Internet CV and do not
+  buy a third bundled-sample flow merely to duplicate the CV branch.
 - SP-025A is the final pre-deployment code/ticket audit. Its ledger and complete
   deterministic gate must identify the exact candidate entering this ticket.
   Do not deploy a materially changed candidate without re-running the affected
@@ -53,6 +63,10 @@ secrets, abuse controls, smoke checks, and rollback.
 - Create the production Turnstile widget manually through **Cloudflare dashboard → Turnstile → Add widget** after the canonical domain is known. No Cloudflare API token, registrar credential, or Cloudflare proxy is required. Domain purchase and Firebase DNS values also remain manual.
 - Add `.env*`, nested `.env*`, and downloaded cloud-credential exclusions to `.dockerignore`, inspect both image histories, and verify no build argument/environment layer contains a secret.
 - Pipeline/container/routing configuration may be completed and validated without values. If any production secret/identifier or dashboard access is missing, stop before authentication/deploy, leave the affected deployment/live checks unchecked, and report the exact manual blocker.
+- Before either controlled production flow, verify OpenAI input/output sharing
+  is **Disabled** for the ScreenPilot project. The flows remain synthetic, but
+  sharing-off, `store: false`, and synthetic-only data are independent gates.
+  Record only the project name, disabled state, and date.
 
 ## Scope boundaries
 
@@ -60,6 +74,12 @@ secrets, abuse controls, smoke checks, and rollback.
 - Do not purchase a domain from CI or expose registrar/provider secrets to image builds.
 - Do not use long-lived Google service-account keys.
 - Do not automate real paid provider flows or add a production Turnstile bypass to smoke tests.
+- Do not scrape, download, or use a random real person's CV. The CV-assisted
+  production fixture must be owner-selected synthetic content or an explicitly
+  licensed public template with no real person's data.
+- Do not repeat the bundled sample in a third paid flow merely to increase the
+  run count. A rerun is allowed only for a named defect that invalidated the
+  original result, and the reason plus incurred usage must be recorded.
 - Do not expose direct service URLs, candidate content, secrets, or raw build arguments in UI/metadata/images/logs.
 - Do not waive, bypass, or reinterpret an unresolved SP-025A finding, blocker,
   unchecked requirement, or candidate-identity mismatch.
@@ -87,7 +107,20 @@ secrets, abuse controls, smoke checks, and rollback.
   canonical domain and direct frontend Cloud Run URL,
   `?diagnostics=timings` must expose no diagnostics drawer, raw timing view,
   **Copy JSON**, or **Reset** controls. This is not a backend diagnostics route.
-- [ ] Manually run sample-CV, uploaded-CV, and conversation-first production flows; do not automate a paid provider smoke.
+- [ ] Manually run exactly two controlled production flows after every unpaid
+  deployment smoke passes: one CV-assisted flow using the owner-selected
+  synthetic/licensed materially different text PDF, and one conversation-first
+  flow. Do not automate them or add a paid bundled-sample flow.
+- [ ] In both production flows verify the canonical Turnstile hostname/action,
+  current ElevenLabs revision and five client tools plus sole `end_call` system
+  tool, captions/insights, corrected question flow, automatic ending, completed
+  workspace, one summary/review, Clear-session cleanup, and no reconnect or
+  duplicate paid operation.
+- [ ] Review provider dashboards after the bounded pair; append connected
+  duration, direct OpenAI usage, ElevenLabs minute/live-LLM cost, allowances,
+  retention/audio state, and infrastructure overage to
+  `docs/operations/full-flow-cost-baseline.md`, then restore the paid-demo kill
+  switch and documented provider safety controls.
 - [ ] Confirm no database, object storage, queue, worker, or candidate artifact deployment exists.
 - [ ] Document Cloud Run revision rollback and prove revisions/images identify the Git SHA.
 - [ ] Record private operational ownership: registrar, renewal price/date, Firebase site ID, canonical domain, Turnstile widget owner, region, and recovery owner.
@@ -109,6 +142,17 @@ secrets, abuse controls, smoke checks, and rollback.
 - [ ] Rollback to a known Cloud Run revision is documented/testable.
 - [ ] Domain registration is the only planned predictable annual purchase; Turnstile and managed SSL are recorded as $0.
 - [ ] Any infrastructure charge or trial credit is recorded separately from the measured per-flow provider cost; no expired promotion is presented as recurring economics.
+- [ ] Exactly one CV-assisted and one conversation-first controlled production
+  flow pass on the deployed audited SHA, unless a named defect required a
+  narrowly documented rerun. No random real-person CV or redundant paid bundled-
+  sample flow was used.
+- [ ] Production Turnstile/hostname, sharing-off, provider revision/tools and
+  caps, automatic ending, summary/review, cleanup, dashboard usage/cost, and
+  restored kill switches are evidenced before SP-026 or public release is
+  declared complete.
+- [ ] The preliminary cost baseline is finalized with both production records,
+  measured-versus-estimated variance, applied allowances, and any infrastructure
+  overage without candidate, account, or secret content.
 
 ## Focused verification
 
@@ -119,10 +163,15 @@ secrets, abuse controls, smoke checks, and rollback.
 - [ ] Supply `?diagnostics=timings` on the canonical domain and direct frontend
   Cloud Run URL and confirm that no diagnostics drawer, raw timing view, **Copy
   JSON**, or **Reset** controls render.
-- [ ] Manually complete the three production paths with controlled provider usage and inspect Turnstile/provider/Cloud Run results.
+- [ ] Manually complete the exact two-flow production set with controlled
+  provider usage and inspect Turnstile/provider/Cloud Run results. A failed
+  defect-invalidated run may be repeated only narrowly and must be recorded.
 - [ ] Exercise/document one rollback and confirm Git SHA labels.
 - [ ] Audit deployed logs, Artifact Registry, Secret Manager bindings, and cloud resources for forbidden persistence or secret exposure.
-- [ ] Review Cloud Billing after the controlled production flows and compare it with `docs/operations/full-flow-cost-baseline.md`.
+- [ ] Review OpenAI, ElevenLabs, and Cloud Billing after the controlled pair;
+  finalize `docs/operations/full-flow-cost-baseline.md`, confirm sharing remains
+  off and retention/audio settings match disclosure, then restore paid/live
+  kill switches before release approval.
 
 ## Commit boundary
 
