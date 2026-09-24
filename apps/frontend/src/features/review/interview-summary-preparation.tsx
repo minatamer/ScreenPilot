@@ -29,6 +29,7 @@ type InterviewSummaryPreparationProps = Readonly<{
   executeChallenge?: ExecuteTurnstileChallenge | undefined;
   insights: readonly InsightCard[];
   interviewGrant: string;
+  hidePassiveStatus?: boolean | undefined;
   onFailure: (failure: SessionFailure) => void;
   onPendingChange?: ((pending: boolean) => void) | undefined;
   onSummarySucceeded: (response: SummarizeInterviewResponse) => void;
@@ -69,6 +70,7 @@ export function InterviewSummaryPreparation({
   executeChallenge,
   insights,
   interviewGrant,
+  hidePassiveStatus = false,
   onFailure,
   onPendingChange,
   onSummarySucceeded,
@@ -156,6 +158,7 @@ export function InterviewSummaryPreparation({
         onFailure({ stage: "summarizing", ...challengeFailure });
       }}
       onVerified={handleVerified}
+      showPendingStatus={!hidePassiveStatus}
       siteKey={siteKey}
     />
   );

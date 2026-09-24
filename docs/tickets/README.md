@@ -98,7 +98,7 @@ owner-approved SP-018A scope decision on 2026-09-21:
 - SP-015A's owner-directed landing and `/demo` UI/UX implementation is represented by commit `cab2990`. Motion, illustration, CTA, responsive alignment, preflight hierarchy, the shared stage-heading primitive, typography tokens, and spacing rhythm have focused deterministic coverage; consolidated owner visual acceptance and remaining whole-flow/manual checks stay tracked in that packet.
 - SP-016 is implemented, locally verified without credentials or paid calls, and represented by commit `13fc434`. Its schemas, five-tool dispatcher, evidence validation, correction-history preservation, CV seeding, strict session synchronization, aligned height-matched Insight Board, responsive connector treatment, and safety cases have focused coverage; published-agent callbacks and an owner/browser reduced-motion visual check remain explicitly pending.
 - SP-016A is implemented, locally verified, and represented by commit `08ff846`. Every currently reachable `/demo` step fits practical tablet and laptop browser viewports through height-aware density, responsive composition, concise copy, bottom-anchored action footers, and bounded inner scrolling; the final compact-anchor evidence uses the real `/demo` flow from asserted top-of-page state, reduced motion is computed and checked, and the production build ran in a zero-local-environment snapshot. The fake-mode End interview path now enters a reducer-owned, scrubbed, non-persistable placeholder stage. Remaining owner/live observations are carried by the consolidated live-validation gate.
-- SP-017 is locally implemented and verified at policy version `sp017-2026-09-22.1`. Its source-controlled prompt, eight-variable provider-config wiring, bounded reconnect state/time context, deterministic/semantic fixtures, and synchronization runbook are complete. On 2026-09-22 the owner published the exact Prompt 1 policy and changed candidate-question/follow-up tool descriptions to the existing private ScreenPilot/Main branch without Preview or a paid conversation. Immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` is recorded for the current policy; historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to `sp017-2026-09-16.1`. Live behavior observation remains in SP-021B.
+- SP-017 is locally implemented and verified at baseline policy version `sp017-2026-09-22.1`. Its source-controlled prompt, eight-variable provider-config wiring, bounded reconnect state/time context, deterministic/semantic fixtures, and synchronization runbook are complete. On 2026-09-22 the owner published that Prompt 1 policy and changed candidate-question/follow-up tool descriptions on the existing private ScreenPilot/Main branch without Preview or a paid conversation; immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped to that policy. SP-021B's corrected `sp021b-2026-09-23.1` policy and sole `end_call` system tool are now the current provider mapping at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`. Historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to `sp017-2026-09-16.1`. Live behavior observation remains in SP-021B.
 - SP-018's core instrumentation and runtime behavior are implemented and
   deterministically verified; SP-018A's no-spend
   caption/termination correction advances the provider-config target to
@@ -140,12 +140,16 @@ owner-approved SP-018A scope decision on 2026-09-21:
   a provider call. The strict stateless summary route now validates the signed
   grant, plan hash, provenance, local evidence graph, bounds, paid state,
   injected admission decisions,
-  and fresh summary Turnstile action before GPT; its structured adapter permits
-  only one repair, returns content-free token usage, and fails closed on
-  unsupported citations or forbidden assessment/employer claims. SP-022 still
+  and fresh summary Turnstile action before GPT; its structured adapter makes
+  at most one model request, reconciles exact evidence-owned fields locally,
+  returns content-free token usage, and fails closed on a structurally unusable
+  response. Unsupported citations or forbidden assessment/employer claims are
+  replaced by the server-owned grounded evidence summary without a second paid
+  generation. SP-022 still
   owns the production route/source rate and capacity limiter. Summary work now
-  begins only after explicit **View summary**; the first controlled real summary
-  remains deferred to SP-021B.
+  begins only after a freshly validated completed-interview boundary; **View
+  summary** exposes pending/ready review and does not initiate provider work.
+  The first controlled real summary remained deferred to SP-021B.
 - SP-021 is implemented and deterministically verified without credentials or
   a provider call. Manual, automatic, and interrupted endings now converge on
   one in-place review transition; the right board collapses as the interview
@@ -163,16 +167,56 @@ owner-approved SP-018A scope decision on 2026-09-21:
   unsupported-employer fallback/evidence behavior, completed-interview hold,
   explicit **View summary** transition, responsive corrections, and fake-mode
   evidence are reconciled. Live observation remains in SP-021B.
-- SP-021B remains open after the 2026-09-23 conversation-first live attempt.
+- SP-021B remains open after the 2026-09-23 conversation-first live attempt and
+  one successful 2026-09-24 synthetic sample-CV standard-live rerun.
   The diagnostics and evidence-preservation paths worked, but missing
   `end_call`, a fallback stall, `SUMMARY_UNREACHABLE`, slow TTFA, inconclusive
-  interruption timing, and responsive error layout blocked acceptance. Fake-only
-  source fixes use unpublished policy `sp021b-2026-09-23.1`; another provider
-  synchronization or live run requires the documented post-fix manual fake
-  rehearsal plus fresh owner action/authorization. A local-only
-  `summary_rehearsal` mode may isolate one live OpenAI summary behind real
-  Turnstile while CV and ElevenLabs stay disabled/fake; it is clearly labelled
-  and cannot satisfy standard live voice acceptance.
+  interruption timing, and responsive error layout blocked acceptance. The
+  owner published corrected policy `sp021b-2026-09-23.1` with built-in
+  `end_call` enabled as the sole active system tool on private Main on
+  2026-09-24 at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`.
+  Publication preceded the documented post-fix manual fake rehearsal. Later on
+  2026-09-24 both current scripted
+  fake entry paths completed through review; the conversation-first script
+  exercised immediate fallback continuation plus final-No closing and agent
+  disconnect. Paired question/follow-up evidence, the no-reconnect and single-
+  summary handoff, and diagnostics clearing were then owner-confirmed. The owner
+  subsequently reported every available user-facing deterministic fake flow
+  working in both current entry paths through completion and review. That report
+  does not imply that deliberately injected error/retry or interruption paths
+  passed, and exact sample-CV provenance remains a targeted check. The owner also
+  reconfirmed `end_call` as the sole active system tool, all five saved client
+  tools as matching their source-controlled configurations, and the exact custom
+  `end_call` description. A
+  controlled `summary_rehearsal` request then proved the earlier summary blocker was an
+  OpenAI HTTP 400 `invalid_json_schema`: Zod emitted unsupported `oneOf` for the
+  role-preference discriminated union. After that fix, a second request crossed
+  the schema boundary but one UI action bought two model generations before the
+  old semantic repair path failed; its exact rule ID was not logged and cannot
+  be recovered. The summary adapter now caps each action at one model operation,
+  projects exact evidence fields from the server ledger, and falls back locally
+  when model narrative fails domain/evidence/safety validation. Content-free
+  structural validation paths/rules are now logged. Two separate corrected
+  summary-rehearsal sessions then returned HTTP 200 with exactly one summary
+  request per session, so no further summary-only rerun is required. The copied
+  review exposed a Team/work-style fact/evidence semantic gap; reconciliation
+  now upserts exactly one visible fact from the latest applicable candidate-
+  backed insight when that topic is covered, replaces an exact-evidence model
+  paraphrase, preserves disjoint model facts, and falls back safely for every
+  partial/superset/merged overlap or grounded multi-category shared turn. It does
+  not preserve model-authored facts when the Team/work-style insight is absent,
+  uncovered, CV-only, or clarification-only because the untyped fact shape
+  cannot safely classify an invention on another valid candidate turn; those
+  states use the complete grounded summary. Its focused fake-only regression
+  passes. After the transcript summary boundary was aligned to speaker plus
+  provider sequence and the production apps were rebuilt, the owner completed
+  one synthetic sample-CV standard-live flow. The corrected candidate-question
+  and Team/work-style flows, automatic agent ending, completed-workspace
+  handoff, and summary/review all worked. Content-free logs record exactly one
+  successful `cv_analyze`, `voice_token`, and `interview_summary` request and no
+  duplicate summary request. Conversation-first live completion, injected
+  failure/interruption paths, responsive/device coverage, cleanup/privacy,
+  provider usage/cost/retention review, and safety restoration remain open.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

@@ -157,10 +157,7 @@ export function DemoExperience() {
     [dispatch],
   );
   const selectEntryMode = (entryMode: EntryMode) => {
-    if (
-      entryMode === "cv_assisted" &&
-      (!providerOperationsEnabled || summaryRehearsal)
-    ) {
+    if (entryMode === "cv_assisted" && !providerOperationsEnabled) {
       return;
     }
     dispatch({ type: "SELECT_ENTRY_MODE", entryMode });
@@ -177,6 +174,22 @@ export function DemoExperience() {
     state.stage !== "empty" &&
     state.stage !== "bootstrapping" &&
     state.stage !== "cleared";
+  const hasFinalCandidateEvidence = state.transcript.some(
+    (turn) => turn.speaker === "candidate" && turn.status === "final",
+  );
+  const summaryPreparationStage =
+    providerOperationsEnabled &&
+    (state.stage === "summarizing" || state.stage === "interview_complete");
+  const summaryPreparationActive =
+    summaryPreparationStage &&
+    Boolean(
+      state.entryMode &&
+      state.screeningPlan &&
+      state.runtimeConfig &&
+      hasFinalCandidateEvidence &&
+      !state.summary &&
+      !state.failure,
+    );
 
   let stageContent;
   if (
@@ -234,6 +247,7 @@ export function DemoExperience() {
         }}
         performanceSource={performanceSource}
         performanceTracker={performanceTracker}
+        summaryPreparing={summaryPreparationActive}
         topicProgress={state.topicProgress}
         transcript={state.transcript}
       />
@@ -273,7 +287,7 @@ export function DemoExperience() {
           title="Bring a CV, or start with a conversation."
         />
         <EntryModeChooser
-          cvAssistedEnabled={providerOperationsEnabled && !summaryRehearsal}
+          cvAssistedEnabled={providerOperationsEnabled}
           summaryRehearsal={summaryRehearsal}
           onSelect={selectEntryMode}
         />
@@ -505,23 +519,6 @@ export function DemoExperience() {
     );
   }
 
-  const hasFinalCandidateEvidence = state.transcript.some(
-    (turn) => turn.speaker === "candidate" && turn.status === "final",
-  );
-  const summaryPreparationStage =
-    providerOperationsEnabled &&
-    (state.stage === "summarizing" ||
-      (state.stage === "interview_complete" && !summaryRehearsal));
-  const summaryPreparationActive =
-    summaryPreparationStage &&
-    Boolean(
-      state.entryMode &&
-      state.screeningPlan &&
-      state.runtimeConfig &&
-      hasFinalCandidateEvidence &&
-      !state.summary &&
-      !state.failure,
-    );
   const summaryPreparation =
     summaryPreparationStage &&
     state.entryMode &&
@@ -532,6 +529,7 @@ export function DemoExperience() {
         <InterviewSummaryPreparation
           active={summaryPreparationActive}
           entryMode={state.entryMode}
+          hidePassiveStatus={state.stage === "interview_complete"}
           insights={state.insights}
           interviewGrant={state.interviewGrant ?? ""}
           onFailure={handlePreparationFailure}
@@ -601,8 +599,9 @@ export function DemoExperience() {
                 >
                   <strong>Summary rehearsal</strong>
                   <span>
-                    Interview voice is simulated. View summary can make one
-                    live, metered summary request after verification.
+                    CV analysis and interview voice are simulated. After the
+                    interview, ScreenPilot can make one live, metered summary
+                    request while you stay in the completed workspace.
                   </span>
                 </aside>
               ) : null}

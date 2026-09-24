@@ -1,6 +1,6 @@
 # SP-021A — Document owner visual feedback and pre-live decisions
 
-Status: Required; both prompts implemented and deterministically verified locally; Prompt 1 owner-published; live observation pending<br>
+Status: Required; both prompts implemented and deterministically verified locally; Prompt 1 owner-published; both behaviors later passed one SP-021B CV-assisted standard-live flow, with conversation-first live observation still pending<br>
 Milestone: Milestone 3 — same-session review<br>
 Last synchronized: 2026-09-23<br>
 Depends on: SP-019, SP-020, SP-021<br>
@@ -124,11 +124,15 @@ The numbers preserve the review order used during the owner walkthrough.
     use the approved fallback and become paired candidate-question and human-
     follow-up evidence. Deterministic fake/provider-shaped verification is
     complete. The owner published the exact policy to private ScreenPilot/Main
-    without Preview; live observation remains pending.
+    without Preview; the later SP-021B CV-assisted standard-live run observed
+    the corrected question flow, while conversation-first live observation
+    remains pending.
 37. **Prompt 2 implemented locally.** Normal interview completion disconnects
     voice first, retains a completed read-only interview workspace, and waits
     for an explicit **View summary** action. Deterministic lifecycle verification
-    is complete; live observation remains pending.
+    is complete; the later SP-021B CV-assisted standard-live run observed the
+    automatic ending and completed-workspace/summary handoff, while
+    conversation-first live observation remains pending.
 
 ### Mobile defects and corrections
 
@@ -161,7 +165,7 @@ The numbers preserve the review order used during the owner walkthrough.
 
 ## Prompt 1 documentation — candidate-question fallback and evidence
 
-Status: **Implemented, deterministically verified, and owner-published; live observation pending.**
+Status: **Implemented, deterministically verified, owner-published, and later live-observed in the SP-021B CV-assisted path; conversation-first live observation remains pending.**
 
 ### Context that must travel with Prompt 1
 
@@ -247,10 +251,12 @@ Status: **Implemented, deterministically verified, and owner-published; live obs
 - Fake interview events exercise the same provider-shaped dispatch path. The
   reducer and live Insight Board retain both cards. Summary validation accepts
   a captured item only when its exact value and complete insight evidence-ID
-  set survive; same-ID paraphrases trigger the one bounded repair and otherwise
-  fail closed. Organized notes, the selected evidence node, and copied review
-  text therefore preserve both authoritative values with the same valid final-
-  turn evidence. No durable storage or provider transcript retrieval was added.
+  set survive; local reconciliation restores the authoritative captured items
+  without an automatic paid repair, while structurally unusable provider output
+  fails closed after its single operation. Organized notes, the selected
+  evidence node, and copied review text therefore preserve both authoritative
+  values with the same valid final-turn evidence. No durable storage or provider
+  transcript retrieval was added.
 - Focused verification passes 4 backend files / 73 tests and 5 frontend files /
   61 tests with `PROVIDER_MODE=fake` and `PAID_DEMO_ENABLED=false`. Relevant
   contracts, backend, and frontend typechecks pass under Node 24.19.0; targeted
@@ -263,11 +269,11 @@ Status: **Implemented, deterministically verified, and owner-published; live obs
   `sp017-2026-09-22.1`; Main branch ID
   `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` is not used as revision evidence.
   Historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped
-  only to `sp017-2026-09-16.1`. SP-021B still owns live observation.
+  only to `sp017-2026-09-16.1`. SP-021B owns the remaining live observation.
 
 ## Prompt 2 documentation — completed-interview hold and View summary
 
-Status: **Implemented and deterministically verified; live observation pending.**
+Status: **Implemented, deterministically verified, and later live-observed in the SP-021B CV-assisted path; conversation-first live observation remains pending.**
 
 ### Context that must travel with Prompt 2
 
@@ -431,7 +437,9 @@ Status: **Implemented and deterministically verified; live observation pending.*
 - [x] Prompt 1 documentation matches its implementation, fixtures, tests, and
   owner-confirmed immutable provider revision.
 - [x] Prompt 2 documentation matches the deterministically verified
-  implementation; live observation remains pending.
+  implementation; the later SP-021B CV-assisted run observed automatic ending
+  and the completed-workspace/summary handoff, while conversation-first live
+  observation remains pending.
 - [x] The source of truth, affected tickets, ticket index, and downstream
   dependencies distinguish deterministic SP-021A reconciliation from paid
   live-validation SP-021B.

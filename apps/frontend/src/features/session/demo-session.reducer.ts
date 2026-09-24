@@ -1,7 +1,6 @@
 import type { InterviewGrant } from "@screenpilot/contracts/api/interview-preparation";
 import type { ProviderUsage } from "@screenpilot/contracts/api/cv-analysis";
 import {
-  isSummaryRehearsal,
   publicRuntimeConfigSchema,
   type PublicRuntimeConfig,
 } from "@screenpilot/contracts/api/public-runtime-config";
@@ -25,6 +24,7 @@ import {
   type TopicProgress,
 } from "@screenpilot/contracts/interview/topic-progress";
 import {
+  transcriptTurnIdentityKey,
   transcriptTurnSchema,
   type TranscriptTurn,
 } from "@screenpilot/contracts/interview/transcript-turn";
@@ -200,9 +200,7 @@ function reconcileRuntimeConfig(
     demoContext,
   };
 
-  return isSummaryRehearsal(runtimeConfig) && state.entryMode === "cv_assisted"
-    ? clearModeSpecificState(refreshedState)
-    : refreshedState;
+  return refreshedState;
 }
 
 function interruptedSession(
@@ -312,16 +310,6 @@ export function restoreDemoSession(
   session: PersistedDemoSession,
   now: string,
 ): DemoSessionState {
-  if (
-    isSummaryRehearsal(session.runtimeConfig) &&
-    session.entryMode === "cv_assisted"
-  ) {
-    return clearModeSpecificState({
-      ...session,
-      hydrationStatus: "ready",
-    });
-  }
-
   if (session.stage === "extracting_cv" || session.stage === "analyzing_cv") {
     return interruptedCvProcessingSession(session);
   }
@@ -489,13 +477,6 @@ export function demoSessionReducer(
     }
     case "SELECT_ENTRY_MODE":
       assertStage(state, event.type, ["choosing_entry_mode"]);
-      if (
-        event.entryMode === "cv_assisted" &&
-        state.runtimeConfig &&
-        isSummaryRehearsal(state.runtimeConfig)
-      ) {
-        throw new InvalidSessionTransitionError(state.stage, event.type);
-      }
       return {
         ...state,
         entryMode: event.entryMode,
@@ -699,10 +680,7 @@ export function demoSessionReducer(
       };
     case "SUMMARY_SUCCEEDED":
       assertStage(state, event.type, ["interview_complete", "summarizing"]);
-      if (
-        state.stage === "interview_complete" &&
-        (!state.runtimeConfig || isSummaryRehearsal(state.runtimeConfig))
-      ) {
+      if (state.stage === "interview_complete" && !state.runtimeConfig) {
         throw new InvalidSessionTransitionError(state.stage, event.type);
       }
       return {
@@ -745,8 +723,8 @@ export function demoSessionReducer(
         state.transcript.some(
           (existingTurn) =>
             existingTurn.id === turn.id ||
-            (existingTurn.speaker === turn.speaker &&
-              existingTurn.sequence === turn.sequence),
+            transcriptTurnIdentityKey(existingTurn) ===
+              transcriptTurnIdentityKey(turn),
         )
       ) {
         return state;

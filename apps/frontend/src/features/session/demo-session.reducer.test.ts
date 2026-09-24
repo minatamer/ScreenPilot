@@ -196,19 +196,22 @@ function cvPreparationState(
 }
 
 describe("demoSessionReducer", () => {
-  it("allows only conversation-first entry in summary rehearsal", () => {
+  it("allows both entry modes in summary rehearsal", () => {
     const rehearsalState = demoSessionReducer(bootstrappedState(), {
       type: "RUNTIME_CONFIG_REFRESHED",
       demoContext,
       runtimeConfig: summaryRehearsalRuntimeConfig,
     });
 
-    expect(() =>
+    expect(
       demoSessionReducer(rehearsalState, {
         type: "SELECT_ENTRY_MODE",
         entryMode: "cv_assisted",
       }),
-    ).toThrow(InvalidSessionTransitionError);
+    ).toMatchObject({
+      entryMode: "cv_assisted",
+      stage: "awaiting_cv",
+    });
     expect(
       demoSessionReducer(rehearsalState, {
         type: "SELECT_ENTRY_MODE",
@@ -220,7 +223,7 @@ describe("demoSessionReducer", () => {
     });
   });
 
-  it("clears a restored CV-assisted path when runtime refresh enters summary rehearsal", () => {
+  it("preserves a restored CV-assisted path when runtime refresh enters summary rehearsal", () => {
     const cvState = cvPreparationState("plan_ready");
 
     const reconciledState = demoSessionReducer(cvState, {
@@ -230,16 +233,15 @@ describe("demoSessionReducer", () => {
     });
 
     expect(reconciledState).toMatchObject({
-      entryMode: null,
+      entryMode: "cv_assisted",
       runtimeConfig: summaryRehearsalRuntimeConfig,
-      stage: "choosing_entry_mode",
+      stage: "plan_ready",
       transcript: [],
-      insights: [],
       topicProgress: [],
     });
-    expect(reconciledState.cv).toBeUndefined();
-    expect(reconciledState.screeningPlan).toBeUndefined();
-    expect(reconciledState.interviewGrant).toBeUndefined();
+    expect(reconciledState.cv).toEqual(normalizedCv);
+    expect(reconciledState.screeningPlan).toEqual(plan("cv_assisted"));
+    expect(reconciledState.interviewGrant).toBe(INTERVIEW_GRANT);
   });
 
   it("converges both preparation branches on the same preflight stage", () => {
@@ -592,7 +594,7 @@ describe("demoSessionReducer", () => {
     ).toThrow();
   });
 
-  it("orders final turns by provider sequence and ignores sequence duplicates", () => {
+  it("orders final turns and deduplicates provider sequences per speaker", () => {
     const state = conversationPreflightState();
     const laterTurn = {
       ...finalCandidateTurn,
@@ -612,6 +614,13 @@ describe("demoSessionReducer", () => {
       sequence: 8,
       text: "A repeated provider event must not create another turn.",
     };
+    const sharedCrossSpeakerSequence = {
+      ...finalCandidateTurn,
+      id: "voice-interviewer-8",
+      sequence: 8,
+      speaker: "interviewer" as const,
+      text: "A different speaker may reuse the provider event ID.",
+    };
 
     const withLater = demoSessionReducer(state, {
       type: "ADD_FINAL_TRANSCRIPT_TURN",
@@ -621,15 +630,24 @@ describe("demoSessionReducer", () => {
       type: "ADD_FINAL_TRANSCRIPT_TURN",
       turn: earlierTurn,
     });
-    const deduplicated = demoSessionReducer(ordered, {
+    const withSharedCrossSpeakerSequence = demoSessionReducer(ordered, {
+      type: "ADD_FINAL_TRANSCRIPT_TURN",
+      turn: sharedCrossSpeakerSequence,
+    });
+    const deduplicated = demoSessionReducer(withSharedCrossSpeakerSequence, {
       type: "ADD_FINAL_TRANSCRIPT_TURN",
       turn: repeatedSequence,
     });
 
     expect(deduplicated.transcript.map((turn) => turn.sequence)).toEqual([
-      3, 8,
+      3, 8, 8,
     ]);
-    expect(deduplicated.transcript).toHaveLength(2);
+    expect(deduplicated.transcript.map((turn) => turn.speaker)).toEqual([
+      "candidate",
+      "candidate",
+      "interviewer",
+    ]);
+    expect(deduplicated.transcript).toHaveLength(3);
   });
 
   it("rejects CV insights that reference unknown normalized facts", () => {
@@ -1057,7 +1075,7 @@ describe("demoSessionReducer", () => {
     );
   });
 
-  it("requires View summary before accepting one completed summary", () => {
+  it("accepts background summary preparation before View summary in every interactive mode", () => {
     let state = demoSessionReducer(conversationPreflightState(), {
       type: "PREFLIGHT_READY",
     });
@@ -1122,26 +1140,20 @@ describe("demoSessionReducer", () => {
       ...state,
       runtimeConfig: summaryRehearsalRuntimeConfig,
     };
-    expect(() =>
-      demoSessionReducer(rehearsalState, {
-        type: "SUMMARY_SUCCEEDED",
-        summary: completedSummary,
-      }),
-    ).toThrow(InvalidSessionTransitionError);
-
-    const summarizing = demoSessionReducer(rehearsalState, {
-      type: "VIEW_SUMMARY",
+    const rehearsalBackgroundPrepared = demoSessionReducer(rehearsalState, {
+      type: "SUMMARY_SUCCEEDED",
+      summary: completedSummary,
     });
-    expect(summarizing).toMatchObject({
+    expect(rehearsalBackgroundPrepared).toMatchObject({
       insights: [retainedQuestionInsight],
-      stage: "summarizing",
+      stage: "interview_complete",
+      summary: completedSummary,
       topicProgress: [retainedTopicProgress],
       transcript: [finalCandidateTurn],
     });
 
-    const review = demoSessionReducer(summarizing, {
-      type: "SUMMARY_SUCCEEDED",
-      summary: completedSummary,
+    const review = demoSessionReducer(rehearsalBackgroundPrepared, {
+      type: "VIEW_SUMMARY",
     });
     expect(review).toMatchObject({
       insights: [retainedQuestionInsight],

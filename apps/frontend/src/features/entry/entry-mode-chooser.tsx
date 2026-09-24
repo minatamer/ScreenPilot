@@ -70,15 +70,19 @@ export function EntryModeChooser({
         badge={
           <EntryModeBadge>
             {cvAssistedEnabled
-              ? "More tailored questions"
+              ? summaryRehearsal
+                ? "Simulated CV analysis"
+                : "More tailored questions"
               : "Paused for this safety check"}
           </EntryModeBadge>
         }
         description={
           cvAssistedEnabled
-            ? "Bring a CV for more focused follow-up questions. It stays in this tab."
+            ? summaryRehearsal
+              ? "Use the CV-assisted flow with simulated analysis and interview voice."
+              : "Bring a CV for more focused follow-up questions. It stays in this tab."
             : summaryRehearsal
-              ? "This local rehearsal uses the synthetic conversation-first fixture; CV analysis is disabled."
+              ? "CV analysis is unavailable while this rehearsal is paused."
               : "CV selection and analysis stay disabled while external actions are paused."
         }
         icon={<DocumentIcon />}

@@ -20,6 +20,7 @@ type ManagedTurnstileGateProps = Readonly<{
   executeChallenge?: ExecuteTurnstileChallenge;
   onFailure: (failure: ManagedTurnstileFailure) => void;
   onVerified: (token: string) => void;
+  showPendingStatus?: boolean;
   siteKey: string;
 }>;
 
@@ -43,6 +44,7 @@ export function ManagedTurnstileGate({
   executeChallenge = executeManagedTurnstileChallenge,
   onFailure,
   onVerified,
+  showPendingStatus = true,
   siteKey,
 }: ManagedTurnstileGateProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -100,15 +102,18 @@ export function ManagedTurnstileGate({
       aria-label="Anti-abuse check"
       className="sp-turnstile-gate"
       data-interaction-required={interactionRequired || undefined}
+      data-pending-status-hidden={!showPendingStatus || undefined}
     >
-      <div className="sp-turnstile-gate__copy" role="status">
-        <span aria-hidden="true" className="sp-turnstile-gate__pulse" />
-        <span>
-          {interactionRequired
-            ? "Complete the anti-abuse check to continue."
-            : "Checking this request before it continues."}
-        </span>
-      </div>
+      {showPendingStatus || interactionRequired ? (
+        <div className="sp-turnstile-gate__copy" role="status">
+          <span aria-hidden="true" className="sp-turnstile-gate__pulse" />
+          <span>
+            {interactionRequired
+              ? "Complete the anti-abuse check to continue."
+              : "Checking this request before it continues."}
+          </span>
+        </div>
+      ) : null}
       <div className="sp-turnstile-gate__widget" ref={containerRef} />
     </section>
   );

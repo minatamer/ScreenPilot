@@ -142,6 +142,15 @@ Implement a source-controlled live-interviewer policy that produces natural, con
   `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to
   `sp017-2026-09-16.1`. SP-021B still owns authorized synthetic live behavior
   observation; publication alone is not a live acceptance result.
+- On 2026-09-24 SP-021B superseded the deployed prompt with corrected policy
+  `sp021b-2026-09-23.1` with built-in `end_call` enabled as the sole active
+  system tool on the same private Main branch. Immutable revision
+  `agtvrsn_9501m39701mmet6av5bz53yk6ggp` is the current provider mapping; the
+  earlier revisions remain historical evidence for their stated policies. The
+  owner later reconfirmed the exact five saved client-tool configurations and
+  separately reopened `end_call` to confirm its custom description exactly
+  matches the source-controlled value. Publication and dashboard inspection are
+  configuration evidence, not live behavior acceptance.
 
 ## Commit boundary
 

@@ -13,3 +13,9 @@ export const transcriptTurnSchema = z.strictObject({
 });
 
 export type TranscriptTurn = z.infer<typeof transcriptTurnSchema>;
+
+export function transcriptTurnIdentityKey(
+  turn: Pick<TranscriptTurn, "sequence" | "speaker">,
+): string {
+  return `${turn.speaker}:${String(turn.sequence)}`;
+}

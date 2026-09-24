@@ -107,6 +107,32 @@ describe("summarizeInterviewRequestSchema", () => {
     ).toBe(true);
   });
 
+  it("uses speaker-scoped sequence identity for live transcript turns", () => {
+    const request = validRequest();
+    const sharedCrossSpeakerSequence = request.transcript.map((turn) =>
+      turn.id === "turn-interviewer" ? { ...turn, sequence: 1 } : turn,
+    );
+
+    expect(
+      summarizeInterviewRequestSchema.safeParse({
+        ...request,
+        transcript: sharedCrossSpeakerSequence,
+      }).success,
+    ).toBe(true);
+    expect(
+      summarizeInterviewRequestSchema.safeParse({
+        ...request,
+        transcript: [
+          ...request.transcript,
+          {
+            ...request.transcript[1],
+            id: "turn-interviewer-duplicate-sequence",
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
   it("accepts only plan-bound CV provenance in CV-assisted mode", () => {
     const request = validRequest();
     const cvPlan = {

@@ -20,6 +20,7 @@ import {
   compareInsightBoardCards,
   INSIGHT_CATEGORY_METADATA,
 } from "./insight-category-metadata";
+import { resolveInsightDisplayStatus } from "./insight-display-status";
 
 type InsightBoardProps = Readonly<{
   cv?: NormalizedCv | undefined;
@@ -389,11 +390,13 @@ function InsightEvidence({
 
 function InsightCardView({
   cv,
+  displayStatus,
   insight,
   isCarouselActive,
   transcript,
 }: Readonly<{
   cv?: NormalizedCv | undefined;
+  displayStatus: InsightStatus;
   insight: InsightCard;
   isCarouselActive: boolean;
   transcript: readonly TranscriptTurn[];
@@ -405,7 +408,7 @@ function InsightCardView({
       className="sp-insight-card"
       data-category={insight.category}
       data-carousel-active={isCarouselActive ? "true" : "false"}
-      data-status={insight.status}
+      data-status={displayStatus}
       role="listitem"
     >
       <div aria-hidden="true" className="sp-insight-card__mark">
@@ -414,8 +417,8 @@ function InsightCardView({
       <div className="sp-insight-card__body">
         <header>
           <p>{insight.label}</p>
-          <Badge tone={statusTone(insight.status)}>
-            {STATUS_LABELS[insight.status]}
+          <Badge tone={statusTone(displayStatus)}>
+            {STATUS_LABELS[displayStatus]}
           </Badge>
         </header>
         <p className="sp-insight-card__value">{insight.value}</p>
@@ -518,6 +521,10 @@ export function InsightBoard({
             {orderedInsights.map((insight, index) => (
               <InsightCardView
                 {...(cv ? { cv } : {})}
+                displayStatus={resolveInsightDisplayStatus(
+                  insight,
+                  orderedInsights,
+                )}
                 insight={insight}
                 isCarouselActive={index === activeInsightSlide}
                 key={insight.id}

@@ -54,6 +54,24 @@ describe("summary model output", () => {
     });
   });
 
+  it("uses only OpenAI-supported composition keywords", () => {
+    const serializedSchema = JSON.stringify(summaryModelOutputJsonSchema);
+
+    expect(serializedSchema).toContain('"anyOf":');
+    for (const unsupportedKeyword of [
+      "allOf",
+      "dependentRequired",
+      "dependentSchemas",
+      "if",
+      "not",
+      "oneOf",
+      "then",
+      "else",
+    ]) {
+      expect(serializedSchema).not.toContain(`"${unsupportedKeyword}":`);
+    }
+  });
+
   it.each([
     "The candidate received a score of 9.",
     "The candidate has a collaborative personality.",
@@ -61,14 +79,17 @@ describe("summary model output", () => {
     "The candidate should be hired.",
     "The company offers a remote work policy.",
     "The candidate applied for this role.",
-  ])("rejects forbidden assessment output: %s", (statement) => {
-    expect(
-      summaryModelOutputSchema.safeParse({
+  ])(
+    "rejects forbidden assessment output at domain normalization: %s",
+    (statement) => {
+      const structurallyParsed = summaryModelOutputSchema.parse({
         ...modelOutput(),
         confirmedFacts: [{ statement, evidenceTurnIds: ["turn-context"] }],
-      }).success,
-    ).toBe(false);
-  });
+      });
+
+      expect(() => normalizeSummaryModelOutput(structurallyParsed)).toThrow();
+    },
+  );
 
   it("rejects duplicate evidence IDs and unknown topic keys", () => {
     expect(

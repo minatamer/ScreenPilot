@@ -21,9 +21,9 @@ import {
 describe("source-controlled ElevenLabs agent configuration", () => {
   it("locks the approved model, transport behavior, privacy, and duration", () => {
     expect(SCREENPILOT_ELEVENLABS_AGENT_CONFIG).toMatchObject({
-      agentRevisionId: "agtvrsn_8901m350e924f2ev7t4pwnvq38b1",
-      agentRevisionPolicyVersion: "sp017-2026-09-22.1",
-      dashboardSyncRequired: true,
+      agentRevisionId: "agtvrsn_9501m39701mmet6av5bz53yk6ggp",
+      agentRevisionPolicyVersion: "sp021b-2026-09-23.1",
+      dashboardSyncRequired: false,
       clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
       conversation: {
         clientEvents: [
@@ -79,7 +79,7 @@ describe("source-controlled ElevenLabs agent configuration", () => {
       voiceIdEnvironmentVariable: "ELEVENLABS_VOICE_ID",
     });
     expect(ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING).toBe(160);
-    expect(ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION).not.toBe(
+    expect(ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION).toBe(
       VOICE_AGENT_POLICY_VERSION,
     );
   });

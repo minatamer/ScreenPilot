@@ -2,7 +2,7 @@
 
 Status: Required release boundary  
 Milestone: Milestone 5 — deploy  
-Last synchronized: 2026-09-21<br>
+Last synchronized: 2026-09-24<br>
 Depends on: SP-022, SP-023, SP-025A<br>
 Suggested commit: `SP-026: publish the stateless ScreenPilot demo`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -82,6 +82,10 @@ secrets, abuse controls, smoke checks, and rollback.
 - [ ] Configure backend canonical origin/cookie settings and Turnstile public site key, secret, allowed hostname, and three actions.
 - [ ] Store OpenAI, ElevenLabs, Turnstile, signing, and cookie secrets in Google Secret Manager/Cloud Run—not GitHub build jobs or images.
 - [ ] Run direct liveness/readiness checks plus unpaid custom-domain routing, refresh, `/v1`, apex/`www`, certificate, cookie, public Turnstile config, and canonical metadata smokes.
+- [ ] Verify the frontend query-parameter opt-in remains loopback-only: on the
+  canonical domain and direct frontend Cloud Run URL,
+  `?diagnostics=timings` must expose no diagnostics drawer, raw timing view,
+  **Copy JSON**, or **Reset** controls. This is not a backend diagnostics route.
 - [ ] Manually run sample-CV, uploaded-CV, and conversation-first production flows; do not automate a paid provider smoke.
 - [ ] Confirm no database, object storage, queue, worker, or candidate artifact deployment exists.
 - [ ] Document Cloud Run revision rollback and prove revisions/images identify the Git SHA.
@@ -96,6 +100,9 @@ secrets, abuse controls, smoke checks, and rollback.
 - [ ] The canonical HTTPS domain serves frontend routes and same-origin `/v1` backend routes; `www` redirects without a loop.
 - [ ] Managed certificate, first-party safety cookie, refresh routing, CSP/CORS/origin, and Turnstile hostname/actions work.
 - [ ] No direct `run.app` URL appears in visitor UI, metadata, copied summaries, or portfolio links.
+- [ ] The local timing-diagnostics UI is unavailable on every non-loopback
+  deployment hostname, including the canonical domain and direct frontend
+  `run.app` URL, even when `?diagnostics=timings` is supplied.
 - [ ] Cloudflare DNS remains DNS-only and no paid proxy/WAF/load balancer has been added.
 - [ ] Secrets are absent from GitHub/build layers and only runtime services receive the minimum values.
 - [ ] Rollback to a known Cloud Run revision is documented/testable.
@@ -108,6 +115,9 @@ secrets, abuse controls, smoke checks, and rollback.
 - [ ] Review WIF trust conditions and effective service-account roles.
 - [ ] Run direct `/health/live` and `/health/ready`, then all unpaid public-domain routing/security smokes.
 - [ ] Check apex/`www`, TLS certificate, DNS-only records, DNSSEC after stability, canonical tags, refresh, relative `/v1`, and cookie attributes.
+- [ ] Supply `?diagnostics=timings` on the canonical domain and direct frontend
+  Cloud Run URL and confirm that no diagnostics drawer, raw timing view, **Copy
+  JSON**, or **Reset** controls render.
 - [ ] Manually complete the three production paths with controlled provider usage and inspect Turnstile/provider/Cloud Run results.
 - [ ] Exercise/document one rollback and confirm Git SHA labels.
 - [ ] Audit deployed logs, Artifact Registry, Secret Manager bindings, and cloud resources for forbidden persistence or secret exposure.

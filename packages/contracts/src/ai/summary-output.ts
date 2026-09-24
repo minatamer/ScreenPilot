@@ -5,18 +5,20 @@ import {
   screeningSummaryFields,
   screeningSummarySchema,
   summaryCandidateStatementSchema,
-  validateSummarySafety,
   type ScreeningSummary,
 } from "../interview/screening-summary.ts";
 
-export const summaryModelOutputSchema = z
-  .strictObject({
-    ...screeningSummaryFields,
-    rolePreference: rolePreferenceSchema.nullable(),
-    compensation: summaryCandidateStatementSchema.nullable(),
-    availability: summaryCandidateStatementSchema.nullable(),
-  })
-  .superRefine(validateSummarySafety);
+// OpenAI Structured Outputs accepts `anyOf` but not the `oneOf` emitted by a
+// Zod discriminated union. Re-wrap the same validated variants as a plain union
+// for the provider-facing schema while retaining the canonical domain parser.
+const summaryRolePreferenceModelSchema = z.union(rolePreferenceSchema.options);
+
+export const summaryModelOutputSchema = z.strictObject({
+  ...screeningSummaryFields,
+  rolePreference: summaryRolePreferenceModelSchema.nullable(),
+  compensation: summaryCandidateStatementSchema.nullable(),
+  availability: summaryCandidateStatementSchema.nullable(),
+});
 
 export type SummaryModelOutput = z.infer<typeof summaryModelOutputSchema>;
 

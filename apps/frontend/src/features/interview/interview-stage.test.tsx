@@ -267,6 +267,52 @@ describe("InterviewStage", () => {
     expect(onViewSummary).toHaveBeenCalledOnce();
   });
 
+  it("keeps View summary disabled with a spinner while background preparation is active", () => {
+    const onViewSummary = vi.fn();
+    const rendered = render(
+      <InterviewStage
+        completed
+        elapsedSeconds={84}
+        entryMode="cv_assisted"
+        insights={[]}
+        onViewSummary={onViewSummary}
+        summaryPreparing
+        topicProgress={[]}
+        transcript={[]}
+      />,
+    );
+
+    const waitingButton = screen.getByRole("button", {
+      name: "Preparing summary. View summary will be available when ready.",
+    });
+    expect(waitingButton).toBeDisabled();
+    expect(waitingButton).toHaveAttribute("aria-busy", "true");
+    expect(waitingButton).toHaveTextContent("View summary");
+    expect(
+      waitingButton.querySelector(".sp-button__spinner"),
+    ).toBeInTheDocument();
+    fireEvent.click(waitingButton);
+    expect(onViewSummary).not.toHaveBeenCalled();
+
+    rendered.rerender(
+      <InterviewStage
+        completed
+        elapsedSeconds={84}
+        entryMode="cv_assisted"
+        insights={[]}
+        onViewSummary={onViewSummary}
+        topicProgress={[]}
+        transcript={[]}
+      />,
+    );
+
+    const readyButton = screen.getByRole("button", { name: "View summary" });
+    expect(readyButton).toBeEnabled();
+    expect(readyButton).not.toHaveAttribute("aria-busy");
+    fireEvent.click(readyButton);
+    expect(onViewSummary).toHaveBeenCalledOnce();
+  });
+
   it("uses the compact waveform and speaking emphasis inside the transcript", () => {
     const rendered = render(
       <InterviewStage

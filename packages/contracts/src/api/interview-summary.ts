@@ -5,7 +5,10 @@ import { insightCardSchema } from "../interview/insight-card.ts";
 import { screeningPlanSchema } from "../interview/screening-plan.ts";
 import { screeningSummarySchema } from "../interview/screening-summary.ts";
 import { topicProgressSchema } from "../interview/topic-progress.ts";
-import { transcriptTurnSchema } from "../interview/transcript-turn.ts";
+import {
+  transcriptTurnIdentityKey,
+  transcriptTurnSchema,
+} from "../interview/transcript-turn.ts";
 import { providerUsageSchema } from "./cv-analysis.ts";
 import { interviewGrantSchema } from "./interview-preparation.ts";
 
@@ -48,12 +51,18 @@ export const summarizeInterviewRequestSchema = z
     }
 
     const transcriptIds = request.transcript.map((turn) => turn.id);
-    const transcriptSequences = request.transcript.map((turn) => turn.sequence);
+    const transcriptTurnIdentities = request.transcript.map(
+      transcriptTurnIdentityKey,
+    );
     if (new Set(transcriptIds).size !== transcriptIds.length) {
       addIssue("Transcript turn IDs must be unique.", ["transcript"]);
     }
-    if (new Set(transcriptSequences).size !== transcriptSequences.length) {
-      addIssue("Transcript sequences must be unique.", ["transcript"]);
+    if (
+      new Set(transcriptTurnIdentities).size !== transcriptTurnIdentities.length
+    ) {
+      addIssue("Transcript speaker/sequence pairs must be unique.", [
+        "transcript",
+      ]);
     }
     if (request.transcript.some((turn) => turn.status !== "final")) {
       addIssue("Only final transcript turns can be summarized.", [

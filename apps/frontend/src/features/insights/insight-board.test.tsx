@@ -301,7 +301,19 @@ describe("InsightBoard", () => {
     const insightList = screen.getByRole("list", {
       name: "Candidate insight cards",
     });
-    expect(within(insightList).getByText("Candidate question")).toBeVisible();
+    const candidateQuestionCard = within(insightList)
+      .getByText("Candidate question")
+      .closest("article");
+    expect(candidateQuestionCard).toHaveAttribute(
+      "data-status",
+      "needs_clarification",
+    );
+    if (!candidateQuestionCard) {
+      throw new Error("Expected the Candidate question card to render.");
+    }
+    expect(
+      within(candidateQuestionCard).getByText("Needs clarification"),
+    ).toBeVisible();
     expect(within(insightList).getAllByText(question)).not.toHaveLength(0);
     expect(within(insightList).getByText("Human follow-up")).toBeVisible();
     expect(within(insightList).getByText(followup)).toBeVisible();

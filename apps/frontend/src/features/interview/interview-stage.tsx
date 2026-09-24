@@ -41,6 +41,7 @@ type InterviewStageProps = Readonly<{
   phase?: VoiceSessionPhase | undefined;
   performanceSource?: VoicePerformanceSource | undefined;
   performanceTracker?: VoicePerformanceTracker | undefined;
+  summaryPreparing?: boolean | undefined;
   topicProgress: readonly TopicProgress[];
   transcript: readonly TranscriptTurn[];
 }>;
@@ -66,6 +67,7 @@ export function InterviewStage({
   phase = "ended",
   performanceSource,
   performanceTracker,
+  summaryPreparing = false,
   topicProgress,
   transcript,
 }: InterviewStageProps) {
@@ -121,6 +123,7 @@ export function InterviewStage({
               onViewSummary={() => {
                 onViewSummary?.();
               }}
+              summaryPreparing={summaryPreparing}
             />
           ) : (
             <InterviewControls

@@ -147,9 +147,10 @@ summary before a paid provider is called. Standard `PROVIDER_MODE=live` creates
 the real clients and validates the complete credential group, but does not by
 itself make a network request. Local summary rehearsal deliberately requires
 live/paid-enabled configuration while omitting ElevenLabs client construction;
-it remains a paid OpenAI/Turnstile path and never authorizes itself. The fixes
-above make loading the populated local file safe in fake mode, but they do not
-authorize any unchecked live-mode readiness or provider test.
+CV analysis and interview voice remain deterministic while the summary is live
+and metered. It remains a paid OpenAI/Turnstile path and never authorizes
+itself. The fixes above make loading the populated local file safe in fake mode,
+but they do not authorize any unchecked live-mode readiness or provider test.
 
 ### Local summary-only rehearsal
 
@@ -157,24 +158,32 @@ Use this only when the owner explicitly wants to validate the live summary
 boundary without paying for another ElevenLabs interview. It is not the default
 fake rehearsal and does not count as a complete live voice pass.
 
-1. Use only the checked-in synthetic conversation-first scenario. Confirm the
-   OpenAI/Turnstile project, balance/caps, allowed `localhost` hostname, and the
-   maximum of one intended summary operation.
+1. Use only the checked-in synthetic sample CV or synthetic conversation-first
+   scenario. Confirm the OpenAI/Turnstile project, balance/caps, allowed
+   `localhost` hostname, and the maximum of one intended summary operation.
 2. In the ignored backend environment, the owner sets `APP_ENV=local`,
    `PROVIDER_MODE=live`, `PAID_DEMO_ENABLED=true`, and
    `LIVE_INTERVIEW_ENABLED=false`. OpenAI, Turnstile, and both application
    secrets remain required. ElevenLabs values are not required by this mode.
 3. Restart both applications with the canonical production-like local startup.
-   Confirm the persistent **Summary rehearsal** notice, disabled CV action, and
-   available conversation-first path. Stop if the notice or mode differs.
-4. Complete the deterministic fake interview. Its diagnostics must say `fake`;
+   Confirm the persistent **Summary rehearsal** notice and that both the
+   simulated CV-assisted and conversation-first paths are available. Stop if
+   the notice or mode differs.
+4. Complete the deterministic fake interview through the selected path. Its
+   diagnostics must say `fake`; CV analysis uses the deterministic analyzer and
    no ElevenLabs client, WebRTC session, speech operation, or voice charge is
-   expected. Voice authorization still consumes a real `voice_token` Turnstile
-   challenge before returning the deterministic local authorization.
-5. Confirm no summary request occurs merely because the interview ended. Click
-   **View summary** once to run the real `interview_summary` Turnstile check and
-   one metered OpenAI summary. Retry only through the visible explicit action
-   after a retryable failure; never refresh or repeat for metrics.
+   expected. The CV-analysis and voice-authorization routes still consume their
+   real Turnstile challenges before returning deterministic local results.
+5. Normal fake-voice disconnect automatically starts the real
+   `interview_summary` Turnstile check and at most one metered OpenAI summary.
+   This can spend the one summary operation even if **View summary** is never
+   clicked. While it is pending, confirm the completed workspace shows no
+   passive “checking” status and keeps **View summary** disabled with a
+   continuous spinner. If Turnstile genuinely requires interaction, complete
+   the visible challenge. When preparation settles, the button becomes enabled;
+   click it to expose the ready review or preserved failure/retry state. Retry
+   only through the visible explicit action after a retryable failure; never
+   refresh or repeat for metrics.
 6. Review only sanitized request count, coarse usage/cost, and provider status.
    This evidence validates summary behavior only, not ElevenLabs or live voice.
 7. When finished, the owner restores `LIVE_INTERVIEW_ENABLED=true`,
@@ -238,6 +247,18 @@ request. A visible Retry analysis action is a new request and requires a fresh
 Turnstile token. Provider diagnostics contain only fixed categories, validation
 rule IDs, field paths, duration, usage, and optional HTTP status—not CV text,
 generated values, response bodies, or raw causes.
+
+For interview summary, one accepted user action likewise sends at most one
+Structured Outputs request. The server—not the model—is authoritative for the
+exact role record, topic partition, evidence IDs, captured candidate questions,
+human follow-ups, compensation/availability evidence, and fixed limitations.
+It reconciles those fields locally, keeps model-authored narrative only after
+the complete domain/evidence/safety check, and otherwise returns its bounded
+grounded evidence summary. It never sends an automatic paid repair request. A
+structurally unusable provider response fails closed after the one request; the
+backend log may contain only bounded validation rule IDs and field paths, never
+transcript text or generated values. A visible Retry is a separate owner action
+with a fresh Turnstile token.
 
 ### 2. Account and billing prerequisites
 
@@ -451,7 +472,7 @@ control; do not improvise a different behavior.
 | --- | --- |
 | Product and template | ElevenAgents (`elevenagents`), one private Blank agent |
 | First message | `Hi, what's your name?` |
-| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts`. Source policy `sp021b-2026-09-23.1` contains post-live blocker fixes and is **not published**. Immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped only to last-published `sp017-2026-09-22.1`; do not run live until the owner deliberately synchronizes and records a new revision. |
+| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts`. Source policy `sp021b-2026-09-23.1` was owner-published to private Main on 2026-09-24 at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`, with built-in `end_call` enabled as the sole active system tool. The owner later reconfirmed that state, the exact five saved client-tool configurations, and the exact source-controlled `end_call` description. Publication is configuration evidence only; paid/live acceptance remains open. |
 | Language | English only |
 | Native LLM | GPT-5.4 Mini (`gpt-5.4-mini`) through ElevenLabs |
 | Reasoning | None / reasoning budget 0 |
@@ -512,18 +533,28 @@ is the prose source of truth; the dashboard is a deployed copy and must never
 be edited as an independent prompt draft.
 
 Current synchronization status: source policy `sp021b-2026-09-23.1` passed
-deterministic fake/provider-shaped verification but is not published. It fixes
-same-response fallback continuation and final-question decline → closing +
-`end_call`. The 2026-09-22 immutable revision
-`agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains honestly mapped to
-`sp017-2026-09-22.1`; it must not be relabelled. Publishing, recording a new
-immutable revision, and any live retest require fresh owner action and
-authorization.
+deterministic fake/provider-shaped verification and was owner-published to
+private Main on 2026-09-24 with built-in `end_call` enabled as the sole active
+system tool.
+Immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp` is mapped to this
+policy; Main branch ID `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` is not revision
+evidence. It fixes same-response fallback continuation and final-question
+decline → closing + `end_call`. The owner later reconfirmed that `end_call`
+remains the sole active system tool and that all five saved client tools match
+their source-controlled descriptions, parameters, bounds, and Wait-for-response
+behavior. The owner also reopened `end_call` and confirmed its custom description
+exactly matches `ELEVENLABS_END_CALL_TOOL_DESCRIPTION`. One later synthetic
+sample-CV standard-live flow passed the corrected question flow, Team/work-style
+flow, automatic ending, and summary/review; the remaining SP-021B live/manual
+matrix stays open.
 
-Before synchronization, complete SP-021B's post-fix manual fake checklist. The
-earlier 2026-09-23 fake walkthrough predates the corrected prompt, terminal
-trace, summary boundaries, timing clock origins, interruption copy, and error
-layout and therefore is historical evidence only.
+Before live activation, complete SP-021B's remaining free checklist. The owner
+reported every available user-facing deterministic fake flow passing in both
+current entry paths through completion and review. The paired evidence,
+completed-workspace handoff, diagnostics clearing, and corrected live summary
+boundary also pass. The latest Team/work-style fact/evidence reconciliation
+needs one affected fake review observation; exact sample-CV provenance and the
+deliberately injected summary error/retry and interruption paths remain open.
 
 1. Run the focused prompt suite in fake mode. Do not start a Preview
    conversation.
@@ -1020,6 +1051,28 @@ state, not a payment method, account identifier, key, or billing screenshot:
   `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` value remains a branch ID only, and the
   earlier `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` revision remains historical
   evidence for `sp017-2026-09-16.1`.
+- [x] On 2026-09-24 the owner replaced private Main's complete system prompt
+  with source policy `sp021b-2026-09-23.1`, enabled the built-in `end_call`
+  system tool as the sole active system tool, and published immutable revision
+  `agtvrsn_9501m39701mmet6av5bz53yk6ggp`. Main branch ID
+  `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` remains branch identity only. No
+  Preview or paid/live conversation is claimed by this publication.
+- [x] On 2026-09-24 the owner reconfirmed that `end_call` remains the sole active
+  system tool and that all five saved client tools match their source-controlled
+  descriptions, required parameters, enums, character-bound descriptions, and
+  Wait-for-response behavior.
+- [x] On 2026-09-24 the owner reopened `end_call` and confirmed that its custom
+  description exactly matches
+  `SCREENPILOT_ELEVENLABS_AGENT_CONFIG.systemTools.endCall.description`:
+  “End the conversation immediately after ScreenPilot's brief closing sentence
+  when screening is complete, the final candidate-question opportunity is
+  resolved or declined, or the candidate asks to stop. Never wait for another
+  user turn after closing.”
+- [x] On 2026-09-24 the owner confirmed the immediate pre-live safety state:
+  provider balance/caps were checked, ElevenLabs audio saving was off with
+  retention at zero, Turnstile hostname/actions were correct, and paid routes
+  had been proved closed before paid mode was enabled. This is configuration
+  evidence only, not live acceptance or authorization for another paid call.
 - [x] Owner-reported publication checkpoint on 2026-09-16: the publish review
   targeted ScreenPilot/Main and showed the complete rendered SP-017 prompt
   replacement, both added runtime variables (`screenpilot_known_state` and
@@ -1199,8 +1252,48 @@ Preview or paid conversation. Historical immutable revision
 `sp017-2026-09-22.1` and its candidate-question fallback/tool-description delta
 to private Main at immutable revision
 `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`, again without Preview or a paid
-conversation. SP-021B observation is still required before this behavior can be
-described as live-validated.
+conversation. On 2026-09-24 the owner published successor policy
+`sp021b-2026-09-23.1` with built-in `end_call` enabled as the sole active system
+tool on the same private Main branch at immutable revision
+`agtvrsn_9501m39701mmet6av5bz53yk6ggp`. The owner later reconfirmed that state
+and the exact five saved client-tool configurations, then separately reopened
+`end_call` and confirmed its exact source-controlled custom description. This is
+configuration evidence only; SP-021B observation is still required before this
+behavior can be described as live-validated.
+
+On 2026-09-24 one bounded synthetic sample-CV live interview reached the
+completed workspace with the corrected published agent behavior, but its local
+summary handoff failed before any `/v1/interview/summary` request. The frontend
+summary contract incorrectly required ElevenLabs' numeric event sequence to be
+globally unique even though the documented/live transcript identity is speaker
+plus sequence and candidate/interviewer callbacks may reuse the number. The
+contract, reducer/tool reconciliation, and persistence boundary now share that
+speaker-scoped identity; same-speaker duplicates and duplicate turn IDs remain
+invalid. Fake-only contract/frontend/backend coverage carries provider-shaped
+shared sequences through one valid summary request. This correction authorizes
+neither another live conversation nor an automatic paid summary retry; restart
+and any retained-session summary attempt remain owner-controlled.
+
+After that correction, the production frontend and backend were rebuilt with
+Node 24.19, restarted without stale listeners, and verified healthy before one
+new owner-controlled synthetic sample-CV standard-live run. The owner reported
+the corrected candidate-question flow, Team/work-style question flow, brief
+closing plus automatic `end_call`, completed-workspace handoff, and live
+summary/review all working. Content-free backend evidence contains exactly one
+successful `cv_analyze` request (HTTP 200, 9,894 ms), one successful
+`voice_token` request (HTTP 200, 664 ms), and one successful
+`interview_summary` request (HTTP 200, 4,848 ms), with no duplicate summary
+request and no logged candidate/provider content. This is one completed CV-
+assisted standard-live path; conversation-first, injected failures,
+interruption, alternate endings, responsive/device checks, raw diagnostics,
+cleanup/privacy inspection, provider-dashboard usage/cost/retention review, and
+post-window safety restoration remain governed by SP-021B.
+
+This run occurred while several SP-021B free/manual sequencing items were still
+recorded as open. Preserve the successful CV-assisted evidence, but do not use
+it to retroactively check those prerequisites or the remaining manual matrix;
+complete the free follow-ups before closing the ticket or authorizing another
+paid flow.
 
 ### Phase F: owner microphone and real-conversation checks
 

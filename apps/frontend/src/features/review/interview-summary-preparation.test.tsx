@@ -1,4 +1,4 @@
-import { render, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { ExecuteTurnstileChallenge } from "@/features/abuse-protection/turnstile-client";
@@ -48,7 +48,16 @@ describe("InterviewSummaryPreparation", () => {
         },
       ],
     };
-    const rendered = render(<InterviewSummaryPreparation {...props} />);
+    const rendered = render(
+      <InterviewSummaryPreparation {...props} hidePassiveStatus />,
+    );
+
+    expect(
+      screen.queryByText("Checking this request before it continues."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Anti-abuse check" }),
+    ).toHaveAttribute("data-pending-status-hidden", "true");
 
     await waitFor(() => {
       expect(summarize).toHaveBeenCalledOnce();
@@ -57,9 +66,15 @@ describe("InterviewSummaryPreparation", () => {
     expect(requestSignal?.aborted).toBe(false);
 
     rendered.rerender(
-      <InterviewSummaryPreparation {...props} active={false} />,
+      <InterviewSummaryPreparation
+        {...props}
+        active={false}
+        hidePassiveStatus
+      />,
     );
-    rendered.rerender(<InterviewSummaryPreparation {...props} active />);
+    rendered.rerender(
+      <InterviewSummaryPreparation {...props} active hidePassiveStatus />,
+    );
     await waitFor(() => {
       expect(executeChallenge).toHaveBeenCalledTimes(2);
     });

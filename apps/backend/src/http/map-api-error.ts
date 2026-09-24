@@ -11,7 +11,6 @@ import {
   OpenAiStructuredOutputError,
 } from "../providers/openai/openai-client.js";
 import { OpenAiCvValidationError } from "../providers/openai/openai-cv-analyzer.js";
-import { OpenAiSummaryValidationError } from "../providers/openai/openai-interview-summarizer.js";
 import { TurnstileVerificationError } from "../providers/turnstile/cloudflare-turnstile-verifier.js";
 import { InterviewGrantError } from "../security/interview-grant.js";
 import { UseCaseError } from "../use-cases/use-case-error.js";
@@ -39,6 +38,8 @@ type ProviderDiagnostic = Readonly<{
   providerHttpStatus?: number;
   providerRetryable?: boolean;
   providerType: string;
+  providerValidationPaths?: readonly string[];
+  providerValidationRuleIds?: readonly string[];
 }>;
 
 function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
@@ -57,8 +58,7 @@ function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
   if (
     providerError instanceof OpenAiRequestError ||
     providerError instanceof OpenAiStructuredOutputError ||
-    providerError instanceof OpenAiCvValidationError ||
-    providerError instanceof OpenAiSummaryValidationError
+    providerError instanceof OpenAiCvValidationError
   ) {
     return {
       provider: "openai",
@@ -81,6 +81,13 @@ function createProviderDiagnostic(error: unknown): ProviderDiagnostic | null {
               ? {}
               : { providerCode: providerError.providerCode }),
             providerFailureClass: providerError.providerFailureClass,
+          }
+        : {}),
+      ...(providerError instanceof OpenAiStructuredOutputError ||
+      providerError instanceof OpenAiCvValidationError
+        ? {
+            providerValidationPaths: providerError.validationPaths,
+            providerValidationRuleIds: providerError.validationRuleIds,
           }
         : {}),
     };

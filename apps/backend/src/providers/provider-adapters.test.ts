@@ -5,6 +5,7 @@ import { CONVERSATION_FIRST_PLAN } from "../demo/conversation-first-plan.js";
 import { createProviderAdapters } from "./provider-adapters.js";
 import type { InterviewSummaryInput } from "../use-cases/ports/interview-summarizer.js";
 import { OpenAiCvAnalyzer } from "./openai/openai-cv-analyzer.js";
+import { FakeOpenAi } from "./openai/fake-openai.js";
 import { OpenAiInterviewSummarizer } from "./openai/openai-interview-summarizer.js";
 import { CloudflareTurnstileVerifier } from "./turnstile/cloudflare-turnstile-verifier.js";
 import { FAKE_TURNSTILE_PASS_TOKEN } from "./turnstile/fake-turnstile-verifier.js";
@@ -248,10 +249,10 @@ describe("provider adapter composition", () => {
     );
   });
 
-  it("uses fake voice without constructing an ElevenLabs client in summary rehearsal", async () => {
+  it("uses fake CV analysis and voice while keeping the live summary boundary in summary rehearsal", async () => {
     const adapters = createProviderAdapters(summaryRehearsalConfig);
 
-    expect(adapters.cvAnalyzer).toBeInstanceOf(OpenAiCvAnalyzer);
+    expect(adapters.cvAnalyzer).toBeInstanceOf(FakeOpenAi);
     expect(adapters.challengeVerifier).toBeInstanceOf(
       CloudflareTurnstileVerifier,
     );
@@ -259,6 +260,14 @@ describe("provider adapter composition", () => {
       OpenAiInterviewSummarizer,
     );
     expect(adapters.voiceTokenProvider).toBeInstanceOf(FakeElevenLabs);
+    const analysis = await adapters.cvAnalyzer.analyzeCv({
+      cvText: [
+        "Riley Vale",
+        "Junior developer with a product internship and accessible workflow project experience.",
+        "Suggested role: Junior Software Developer",
+      ].join("\n\n"),
+    });
+    expect(analysis.normalizedCv.facts.length).toBeGreaterThan(0);
     await expect(
       adapters.voiceTokenProvider.createVoiceToken({
         requestId: "summary-rehearsal-request",

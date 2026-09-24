@@ -14,6 +14,7 @@ type InterviewControlsProps = Readonly<{
 type CompletedInterviewControlsProps = Readonly<{
   elapsedSeconds: number;
   onViewSummary: () => void;
+  summaryPreparing: boolean;
 }>;
 
 function StopIcon() {
@@ -91,12 +92,24 @@ export function InterviewControls({
 export function CompletedInterviewControls({
   elapsedSeconds,
   onViewSummary,
+  summaryPreparing,
 }: CompletedInterviewControlsProps) {
   return (
     <div className="sp-interview-controls" data-state="complete">
       <InterviewTimer elapsedSeconds={elapsedSeconds} />
       <ButtonGroup className="sp-interview-controls__actions">
-        <Button onClick={onViewSummary}>View summary</Button>
+        <Button
+          aria-label={
+            summaryPreparing
+              ? "Preparing summary. View summary will be available when ready."
+              : undefined
+          }
+          loading={summaryPreparing}
+          loadingLabel="View summary"
+          onClick={onViewSummary}
+        >
+          View summary
+        </Button>
       </ButtonGroup>
     </div>
   );

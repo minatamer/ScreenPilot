@@ -86,7 +86,10 @@ const createLiveProviderAdapters = (
       timeoutMs: config.limits.providerRequestTimeoutMs,
       verificationUrl: config.providers.turnstile.verificationUrl,
     }),
-    cvAnalyzer: new OpenAiCvAnalyzer(openAiClient),
+    cvAnalyzer:
+      config.effectiveMode === "summary_rehearsal"
+        ? new FakeOpenAi()
+        : new OpenAiCvAnalyzer(openAiClient),
     interviewSummarizer: new OpenAiInterviewSummarizer(openAiClient),
     voiceTokenProvider: createLiveVoiceTokenProvider(config),
   });

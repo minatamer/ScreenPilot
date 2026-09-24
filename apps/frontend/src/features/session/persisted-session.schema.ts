@@ -13,7 +13,10 @@ import { normalizedCvSchema } from "@screenpilot/contracts/interview/normalized-
 import { screeningPlanSchema } from "@screenpilot/contracts/interview/screening-plan";
 import { screeningSummarySchema } from "@screenpilot/contracts/interview/screening-summary";
 import { topicProgressSchema } from "@screenpilot/contracts/interview/topic-progress";
-import { transcriptTurnSchema } from "@screenpilot/contracts/interview/transcript-turn";
+import {
+  transcriptTurnIdentityKey,
+  transcriptTurnSchema,
+} from "@screenpilot/contracts/interview/transcript-turn";
 import { z } from "zod";
 
 import {
@@ -298,6 +301,27 @@ export const persistedDemoSessionSchema = z
       context.addIssue({
         code: "custom",
         message: "Only final transcript turns may be persisted.",
+        path: ["transcript"],
+      });
+    }
+
+    const transcriptIds = session.transcript.map((turn) => turn.id);
+    if (new Set(transcriptIds).size !== transcriptIds.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Stored transcript turn IDs must be unique.",
+        path: ["transcript"],
+      });
+    }
+    const transcriptTurnIdentities = session.transcript.map(
+      transcriptTurnIdentityKey,
+    );
+    if (
+      new Set(transcriptTurnIdentities).size !== transcriptTurnIdentities.length
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Stored transcript speaker/sequence pairs must be unique.",
         path: ["transcript"],
       });
     }

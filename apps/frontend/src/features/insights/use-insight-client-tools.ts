@@ -3,7 +3,10 @@
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 import type { InsightCard } from "@screenpilot/contracts/interview/insight-card";
 import type { TopicProgress } from "@screenpilot/contracts/interview/topic-progress";
-import type { TranscriptTurn } from "@screenpilot/contracts/interview/transcript-turn";
+import {
+  transcriptTurnIdentityKey,
+  type TranscriptTurn,
+} from "@screenpilot/contracts/interview/transcript-turn";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import type { VoicePerformanceTracker } from "@/features/interview/voice-performance";
@@ -196,8 +199,8 @@ function createInsightToolController(
         !snapshot.transcript.some(
           (existingTurn) =>
             existingTurn.id === turn.id ||
-            (existingTurn.speaker === turn.speaker &&
-              existingTurn.sequence === turn.sequence),
+            transcriptTurnIdentityKey(existingTurn) ===
+              transcriptTurnIdentityKey(turn),
         )
       ) {
         snapshot = {

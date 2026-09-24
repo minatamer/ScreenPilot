@@ -39,15 +39,34 @@ disconnect interview-complete hold before the user chooses View summary. The
 candidate-question behavior originated in published policy
 `sp017-2026-09-22.1`; the 2026-09-23 live attempt exposed completion and
 same-response continuation defects now corrected and deterministically verified
-in unpublished source policy `sp021b-2026-09-23.1`. The reducer-owned completion hold is also
+in source policy `sp021b-2026-09-23.1`. The reducer-owned completion hold is also
 implemented and deterministically verified in the browser lifecycle. On
-2026-09-22 the owner published the exact Prompt 1 source policy to the existing
-private ScreenPilot/Main branch without Preview at immutable revision
-`agtvrsn_8901m350e924f2ev7t4pwnvq38b1`; historical revision
+2026-09-24 the owner published the exact `sp021b-2026-09-23.1` prompt and enabled
+the built-in `end_call` system tool as the sole active system tool on the
+existing private ScreenPilot/Main branch at immutable revision
+`agtvrsn_9501m39701mmet6av5bz53yk6ggp`; Main branch ID
+`agtbrch_8401m2ar2j6nfshaa5wg31f0j654` remains branch identity only. Previous
+revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped only to
+`sp017-2026-09-22.1`, and historical revision
 `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to
-`sp017-2026-09-16.1`. This publication is configuration evidence, not live
-behavior acceptance. SP-021B runs the next owner-authorized paid
-window after the complete product exists, covering both entry modes through
+`sp017-2026-09-16.1`. On 2026-09-24 the owner reconfirmed that `end_call` remains
+the sole active system tool, that its custom description exactly matches
+`ELEVENLABS_END_CALL_TOOL_DESCRIPTION`, and that all five saved client tools
+match their source-controlled descriptions, parameters, bounds, and
+Wait-for-response behavior. That dashboard inspection was configuration
+evidence rather than live acceptance. The owner also reported every available
+user-facing deterministic fake flow passing in both current entry paths through
+completion and review; that does not convert deliberately injected failure or
+interruption scenarios into passes. Later on 2026-09-24, after the corrected
+summary boundary was rebuilt and restarted, the owner completed one synthetic
+sample-CV standard-live path against that immutable revision. The candidate-
+question flow, Team/work-style question flow, brief close plus provider-owned
+automatic ending, completed-workspace handoff, and live summary/review all
+worked. Content-free backend evidence records exactly one successful
+`cv_analyze`, `voice_token`, and `interview_summary` request for that run. The
+conversation-first live path and remaining failure, cleanup, diagnostics,
+provider/cost, responsive, privacy, and safety-restoration checks remain open.
+SP-021B covers both entry modes through
 corrected voice behavior, summary, evidence-linked review, retry behavior,
 cleanup, provider usage/cost, and the retained performance ledger. SP-025 reuses
 current SP-021B live evidence and repeats only evidence invalidated by later
@@ -276,22 +295,27 @@ landing
   -> live/interviewing
   -> ending
   -> interview_complete
-      -> explicit View summary -> summarizing or review_ready
+      -> eligible background summary preparation while the hold remains visible
+      -> enabled View summary -> summarizing failure/retry or review_ready
   -> review_ready/review
   -> cleared
 
 live/interviewing -> unexpected interruption -> summarizing or review_ready (partial review)
 ```
 
-After a fresh bootstrap validates the current boundary, standard fake/live
-summary preparation may run single-flight behind `interview_complete`; local
-summary rehearsal remains idle until **View summary**, and paid-disabled,
-pending, or failed runtime validation starts no summary work. The user remains
-in the read-only completed workspace until **View summary** exposes the pending
-or ready review. Any blocking failure remains attached to its current stage and
-offers a specific retry or reset. No later stage is shown as successful when its
-prerequisite failed. Unexpected provider/network interruption remains the
-separate partial-review path rather than normal completion.
+After a fresh bootstrap validates the current boundary, every summary-capable
+mode may run one single-flight preparation behind `interview_complete`;
+paid-disabled, pending, or failed runtime validation starts no summary work.
+While preparation is pending, the read-only completed workspace suppresses the
+passive Turnstile checking copy and keeps **View summary** disabled with a
+continuous spinner. A genuinely interactive anti-abuse challenge may still
+appear. Success enables **View summary**; failure also releases the action so it
+can expose the preserved-evidence failure/retry state. The action never starts a
+new summary operation. Any blocking failure remains attached to its current
+stage and offers a specific retry or reset. No later stage is shown as
+successful when its prerequisite failed. Unexpected provider/network
+interruption remains the separate partial-review path rather than normal
+completion.
 
 ### 4.4 Detailed stage contracts
 
@@ -365,7 +389,7 @@ separate partial-review path rather than normal completion.
 - **Visible behavior:** one **Start interview** button aligned at the lower right. Clicking it executes Turnstile in managed, interaction-only mode; a legitimate visitor normally moves directly into the connecting animation, while any required interaction appears inline without leaving preflight. This infrastructure detail is not narrated in candidate-facing copy.
 - **API:** `POST /v1/voice/token` verifies the signed grant and one memory-only `turnstileToken`, applies backend/provider capacity gates, and returns a short-lived private conversation token.
 - **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, role-neutral synthetic-demo disclosure, the universal screening plan, optional normalized CV/fact-linked role suggestion, candidate-stated role or undecided state, and registered client tools. All candidate content is bounded and delimited as untrusted data.
-- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Its bounded synthetic interview trace follows the bundled Riley Vale sample context—junior software-development direction, accessible workflow internship, distributed collaboration, logistics, and onboarding/mentorship priorities—then exercises the same client-tool and evidence-linking paths as live mode. Conversation-first still records Candidate-only provenance, while the sample-CV path confirms/corrects the matching seeded CV insight. The fake summary adapter preserves safe candidate-stated detail in its evidence-linked sections, with a cautious generic fallback if a supplied value would violate the summary boundary. Bootstrap exposes the non-secret provider mode, paid-operation state, and one derived `effectiveMode`; backend route gates and frontend adapter selection consume that same value. `deterministic_fake` keeps deterministic CV/voice/summary paths, `paid_disabled` closes every provider-backed action without substituting fake output, `standard_live` enables the paid live path, and local-only `summary_rehearsal` keeps interview voice deterministic while its summary remains live and metered. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary; a restored CV-assisted session is cleared back to the entry chooser if the refreshed mode permits conversation-first only. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
+- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Its bounded synthetic interview trace follows the bundled Riley Vale sample context—junior software-development direction, accessible workflow internship, distributed collaboration, logistics, and onboarding/mentorship priorities—then exercises the same client-tool and evidence-linking paths as live mode. Conversation-first still records Candidate-only provenance, while the sample-CV path confirms/corrects the matching seeded CV insight. The fake summary adapter preserves safe candidate-stated detail in its evidence-linked sections, with a cautious generic fallback if a supplied value would violate the summary boundary. Bootstrap exposes the non-secret provider mode, paid-operation state, and one derived `effectiveMode`; backend route gates and frontend adapter selection consume that same value. `deterministic_fake` keeps deterministic CV/voice/summary paths, `paid_disabled` closes every provider-backed action without substituting fake output, `standard_live` enables the paid live path, and local-only `summary_rehearsal` keeps CV analysis and interview voice deterministic while its summary remains live and metered. Both entry modes remain available in rehearsal, so the synthetic sample CV can exercise the real CV-assisted request shape without buying CV analysis or ElevenLabs work. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
 - **Output state:** `interviewing` only after the SDK reports connected.
 - **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider. A terminal SDK error, rejected conversation identifier, or unrecoverable interruption ends the provider session once and unmounts the session bridge before recovery UI remains available.
 
@@ -379,14 +403,14 @@ separate partial-review path rather than normal completion.
 - **Output state:** `ending` on agent completion, user End action, or time limit; a normal terminal disconnect then advances to `interview_complete`. An unrecoverable unexpected disconnect follows the separate partial-review path. Agent completion is a provider-owned terminal signal: after its brief spoken close the policy calls ElevenLabs' sole enabled `end_call` system tool, the SDK emits typed disconnect reason `agent`, and the reducer preserves that first terminal reason exactly once. Never infer completion by matching farewell wording.
 - **Failure:** brief reconnect attempt only while SDK supports it; otherwise preserve local transcript and proceed to partial review.
 
-**Candidate-question behavior (SP-021A/SP-021B; source-corrected, provider synchronization pending):** policy `sp021b-2026-09-23.1` begins unsupported employer answers with the exact bounded response, “I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review.” It records `recordCandidateQuestion` plus `requestFollowup`, then asks exactly one remaining HR question in the same response without waiting for acknowledgement; with no gap it briefly closes and calls `end_call` in that response. A resolved or declined final-question opportunity, including No, likewise produces exactly one closing plus `end_call` in the same turn. Completion remains explicit provider state/tool behavior, never farewell-string matching. Immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped only to published `sp017-2026-09-22.1`; the new source policy is marked dashboard-sync-required and no publication or paid retest has occurred.
+**Candidate-question behavior (SP-021A/SP-021B; provider-synchronized and live-validated in the CV-assisted path):** policy `sp021b-2026-09-23.1` begins unsupported employer answers with the exact bounded response, “I don’t have confirmed onboarding or work-arrangement details in this demo. A human recruiter would need to confirm that, so I’ll include your question in this session’s review.” It records `recordCandidateQuestion` plus `requestFollowup`, then asks exactly one remaining HR question in the same response without waiting for acknowledgement; with no gap it briefly closes and calls `end_call` in that response. The two records remain intentionally distinct: Candidate question preserves what the candidate asked, while Human follow-up preserves the recruiter-owned action and reason. When both cite the same turn, the unsupported Candidate question uses the same visible **Needs clarification** treatment as its Human follow-up without becoming a duplicate clarification in the generated summary. A resolved or declined final-question opportunity, including No, likewise produces exactly one closing plus `end_call` in the same turn. Completion remains explicit provider state/tool behavior, never farewell-string matching. The owner published that policy with the built-in `end_call` system tool enabled as the sole active system tool on private Main on 2026-09-24 at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`, then reconfirmed the exact five saved client-tool configurations and the exact source-controlled `end_call` description. The owner completed the current user-facing fake flows, paired evidence, completed-workspace handoff, and diagnostics-clearing observations, and later completed a synthetic sample-CV standard-live flow in which the candidate-question flow and provider-owned automatic ending worked. The second entry mode and deliberately injected summary-failure and interruption paths remain separate gates.
 
 #### Stage 9 — end and summarize
 
 - **Input state:** local final transcript and insight state; no recording artifact is expected.
 - **Termination:** agent `end_call`, candidate-selected **End interview**, and the absolute eight-minute deadline enter one idempotent shutdown path. The first terminal reason wins. Provider/WebRTC/media work, authorization, timers, requests, and content-free measurements are released immediately; the provider bridge unmounts, while the existing bounded two-second fallback completes local shutdown if no terminal disconnect arrives. During that short pending interval, manual End loses its stop icon, shows a continuous spinner, and cannot be clicked again; mute is disabled.
-- **Completed workspace:** after normal shutdown the reducer enters `interview_complete`, retaining the transcript and Insight Board read-only. Elapsed time is frozen (`08:00` for the hard stop), the status rail says **Interview complete** and **Microphone disconnected**, speaking/listening/reconnect UI and mute are absent, and **View summary** replaces End. Standard fake/live mode may prepare one summary in the background while this hold remains visible; summary rehearsal deliberately waits for **View summary** before beginning its one live summary operation. Fake voice emits its agent-owned disconnect only after every final transcript and client-tool event. A restored completed session remains completed and never requests a voice token or reconnects.
-- **Summary handoff:** no restored session mounts Turnstile or starts summary work from its persisted runtime configuration. A fresh successful bootstrap must first validate the current `effectiveMode`; pending or failed refresh stays closed, and paid-disabled stays closed after success. Once validated, standard fake/live mode may begin one background Turnstile/request lifecycle without exposing review or altering the completed workspace; **View summary** advances to the already-ready review or the genuine **Organizing this conversation** state. In local summary rehearsal, disconnect begins no Turnstile or summary work: the explicit **View summary** action advances `interview_complete` to `summarizing` and only then starts at most one live summary lifecycle. Retry is explicit, obtains a fresh Turnstile token, and never reconnects voice or duplicates an in-flight/completed summary operation.
+- **Completed workspace:** after normal shutdown the reducer enters `interview_complete`, retaining the transcript and Insight Board read-only. Elapsed time is frozen (`08:00` for the hard stop), the status rail says **Interview complete** and **Microphone disconnected**, speaking/listening/reconnect UI and mute are absent, and **View summary** replaces End. Every freshly validated summary-capable mode may prepare one summary in the background while this hold remains visible. During that work, **View summary** stays disabled and shows a continuous spinner without replacing its label; passive anti-abuse checking copy is hidden so it cannot be mistaken for voice reconnection. A genuinely required Turnstile interaction remains visible. Fake voice emits its agent-owned disconnect only after every final transcript and client-tool event. A restored completed session remains completed and never requests a voice token or reconnects.
+- **Summary handoff:** no restored session mounts Turnstile or starts summary work from its persisted runtime configuration. A fresh successful bootstrap must first validate the current `effectiveMode`; pending or failed refresh stays closed, and paid-disabled stays closed after success. Once validated, deterministic fake, standard live, and local summary rehearsal may each begin one background Turnstile/request lifecycle without exposing review or altering the completed workspace. Summary success enables **View summary**, which advances to the already-ready review. Summary failure also enables it, and the action exposes the genuine failure/retry state without starting another operation. Retry is explicit, obtains a fresh Turnstile token, and never reconnects voice or duplicates an in-flight/completed summary operation.
 - **API:** `POST /v1/interview/summary` sends the bounded local transcript, plan, insight cards, and a memory-only `turnstileToken`; after Siteverify succeeds, GPT-5.4 mini returns structured evidence-linked notes using `store: false`.
 - **Output state:** explicit **View summary** advances to `summarizing` or `review_ready`; unexpected provider/network interruption remains the distinct partial-review path.
 - **Failure:** Turnstile or summary failure preserves the transcript and cards. Retry appears only for retryable failures and obtains a fresh token; local request-shape and provider billing/account/auth/configuration failures require owner action and do not offer Retry. Browser diagnostics record only a content-free boundary category, while backend diagnostics retain only sanitized provider class/status/timing metadata.
@@ -397,6 +421,51 @@ OpenAI owner-action classification includes bounded exact codes
 billing/quota markers. They remain non-retryable even with HTTP 429. A numeric
 `Retry-After` is honored only from 1 through 86,400 seconds; zero and malformed
 values are omitted rather than violating the positive shared API contract.
+
+**SP-021B summary-boundary corrections (2026-09-24):** a controlled local
+`summary_rehearsal` request reached OpenAI and was rejected before generation
+with HTTP 400 `invalid_json_schema`. The provider-facing summary schema had
+wrapped the canonical `rolePreferenceSchema` discriminated union, causing Zod
+to emit unsupported `oneOf` inside the otherwise valid nullable `anyOf`.
+ScreenPilot now re-wraps the same two canonical validated variants as a plain
+Zod union for provider output, which emits supported `anyOf`. A deterministic
+regression guard rejects unsupported composition keywords, and the built schema
+is verified as a strict root object with `additionalProperties: false`, `anyOf`,
+and no `oneOf`.
+
+A second owner-triggered request crossed that schema boundary but failed as
+`semantic_output_unusable` after both the original structured response and the
+old automatic model repair failed local evidence/safety validation. The old log
+did not retain its content-free rule IDs or paths, so the exact violated rule is
+not recoverable. The system no longer asks the model to be authoritative for
+exact data the server already owns. Each summary action now performs at most one
+OpenAI operation; local reconciliation projects role, topic partition, evidence
+IDs, captured questions, human follow-ups, compensation/availability evidence,
+and limitations from the validated in-request evidence ledger. Model-authored
+narrative is retained only when the complete domain/evidence/safety validator
+accepts it; otherwise the same grounded local summary used by deterministic mode
+is returned. There is no automatic paid repair. A structurally unusable provider
+response still fails closed after the one operation and records only bounded
+validation rule IDs and field paths. No automated test may call a paid provider.
+
+The owner then completed two separate summary-rehearsal sessions against the
+corrected boundary. Each session produced exactly one successful
+`interview_summary` request (HTTP 200 in 4,738 ms and 5,360 ms respectively),
+with its own preceding bootstrap, preparation, and simulated-voice sequence.
+This validates the live OpenAI summary boundary and the one-request-per-action
+cap without using a live ElevenLabs conversation; no further summary-only rerun
+is required. The copied review did expose one remaining quality issue: **Team
+and work style** was marked covered without a corresponding visible confirmed-
+fact statement. The summary reconciliation now derives one visible evidence-
+linked Team/work-style fact from the latest applicable candidate-backed insight
+or safely uses the complete grounded summary when the model association is
+ambiguous. In the later synthetic sample-CV standard-live rerun, the owner
+reported the Team/work-style question flow and resulting summary/review working.
+That same run produced exactly one successful `cv_analyze` (9,894 ms), one
+successful `voice_token` (664 ms), and one successful `interview_summary`
+(4,848 ms) route response, all HTTP 200, without logging provider or candidate
+content. Conversation-first live acceptance and the remaining SP-021B manual
+matrix stay open.
 
 #### Stage 10 — local review and clear
 
@@ -660,6 +729,13 @@ requestFollowup({ reason });
 ```
 
 All five are ElevenLabs client tools executed in the browser. `recordInsight` owns typed `preferred_name` and `role_preference` categories; when either is recorded or corrected, the reducer synchronizes `DemoSession.preferredName` or `DemoSession.rolePreference` from the same evidence. A conversation-first preferred name requires a final candidate turn. The agent does not invent browser turn IDs: after schema validation, the client handler attaches the latest eligible final candidate turn ID from local state. A fact-changing call with no eligible final candidate turn is rejected. Tool output never writes to the backend.
+
+`candidate_question` and `follow_up_needed` deliberately remain separate records
+even when they share one final candidate turn: the first preserves the exact
+question and the second preserves the human action item. Presentation resolves
+the paired Candidate question to **Needs clarification** while leaving its
+stored status unchanged, so summary generation keeps the question and follow-up
+sections distinct without manufacturing another clarification entry.
 
 `packages/contracts/src/interview/client-tools.ts` is also the exact dashboard
 deployment contract. `VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS` owns the five
@@ -1114,19 +1190,22 @@ paid-disabled runtime. Production rejects the false override.
 | `deterministic_fake` | One deterministic background preparation may start after normal disconnect. | No; token/session and summary adapters are fake. | No; it only exposes pending or ready review. |
 | `paid_disabled` | Never. Provider-backed controls, Turnstile, and summary remain closed. | No. | No. |
 | `standard_live` | One protected live background preparation may start after normal disconnect. | Yes, only through the protected live voice path. | No; it only exposes pending or ready review. |
-| `summary_rehearsal` | No work at disconnect; one protected live summary may start only after the explicit action. | No; voice remains deterministic fake. | Yes. |
+| `summary_rehearsal` | One protected live background preparation may start after normal fake-voice disconnect. | No; CV analysis and voice remain deterministic fake. | No; it only becomes enabled after preparation settles and exposes ready review or failure/retry. |
 
 Fake mode with paid operations enabled remains invalid. Bootstrap exposes the
 derived `effectiveMode` without exposing the raw environment flag. Backend
 route gates, provider construction, browser action availability, and voice
-bridge selection all use that one mode. In summary rehearsal, CV analysis is closed,
-conversation-first preparation remains deterministic, voice authorization still
-requires the real Turnstile boundary, and the backend/browser use the fake
-ElevenLabs token/session path with fake-labelled in-memory diagnostics. The
-ElevenLabs HTTP client and React session are not constructed or called. The
-completed workspace waits for **View summary**; that explicit action performs a
+bridge selection all use that one mode. In summary rehearsal, CV analysis uses
+the deterministic fake analyzer, conversation-first preparation remains
+deterministic, voice authorization still requires the real Turnstile boundary,
+and the backend/browser use the fake ElevenLabs token/session path with
+fake-labelled in-memory diagnostics. The ElevenLabs HTTP client and React
+session are not constructed or called. Both entry modes are available. After
+normal fake-voice disconnect, the completed workspace automatically performs a
 fresh real Turnstile check and at most one live metered OpenAI summary request.
-No automatic retry or fake-summary fallback is allowed.
+**View summary** is disabled with a spinner while that request is pending and
+does not initiate provider work. No automatic retry or fake-summary fallback is
+allowed.
 
 Persisted runtime configuration is never activation authority. A restored
 completed session mounts no summary challenge or request while bootstrap refresh
@@ -1153,8 +1232,8 @@ SP-021B's separately authorized standard live voice acceptance.
 - Final user text becomes a `TranscriptTurn` with a browser-generated stable ID.
 - Final agent messages become agent turns.
 - Tool calls reference existing final turn IDs.
-- Usable provider event sequences are the message identity and caption-order authority: tentative events without one are rejected, a finalized sequence rejects later tentative/duplicate callbacks, and an older final may enter the sorted transcript without replacing a newer caption. When a final message has no usable provider ID, assign the next bounded local sequence and suppress only an immediately adjacent final with the same speaker and normalized text; distinct provider IDs or an intervening accepted final preserve legitimate repeated statements.
-- The local browser projection accepts at most 160 final turns and 30,000 transcript characters. The reducer validates each turn before insertion, ignores repeated IDs or same-speaker sequences, and the restore schema rechecks both bounds before showing saved evidence.
+- Usable provider event sequences are the message identity and caption-order authority: tentative events without one are rejected, a finalized speaker/sequence pair rejects later tentative/duplicate callbacks, and an older final may enter the sorted transcript without replacing a newer caption. Candidate and interviewer turns may legitimately share one numeric provider sequence; that pair remains valid through browser persistence and the summary request boundary because local identity is speaker plus sequence. When a final message has no usable provider ID, assign the next bounded local sequence and suppress only an immediately adjacent final with the same speaker and normalized text; distinct provider IDs or an intervening accepted final preserve legitimate repeated statements.
+- The local browser projection accepts at most 160 final turns and 30,000 transcript characters. The reducer validates each turn before insertion and ignores repeated IDs or same-speaker sequences. The restore and summary-request schemas enforce unique turn IDs plus unique speaker/sequence pairs, so corrupt same-speaker duplicates fail closed without discarding legitimate cross-speaker provider-ID reuse.
 - A failed or quota-rejected `sessionStorage` write leaves the current in-memory transcript and cards visible and produces a review warning; it never creates a second persistence path.
 - A persisted `review_ready` projection is valid only with terminal voice metadata whose status is `ended` or `failed`. Missing or still-active voice state is corrupt restore data and must be cleared rather than presented as a complete interview; restored `failed` metadata always produces the concise **Partial review** state while keeping the bounded transcript internal until a node is selected.
 - The local transcript is review evidence, not a certified verbatim record.
@@ -2462,7 +2541,7 @@ Controls:
 - Verify `entryMode`, plan type, allowed source labels, and grant binding agree; reject `CV` evidence in conversation-first mode.
 - Treat all browser fields as untrusted.
 - GPT-5.4 mini, reasoning `none`, structured output, `store: false`.
-- Validate all returned candidate-turn citations, resolve repeated candidate insight categories by their parsed timestamp instant so valid timezone offsets cannot displace the latest correction, require available candidate-backed current-context/experience/team/question content, require every captured candidate-question and human-follow-up value plus its complete insight evidence-ID set to survive exactly, require distinct summary entries for the current-context, broad-experience, and team/work-style groups, enforce the covered/not-covered topic partition in both directions, and allow at most one repair for malformed or unsupported structured output.
+- Validate all returned candidate-turn citations, resolve repeated candidate insight categories by their parsed timestamp instant so valid timezone offsets cannot displace the latest correction, require available candidate-backed current-context/experience/team/question content, require every captured candidate-question and human-follow-up value plus its complete insight evidence-ID set to survive exactly, require distinct summary entries for the current-context, broad-experience, and team/work-style groups, and enforce the covered/not-covered topic partition in both directions. One user action makes at most one model request: exact evidence fields are reconciled locally from the server ledger, and invalid model narrative falls back locally without a second generation. When `team_work_style` is covered and the latest applicable Candidate or CV + Candidate insight is confirmed/corrected, classify every model fact's evidence against the complete grounded Team/work-style evidence set. Disjoint facts remain eligible model narrative; all exact-set variants collapse to exactly one visible canonical `Team and work preference` fact. Any non-exact overlap—including an earlier/latest-only correction subset, a superset, or team evidence merged with unrelated evidence—and any grounded category sharing a Team/work-style turn cause the complete grounded-summary fallback. If the topic is not covered or the latest insight is absent, CV-only, or needs clarification, also return the complete grounded summary: the untyped model fact shape cannot safely distinguish an invented Team/work-style statement that cites another otherwise-valid candidate turn. No confirmed Team/work-style fact is promoted in those states, and no personality, culture-fit, suitability, or employer fact is inferred.
 - Apply the paid-operation kill switch and any injected summary-admission denial before Turnstile/OpenAI. SP-020 provides this injected fail-closed boundary and its zero-provider-call tests; SP-022 owns the bounded TTL route/source limiter, capacity policy, and server wiring, so the current server default does not claim to rate-limit summary requests yet.
 - Never retrieve a provider conversation or recording.
 
@@ -2912,9 +2991,10 @@ choosing_entry_mode -> Start without a CV -> preparing_conversation -> preflight
 awaiting_cv -> local extract/status -> SP-012 analysis -> plan_ready -> preflight
 preflight -> SP-013 consent/readiness -> ready/connecting -> live -> ending -> interview_complete
 interview_complete -> freshly validated standard fake/live -> background single-flight summary preparation while the read-only completed workspace remains visible
+interview_complete -> freshly validated summary rehearsal -> background single-flight live summary preparation after deterministic fake voice
 interview_complete -> pending/failed/paid-disabled refresh -> no Turnstile or summary request
-interview_complete -> summary rehearsal -> View summary initiates one summary lifecycle
-interview_complete -> explicit View summary -> summarizing or review_ready
+interview_complete -> summary pending -> View summary disabled with spinner; passive checking copy hidden
+interview_complete -> summary settled -> enabled View summary -> summarizing failure/retry or review_ready
 summarizing -> review_ready
 live -> unexpected provider/network interruption -> summarizing or review_ready (partial review)
 retryable failure -> Retry the failed operation without changing entry mode
@@ -4235,7 +4315,19 @@ publication of Prompt 1 is recorded at immutable revision
 implemented and reconciled, one consolidated owner-authorized paid window
 validates both entry modes through corrected voice behavior, summary, evidence-
 linked review, retry behavior, cleanup, provider evidence, and fake-first
-informational timing diagnostics.
+informational timing diagnostics. The corrected source policy is synchronized
+to private Main at immutable revision
+`agtvrsn_9501m39701mmet6av5bz53yk6ggp`; publication is not live acceptance.
+Owner-reported user-facing post-fix fake flows and the corrected summary
+boundary now pass. One later synthetic sample-CV standard-live run also passed
+the corrected candidate-question and Team/work-style flows, provider-owned
+automatic ending, completed-workspace handoff, and summary/review, with exactly
+one successful `cv_analyze`, `voice_token`, and `interview_summary` route
+response. Exact sample-CV provenance assertions not covered by that owner
+report, deliberately injected summary error/retry and interruption scenarios,
+the post-reconciliation fake Team/work-style sequencing check, the
+conversation-first live path, provider usage/cost audit, and the remaining
+manual matrix stay open.
 
 **Depends on:** SP-018A, SP-019, SP-020, SP-021, SP-021A.
 
@@ -4243,25 +4335,37 @@ informational timing diagnostics.
 
 **Checklist:**
 
-- [ ] Before any live-mode switch or paid provider operation, run a fresh
-  deterministic fake-mode rehearsal of both SP-021A prompts against the exact
-  release candidate: verify Prompt 1's approved fallback plus paired Candidate
-  question/Human follow-up evidence through review, and verify Prompt 2's fake
-  agent completion, disconnected read-only workspace, and **View summary**
-  handoff without voice reconnection or duplicate summary work. Any failure
-  keeps SP-021B closed until it is fixed, documented, and revalidated in fake
-  mode. The earlier checked run is historical pre-correction evidence only and
-  does not satisfy this current release-candidate gate.
+- [ ] Complete the remaining release-candidate fake observations after the
+  owner-reported user-facing flows passed: recheck the latest Team/work-style
+  fact/evidence projection, exact sample-CV provenance, deliberately injected
+  summary error/retry presentation, and injected-interruption partial-review
+  path. Any failure keeps SP-021B closed until it is fixed, documented, and
+  revalidated in fake mode.
 - [ ] Reconcile the exact unchecked SP-018A ledger without converting any
   unperformed item into a pass.
 - [ ] Confirm SP-021A's two accepted behavior specifications and all owner-
   approved fixes are implemented, documented, and deterministically verified;
   keep SP-021B closed and do not spend provider credit while any mismatch
   remains.
-- [ ] Run one bounded synthetic CV-assisted complete flow and one bounded
-  synthetic conversation-first complete flow through summary and review.
-- [ ] Independently observe the corrected Pilot captions and provider-owned
-  automatic ending after their deterministic SP-018A fixes.
+- [x] Synchronize policy `sp021b-2026-09-23.1` and the sole `end_call` system
+  tool to private Main; record immutable revision
+  `agtvrsn_9501m39701mmet6av5bz53yk6ggp` separately from Main branch ID
+  `agtbrch_8401m2ar2j6nfshaa5wg31f0j654`. This configuration publication
+  occurred on 2026-09-24 before the required post-fix manual fake rehearsal and
+  therefore does not authorize or satisfy live acceptance.
+- [x] Owner-reconfirm `end_call` as the sole active system tool and all five
+  saved client tools as matching their source-controlled descriptions,
+  parameters, bounds, and Wait-for-response behavior.
+- [x] Owner-confirm the `end_call` custom description exactly matches
+  `SCREENPILOT_ELEVENLABS_AGENT_CONFIG.systemTools.endCall.description`.
+- [x] Run one bounded synthetic CV-assisted complete flow through automatic
+  ending and live summary/review.
+- [ ] Run one bounded synthetic conversation-first complete flow through
+  summary and review.
+- [ ] Independently observe the corrected Pilot captions after their
+  deterministic SP-018A fix.
+- [x] Independently observe the provider-owned automatic ending after its
+  deterministic SP-018A fix in the CV-assisted standard-live path.
 - [ ] Verify all eight runtime variables, all five client tools, mode-specific
   provenance, evidence navigation, retry behavior, Clear & exit, and cleanup.
 - [x] Before live testing, verify in both fake entry paths that applicable
@@ -4273,12 +4377,17 @@ informational timing diagnostics.
 - [ ] Retain the naturally occurring observations from the two bounded live
   flows without repeating a paid action for metrics or applying a sample-count
   gate; complete the remaining audible interruption/overlap observation there.
-- [ ] Confirm the pre-live implementation removed all fixed-quota and
+- [x] Confirm the pre-live implementation removed all fixed-quota and
   percentile-gate code, UI copy, tests, fixtures, and dead report abstractions;
   repository search must find no obsolete benchmark path masquerading as unused
   compatibility code.
-- [ ] Review provider revision, retention/audio state, operation counts, coarse
-  usage, and actual cost with sanitized evidence only.
+- [x] Record the owner's immediate pre-live configuration confirmation that
+  provider balance/caps are set, ElevenLabs audio saving is off with retention
+  at zero, the Turnstile hostname/actions are correct, and paid routes were
+  proved closed before paid mode was enabled. This is safety/configuration
+  evidence, not live behavior acceptance.
+- [ ] After the bounded live window, review operation counts, coarse usage, and
+  actual cost with sanitized evidence only.
 - [ ] Restore paid false/fake mode, reverify the smallest affected deterministic
   paths, and record every unperformed item with its blocker.
 
@@ -4442,6 +4551,11 @@ while preserving the SP-025-approved behavior except for documented bug fixes.
 - [ ] Create/restrict the free production Turnstile widget, configure best-effort backend route/source limits and provider caps, and verify no paid Cloudflare proxy/WAF/Bot Fight Mode dependency was introduced.
 - [ ] Confirm there is no application database, candidate-data object storage, queue, or worker deployment; Artifact Registry contains deployment images only.
 - [ ] Make the workflow run liveness/readiness checks against the direct services and bounded unpaid routing/security smoke checks through the custom domain, including frontend refresh routing, backend `/v1` routing, apex/`www`, certificate, first-party cookie, public Turnstile configuration, and canonical-URL checks. Do not automate a real paid provider flow or introduce a production Turnstile bypass; manually run sample-CV, uploaded-CV, and conversation-first flows after deployment.
+- [ ] Verify the frontend-only `?diagnostics=timings` opt-in remains unavailable
+  on every non-loopback deployment hostname, including the canonical domain and
+  direct frontend Cloud Run URL: no diagnostics drawer, raw timing view, **Copy
+  JSON**, or **Reset** controls may render. Do not add or expect a backend
+  diagnostics route.
 - [ ] Document Cloud Run revision rollback and verify the deployed revision labels identify the Git commit; do not add Terraform, Kubernetes, or a custom release controller.
 - [ ] Verify privacy, retention, cost, latency, and abuse configuration in deployed state; record Turnstile as $0 rather than bundling it into the domain price.
 - [ ] Verify Cloud Run, Firebase Hosting, Secret Manager, and Artifact Registry billing against their current free quotas; keep Cloud Run minimum instances at zero, prune stale images/secret versions, and record any standing cost separately from the per-flow provider baseline.

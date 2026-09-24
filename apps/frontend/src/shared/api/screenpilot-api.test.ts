@@ -40,27 +40,27 @@ function realisticConversationFirstSummaryRequest() {
   const transcript = [
     ["pilot-name", 0, "interviewer", "What would you like me to call you?"],
     ["candidate-role", 1, "candidate", "Use Riley and a product role."],
-    ["pilot-question", 2, "interviewer", "What would you like clarified?"],
+    ["pilot-question", 1, "interviewer", "What would you like clarified?"],
     [
       "candidate-question",
-      3,
+      2,
       "candidate",
       "How large is the team and what onboarding is provided?",
     ],
     [
       "pilot-fallback",
-      4,
+      2,
       "interviewer",
       "A human recruiter must confirm that. What matters in your next role?",
     ],
     [
       "candidate-motivation",
-      5,
+      3,
       "candidate",
       "Clear priorities, mentorship, and collaborative work matter most.",
     ],
-    ["pilot-final", 6, "interviewer", "Any final questions?"],
-    ["candidate-final-no", 7, "candidate", "No."],
+    ["pilot-final", 3, "interviewer", "Any final questions?"],
+    ["candidate-final-no", 4, "candidate", "No."],
   ].map(([id, sequence, speaker, text]) => ({
     id: String(id),
     occurredAt,

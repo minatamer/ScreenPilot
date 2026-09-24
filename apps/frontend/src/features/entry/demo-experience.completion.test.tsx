@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ScreeningSummary } from "@screenpilot/contracts/interview/screening-summary";
+
 import { createInitialDemoSessionState } from "@/features/session/demo-session.reducer";
 import { createConversationFirstPlanFixture } from "@/test/conversation-first-plan.fixture";
 import { TEST_PUBLIC_RUNTIME_CONFIG } from "@/test/cv-analysis.fixture";
@@ -10,6 +12,7 @@ import { DemoExperience } from "./demo-experience";
 interface ReviewFixture {
   effectiveMode: "deterministic_fake" | "summary_rehearsal";
   runtimeConfigStatus: "failed" | "pending" | "ready";
+  summaryReady: boolean;
   stage: "interview_complete" | "review_ready" | "summarizing";
   voiceStatus: "ended" | "failed";
 }
@@ -23,6 +26,7 @@ const sessionActions = vi.hoisted(() => ({
 const reviewFixture = vi.hoisted((): ReviewFixture => ({
   effectiveMode: "deterministic_fake",
   runtimeConfigStatus: "ready",
+  summaryReady: false,
   stage: "review_ready",
   voiceStatus: "ended",
 }));
@@ -31,6 +35,17 @@ const retryRuntimeConfig = vi.hoisted(() => vi.fn());
 const router = vi.hoisted(() => ({
   replace: vi.fn(),
 }));
+const completedSummary: ScreeningSummary = {
+  overview: "Key conversation points, organized for review.",
+  confirmedFacts: [],
+  clarifications: [],
+  topicsCovered: [],
+  topicsNotCovered: [],
+  communicationNotes: [],
+  candidateQuestions: [],
+  humanFollowups: [],
+  limitations: ["These AI-organized notes require human review."],
+};
 
 vi.mock("next/navigation", () => ({
   useRouter: () => router,
@@ -66,6 +81,7 @@ vi.mock("@/features/session/use-demo-session", () => ({
             }
           : TEST_PUBLIC_RUNTIME_CONFIG,
       screeningPlan: createConversationFirstPlanFixture(),
+      ...(reviewFixture.summaryReady ? { summary: completedSummary } : {}),
       voice: {
         status: reviewFixture.voiceStatus,
         endedAt: "2026-09-21T09:15:00.000Z",
@@ -109,6 +125,7 @@ describe("DemoExperience completion stage", () => {
     sessionActions.clearSession.mockReturnValue(true);
     reviewFixture.effectiveMode = "deterministic_fake";
     reviewFixture.runtimeConfigStatus = "ready";
+    reviewFixture.summaryReady = false;
     reviewFixture.voiceStatus = "ended";
     reviewFixture.stage = "review_ready";
   });
@@ -199,9 +216,9 @@ describe("DemoExperience completion stage", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("keeps completed evidence visible while standard fake mode prepares one background summary", () => {
+  it("keeps completed evidence visible and disables View summary until background preparation finishes", () => {
     reviewFixture.stage = "interview_complete";
-    render(<DemoExperience />);
+    const rendered = render(<DemoExperience />);
 
     expect(
       screen.getByRole("heading", { level: 1, name: "Interview complete" }),
@@ -225,25 +242,45 @@ describe("DemoExperience completion stage", () => {
       expect.objectContaining({ active: true }),
     );
 
+    const waitingButton = screen.getByRole("button", {
+      name: "Preparing summary. View summary will be available when ready.",
+    });
+    expect(waitingButton).toBeDisabled();
+    expect(waitingButton).toHaveTextContent("View summary");
+    expect(
+      waitingButton.querySelector(".sp-button__spinner"),
+    ).toBeInTheDocument();
+    fireEvent.click(waitingButton);
+    expect(sessionActions.dispatch).not.toHaveBeenCalledWith({
+      type: "VIEW_SUMMARY",
+    });
+
+    reviewFixture.summaryReady = true;
+    rendered.rerender(<DemoExperience />);
     fireEvent.click(screen.getByRole("button", { name: "View summary" }));
     expect(sessionActions.dispatch).toHaveBeenCalledWith({
       type: "VIEW_SUMMARY",
     });
-    expect(summaryPreparationRender).toHaveBeenCalledOnce();
+    expect(summaryPreparationRender).toHaveBeenLastCalledWith(
+      expect.objectContaining({ active: false }),
+    );
   });
 
-  it("keeps summary rehearsal idle in the completed workspace until View summary", () => {
+  it("uses the same silent background preparation in summary rehearsal", () => {
     reviewFixture.effectiveMode = "summary_rehearsal";
     reviewFixture.stage = "interview_complete";
 
     render(<DemoExperience />);
 
-    expect(summaryPreparationRender).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "View summary" }));
-    expect(sessionActions.dispatch).toHaveBeenCalledWith({
-      type: "VIEW_SUMMARY",
-    });
-    expect(summaryPreparationRender).not.toHaveBeenCalled();
+    expect(summaryPreparationRender).toHaveBeenCalledOnce();
+    expect(summaryPreparationRender).toHaveBeenCalledWith(
+      expect.objectContaining({ active: true, hidePassiveStatus: true }),
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "Preparing summary. View summary will be available when ready.",
+      }),
+    ).toBeDisabled();
   });
 
   it("starts summary rehearsal only after the reducer enters summarizing", () => {

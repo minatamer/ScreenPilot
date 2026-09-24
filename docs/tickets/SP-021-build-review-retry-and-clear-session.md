@@ -120,13 +120,15 @@ Complete the same-tab experience with an evidence-linked, provenance-correct rev
 - Owner visual feedback removed the staged ending page and its artificial 420 ms morph. Manual shutdown preserves the interview layout with a disabled spinner CTA until provider cleanup or the bounded fallback completes. Agent/manual/deadline completion then retains that layout read-only with a frozen timer, disconnected microphone, and **View summary**; it no longer advances directly to review.
 - SP-021A Prompt 2 added one summary-preparation owner for the review handoff.
   Its 2026-09-23 global View-summary-only record is preserved as the decision at
-  that point, then narrowed by the later owner-directed local summary-rehearsal
-  mode: only `summary_rehearsal` waits for **View summary** to initiate work;
-  freshly validated `deterministic_fake` and `standard_live` may prepare once in
-  the background, while `paid_disabled`, pending, and failed refresh remain
-  closed. Completed-state persistence is allow-listed, never authorizes work by
-  itself, and restore never requests a voice token or mounts the provider
-  bridge.
+  that point. Later owner-directed refinements first introduced local summary
+  rehearsal and then aligned every freshly validated summary-capable mode:
+  `deterministic_fake`, `standard_live`, and `summary_rehearsal` may prepare once
+  in the background, while `paid_disabled`, pending, and failed refresh remain
+  closed. During preparation **View summary** is disabled with a spinner and
+  passive anti-abuse checking copy is hidden; after preparation settles, the
+  action exposes ready review or failure/retry without initiating provider work.
+  Completed-state persistence is allow-listed, never authorizes work by itself,
+  and restore never requests a voice token or mounts the provider bridge.
 - The 2026-09-22 SP-021A documentation review found that the review center card and copied summary collapsed an omitted partial-summary `rolePreference` into **Undecided** and hid role evidence. The follow-up now derives both surfaces from one role-review resolver: omitted means **Not established** plus unavailable evidence, **Undecided** requires the explicit summary state, and candidate-stated/undecided roles expose their bounded final-candidate-turn references. Focused regression coverage exercises missing partial role data, explicit undecided data, evidence-backed stated-role copy, and matching UI/copy evidence wording; owner visual acceptance remains documented in SP-021A and live acceptance remains deferred to SP-021B.
 - Owner review feedback replaced the vertically stacked evidence map and organized-notes workspace with a themed, keyboard-operable two-tab switch. A later refinement moved that switch into the former header-tag position, vertically centered against the step/title block on wide screens and stacked full-width only on narrow screens. Both panels stay mounted so map selection state survives a switch, while the inactive panel is removed from page flow to bound review-page height.
 - The phone tab switcher now resets the desktop row-axis flex basis after the heading stacks vertically. It renders as a content-height, full-width segmented control with two single-line 44 px tabs instead of allowing the desktop `30rem` width basis to become an oversized mobile height.

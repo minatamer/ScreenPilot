@@ -3737,6 +3737,17 @@ h3 {
   min-height: 7rem;
 }
 
+.sp-turnstile-gate[data-pending-status-hidden="true"]:not(
+    [data-interaction-required="true"]
+  ) {
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  gap: 0;
+}
+
 .sp-plan-preview {
   gap: var(--sp-demo-stage-gap);
 }
@@ -4887,6 +4898,7 @@ h3 {
 
   /* This is a functional busy indicator, so retain a slower rotation while
      decorative motion remains collapsed. */
+  .sp-button__spinner,
   .sp-cv-analysis__spinner {
     animation-duration: 1600ms !important;
     animation-iteration-count: infinite !important;
@@ -5013,6 +5025,16 @@ h3 {
   .sp-demo-workspace__task > * {
     height: 100%;
     min-height: 0;
+  }
+
+  .sp-demo-workspace__task:has(> .sp-summary-rehearsal-notice) {
+    grid-template-rows: auto minmax(0, 1fr);
+    row-gap: clamp(var(--sp-space-2), 1.2dvh, var(--sp-space-3));
+  }
+
+  .sp-demo-workspace__task > .sp-summary-rehearsal-notice {
+    height: auto;
+    align-self: start;
   }
 
   .sp-demo-stage {

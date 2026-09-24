@@ -13,6 +13,7 @@ import {
   compareInsightBoardCards,
   INSIGHT_CATEGORY_METADATA,
 } from "@/features/insights/insight-category-metadata";
+import { resolveInsightDisplayStatus } from "@/features/insights/insight-display-status";
 import { Badge } from "@/shared/ui/badge";
 
 import { resolveInsightEvidenceDetail } from "./review-evidence-model";
@@ -44,6 +45,7 @@ function formatLocalTime(occurredAt: string): string {
 type EvidenceNodeProps = Readonly<{
   active: boolean;
   detailId: string;
+  displayStatus: InsightCard["status"];
   insight: InsightCard;
   onSelect: (insightId: string, trigger: HTMLButtonElement) => void;
 }>;
@@ -51,6 +53,7 @@ type EvidenceNodeProps = Readonly<{
 function EvidenceNode({
   active,
   detailId,
+  displayStatus,
   insight,
   onSelect,
 }: EvidenceNodeProps) {
@@ -63,7 +66,7 @@ function EvidenceNode({
         className="sp-evidence-node"
         data-active={active || undefined}
         data-category={insight.category}
-        data-status={insight.status}
+        data-status={displayStatus}
         onClick={(event) => {
           onSelect(insight.id, event.currentTarget);
         }}
@@ -77,7 +80,7 @@ function EvidenceNode({
           <strong>{insight.value}</strong>
           <span className="sp-evidence-node__meta">
             <Badge>{insight.source}</Badge>
-            <span>{insightStatusLabel(insight.status)}</span>
+            <span>{insightStatusLabel(displayStatus)}</span>
           </span>
         </span>
         <span aria-hidden="true" className="sp-evidence-node__toggle">
@@ -274,6 +277,10 @@ export function EvidenceMap({
             <EvidenceNode
               active={selectedInsight?.id === insight.id}
               detailId={detailId}
+              displayStatus={resolveInsightDisplayStatus(
+                insight,
+                orderedInsights,
+              )}
               insight={insight}
               key={insight.id}
               onSelect={selectInsight}
@@ -320,6 +327,10 @@ export function EvidenceMap({
             <EvidenceNode
               active={selectedInsight?.id === insight.id}
               detailId={detailId}
+              displayStatus={resolveInsightDisplayStatus(
+                insight,
+                orderedInsights,
+              )}
               insight={insight}
               key={insight.id}
               onSelect={selectInsight}

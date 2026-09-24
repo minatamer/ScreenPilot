@@ -335,6 +335,54 @@ describe("session storage", () => {
     expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
   });
 
+  it("validates persisted transcript identity per speaker and provider sequence", () => {
+    const candidateTurn = {
+      id: "voice-candidate-7",
+      sequence: 7,
+      speaker: "candidate" as const,
+      status: "final" as const,
+      text: "I prefer a collaborative environment.",
+      occurredAt: CREATED_AT,
+    };
+    const interviewerTurn = {
+      id: "voice-interviewer-7",
+      sequence: 7,
+      speaker: "interviewer" as const,
+      status: "final" as const,
+      text: "What matters in your next role?",
+      occurredAt: "2026-09-09T09:00:01.000Z",
+    };
+    const baseSession = persistedSession();
+
+    expect(
+      persistedDemoSessionSchema.safeParse({
+        ...baseSession,
+        transcript: [candidateTurn, interviewerTurn],
+      }).success,
+    ).toBe(true);
+    expect(
+      persistedDemoSessionSchema.safeParse({
+        ...baseSession,
+        transcript: [
+          candidateTurn,
+          {
+            ...candidateTurn,
+            id: "voice-candidate-duplicate-sequence",
+          },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      persistedDemoSessionSchema.safeParse({
+        ...baseSession,
+        transcript: [
+          candidateTurn,
+          { ...interviewerTurn, id: candidateTurn.id, sequence: 8 },
+        ],
+      }).success,
+    ).toBe(false);
+  });
+
   it.each([
     { name: "missing", voice: undefined },
     {

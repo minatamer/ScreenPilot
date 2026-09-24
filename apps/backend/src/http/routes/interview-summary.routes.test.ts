@@ -12,6 +12,7 @@ import { loadBackendConfig } from "../../config/load-backend-config.js";
 import {
   OpenAiHttpClient,
   OpenAiRequestError,
+  OpenAiStructuredOutputError,
 } from "../../providers/openai/openai-client.js";
 import { createProviderAdapters } from "../../providers/provider-adapters.js";
 import {
@@ -198,7 +199,7 @@ function failedLiveScenarioFixture() {
     {
       id: "pilot-final-question",
       occurredAt: "2026-09-23T09:01:10.000Z",
-      sequence: 32,
+      sequence: 31,
       speaker: "interviewer",
       status: "final",
       text: "Any final questions?",
@@ -206,7 +207,7 @@ function failedLiveScenarioFixture() {
     {
       id: "candidate-final-no",
       occurredAt: "2026-09-23T09:01:15.000Z",
-      sequence: 33,
+      sequence: 32,
       speaker: "candidate",
       status: "final",
       text: "No.",
@@ -545,6 +546,50 @@ describe("POST /v1/interview/summary", () => {
     expect(logs).toContain('"providerType":"request_timeout"');
     expect(logs).toContain('"providerRetryable":true');
     expect(logs).not.toContain("PRIVATE SUMMARY TRANSCRIPT CONTENT");
+    expect(logs).not.toContain(input.interviewGrant);
+    expect(logs).not.toContain(input.turnstileToken);
+  });
+
+  it("logs only content-free structured-output validation diagnostics", async () => {
+    const destination = new PassThrough();
+    destination.setEncoding("utf8");
+    const logChunks: string[] = [];
+    destination.on("data", (chunk: string) => logChunks.push(chunk));
+    const config = fakeConfig({ APP_ENV: "local" });
+    const providers = providerSpies();
+    providers.summarizeInterview.mockRejectedValueOnce(
+      new OpenAiStructuredOutputError({
+        durationMs: 125,
+        usage: {
+          cachedInputTokens: 0,
+          inputTokens: 100,
+          outputTokens: 50,
+        },
+        validationPaths: ["confirmedFacts.0.statement"],
+        validationRuleIds: ["schema_invalid_value"],
+      }),
+    );
+    const { app } = createTestApp(providers, {
+      config,
+      logger: createBackendLogger(config, destination),
+    });
+    const agent = request.agent(app);
+    const input = summaryRequest(await prepareGrant(agent));
+
+    await agent
+      .post("/v1/interview/summary")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(input)
+      .expect(503);
+    await new Promise<void>((resolve) => setImmediate(resolve));
+
+    const logs = logChunks.join("");
+    expect(logs).toContain(
+      '"providerValidationPaths":["confirmedFacts.0.statement"]',
+    );
+    expect(logs).toContain(
+      '"providerValidationRuleIds":["schema_invalid_value"]',
+    );
     expect(logs).not.toContain(input.interviewGrant);
     expect(logs).not.toContain(input.turnstileToken);
   });

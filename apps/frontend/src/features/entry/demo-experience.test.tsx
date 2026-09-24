@@ -324,7 +324,7 @@ describe("DemoExperience preparation paths", () => {
     window.sessionStorage.clear();
   });
 
-  it("labels summary rehearsal, disables CV entry, and keeps conversation preparation deterministic", async () => {
+  it("labels summary rehearsal, enables CV entry, and keeps conversation preparation deterministic", async () => {
     const browserFetch = vi.fn<typeof fetch>((input) => {
       const url = requestUrl(input);
       if (url === "/v1/demo/bootstrap") {
@@ -348,16 +348,16 @@ describe("DemoExperience preparation paths", () => {
     const rehearsalStatus = await screen.findByRole("status", {
       name: "Summary rehearsal status",
     });
-    expect(rehearsalStatus).toHaveTextContent("Interview voice is simulated");
     expect(rehearsalStatus).toHaveTextContent(
-      "View summary can make one live, metered summary request",
+      "CV analysis and interview voice are simulated",
     );
-    expect(
-      screen.getByRole("button", { name: "CV analysis unavailable" }),
-    ).toBeDisabled();
+    expect(rehearsalStatus).toHaveTextContent(
+      "one live, metered summary request",
+    );
+    expect(screen.getByRole("button", { name: "Use a CV" })).toBeEnabled();
     expect(
       screen.getByText(
-        "This local rehearsal uses the synthetic conversation-first fixture; CV analysis is disabled.",
+        "Use the CV-assisted flow with simulated analysis and interview voice.",
       ),
     ).toBeVisible();
 
@@ -373,10 +373,13 @@ describe("DemoExperience preparation paths", () => {
     );
   });
 
-  it("runs summary rehearsal through fake voice and starts exactly one summary only after View summary", async () => {
+  it("runs the CV-assisted summary rehearsal through simulated analysis and voice while preparing one summary in the completed workspace", async () => {
     window.history.replaceState({}, "", "/demo?diagnostics=timings");
+    const analysisResponse = createCvAnalysisResponseFixture();
+    vi.mocked(extractPdfText).mockResolvedValue(uploadedCvExtraction);
     const requestedUrls: string[] = [];
     let summaryRequest: Record<string, unknown> | undefined;
+    const pendingSummaryResponse = deferred<Response>();
     const browserFetch = vi.fn<typeof fetch>((input, options) => {
       const url = requestUrl(input);
       requestedUrls.push(url);
@@ -385,8 +388,8 @@ describe("DemoExperience preparation paths", () => {
           jsonResponse(summaryRehearsalBootstrapResponse()),
         );
       }
-      if (url === "/v1/interview/prepare") {
-        return Promise.resolve(jsonResponse(preparedResponse()));
+      if (url === "/v1/cv/analyze") {
+        return Promise.resolve(jsonResponse(analysisResponse));
       }
       if (url === "/v1/voice/token") {
         return Promise.resolve(
@@ -398,7 +401,7 @@ describe("DemoExperience preparation paths", () => {
       }
       if (url === "/v1/interview/summary") {
         summaryRequest = requestJsonBody(options);
-        return Promise.resolve(jsonResponse(summaryResponse()));
+        return pendingSummaryResponse.promise;
       }
       return Promise.reject(new Error(`Unexpected request: ${url}`));
     });
@@ -412,9 +415,20 @@ describe("DemoExperience preparation paths", () => {
       </StrictMode>,
     );
 
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Start without a CV" }),
-    );
+    fireEvent.click(await screen.findByRole("button", { name: "Use a CV" }));
+    fireEvent.change(screen.getByLabelText("Choose PDF file"), {
+      target: {
+        files: [
+          new File(["%PDF-1.7 synthetic"], "summary-rehearsal-cv.pdf", {
+            type: "application/pdf",
+          }),
+        ],
+      },
+    });
+    expect(
+      await screen.findByRole("heading", { name: "What the CV says" }),
+    ).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(
       await screen.findByRole("heading", { name: "How the interview works" }),
     ).toBeVisible();
@@ -441,16 +455,37 @@ describe("DemoExperience preparation paths", () => {
         { timeout: 12_000 },
       ),
     ).toBeVisible();
+    await waitFor(() => {
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    });
     expect(
-      requestedUrls.filter((url) => url === "/v1/interview/summary"),
-    ).toHaveLength(0);
+      screen.queryByText("Checking this request before it continues."),
+    ).not.toBeInTheDocument();
+    const waitingButton = screen.getByRole("button", {
+      name: "Preparing summary. View summary will be available when ready.",
+    });
+    expect(waitingButton).toBeDisabled();
+    expect(waitingButton).toHaveTextContent("View summary");
+    expect(
+      waitingButton.querySelector(".sp-button__spinner"),
+    ).toBeInTheDocument();
     expect(
       JSON.parse(
         screen.getByLabelText<HTMLTextAreaElement>("Raw timing JSON").value,
       ),
     ).toMatchObject({ source: "fake" });
 
-    fireEvent.click(screen.getByRole("button", { name: "View summary" }));
+    await act(async () => {
+      pendingSummaryResponse.resolve(jsonResponse(summaryResponse()));
+      await pendingSummaryResponse.promise;
+    });
+    const viewSummary = await screen.findByRole("button", {
+      name: "View summary",
+    });
+    expect(viewSummary).toBeEnabled();
+    fireEvent.click(viewSummary);
     expect(
       await screen.findByRole("heading", {
         name: "Your conversation, organized as connected evidence.",
@@ -461,13 +496,13 @@ describe("DemoExperience preparation paths", () => {
         requestedUrls.filter((url) => url === "/v1/interview/summary"),
       ).toHaveLength(1);
     });
-    expect(controlledBrowserBoundaries.turnstile).toHaveBeenCalledTimes(2);
+    expect(controlledBrowserBoundaries.turnstile).toHaveBeenCalledTimes(3);
     expect(controlledBrowserBoundaries.elevenLabsBridge).not.toHaveBeenCalled();
 
     expect(summaryRequest).toMatchObject({
-      entryMode: "conversation_first",
-      interviewGrant: "signed-conversation-first-grant",
-      plan: { entryMode: "conversation_first" },
+      entryMode: "cv_assisted",
+      interviewGrant: analysisResponse.interviewGrant,
+      plan: { entryMode: "cv_assisted" },
       turnstileToken: FAKE_TURNSTILE_TOKEN,
     });
     expect(summaryRequest).not.toHaveProperty("cv");
@@ -498,13 +533,9 @@ describe("DemoExperience preparation paths", () => {
     const insights = summaryRequest?.["insights"] as
       Record<string, unknown>[] | undefined;
     expect(
-      insights?.every((insight) => insight["source"] === "Candidate"),
-    ).toBe(true);
-    expect(
-      insights?.every(
+      insights?.some(
         (insight) =>
-          Array.isArray(insight["cvFactIds"]) &&
-          insight["cvFactIds"].length === 0,
+          insight["source"] === "CV" || insight["source"] === "CV + Candidate",
       ),
     ).toBe(true);
     expect(insights).toEqual(
@@ -551,10 +582,10 @@ describe("DemoExperience preparation paths", () => {
           topics?: { cvFactIds?: unknown[] }[];
         }
       | undefined;
-    expect(plan?.roleClarification?.cvFactIds).toEqual([]);
-    expect(plan?.topics?.every((topic) => topic.cvFactIds?.length === 0)).toBe(
-      true,
-    );
+    expect(plan?.roleClarification?.cvFactIds).toEqual(["role-direction-1"]);
+    expect(
+      plan?.topics?.some((topic) => topic.cvFactIds?.includes("experience-1")),
+    ).toBe(true);
 
     rendered.rerender(
       <StrictMode>
@@ -864,9 +895,10 @@ describe("DemoExperience preparation paths", () => {
     rendered.unmount();
   });
 
-  it("keeps a restored summary rehearsal idle until View summary, then starts exactly once", async () => {
+  it("starts one restored summary rehearsal in the completed workspace and enables View summary when ready", async () => {
     storeRestoredCompletedSession();
     const requestedUrls: string[] = [];
+    const pendingSummaryResponse = deferred<Response>();
     const browserFetch = vi.fn<typeof fetch>((input) => {
       const url = requestUrl(input);
       requestedUrls.push(url);
@@ -876,7 +908,7 @@ describe("DemoExperience preparation paths", () => {
         );
       }
       if (url === "/v1/interview/summary") {
-        return Promise.resolve(jsonResponse(summaryResponse()));
+        return pendingSummaryResponse.promise;
       }
       return Promise.reject(new Error(`Unexpected request: ${url}`));
     });
@@ -896,10 +928,30 @@ describe("DemoExperience preparation paths", () => {
     expect(
       screen.getByRole("heading", { name: "Interview complete" }),
     ).toBeVisible();
-    expect(requestedUrls).toEqual(["/v1/demo/bootstrap"]);
-    expect(controlledBrowserBoundaries.turnstile).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(
+        requestedUrls.filter((url) => url === "/v1/interview/summary"),
+      ).toHaveLength(1);
+    });
+    expect(controlledBrowserBoundaries.turnstile).toHaveBeenCalledOnce();
+    expect(
+      screen.queryByText("Checking this request before it continues."),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Preparing summary. View summary will be available when ready.",
+      }),
+    ).toBeDisabled();
 
-    fireEvent.click(screen.getByRole("button", { name: "View summary" }));
+    await act(async () => {
+      pendingSummaryResponse.resolve(jsonResponse(summaryResponse()));
+      await pendingSummaryResponse.promise;
+    });
+    const viewSummary = await screen.findByRole("button", {
+      name: "View summary",
+    });
+    expect(viewSummary).toBeEnabled();
+    fireEvent.click(viewSummary);
     expect(
       await screen.findByRole("heading", {
         name: "Your conversation, organized as connected evidence.",

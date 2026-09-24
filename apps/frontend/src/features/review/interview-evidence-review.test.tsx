@@ -251,11 +251,13 @@ describe("InterviewEvidenceReview", () => {
       />,
     );
 
-    fireEvent.click(
-      screen.getByRole("button", {
-        name: new RegExp(`Candidate question.*${candidateQuestion}`, "u"),
-      }),
-    );
+    const candidateQuestionNode = screen.getByRole("button", {
+      name: new RegExp(`Candidate question.*${candidateQuestion}`, "u"),
+    });
+    expect(
+      within(candidateQuestionNode).getByText("needs clarification"),
+    ).toBeVisible();
+    fireEvent.click(candidateQuestionNode);
     const evidenceDetail = screen.getByRole("region", {
       name: "Expanded evidence for Candidate question",
     });
