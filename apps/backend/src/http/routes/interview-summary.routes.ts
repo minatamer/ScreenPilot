@@ -7,6 +7,7 @@ import { Router, type RequestHandler } from "express";
 import type { GenerateInterviewSummary } from "../../use-cases/generate-interview-summary.js";
 import { requireAllowedOrigin } from "../middleware/allowed-origin.js";
 import { markRoute } from "../middleware/request-logging.js";
+import { withRequestAbortSignal } from "../middleware/with-request-abort-signal.js";
 import {
   getAnonymousSessionId,
   requireAnonymousSession,
@@ -29,30 +30,18 @@ export function createInterviewSummaryRoutes(input: {
     validateJsonBody(
       summarizeInterviewRequestSchema,
       async (request, response, validatedBody) => {
-        const abortController = new AbortController();
-        const abortRequest = () => {
-          abortController.abort();
-        };
-        const abortIncompleteResponse = () => {
-          if (!response.writableEnded) {
-            abortController.abort();
-          }
-        };
-        request.once("aborted", abortRequest);
-        response.once("close", abortIncompleteResponse);
-        try {
-          const result: SummarizeInterviewResponse =
-            await input.generateInterviewSummary(
+        const result: SummarizeInterviewResponse = await withRequestAbortSignal(
+          request,
+          response,
+          (signal) =>
+            input.generateInterviewSummary(
               validatedBody,
               getAnonymousSessionId(response),
-              abortController.signal,
-            );
-          response.setHeader("cache-control", "no-store");
-          response.status(200).json(result);
-        } finally {
-          request.off("aborted", abortRequest);
-          response.off("close", abortIncompleteResponse);
-        }
+              signal,
+            ),
+        );
+        response.setHeader("cache-control", "no-store");
+        response.status(200).json(result);
       },
     ),
   );

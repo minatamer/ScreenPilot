@@ -209,14 +209,8 @@ function CandidateAtLaptopIllustration({
           />
           <g transform="translate(164 202)">
             <g className="sp-live-conversation__laptop-pilot-mark">
-              <path
-                d="M7 9.5 25 5l-5.2 20-4.4-7.2L7 9.5Z"
-                fill="#F26B5B"
-              />
-              <path
-                d="m11 11 8.5-2.2-5.8 6.3L11 11Z"
-                fill="#FDE8E4"
-              />
+              <path d="M7 9.5 25 5l-5.2 20-4.4-7.2L7 9.5Z" fill="#F26B5B" />
+              <path d="m11 11 8.5-2.2-5.8 6.3L11 11Z" fill="#FDE8E4" />
             </g>
           </g>
         </g>

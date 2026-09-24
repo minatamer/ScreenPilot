@@ -7,12 +7,9 @@ import { InsightBoard } from "./insight-board";
 
 const NOW = "2026-09-15T08:00:00.000Z";
 const cancelCarouselAnimation = vi.fn();
-const animateCarousel = vi.fn(
-  () =>
-    ({
-      cancel: cancelCarouselAnimation,
-    }) as unknown as Animation,
-);
+const animateCarousel = vi.fn(() => ({
+  cancel: cancelCarouselAnimation,
+}));
 
 function parentElementOf(element: HTMLElement): HTMLElement {
   const parentElement = element.parentElement;

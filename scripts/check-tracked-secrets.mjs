@@ -4,6 +4,18 @@ import process from "node:process";
 
 const MAXIMUM_SCANNED_FILE_BYTES = 2_000_000;
 
+const blankEnvironmentTemplateFields = new Set([
+  "ANONYMOUS_COOKIE_SECRET",
+  "ELEVENLABS_AGENT_ID",
+  "ELEVENLABS_API_KEY",
+  "ELEVENLABS_VOICE_ID",
+  "INTERVIEW_GRANT_SIGNING_SECRET",
+  "OPENAI_API_KEY",
+  "TURNSTILE_ALLOWED_HOSTNAMES",
+  "TURNSTILE_SECRET_KEY",
+  "TURNSTILE_SITE_KEY",
+]);
+
 const secretRules = [
   {
     label: "non-blank committed secret environment assignment",
@@ -64,6 +76,20 @@ for (const path of trackedFiles) {
     continue;
   }
   const text = bytes.toString("utf8");
+  if (path.endsWith(".env.example")) {
+    for (const line of text.split(/\r?\n/u)) {
+      const assignment = /^([A-Z][A-Z0-9_]*)=(.*)$/u.exec(line);
+      if (
+        assignment !== null &&
+        blankEnvironmentTemplateFields.has(assignment[1]) &&
+        assignment[2].trim() !== ""
+      ) {
+        findings.push(
+          `${path}: non-blank owner-supplied environment template field ${assignment[1]}`,
+        );
+      }
+    }
+  }
   for (const rule of secretRules) {
     rule.pattern.lastIndex = 0;
     if (rule.pattern.test(text)) {

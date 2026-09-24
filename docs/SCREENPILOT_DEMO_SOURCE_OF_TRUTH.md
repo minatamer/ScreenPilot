@@ -4673,38 +4673,47 @@ while preserving the SP-025-approved behavior except for documented bug fixes.
 
 **Suggested commit:** `SP-025A: audit release candidate`
 
+**Implementation evidence (2026-09-24):** The repository-wide audit ledger is
+recorded in `docs/operations/release-candidate-audit.md`. It reconciles every
+required ticket through SP-025, fixes the non-blank committed hostname template,
+centralizes and tests HTTP request-abort ownership, removes the remaining format
+drift and test-only unsafe cast, and records the complete fake/paid-disabled
+deterministic gate. The code audit is complete, but deployment remains blocked
+on SP-025's explicitly open owner/manual release matrix and approval; SP-026
+still owns production configuration and its two definitive synthetic flows.
+
 **Checklist:**
 
-- [ ] Produce `docs/operations/release-candidate-audit.md` with one honest entry
+- [x] Produce `docs/operations/release-candidate-audit.md` with one honest entry
   per required prior ticket: status, commits, implementation/docs evidence,
   verification, explicit deferral destination/rationale, blockers, and limits.
-- [ ] Prove `frontend -> contracts <- backend`, one reducer workflow authority,
+- [x] Prove `frontend -> contracts <- backend`, one reducer workflow authority,
   allow-listed browser persistence, stateless backend composition, and no
   provider/Node/application concerns leaking into contracts.
-- [ ] Audit and fix material duplication, dead/obsolete code, unused exports and
+- [x] Audit and fix material duplication, dead/obsolete code, unused exports and
   dependencies, stale flags/TODOs, unsafe casts/diagnostics, swallowed errors,
   provider-call duplication, and high-frequency/bundle-sensitive waste.
-- [ ] Establish the SP-025-approved behavioral baseline, review every first-party
+- [x] Establish the SP-025 handed-off behavioral baseline, review every first-party
   source/test/configuration/script/style/documentation area, and resolve each
   concrete quality or efficiency finding without speculative abstraction or an
   unrecorded functional change.
-- [ ] Record before/after regression evidence for every refactored critical path
+- [x] Record before/after regression evidence for every refactored critical path
   and document the disposition of worthwhile low-severity findings as well as
   release-blocking material findings.
-- [ ] Audit cleanup and abort ownership for listeners, timers, requests, object
+- [x] Audit cleanup and abort ownership for listeners, timers, requests, object
   URLs, microphone/media tracks, SDK subscriptions, voice sessions, retries,
   stale results, terminal transitions, and Clear & exit.
-- [ ] Audit tracked secrets/content, blank environment examples, backend-only
+- [x] Audit tracked secrets/content, blank environment examples, backend-only
   provider secrets, bounded contracts/APIs, error/log redaction, persistence,
   role-neutral policy, evidence links, reducer transitions, operations docs,
   and test-runner fake/paid-disabled isolation.
-- [ ] Fix every material finding in its owning boundary and add the smallest
+- [x] Fix every material finding in its owning boundary and add the smallest
   focused regression coverage.
-- [ ] Run formatting, lint, all typechecks/unit tests/production builds,
+- [x] Run formatting, lint, all typechecks/unit tests/production builds,
   dependency/security audit, architecture validation, tracked-secret and ignore
   checks, unused/dead-code review, `git diff --check`, and final scope review on
   the exact candidate without reading `.env.local` or making a provider call.
-- [ ] Leave every unperformed/manual/live/external check explicitly deferred or
+- [x] Leave every unperformed/manual/live/external check explicitly deferred or
   blocked; never use a ticket-named commit as completion evidence by itself.
 
 ### Milestone 5 — deploy

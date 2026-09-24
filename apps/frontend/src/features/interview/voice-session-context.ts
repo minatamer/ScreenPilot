@@ -163,9 +163,8 @@ export function calculateRemainingVoiceSessionMilliseconds(
   nowMilliseconds = Date.now(),
 ): number {
   const maximumDurationMilliseconds = PUBLIC_RUNTIME_LIMITS.callSeconds * 1_000;
-  const deadlineMilliseconds = calculateVoiceSessionDeadlineMilliseconds(
-    startedAt,
-  );
+  const deadlineMilliseconds =
+    calculateVoiceSessionDeadlineMilliseconds(startedAt);
   return deadlineMilliseconds === null
     ? maximumDurationMilliseconds
     : Math.min(

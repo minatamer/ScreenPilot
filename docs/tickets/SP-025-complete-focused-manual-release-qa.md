@@ -1,6 +1,6 @@
 # SP-025 — Complete focused manual release QA
 
-Status: Evidence reconciled — SP-024 and production acceptance are handed off; free/manual gates, the final quick gate, safety restoration, and deployable-candidate approval remain open<br>
+Status: Evidence reconciled — SP-024 and production acceptance are handed off; the SP-025A deterministic gate passed, while free/manual gates, safety restoration, and deployable-candidate approval remain open<br>
 Milestone: Milestone 4 — public-demo hardening  
 Last synchronized: 2026-09-24<br>
 Depends on: SP-010A, SP-017, SP-018, SP-021B, SP-022, SP-023, SP-024<br>
@@ -137,7 +137,9 @@ release only after its bounded production acceptance.
 - [ ] Verify candidate counterquestions are answered first, unclear audio is clarified without evidence, and timing/interruption settings—not prompt filler—handle latency.
 - [ ] Verify normal 8–10-prompt HR coverage, multi-field answer credit, one broad role-context clarification maximum, and zero technical, portfolio, competency, roleplay, professional-knowledge, or suitability chains.
 - [ ] Verify unsupported employer/vacancy questions become human follow-up without blocking completion and that no selected role invents responsibilities, qualifications, salary, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines.
-- [ ] Run the smallest targeted release-critical unit/backend checks, then the complete fast default commands once.
+- [x] Run the smallest targeted release-critical unit/backend checks, then the
+  complete fast default commands once. SP-025A completed the focused corrected
+  surfaces and the complete deterministic repository gate on 2026-09-24.
 - [x] Reconcile SP-021B evidence honestly: retain the successful CV-assisted
   live result, record the owner's conversation-first success recollection as
   uncorroborated by a distinguishable full-live operation ledger, and require no
@@ -162,7 +164,9 @@ release only after its bounded production acceptance.
 ## Acceptance criteria
 
 - [ ] Every required Section 18 manual scenario has a recorded pass across the relevant responsive matrix.
-- [ ] The complete quick gate passes once on the release candidate.
+- [x] The complete quick gate passes once on the release candidate. SP-025A
+  recorded the locked-runtime command details and exact pass counts in the
+  release-candidate audit ledger.
 - [x] Existing live evidence and its limitations are recorded without a new
   paid local call; the definitive two-entry-mode paid acceptance, production
   Turnstile/hostname checks, and measured cost finalization are handed to
@@ -174,16 +178,19 @@ release only after its bounded production acceptance.
   distinguishes the global one-frame-collapse symptom from an application
   defect; every surviving reduced-motion exemption maps to an owner-approved
   SP-024 finding or a pre-existing source-of-truth decision.
-- [ ] No deferred, rejected, or newly proposed SP-024 finding was implemented
+- [x] No deferred, rejected, or newly proposed SP-024 finding was implemented
   without an owner decision.
 - [ ] Every required role-neutral scenario proves one universal HR screen, no allow-list/redirection, no profession-specific assessment, and no invented employer/vacancy fact.
-- [ ] Any non-blocking known limitation is documented honestly and does not contradict definition of done.
+- [x] Any non-blocking known limitation is documented honestly and does not contradict definition of done.
 - [ ] SP-025A receives the exact approved release candidate and complete manual
   evidence; SP-026 remains blocked until the repository/ticket audit closes.
 
 ## Focused verification
 
-- [ ] Run `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, and `pnpm build` once.
+- [x] Run `pnpm lint`, `pnpm typecheck`, `pnpm test:unit`, and `pnpm build` once.
+  SP-025A invoked the pinned pnpm 11.24.0 workspace commands directly because
+  the host's default executable was pnpm 11.19.0; the clean production-build
+  snapshot contained no ignored local environment file.
 - [ ] Use a written manual matrix recording environment, viewport/browser, scenario, result, evidence, and defect link.
 - [ ] Record the effective `prefers-reduced-motion` state in every motion check;
   run a paired `no-preference`/`reduce` comparison rather than relying on the

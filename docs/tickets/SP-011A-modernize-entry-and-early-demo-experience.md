@@ -344,7 +344,9 @@ The revised direction keeps Signal Canvas but makes the interview the visual and
 ## Focused verification
 
 - [x] Run the four focused changed-surface frontend test files; all 22 tests pass.
-- [ ] Run frontend lint, frontend typecheck, the complete frontend unit suite, and the frontend production build after visual direction is accepted.
+- [x] Run frontend lint, frontend typecheck, the complete frontend unit suite,
+  and the frontend production build after visual direction is accepted. SP-025A
+  reconfirmed these gates on 2026-09-24 with Node 24.19.0 and pnpm 11.24.0.
 - [x] Verify keyboard order, visible focus, absence of preview controls, native dialog open/Escape/close/focus return, and 44 px targets.
 - [x] Verify word-by-word question/answer timing, all six ordered card creations, both completed-board holds, second-board-to-first-board loop, deliberate keyboard/click-focus and off-screen/hidden-page pause, and opacity-only reduced-motion progression.
 - [x] Inspect `/` and early `/demo` at 320, 390, 768, 1024, 1280, 1440, 1920, and one intermediate drag-resized width; confirm no document/header/preview/story overflow.
