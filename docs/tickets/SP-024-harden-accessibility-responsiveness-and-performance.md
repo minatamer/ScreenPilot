@@ -1,6 +1,6 @@
 # SP-024 — Harden accessibility, responsiveness, and frontend performance
 
-Status: Required — Phase A audit/proposal only; Phase B blocked pending explicit owner approval<br>
+Status: Implemented — owner-approved Phase B complete; broader release-device QA remains in SP-025<br>
 Milestone: Milestone 4 — public-demo hardening  
 Last synchronized: 2026-09-24<br>
 Depends on: SP-005, SP-011, SP-011A, SP-012, SP-013, SP-016, SP-016A, SP-021<br>
@@ -54,6 +54,13 @@ The Phase A deliverable is
   privacy, accessibility, role-neutral, or visual direction;
 - an owner-decision table whose initial state is `Pending` for every proposed
   finding. Phase A must not pre-check implementation or verification boxes.
+
+**Owner decision (2026-09-24):** Approved `SP024-RESP-001`,
+`SP024-RESP-002`, `SP024-MOTION-001`, `SP024-MOTION-002`,
+`SP024-MOTION-003`, and `SP024-TEST-001`. For `SP024-MOTION-002`, reduced
+motion must show the completed highlight immediately with no sweep; normal
+motion retains the one-second sweep. The approved set is frozen and SP-025 is
+not part of this implementation.
 
 ## Standalone audit context
 
@@ -185,80 +192,108 @@ Phase A must:
 
 ## Phase A — audit and proposal checklist
 
-- [ ] Record the exact revision and produce the audit-environment matrix before
+- [x] Record the exact revision and produce the audit-environment matrix before
   interpreting results.
-- [ ] Audit semantic structure, keyboard order, focus management/restoration,
+- [x] Audit semantic structure, keyboard order, focus management/restoration,
   visible focus, ARIA names/live regions, caption access, contrast, and 44×44
   targets; run automated checks and a full manual keyboard review without
   applying fixes.
-- [ ] Inspect every reference anchor and drag-resize intermediate widths for
+- [x] Inspect every reference anchor and drag-resize intermediate widths for
   continuous reflow, overflow, clipping, dead zones, or duplicated
   implementations.
-- [ ] Audit equal landing-card priority, shared branch convergence,
+- [x] Audit equal landing-card priority, shared branch convergence,
   portrait/landscape, safe areas, dynamic viewport height, browser chrome,
   virtual keyboard, sticky interview controls, and Turnstile fallback layout.
-- [ ] Check long names, CV excerpts, captions, card values, summaries, errors,
+- [x] Check long names, CV excerpts, captions, card values, summaries, errors,
   and translated-like expansion.
-- [ ] Audit mobile insight rail/expanded evidence and desktop/large-monitor
+- [x] Audit mobile insight rail/expanded evidence and desktop/large-monitor
   constellation behavior.
 - [ ] Profile PDF extraction, animation, live caption/insight updates, render
   churn, input responsiveness, fonts, bundles, PDF worker/assets, and image/icon
   loading on representative mobile/throttled profiles.
-- [ ] Run the complete reduced-motion diagnostic and proposed-exemption matrix
+- [x] Run the complete reduced-motion diagnostic and proposed-exemption matrix
   in both preference modes.
-- [ ] Consolidate overlapping skill/tool findings, remove false positives, and
+- [x] Consolidate overlapping skill/tool findings, remove false positives, and
   document rejected advice and unresolved evidence gaps.
-- [ ] Produce the complete owner-decision table with stable finding IDs and no
+- [x] Produce the complete owner-decision table with stable finding IDs and no
   implementation marked approved or complete.
-- [ ] Stop and request owner approval. Do not begin Phase B in the same run
+- [x] Stop and request owner approval. Do not begin Phase B in the same run
   unless the owner reviews the proposal and explicitly authorizes it.
 
 ## Phase B — approved implementation checklist
 
-All items remain blocked until the owner approval gate is satisfied.
+The owner approval gate was satisfied on 2026-09-24.
 
-- [ ] Record the exact approved finding IDs and freeze the Phase B scope.
-- [ ] Implement only approved accessibility, responsive, motion, and
+- [x] Record the exact approved finding IDs and freeze the Phase B scope.
+- [x] Implement only approved accessibility, responsive, motion, and
   performance corrections without weakening shared design consistency.
-- [ ] Add or update the smallest tests required by the approved behavior,
+- [x] Add or update the smallest tests required by the approved behavior,
   including both motion-preference modes for every approved exemption.
-- [ ] Re-run the smallest affected checks and manual states after each bounded
+- [x] Re-run the smallest affected checks and manual states after each bounded
   group of changes.
-- [ ] Re-run the approved audit scenarios and map each implemented finding to
+- [x] Re-run the approved audit scenarios and map each implemented finding to
   evidence; return new or materially changed proposals to the owner gate.
-- [ ] Synchronize approved token or visual-rule changes with the HTML design
+- [x] Synchronize approved token or visual-rule changes with the HTML design
   reference and source of truth.
 
 ## Acceptance criteria
 
 ### Phase A checkpoint
 
-- [ ] The complete audit exists at
+- [x] The complete audit exists at
   `docs/operations/sp-024-frontend-audit.md`, contains reproducible evidence and
   stable finding IDs, and separates observed defects from subjective advice.
-- [ ] Both motion preference states and the global one-frame-collapse risk are
+- [x] Both motion preference states and the global one-frame-collapse risk are
   explicitly documented, with every suggested exemption pending owner review.
-- [ ] No application, CSS, token, design-reference, test, dependency, hook, or
+- [x] No application, CSS, token, design-reference, test, dependency, hook, or
   runtime configuration file changed during Phase A.
-- [ ] The owner-decision table is complete and still records `Pending` unless
+- [x] The owner-decision table is complete and still records `Pending` unless
   the owner has explicitly ruled on each item.
 
 ### Phase B completion
 
-- [ ] Every owner-approved finding is implemented and verified; rejected,
+- [x] Every owner-approved finding is implemented and verified; rejected,
   deferred, and unapproved findings remain untouched and documented.
-- [ ] Every major stage, action, state, error, and evidence relationship is
+- [x] Every major stage, action, state, error, and evidence relationship is
   present at every viewport class.
-- [ ] No horizontal page scroll, clipped sticky action, inaccessible focus, or
+- [x] No horizontal page scroll, clipped sticky action, inaccessible focus, or
   device-specific duplicate implementation remains within the approved scope.
 - [ ] Both complete flows remain operable in portrait/landscape and with virtual
   keyboard/safe areas.
-- [ ] Large monitors look intentionally composed and phones remain
+- [x] Large monitors look intentionally composed and phones remain
   information-complete.
 - [ ] Representative mobile CPU/network performance keeps extraction,
   captions, controls, and insights responsive.
-- [ ] Accessibility-driven token corrections are synchronized with the HTML
+- [x] Accessibility-driven token corrections are synchronized with the HTML
   design reference.
+
+## Phase B implementation evidence
+
+The approved implementation completed on 2026-09-24 without a dependency,
+provider configuration, or persistence change. The compact completed action now
+uses the full mobile track; mobile coverage uses four pages of three readable
+12 px rows; reduced passive scrolling is immediate; reduced evidence markers
+resolve to their completed painted state without a sweep; and hero cards now
+use the approved normal/reduced one-shot travel plus normal-only hover lift.
+The landing-preview state test covers both media-query values.
+
+Process-local fake/paid-disabled verification passed 4 affected files / 17
+tests, the full frontend suite at 40 files / 295 tests, frontend typecheck,
+frontend lint, a Node 24 production build, formatting, and diff checks. A fresh
+production-local deterministic conversation-first browser run completed at 320
+px with a 197 × 44 px **View summary** action, exactly three active 12 px
+coverage rows on every page, zero horizontal overflow, immediate reduced
+highlighting, and clean browser warning/error logs. Responsive completion
+geometry also passed at 360 × 800, 390 × 844, and 844 × 390; reduced hero
+overflow/settled-state checks passed from 320 through 2560 px.
+
+The connected browser reported reduced motion and does not expose a media-
+preference override. The normal path was therefore verified through the
+compiled production CSS and the no-preference component branch rather than a
+second live computed-style capture. Physical Safari/Firefox/Android devices,
+screen-reader output, virtual-keyboard/safe-area injection, and throttled
+CPU/network profiling remain explicitly unchecked and move to SP-025/manual
+release evidence; they are not silently claimed here.
 
 ## Focused verification
 

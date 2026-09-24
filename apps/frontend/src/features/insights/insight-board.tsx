@@ -37,7 +37,7 @@ const STATUS_LABELS: Readonly<Record<InsightStatus, string>> = {
   needs_clarification: "Needs clarification",
 };
 
-const MOBILE_TOPICS_PER_SLIDE = 4;
+const MOBILE_TOPICS_PER_SLIDE = 3;
 const CAROUSEL_SWIPE_THRESHOLD_PX = 44;
 const CAROUSEL_AXIS_LOCK_THRESHOLD_PX = 8;
 const CAROUSEL_EDGE_RESISTANCE = 0.28;

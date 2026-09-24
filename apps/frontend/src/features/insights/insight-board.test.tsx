@@ -174,7 +174,7 @@ describe("InsightBoard", () => {
     );
   });
 
-  it("pages conversation coverage in compact groups of four", () => {
+  it("pages conversation coverage in compact groups of three", () => {
     render(
       <InsightBoard
         entryMode="conversation_first"
@@ -220,7 +220,7 @@ describe("InsightBoard", () => {
     ).getAllByRole("listitem");
     expect(
       topics.map((topic) => topic.getAttribute("data-carousel-active")),
-    ).toEqual(["true", "true", "true", "true", "false"]);
+    ).toEqual(["true", "true", "true", "false", "false"]);
     expect(
       topics.map((topic) => topic.getAttribute("data-carousel-index")),
     ).toEqual(["0", "1", "2", "3", "4"]);
@@ -255,7 +255,7 @@ describe("InsightBoard", () => {
     });
     expect(
       topics.map((topic) => topic.getAttribute("data-carousel-active")),
-    ).toEqual(["false", "false", "false", "false", "true"]);
+    ).toEqual(["false", "false", "false", "true", "true"]);
     expect(topicViewport).toHaveAttribute("data-carousel-direction", "next");
     expect(topicViewport).toHaveAttribute("data-carousel-slide", "1");
     expect(topicViewport).toHaveAttribute("data-dragging", "false");
@@ -268,7 +268,7 @@ describe("InsightBoard", () => {
     );
     expect(
       topics.map((topic) => topic.getAttribute("data-carousel-active")),
-    ).toEqual(["true", "true", "true", "true", "false"]);
+    ).toEqual(["true", "true", "true", "false", "false"]);
     expect(topicViewport).toHaveAttribute(
       "data-carousel-direction",
       "previous",
