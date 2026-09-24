@@ -2,7 +2,7 @@ import {
   voiceTokenRequestSchema,
   type VoiceTokenResponse,
 } from "@screenpilot/contracts/api/voice-token";
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 
 import type { CreateVoiceToken } from "../../use-cases/create-voice-token.js";
 import { requireAllowedOrigin } from "../middleware/allowed-origin.js";
@@ -17,6 +17,7 @@ import {
 export function createVoiceTokenRoutes(input: {
   allowedOrigins: readonly string[];
   createVoiceToken: CreateVoiceToken;
+  requestAdmission: RequestHandler;
 }): Router {
   const router = Router();
 
@@ -25,6 +26,7 @@ export function createVoiceTokenRoutes(input: {
     markRoute("voice_token"),
     requireAllowedOrigin(input.allowedOrigins),
     requireAnonymousSession(),
+    input.requestAdmission,
     validateJsonBody(
       voiceTokenRequestSchema,
       async (request, response, validatedBody) => {

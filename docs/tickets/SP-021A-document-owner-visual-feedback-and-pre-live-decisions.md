@@ -2,7 +2,7 @@
 
 Status: Required; both prompts implemented and deterministically verified locally; Prompt 1 owner-published; both behaviors later passed one SP-021B CV-assisted standard-live flow, with conversation-first live observation still pending<br>
 Milestone: Milestone 3 — same-session review<br>
-Last synchronized: 2026-09-23<br>
+Last synchronized: 2026-09-24<br>
 Depends on: SP-019, SP-020, SP-021<br>
 Suggested commit: `SP-021A: document owner visual review findings`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)<br>
@@ -310,13 +310,13 @@ Status: **Implemented, deterministically verified, and later live-observed in th
      mute controls, state that the microphone is disconnected, and replace
      **End interview** with **View summary**.
    - The original Prompt 2 target kept summary preparation idle after
-     disconnect and let **View summary** begin the single lifecycle. The later
-     owner-directed local summary-rehearsal decision narrowed that global rule:
-     only `summary_rehearsal` still waits to initiate work; freshly validated
-     standard fake/live may prepare once behind the hold, while paid-disabled,
-     pending, and failed runtime validation remain closed. **View summary**
-     always controls review exposure and never reconnects voice or duplicates a
-     summary call.
+     disconnect and let **View summary** begin the single lifecycle. The final
+     owner-directed rule instead allows freshly validated deterministic fake,
+     standard live, and local `summary_rehearsal` to prepare once behind the
+     hold, while paid-disabled, pending, and failed runtime validation remain
+     closed. **View summary** stays disabled with a spinner while preparation
+     is pending, controls review exposure after settlement, and never starts a
+     provider call, reconnects voice, or duplicates summary work.
 3. **Align fake mode, restore behavior, and failure semantics.**
    - Emit an agent-owned fake disconnect after all final transcript/tool events
      and enter the same completed workspace.
@@ -352,12 +352,12 @@ Status: **Implemented, deterministically verified, and later live-observed in th
   with **View summary**.
 - The original 2026-09-23 Prompt 2 implementation started its one managed
   summary lifecycle only after disconnect plus explicit **View summary**. That
-  historical global rule was later superseded only as to initiation timing by
-  local summary rehearsal: freshly bootstrap-validated `deterministic_fake` and
-  `standard_live` may prepare once while the completed workspace remains
-  visible; `summary_rehearsal` still waits for **View summary**;
-  `paid_disabled`, pending, and failed refresh start nothing. **View summary**
-  continues to be the only action that exposes pending or ready review.
+  historical global rule was later superseded as to initiation timing: freshly
+  bootstrap-validated `deterministic_fake`, `standard_live`, and
+  `summary_rehearsal` may prepare once while the completed workspace remains
+  visible; `paid_disabled`, pending, and failed refresh start nothing. **View
+  summary** stays disabled with a spinner while work is pending and exposes the
+  ready review or genuine failure state without initiating provider work.
 - The fake trace emits an agent-owned disconnect after every final transcript
   and client-tool event. Restored completed state never requests a token or
   reconnects. Unexpected provider/network interruption still uses the existing

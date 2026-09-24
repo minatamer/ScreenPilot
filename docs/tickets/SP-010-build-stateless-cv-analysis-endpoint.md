@@ -3,7 +3,7 @@
 Status: Required  
 Milestone: Milestone 1 — interview preparation paths  
 Implementation state: Completed, verified, and committed on 2026-09-11<br>
-Last synchronized: 2026-09-11<br>
+Last synchronized: 2026-09-24<br>
 Depends on: SP-003, SP-007, SP-009  
 Suggested commit: `SP-010: analyze CVs without persistence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -47,7 +47,7 @@ Convert bounded browser-extracted CV text into validated evidence-grounded facts
 ## Implementation checklist
 
 - [x] Consume declared `@screenpilot/contracts` AnalyzeCv request and normalized-output/plan exports; do not deep-import package source or duplicate schemas in the backend.
-- [ ] Validate origin, cookie, schema, body bounds, fixed catalogue key, text printability/language sanity, client request ID, and best-effort rate signal. Everything except a real runtime rate/capacity signal is complete; SP-010 exposes and tests the fail-closed admission seam, while SP-022 owns the bounded TTL limiter and spend controls.
+- [x] Validate origin, cookie, schema, body bounds, text printability/language sanity, client request ID, and best-effort rate/capacity signals. SP-010 exposes and tests the fail-closed admission seam; SP-022 now supplies and tests the bounded TTL limiter, in-flight capacity gate, and runtime wiring.
 - [x] Verify the fresh Turnstile token with expected `cv_analyze` action and hostname before constructing an OpenAI request.
 - [x] Build a prompt that clearly delimits CV text as untrusted data and enforces the HR-only output schema.
 - [x] Call only locked GPT-5.4 mini with reasoning none, structured output, and `store: false`.

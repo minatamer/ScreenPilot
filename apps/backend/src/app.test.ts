@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { PassThrough } from "node:stream";
 
 import { bootstrapResponseSchema } from "@screenpilot/contracts/api/bootstrap";
+import { analyzeCvResponseSchema } from "@screenpilot/contracts/api/cv-analysis";
 import { apiErrorSchema } from "@screenpilot/contracts/api/error-envelope";
 import {
   prepareInterviewResponseSchema,
@@ -17,6 +18,7 @@ import type { BackendConfig } from "./config/backend-config.schema.js";
 import { loadBackendConfig } from "./config/load-backend-config.js";
 import { createBackendLogger } from "./http/middleware/request-logging.js";
 import type { ProviderAdapters } from "./providers/provider-adapters.js";
+import { FakeOpenAi } from "./providers/openai/fake-openai.js";
 import {
   createInterviewGrantService,
   hashInterviewGrantValue,
@@ -304,6 +306,10 @@ describe("ScreenPilot backend application", () => {
       conversationId: "screenpilot-fake-conversation",
       conversationToken: "screenpilot-fake-conversation-token",
     });
+    const fakeOpenAi = new FakeOpenAi();
+    providers.analyzeCv.mockImplementation((input, signal) =>
+      fakeOpenAi.analyzeCv(input, signal),
+    );
     providers.summarizeInterview.mockImplementation((input) =>
       Promise.resolve({
         summary: createSummaryFixture(input),
@@ -342,7 +348,7 @@ describe("ScreenPilot backend application", () => {
       preparation.body,
     ).interviewGrant;
 
-    const cvAttempt = await agent
+    const cvAnalysis = await agent
       .post("/v1/cv/analyze")
       .set("Origin", ALLOWED_ORIGIN)
       .send({
@@ -350,11 +356,10 @@ describe("ScreenPilot backend application", () => {
         cvText: "Synthetic CV content. ".repeat(30),
         turnstileToken: "unused-cv-challenge",
       })
-      .expect(503);
-    expect(apiErrorSchema.parse(cvAttempt.body).error.code).toBe(
-      "CAPACITY_REACHED",
-    );
-    expect(providers.analyzeCv).not.toHaveBeenCalled();
+      .expect(200);
+    expect(analyzeCvResponseSchema.parse(cvAnalysis.body)).toMatchObject({
+      cv: { experienceLevel: "unclear" },
+    });
 
     const voiceAuthorization = await agent
       .post("/v1/voice/token")
@@ -382,9 +387,181 @@ describe("ScreenPilot backend application", () => {
     expect(
       summarizeInterviewResponseSchema.parse(summary.body).summary,
     ).toEqual(createSummaryFixture(summaryInput));
-    expect(providers.verifyChallenge).toHaveBeenCalledTimes(2);
+    expect(providers.verifyChallenge).toHaveBeenCalledTimes(3);
+    expect(providers.analyzeCv).toHaveBeenCalledOnce();
     expect(providers.createVoiceToken).toHaveBeenCalledOnce();
     expect(providers.summarizeInterview).toHaveBeenCalledOnce();
+  });
+
+  it("rate-limits a metered route before another challenge or provider call", async () => {
+    const config = testConfig({ RATE_LIMIT_VOICE_TOKEN_REQUESTS: "1" });
+    const providers = createProviderSpies();
+    providers.verifyChallenge.mockImplementation(({ expectedAction }) =>
+      Promise.resolve({
+        action: expectedAction,
+        errorCodes: [],
+        hostname: "localhost",
+        success: true,
+      }),
+    );
+    providers.createVoiceToken.mockResolvedValue({
+      conversationId: "screenpilot-fake-conversation",
+      conversationToken: "screenpilot-fake-conversation-token",
+    });
+    const app = createApp({
+      clock: () => FIXED_NOW,
+      config,
+      idGenerator: randomUUID,
+      providerAdapters: providers.adapters,
+      securitySecrets: SECURITY_SECRETS,
+    });
+    const agent = request.agent(app);
+    await agent.get("/v1/demo/bootstrap").expect(200);
+    const preparation = await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(VALID_PREPARE_REQUEST)
+      .expect(200);
+    const interviewGrant = prepareInterviewResponseSchema.parse(
+      preparation.body,
+    ).interviewGrant;
+
+    await agent
+      .post("/v1/voice/token")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        interviewGrant,
+        turnstileToken: "first-fake-challenge",
+      })
+      .expect(200);
+    const rejected = await agent
+      .post("/v1/voice/token")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        interviewGrant,
+        turnstileToken: "second-fake-challenge",
+      })
+      .expect(429);
+
+    expect(apiErrorSchema.parse(rejected.body).error).toMatchObject({
+      code: "RATE_LIMITED",
+      retryAfterSeconds: 60,
+      retryable: true,
+    });
+    expect(rejected.headers["retry-after"]).toBe("60");
+    expect(providers.verifyChallenge).toHaveBeenCalledOnce();
+    expect(providers.createVoiceToken).toHaveBeenCalledOnce();
+  });
+
+  it("rate-limits bootstrap and deterministic preparation without provider work", async () => {
+    const { app, providers } = createTestApplication(
+      testConfig({
+        RATE_LIMIT_BOOTSTRAP_REQUESTS: "1",
+        RATE_LIMIT_PREPARE_REQUESTS: "1",
+      }),
+    );
+    const agent = request.agent(app);
+
+    await agent.get("/v1/demo/bootstrap").expect(200);
+    const rejectedBootstrap = await agent.get("/v1/demo/bootstrap").expect(429);
+    expect(apiErrorSchema.parse(rejectedBootstrap.body).error.code).toBe(
+      "RATE_LIMITED",
+    );
+    await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(VALID_PREPARE_REQUEST)
+      .expect(200);
+    const rejectedPreparation = await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(VALID_PREPARE_REQUEST)
+      .expect(429);
+    expect(apiErrorSchema.parse(rejectedPreparation.body).error.code).toBe(
+      "RATE_LIMITED",
+    );
+    expectNoProviderCalls(providers.operations);
+  });
+
+  it("rejects excess in-flight work before another challenge or provider call", async () => {
+    const config = testConfig({
+      CAPACITY_GLOBAL_CONCURRENT_REQUESTS: "1",
+      CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS: "1",
+      CAPACITY_SUMMARY_CONCURRENT_REQUESTS: "1",
+      CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS: "1",
+    });
+    const providers = createProviderSpies();
+    providers.verifyChallenge.mockImplementation(({ expectedAction }) =>
+      Promise.resolve({
+        action: expectedAction,
+        errorCodes: [],
+        hostname: "localhost",
+        success: true,
+      }),
+    );
+    let resolveVoiceToken:
+      | ((value: { conversationId: string; conversationToken: string }) => void)
+      | undefined;
+    providers.createVoiceToken.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveVoiceToken = resolve;
+        }),
+    );
+    const app = createApp({
+      clock: () => FIXED_NOW,
+      config,
+      idGenerator: randomUUID,
+      providerAdapters: providers.adapters,
+      securitySecrets: SECURITY_SECRETS,
+    });
+    const agent = request.agent(app);
+    await agent.get("/v1/demo/bootstrap").expect(200);
+    const preparation = await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(VALID_PREPARE_REQUEST)
+      .expect(200);
+    const interviewGrant = prepareInterviewResponseSchema.parse(
+      preparation.body,
+    ).interviewGrant;
+    const firstResponsePromise = agent
+      .post("/v1/voice/token")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        interviewGrant,
+        turnstileToken: "first-fake-challenge",
+      })
+      .then((response) => response);
+    await vi.waitFor(() => {
+      expect(providers.createVoiceToken).toHaveBeenCalledOnce();
+    });
+
+    const rejected = await agent
+      .post("/v1/voice/token")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        interviewGrant,
+        turnstileToken: "second-fake-challenge",
+      })
+      .expect(503);
+    expect(apiErrorSchema.parse(rejected.body).error).toMatchObject({
+      code: "CAPACITY_REACHED",
+      retryable: true,
+    });
+    expect(providers.verifyChallenge).toHaveBeenCalledOnce();
+    expect(providers.createVoiceToken).toHaveBeenCalledOnce();
+
+    if (resolveVoiceToken === undefined) {
+      throw new TypeError(
+        "Expected the first voice request to reach the provider.",
+      );
+    }
+    resolveVoiceToken({
+      conversationId: "screenpilot-fake-conversation",
+      conversationToken: "screenpilot-fake-conversation-token",
+    });
+    expect((await firstResponsePromise).status).toBe(200);
   });
 
   it("rejects missing correlation, disallowed origins, and unsafe body shapes", async () => {

@@ -36,6 +36,7 @@ secrets, abuse controls, smoke checks, and rollback.
   Do not deploy a materially changed candidate without re-running the affected
   SP-025A audit and verification.
 - At low traffic, the two scale-to-zero services, Hosting traffic, five active secret versions, and small image repository may remain inside provider free quotas. Billing must still be enabled where required, and Artifact Registry storage/domain renewal are standing costs rather than per-flow AI charges.
+- SP-022 defines the initial Cloud Run ceilings that this ticket must apply and verify: backend minimum instances `0`, maximum instances `1`, container concurrency `4`; frontend minimum instances `0`, maximum instances `1`, container concurrency `80`. The backend value matches its default global in-flight metered capacity, while the single-instance ceiling prevents horizontal scaling from multiplying the application-side spend gate. Any change requires a documented budget review rather than relying on free-tier credits.
 
 ### Domain research checkpoint (2026-09-16)
 

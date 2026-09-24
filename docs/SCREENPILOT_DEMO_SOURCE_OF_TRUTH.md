@@ -1334,9 +1334,10 @@ observation.
 - Cloud Run maximum-instance/concurrency bounds plus provider account spend alerts/caps provide the hard financial ceiling that memory-only limits cannot guarantee.
 - Bounded prompt/context/output sizes.
 - Paid smoke tests never run in default CI.
-- Local summary rehearsal cannot run in production, cannot enable CV analysis,
-  and cannot contact ElevenLabs. It retains the live Turnstile/OpenAI summary
-  gates and therefore remains an explicitly owner-authorized paid operation.
+- Local summary rehearsal cannot run in production and cannot contact
+  ElevenLabs. It keeps CV analysis and voice deterministic, retains the real
+  paid-route Turnstile boundaries and live OpenAI summary gate, and therefore
+  remains an explicitly owner-authorized paid operation.
 
 ---
 
@@ -1914,7 +1915,7 @@ The tree is intentionally explicit but not a mandate to split trivial logic into
 | Product orchestration independent of Express and SDK payloads | `apps/backend/src/use-cases` | `use-cases/analyze-cv.ts` |
 | External API/SDK translation or a deterministic fake | `apps/backend/src/providers/<provider>` | `providers/openai/openai-cv-analyzer.ts` |
 | Server-owned synthetic-demo disclosure and universal plan content | `apps/backend/src/demo` | `demo/role-neutral-demo-context.ts` |
-| Signing, cookies, rate limits, or spend gates | `apps/backend/src/security` | `security/interview-grant.ts` |
+| Signing, cookies, rate limits, or spend gates | `apps/backend/src/security` | `security/interview-grant.ts`, `security/stateless-rate-limit.ts`, `security/spend-cap.ts` |
 | A test for one module | beside that module | `session-storage.test.ts` |
 | A reusable synthetic/adversarial input | `tests/fixtures/<kind>` | `cv/prompt-injection.txt` |
 | A runtime sample the browser must fetch | `apps/frontend/public/fixtures` | `screenpilot-sample-cv.pdf` |
@@ -2009,11 +2010,17 @@ TURNSTILE_ALLOWED_HOSTNAMES=
 INTERVIEW_GRANT_SIGNING_SECRET=
 ANONYMOUS_COOKIE_SECRET=
 
-# Bounded request, expiry, and per-instance rate-limit settings
+# Bounded request, expiry, and per-instance admission settings
+HTTP_HEADERS_TIMEOUT_MS=10000
+HTTP_REQUEST_TIMEOUT_MS=30000
 HTTP_JSON_BODY_MAX_BYTES=65536
 PROVIDER_REQUEST_TIMEOUT_MS=30000
 INTERVIEW_GRANT_TTL_SECONDS=900
 ANONYMOUS_COOKIE_TTL_SECONDS=7200
+CAPACITY_GLOBAL_CONCURRENT_REQUESTS=4
+CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS=2
+CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS=1
+CAPACITY_SUMMARY_CONCURRENT_REQUESTS=2
 RATE_LIMIT_WINDOW_SECONDS=60
 RATE_LIMIT_MAX_ENTRIES=10000
 RATE_LIMIT_BOOTSTRAP_REQUESTS=120
@@ -2542,7 +2549,7 @@ Controls:
 - Treat all browser fields as untrusted.
 - GPT-5.4 mini, reasoning `none`, structured output, `store: false`.
 - Validate all returned candidate-turn citations, resolve repeated candidate insight categories by their parsed timestamp instant so valid timezone offsets cannot displace the latest correction, require available candidate-backed current-context/experience/team/question content, require every captured candidate-question and human-follow-up value plus its complete insight evidence-ID set to survive exactly, require distinct summary entries for the current-context, broad-experience, and team/work-style groups, and enforce the covered/not-covered topic partition in both directions. One user action makes at most one model request: exact evidence fields are reconciled locally from the server ledger, and invalid model narrative falls back locally without a second generation. When `team_work_style` is covered and the latest applicable Candidate or CV + Candidate insight is confirmed/corrected, classify every model fact's evidence against the complete grounded Team/work-style evidence set. Disjoint facts remain eligible model narrative; all exact-set variants collapse to exactly one visible canonical `Team and work preference` fact. Any non-exact overlap—including an earlier/latest-only correction subset, a superset, or team evidence merged with unrelated evidence—and any grounded category sharing a Team/work-style turn cause the complete grounded-summary fallback. If the topic is not covered or the latest insight is absent, CV-only, or needs clarification, also return the complete grounded summary: the untyped model fact shape cannot safely distinguish an invented Team/work-style statement that cites another otherwise-valid candidate turn. No confirmed Team/work-style fact is promoted in those states, and no personality, culture-fit, suitability, or employer fact is inferred.
-- Apply the paid-operation kill switch and any injected summary-admission denial before Turnstile/OpenAI. SP-020 provides this injected fail-closed boundary and its zero-provider-call tests; SP-022 owns the bounded TTL route/source limiter, capacity policy, and server wiring, so the current server default does not claim to rate-limit summary requests yet.
+- Apply the paid-operation kill switch, bounded route/source/anonymous-cookie limiter, per-instance in-flight capacity gate, and any injected summary-admission denial before Turnstile/OpenAI. SP-020 provides the injected fail-closed boundary; SP-022 wires the production admission middleware and proves rejected requests make zero challenge/provider calls.
 - Never retrieve a provider conversation or recording.
 
 Returns `ScreeningSummary`, provider-reported input/cached-input/output token counts with coarse estimated cost, and bounded process limitations. Successful responses use `Cache-Control: no-store`.
@@ -3234,11 +3241,12 @@ Present this as a high-quality UI concept for composition and visual direction. 
 - Obtain a fresh action-specific token for each paid request. Keep it in memory only, never put it in `sessionStorage`, and reset the widget after success, expiry, duplicate rejection, or retry.
 - Perform mandatory backend Siteverify validation with the server-only secret, expected production hostname, and expected action before any OpenAI or ElevenLabs call. The client widget alone is never considered protection.
 - Return the public site key through bootstrap; keep the secret in Google Secret Manager/Cloud Run. Use separate production and non-production widgets/test keys.
-- Apply bounded best-effort backend route/source limits using the validated proxy chain and the anonymous safety cookie. Counters are capped, TTL-based, memory-only, and per Cloud Run instance; do not log raw IP addresses or pretend the limits are durable across restarts/scaling.
+- Apply bounded best-effort backend route/source limits using the validated proxy chain and the anonymous safety cookie. Raw source and cookie values are HMAC-fingerprinted with a process-local random secret before entering capped TTL memory. Fixed-window expiry uses a bounded one-node-per-entry min-heap, so ordinary hits never scan the full counter table and expiry/eviction work is incremental. Counters are per Cloud Run instance and reset on restart/scale. Do not log raw IP addresses or pretend the limits are durable identity enforcement.
 - Apply tighter limits to voice-token issuance and coarser limits to CV analysis and summary generation; rate-limit deterministic conversation preparation separately even though it is free.
-- Backend maximum body sizes and request deadlines.
+- Hold bounded per-instance in-flight leases for CV analysis, voice-token issuance, and summary generation until the HTTP response finishes or closes. Default global capacity is `4`, with per-route ceilings `2`, `1`, and `2` respectively; reject excess work before Turnstile/provider invocation.
+- Bound inbound HTTP receipt separately from provider work: complete headers have a 10-second deadline, the complete inbound request has a 30-second receipt deadline, and JSON bodies remain capped at 64 KiB. Node returns `408` and closes an incomplete connection before the Express listener continues. These settings do not masquerade as a whole-handler deadline; each outbound Turnstile/OpenAI/ElevenLabs operation instead has its own abortable 30-second provider timeout, while local handler work operates only on already-bounded inputs.
 - Paid-demo environment kill switch.
-- Cloud Run maximum instances/concurrency plus provider account concurrency and spend alerts/caps.
+- Cloud Run deployment target: backend minimum instances `0`, maximum instances `1`, container concurrency `4`; frontend minimum instances `0`, maximum instances `1`, container concurrency `80`. SP-026 applies and verifies these settings because the services do not exist during SP-022. Provider account controls remain independent: the owner-recorded OpenAI USD 5 hard limit/alerts and ElevenLabs 1-call agent concurrency, 5-call daily limit, disabled overage/burst/queue controls bound provider exposure.
 - Clear capacity/rate errors with no provider fallback.
 - Keep Cloudflare Bot Fight Mode and the Cloudflare HTTP proxy out of scope because Firebase Hosting remains the public routing layer and a domain-wide challenge could interfere with API traffic. Turnstile requires neither.
 
@@ -3687,7 +3695,7 @@ Every authorized ticket implementation or completion commit begins with the exac
 - [x] Issue the shared short-lived `interviewGrant` bound to `cv_assisted` and the validated analysis/plan hashes.
 - [x] Add fake-provider success, timeout, malformed-output, injection, expiry, no-persistence, and Turnstile failure/replay/wrong-action tests.
 
-SP-010 provides an injected fail-closed admission boundary and proves denials occur before Turnstile/OpenAI. The actual bounded TTL rate limiter, capacity/spend policy, and runtime wiring remain owned by SP-022; the SP-010 server default does not claim to enforce them yet.
+SP-010 provides an injected fail-closed admission boundary and proves denials occur before Turnstile/OpenAI. SP-022 now supplies the bounded TTL rate limiter, in-flight capacity policy, and production route wiring; both layers reject before Turnstile/OpenAI and retain zero-provider-call coverage.
 
 #### [SP-010A — Make every candidate-selected role an available synthetic demo vacancy](tickets/SP-010A-make-every-candidate-selected-role-available.md)
 
@@ -4254,7 +4262,7 @@ closure no longer claims full-timeline navigation as current UI.
 - [x] Forbid scores, decisions, sentiment, personality, and unsupported proficiency labels.
 - [x] Validate/repair one malformed output and return limitations.
 - [x] Add success, partial, invalid-evidence, timeout, and fake-provider tests.
-- [x] Apply injected summary-admission denials before Turnstile/OpenAI and record that SP-022, not SP-020, owns the production route/source limiter and server wiring.
+- [x] Apply injected summary-admission denials before Turnstile/OpenAI; SP-022 now supplies and tests the production route/source limiter, in-flight capacity gate, and server wiring.
 
 #### [SP-021 — Build review, retry, and clear-session experience](tickets/SP-021-build-review-retry-and-clear-session.md)
 
@@ -4403,15 +4411,15 @@ manual matrix stay open.
 
 **Checklist:**
 
-- [ ] Audit the shared managed Turnstile client across `cv_analyze`, `voice_token`, and `interview_summary`: interaction-only presentation, responsive/accessible fallback, memory-only single-use token handling, explicit reset, and no challenge on deterministic conversation preparation.
-- [ ] Audit the backend Siteverify boundary across all three paid routes: server-only secret, `success`, expected hostname/action, five-minute/single-use semantics, bounded timeout, redacted logs, and fail-closed provider ordering.
-- [ ] Add bounded best-effort backend route/source and anonymous-cookie limits using a validated proxy chain, capped TTL memory, and no raw-IP logging; document clearly that limits are per Cloud Run instance and reset on restart/scale.
-- [ ] Rate-limit conversation preparation even though it is free, and ensure only voice/AI provider operations consume paid-demo capacity.
-- [ ] Add backend body/time limits, paid-demo switch, and safe `Retry-After` errors.
-- [ ] Configure Cloud Run maximum instances/concurrency plus OpenAI/ElevenLabs concurrency and spend alerts/caps so distributed clients cannot exceed the planned financial ceiling merely by evading an in-memory counter.
-- [ ] Use the Section 13 baseline to reserve $0.80 per standard eight-minute acceptance flow or $1.40 when burst is deliberately enabled; keep `PAID_DEMO_ENABLED=false` unless the user-approved total test budget and provider caps can cover the planned runs.
-- [ ] Document that Turnstile Free costs $0, is independent of registrar/DNS/proxy choice, and is not a unique-person or durable one-interview guarantee; keep Bot Fight Mode, Cloudflare proxying, paid WAF, and persistent counter storage out of scope.
-- [ ] Test successful, missing, invalid, expired, duplicated, wrong-hostname, wrong-action, Siteverify-timeout, route-rate, capacity, provider-cap, and kill-switch paths with fakes; every pre-provider failure asserts zero OpenAI/ElevenLabs calls.
+- [x] Audit the shared managed Turnstile client across `cv_analyze`, `voice_token`, and `interview_summary`: interaction-only presentation, responsive/accessible fallback, memory-only single-use token handling, explicit reset, and no challenge on deterministic conversation preparation.
+- [x] Audit the backend Siteverify boundary across all three paid routes: server-only secret, `success`, expected hostname/action, five-minute/single-use semantics, bounded timeout, redacted logs, and fail-closed provider ordering.
+- [x] Add bounded best-effort backend route/source and anonymous-cookie limits using a validated proxy chain, capped TTL memory, and no raw-IP logging; document clearly that limits are per Cloud Run instance and reset on restart/scale.
+- [x] Rate-limit conversation preparation even though it is free, and ensure only voice/AI provider operations consume paid-demo capacity.
+- [x] Add the backend body limit, explicit Node header/request-receipt deadlines, separately abortable provider deadlines, paid-demo switch, and safe `Retry-After` errors.
+- [x] Record owner-confirmed OpenAI/ElevenLabs account controls and define intended Cloud Run ceilings without performing deployment work. SP-026 alone applies/verifies minimum/maximum instances, service concurrency, billing alerts, and the production-domain Turnstile widget after those resources exist.
+- [x] Use the Section 13 baseline to reserve $0.80 per standard eight-minute acceptance flow or $1.40 when burst is deliberately enabled; keep `PAID_DEMO_ENABLED=false` unless the user-approved live window and owner-confirmed provider controls cover the planned runs.
+- [x] Document that Turnstile Free costs $0, is independent of registrar/DNS/proxy choice, and is not a unique-person or durable one-interview guarantee; keep Bot Fight Mode, Cloudflare proxying, paid WAF, and persistent counter storage out of scope.
+- [x] Test successful, missing, invalid, expired, duplicated, wrong-hostname, wrong-action, Siteverify-timeout, route-rate, capacity, and kill-switch paths with fakes; every pre-provider failure asserts zero OpenAI/ElevenLabs calls. Owner evidence confirms successful local real-widget requests for all three actions; production-host verification belongs to SP-026.
 
 #### [SP-023 — Harden privacy, headers, and logging](tickets/SP-023-harden-privacy-headers-and-logging.md)
 

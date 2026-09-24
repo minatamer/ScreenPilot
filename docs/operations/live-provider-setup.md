@@ -101,10 +101,16 @@ unrelated safety limits.
 | `TURNSTILE_ALLOWED_HOSTNAMES` | `localhost` for this local widget | Hostnames only: no scheme, port, path, or wildcard syntax. |
 | `INTERVIEW_GRANT_SIGNING_SECRET` | First generated secret | At least 32 characters. |
 | `ANONYMOUS_COOKIE_SECRET` | Second, different generated secret | At least 32 characters. |
+| `HTTP_HEADERS_TIMEOUT_MS` | `10000` | Bounds receipt of complete request headers to 10 seconds before Express routing. |
+| `HTTP_REQUEST_TIMEOUT_MS` | `30000` | Bounds receipt of the complete inbound request to 30 seconds; it is not a route-handler/provider timeout. |
 | `HTTP_JSON_BODY_MAX_BYTES` | `65536` | Keeps parsed JSON requests within 64 KiB. |
-| `PROVIDER_REQUEST_TIMEOUT_MS` | `30000` | Bounds a provider operation to 30 seconds. |
+| `PROVIDER_REQUEST_TIMEOUT_MS` | `30000` | Separately bounds and aborts each outbound provider operation to 30 seconds. |
 | `INTERVIEW_GRANT_TTL_SECONDS` | `900` | Makes an interview grant expire after 15 minutes. |
 | `ANONYMOUS_COOKIE_TTL_SECONDS` | `7200` | Makes the content-free safety cookie expire after two hours. |
+| `CAPACITY_GLOBAL_CONCURRENT_REQUESTS` | `4` | Caps all in-flight metered requests in one backend instance. |
+| `CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS` | `2` | Per-instance CV-analysis in-flight ceiling. |
+| `CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS` | `1` | Strict per-instance voice-token in-flight ceiling. |
+| `CAPACITY_SUMMARY_CONCURRENT_REQUESTS` | `2` | Per-instance summary in-flight ceiling. |
 | `RATE_LIMIT_WINDOW_SECONDS` | `60` | Existing per-instance limiter window. |
 | `RATE_LIMIT_MAX_ENTRIES` | `10000` | Bounds in-memory limiter bookkeeping. |
 | `RATE_LIMIT_BOOTSTRAP_REQUESTS` | `120` | Preserves the existing bootstrap request ceiling. |
@@ -1103,6 +1109,12 @@ state, not a payment method, account identifier, key, or billing screenshot:
   Managed mode with only `localhost` authorized and pre-clearance off. No
   Cloudflare zone, Worker, proxy, WAF rule, API token, paid plan, or Spin setup
   was created.
+- [x] On 2026-09-24 the owner confirmed the local widget/account configuration
+  remains complete for SP-022. Owner-controlled successful requests exercised
+  all three expected actions—`cv_analyze`, `voice_token`, and
+  `interview_summary`—on `localhost`. This is owner/runtime evidence, not a
+  claim that the coding agent inspected the dashboard, and it does not replace
+  SP-026's production-domain widget.
 - [x] Provider plan limitations and observed dashboard labels are recorded;
   the remaining usage-summary check does not authorize a Preview or paid call.
 
@@ -1200,8 +1212,11 @@ The first live summary belongs to that consolidated window.
 - [ ] During SP-021B, synthetic summary makes at most one bounded direct OpenAI
   operation per authorized complete flow and is checked for cost and
   `store: false` behavior.
-- [ ] The owner verifies real Turnstile success, action and hostname validation,
-  expiration, and replay rejection.
+- [x] The owner verifies successful real local Turnstile action/hostname
+  handling through `cv_analyze`, `voice_token`, and `interview_summary`.
+  Expiration, duplicate/replay, wrong-hostname, wrong-action, and timeout
+  rejection remain deterministically covered so this checkpoint does not spend
+  provider credits merely to force negative challenge states.
 - [x] The owner verifies one private ElevenLabs token issuance and one WebRTC
   connection.
 - [ ] ElevenLabs audio saving, zero-day retention, version ID, usage, and cost

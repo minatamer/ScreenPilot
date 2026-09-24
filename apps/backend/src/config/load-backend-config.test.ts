@@ -85,6 +85,14 @@ describe("loadBackendConfig", () => {
     expect(config.providers.openAi.store).toBe(false);
     expect(config.providers.elevenLabs.sttModel).toBe("scribe_v2_realtime");
     expect(config.providers.elevenLabs.ttsModel).toBe("eleven_flash_v2_5");
+    expect(config.limits.httpHeadersTimeoutMs).toBe(10_000);
+    expect(config.limits.httpRequestTimeoutMs).toBe(30_000);
+    expect(config.limits.capacity).toEqual({
+      cvAnalyzeConcurrentRequests: 2,
+      globalConcurrentRequests: 4,
+      summaryConcurrentRequests: 2,
+      voiceTokenConcurrentRequests: 1,
+    });
   });
 
   it("keeps fake mode valid with every user-owned field blank", () => {
@@ -299,7 +307,27 @@ describe("loadBackendConfig", () => {
     ["invalid live-interview flag", { LIVE_INTERVIEW_ENABLED: "sometimes" }],
     ["malformed port", { PORT: "three-thousand" }],
     ["out-of-range body limit", { HTTP_JSON_BODY_MAX_BYTES: "1023" }],
+    ["out-of-range headers timeout", { HTTP_HEADERS_TIMEOUT_MS: "999" }],
+    ["out-of-range request timeout", { HTTP_REQUEST_TIMEOUT_MS: "4999" }],
+    [
+      "headers timeout above request timeout",
+      {
+        HTTP_HEADERS_TIMEOUT_MS: "20000",
+        HTTP_REQUEST_TIMEOUT_MS: "10000",
+      },
+    ],
     ["out-of-range rate limit", { RATE_LIMIT_VOICE_TOKEN_REQUESTS: "0" }],
+    [
+      "out-of-range capacity",
+      { CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS: "0" },
+    ],
+    [
+      "route capacity above global capacity",
+      {
+        CAPACITY_GLOBAL_CONCURRENT_REQUESTS: "1",
+        CAPACITY_SUMMARY_CONCURRENT_REQUESTS: "2",
+      },
+    ],
     ["invalid origin URL", { ALLOWED_ORIGINS: "localhost:3000/path" }],
   ])("rejects %s", (_name, override) => {
     expect(() =>

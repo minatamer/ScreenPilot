@@ -2,7 +2,7 @@ import {
   analyzeCvRequestSchema,
   type AnalyzeCvResponse,
 } from "@screenpilot/contracts/api/cv-analysis";
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 
 import type { AnalyzeCv } from "../../use-cases/analyze-cv.js";
 import { requireAllowedOrigin } from "../middleware/allowed-origin.js";
@@ -16,6 +16,7 @@ import {
 export function createCvAnalyzeRoutes(input: {
   allowedOrigins: readonly string[];
   analyzeCv: AnalyzeCv;
+  requestAdmission: RequestHandler;
 }): Router {
   const router = Router();
 
@@ -24,6 +25,7 @@ export function createCvAnalyzeRoutes(input: {
     markRoute("cv_analyze"),
     requireAllowedOrigin(input.allowedOrigins),
     requireAnonymousSession(),
+    input.requestAdmission,
     validateJsonBody(
       analyzeCvRequestSchema,
       async (request, response, validatedBody) => {

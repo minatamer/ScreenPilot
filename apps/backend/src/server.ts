@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { createServer } from "node:http";
 
 import type { Express } from "express";
 import type { Logger } from "pino";
@@ -10,13 +11,24 @@ import { createBackendLogger } from "./http/middleware/request-logging.js";
 import { createProviderAdapters } from "./providers/provider-adapters.js";
 
 const GRACEFUL_SHUTDOWN_TIMEOUT_MS = 10_000;
+const INCOMPLETE_REQUEST_CHECK_INTERVAL_MS = 1_000;
 
 export function startBackendServer(input: {
   app: Express;
+  httpHeadersTimeoutMs: number;
+  httpRequestTimeoutMs: number;
   logger: Logger;
   port: number;
 }) {
-  const server = input.app.listen(input.port, () => {
+  const server = createServer(
+    {
+      connectionsCheckingInterval: INCOMPLETE_REQUEST_CHECK_INTERVAL_MS,
+      headersTimeout: input.httpHeadersTimeoutMs,
+      requestTimeout: input.httpRequestTimeoutMs,
+    },
+    input.app,
+  );
+  server.listen(input.port, () => {
     input.logger.info(
       { event: "server_listening", port: input.port },
       "backend_listening",
@@ -79,7 +91,13 @@ if (isMainModule()) {
     const logger = createBackendLogger(config);
     const providerAdapters = createProviderAdapters(config);
     const app = createApp({ config, logger, providerAdapters });
-    startBackendServer({ app, logger, port: config.port });
+    startBackendServer({
+      app,
+      httpHeadersTimeoutMs: config.limits.httpHeadersTimeoutMs,
+      httpRequestTimeoutMs: config.limits.httpRequestTimeoutMs,
+      logger,
+      port: config.port,
+    });
   } catch (error: unknown) {
     const safeMessage =
       error instanceof Error ? error.message : "Unknown startup failure.";

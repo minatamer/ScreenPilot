@@ -2,7 +2,7 @@ import {
   summarizeInterviewRequestSchema,
   type SummarizeInterviewResponse,
 } from "@screenpilot/contracts/api/interview-summary";
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 
 import type { GenerateInterviewSummary } from "../../use-cases/generate-interview-summary.js";
 import { requireAllowedOrigin } from "../middleware/allowed-origin.js";
@@ -16,6 +16,7 @@ import {
 export function createInterviewSummaryRoutes(input: {
   allowedOrigins: readonly string[];
   generateInterviewSummary: GenerateInterviewSummary;
+  requestAdmission: RequestHandler;
 }): Router {
   const router = Router();
 
@@ -24,6 +25,7 @@ export function createInterviewSummaryRoutes(input: {
     markRoute("interview_summary"),
     requireAllowedOrigin(input.allowedOrigins),
     requireAnonymousSession(),
+    input.requestAdmission,
     validateJsonBody(
       summarizeInterviewRequestSchema,
       async (request, response, validatedBody) => {

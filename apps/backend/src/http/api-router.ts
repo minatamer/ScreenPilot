@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 
 import type { AnonymousSessionCookieOptions } from "../security/anonymous-session-cookie.js";
 import type { AnalyzeCv } from "../use-cases/analyze-cv.js";
@@ -23,6 +23,13 @@ export function createApiRouter(input: {
   isReady: () => boolean;
   issueVoiceToken: CreateVoiceToken;
   prepareConversationFirst: PrepareConversationFirst;
+  requestAdmission: Readonly<{
+    bootstrap: RequestHandler;
+    cvAnalyze: RequestHandler;
+    interviewPrepare: RequestHandler;
+    interviewSummary: RequestHandler;
+    voiceToken: RequestHandler;
+  }>;
 }): Router {
   const router = Router();
 
@@ -33,6 +40,7 @@ export function createApiRouter(input: {
       cookieOptions: input.cookieOptions,
       getDemoBootstrap: input.getDemoBootstrap,
       idGenerator: input.idGenerator,
+      requestAdmission: input.requestAdmission.bootstrap,
     }),
   );
   router.use(
@@ -40,6 +48,7 @@ export function createApiRouter(input: {
     createCvAnalyzeRoutes({
       allowedOrigins: input.allowedOrigins,
       analyzeCv: input.analyzeCv,
+      requestAdmission: input.requestAdmission.cvAnalyze,
     }),
   );
   router.use(
@@ -47,6 +56,7 @@ export function createApiRouter(input: {
     createInterviewPrepareRoutes({
       allowedOrigins: input.allowedOrigins,
       prepareConversationFirst: input.prepareConversationFirst,
+      requestAdmission: input.requestAdmission.interviewPrepare,
     }),
   );
   router.use(
@@ -54,6 +64,7 @@ export function createApiRouter(input: {
     createInterviewSummaryRoutes({
       allowedOrigins: input.allowedOrigins,
       generateInterviewSummary: input.generateInterviewSummary,
+      requestAdmission: input.requestAdmission.interviewSummary,
     }),
   );
   router.use(
@@ -61,6 +72,7 @@ export function createApiRouter(input: {
     createVoiceTokenRoutes({
       allowedOrigins: input.allowedOrigins,
       createVoiceToken: input.issueVoiceToken,
+      requestAdmission: input.requestAdmission.voiceToken,
     }),
   );
 

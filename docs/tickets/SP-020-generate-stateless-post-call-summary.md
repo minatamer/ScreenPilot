@@ -2,7 +2,7 @@
 
 Status: Required  
 Milestone: Milestone 3 — same-session review  
-Last synchronized: 2026-09-23<br>
+Last synchronized: 2026-09-24<br>
 Depends on: SP-009, SP-010, SP-010A, SP-017, SP-019<br>
 Suggested commit: `SP-020: summarize local interview evidence`<br>
 Parent plan: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)  
@@ -45,7 +45,7 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 
 - [x] Implement the shared bounded summary request/output contracts and route.
 - [x] Validate origin/cookie/grant, entry mode, plan hash/type, allowed provenance, turn/insight/topic references, and all size/count limits.
-- [x] Apply the paid kill switch and typed summary-admission decisions before Turnstile/OpenAI; explicitly defer the production route/source limiter and its server wiring to SP-022.
+- [x] Apply the paid kill switch and typed summary-admission decisions before Turnstile/OpenAI; SP-022 now supplies and tests the production route/source limiter, in-flight capacity gate, and server wiring.
 - [x] Verify a fresh Turnstile token with `interview_summary` action/hostname before OpenAI.
 - [x] Build a prompt that treats all browser fields as untrusted evidence and requires citations/limitations.
 - [x] Call only GPT-5.4 mini with reasoning none, structured output, and `store: false`.
@@ -79,7 +79,7 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 
 ## Implementation record — 2026-09-21
 
-- Added the strict no-store summary route, grant/plan/provenance/evidence checks, paid kill switch, typed summary-admission boundary, and fresh `interview_summary` Turnstile verification before any summary provider call. SP-022 still owns the production rate/capacity implementation and server wiring; SP-020 does not claim that limiter exists yet.
+- Added the strict no-store summary route, grant/plan/provenance/evidence checks, paid kill switch, typed summary-admission boundary, and fresh `interview_summary` Turnstile verification before any summary provider call. SP-022 now supplies the production rate/capacity implementation and server wiring around that boundary.
 - Added a GPT-5.4 Mini structured-output adapter that reuses the locked reasoning-none, `store: false` Responses client. It performs at most one repair for malformed or semantically unsupported output and aggregates input, cached-input, and output usage across that repair.
 - Kept the uncited overview and limitations server-bounded to fixed process language. All candidate-specific output sections require final candidate-turn citations; topic coverage must partition the universal plan and match local topic evidence.
 - Semantic completeness validation now requires every available candidate-backed current-context, experience/responsibility/strongest-area, team/work-style, and candidate-question insight to appear in its appropriate output section. The three required fact groups must resolve to distinct summary entries, so one combined fact cannot satisfy all three. Topic validation is bidirectional: every claimed covered topic must match covered local progress, and every locally covered topic must remain in `topicsCovered` with evidence.
@@ -87,12 +87,15 @@ Use one protected stateless GPT request to organize bounded local transcript/ins
 - Final fake-only verification passed the focused contracts suite (3 files / 18 tests), focused backend summary suite (4 files / 41 tests), complete contracts suite (6 files / 47 tests), and complete backend suite (23 files / 256 tests). Both package lint commands, both package builds, Prettier checking for the affected code, and `git diff --check` also passed. The local runtime reported Node 22.23.2 while the repository requires Node 24, but every invoked check completed successfully.
 - No credential was read, no provider network request was made, and no standalone paid summary was run. The first controlled real summary remains assigned to SP-021B after SP-021A.
 - Validation follow-up on 2026-09-22 replaced lexical ISO timestamp comparison with one shared chronological candidate-insight selector. Focused regressions use valid mixed-offset timestamps to prove both semantic grounding and fake summary output preserve the genuinely latest role correction. The follow-up passed the focused backend set (5 files / 48 tests), focused contracts set (3 files / 18 tests), backend typecheck, affected-file lint and Prettier checks, and `git diff --check`; no live verification claim changed.
-- Owner-directed rehearsal follow-up on 2026-09-23 makes **View summary** the
-  sole transition that may start Turnstile/OpenAI summary work. Merely reaching
-  `interview_complete` performs no summary operation; retry remains an explicit
-  fresh-token action. Local `summary_rehearsal` keeps conversation-first voice
-  deterministic while exercising the same live Turnstile/OpenAI summary route,
-  and it never falls back to the fake summarizer after a live failure.
+- Owner-directed rehearsal follow-up was subsequently refined so a freshly
+  bootstrap-validated completion starts at most one background summary
+  lifecycle in deterministic fake, standard live, or local
+  `summary_rehearsal`. **View summary** never starts provider work: it stays
+  disabled with a spinner while preparation is pending, then exposes the ready
+  review or genuine failure/retry state. Local rehearsal keeps CV analysis and
+  voice deterministic while exercising real action-specific Turnstile and the
+  live OpenAI summary route; it never falls back to the fake summarizer after a
+  live failure.
 
 ## Commit boundary
 

@@ -23,9 +23,18 @@ describe("backend server lifecycle", () => {
     });
     const interruptListeners = process.listenerCount("SIGINT");
     const terminationListeners = process.listenerCount("SIGTERM");
-    const server = startBackendServer({ app, logger, port: 0 });
+    const server = startBackendServer({
+      app,
+      httpHeadersTimeoutMs: config.limits.httpHeadersTimeoutMs,
+      httpRequestTimeoutMs: config.limits.httpRequestTimeoutMs,
+      logger,
+      port: 0,
+    });
     await once(server, "listening");
     const closed = once(server, "close");
+
+    expect(server.headersTimeout).toBe(10_000);
+    expect(server.requestTimeout).toBe(30_000);
 
     process.emit("SIGTERM");
     await closed;

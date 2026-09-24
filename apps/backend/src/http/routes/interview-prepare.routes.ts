@@ -2,7 +2,7 @@ import {
   prepareInterviewRequestSchema,
   type PrepareInterviewResponse,
 } from "@screenpilot/contracts/api/interview-preparation";
-import { Router } from "express";
+import { Router, type RequestHandler } from "express";
 
 import type { PrepareConversationFirst } from "../../use-cases/prepare-conversation-first.js";
 import { requireAllowedOrigin } from "../middleware/allowed-origin.js";
@@ -16,6 +16,7 @@ import {
 export function createInterviewPrepareRoutes(input: {
   allowedOrigins: readonly string[];
   prepareConversationFirst: PrepareConversationFirst;
+  requestAdmission: RequestHandler;
 }): Router {
   const router = Router();
 
@@ -24,6 +25,7 @@ export function createInterviewPrepareRoutes(input: {
     markRoute("interview_prepare"),
     requireAllowedOrigin(input.allowedOrigins),
     requireAnonymousSession(),
+    input.requestAdmission,
     validateJsonBody(
       prepareInterviewRequestSchema,
       (_request, response, validatedBody) => {

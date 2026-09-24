@@ -136,11 +136,33 @@ export const backendEnvironmentSchema = z
       7_200,
     ),
     APP_ENV: z.enum(APP_ENVIRONMENTS).default("local"),
+    CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS: integerEnvironmentValue(
+      1,
+      100,
+    ).default(2),
+    CAPACITY_GLOBAL_CONCURRENT_REQUESTS: integerEnvironmentValue(
+      1,
+      100,
+    ).default(4),
+    CAPACITY_SUMMARY_CONCURRENT_REQUESTS: integerEnvironmentValue(
+      1,
+      100,
+    ).default(2),
+    CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS: integerEnvironmentValue(
+      1,
+      100,
+    ).default(1),
     ELEVENLABS_AGENT_ID: blankableProviderIdentifier.default(""),
     ELEVENLABS_API_KEY: blankableSecret.default(""),
     ELEVENLABS_VOICE_ID: blankableProviderIdentifier.default(""),
+    HTTP_HEADERS_TIMEOUT_MS: integerEnvironmentValue(1_000, 60_000).default(
+      10_000,
+    ),
     HTTP_JSON_BODY_MAX_BYTES: integerEnvironmentValue(1_024, 1_048_576).default(
       65_536,
+    ),
+    HTTP_REQUEST_TIMEOUT_MS: integerEnvironmentValue(5_000, 120_000).default(
+      30_000,
     ),
     INTERVIEW_GRANT_SIGNING_SECRET: blankableSecret.default(""),
     INTERVIEW_GRANT_TTL_SECONDS: integerEnvironmentValue(60, 3_600).default(
@@ -193,6 +215,34 @@ export const backendEnvironmentSchema = z
         code: "custom",
         message: "Paid demo operations cannot be enabled in fake mode.",
         path: ["PAID_DEMO_ENABLED"],
+      });
+    }
+
+    for (const field of [
+      "CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS",
+      "CAPACITY_SUMMARY_CONCURRENT_REQUESTS",
+      "CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS",
+    ] as const) {
+      if (
+        environment[field] > environment.CAPACITY_GLOBAL_CONCURRENT_REQUESTS
+      ) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Per-route capacity cannot exceed the global concurrent-request capacity.",
+          path: [field],
+        });
+      }
+    }
+
+    if (
+      environment.HTTP_HEADERS_TIMEOUT_MS > environment.HTTP_REQUEST_TIMEOUT_MS
+    ) {
+      context.addIssue({
+        code: "custom",
+        message:
+          "The HTTP headers timeout cannot exceed the whole-request receipt timeout.",
+        path: ["HTTP_HEADERS_TIMEOUT_MS"],
       });
     }
 
@@ -356,7 +406,15 @@ export const backendConfigSchema = z.strictObject({
   effectiveMode: z.enum(EFFECTIVE_RUNTIME_MODES),
   limits: z.strictObject({
     anonymousCookieTtlSeconds: z.number().int().min(300).max(86_400),
+    capacity: z.strictObject({
+      cvAnalyzeConcurrentRequests: z.number().int().min(1).max(100),
+      globalConcurrentRequests: z.number().int().min(1).max(100),
+      summaryConcurrentRequests: z.number().int().min(1).max(100),
+      voiceTokenConcurrentRequests: z.number().int().min(1).max(100),
+    }),
+    httpHeadersTimeoutMs: z.number().int().min(1_000).max(60_000),
     httpJsonBodyBytes: z.number().int().min(1_024).max(1_048_576),
+    httpRequestTimeoutMs: z.number().int().min(5_000).max(120_000),
     interviewGrantTtlSeconds: z.number().int().min(60).max(3_600),
     providerRequestTimeoutMs: z.number().int().min(1_000).max(120_000),
     rateLimit: z.strictObject({
@@ -425,7 +483,19 @@ export const createBackendConfigCandidate = (
     effectiveMode,
     limits: {
       anonymousCookieTtlSeconds: environment.ANONYMOUS_COOKIE_TTL_SECONDS,
+      capacity: {
+        cvAnalyzeConcurrentRequests:
+          environment.CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS,
+        globalConcurrentRequests:
+          environment.CAPACITY_GLOBAL_CONCURRENT_REQUESTS,
+        summaryConcurrentRequests:
+          environment.CAPACITY_SUMMARY_CONCURRENT_REQUESTS,
+        voiceTokenConcurrentRequests:
+          environment.CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS,
+      },
+      httpHeadersTimeoutMs: environment.HTTP_HEADERS_TIMEOUT_MS,
       httpJsonBodyBytes: environment.HTTP_JSON_BODY_MAX_BYTES,
+      httpRequestTimeoutMs: environment.HTTP_REQUEST_TIMEOUT_MS,
       interviewGrantTtlSeconds: environment.INTERVIEW_GRANT_TTL_SECONDS,
       providerRequestTimeoutMs: environment.PROVIDER_REQUEST_TIMEOUT_MS,
       rateLimit: {

@@ -11,6 +11,7 @@ import {
 import { createApiRouter } from "./http/api-router.js";
 import { notFoundHandler, terminalErrorHandler } from "./http/map-api-error.js";
 import { createAllowedOriginMiddleware } from "./http/middleware/allowed-origin.js";
+import { createRequestAdmissionMiddleware } from "./http/middleware/request-admission.js";
 import { createRequestIdMiddleware } from "./http/middleware/request-id.js";
 import {
   createBackendLogger,
@@ -20,6 +21,8 @@ import { createSecurityHeadersMiddleware } from "./http/middleware/security-head
 import type { ProviderAdapters } from "./providers/provider-adapters.js";
 import { createAnonymousSessionCookieOptions } from "./security/anonymous-session-cookie.js";
 import { createInterviewGrantService } from "./security/interview-grant.js";
+import { createSpendCapacityGate } from "./security/spend-cap.js";
+import { createStatelessRateLimiter } from "./security/stateless-rate-limit.js";
 import { createGetDemoBootstrap } from "./use-cases/get-demo-bootstrap.js";
 import {
   createAnalyzeCv,
@@ -94,6 +97,7 @@ function providerAdaptersAreReady(adapters: ProviderAdapters): boolean {
 export function createApp(options: CreateAppOptions): Express {
   const parsedConfig = backendConfigSchema.parse(options.config);
   const clock = options.clock ?? (() => new Date());
+  const clockMilliseconds = options.clockMilliseconds ?? Date.now;
   const idGenerator = options.idGenerator ?? randomUUID;
   const logger = options.logger ?? createBackendLogger(parsedConfig);
   const securitySecrets = resolveSecuritySecrets(
@@ -113,9 +117,7 @@ export function createApp(options: CreateAppOptions): Express {
   const analyzeCv = createAnalyzeCv({
     admission: options.cvAnalysisAdmission ?? (() => "allowed"),
     analyzer: options.providerAdapters.cvAnalyzer,
-    enabled:
-      parsedConfig.effectiveMode === "deterministic_fake" ||
-      parsedConfig.effectiveMode === "standard_live",
+    enabled: parsedConfig.effectiveMode !== "paid_disabled",
     grantService,
     grantTtlSeconds: parsedConfig.limits.interviewGrantTtlSeconds,
     idGenerator,
@@ -135,6 +137,74 @@ export function createApp(options: CreateAppOptions): Express {
     summarizer: options.providerAdapters.interviewSummarizer,
     verifier: options.providerAdapters.challengeVerifier,
   });
+  const rateLimiter = createStatelessRateLimiter({
+    clockMilliseconds,
+    maxEntries: parsedConfig.limits.rateLimit.maxEntries,
+    windowSeconds: parsedConfig.limits.rateLimit.windowSeconds,
+  });
+  const capacityGate = createSpendCapacityGate({
+    globalMaximum: parsedConfig.limits.capacity.globalConcurrentRequests,
+    routeMaximums: {
+      cv_analyze: parsedConfig.limits.capacity.cvAnalyzeConcurrentRequests,
+      interview_summary: parsedConfig.limits.capacity.summaryConcurrentRequests,
+      voice_token: parsedConfig.limits.capacity.voiceTokenConcurrentRequests,
+    },
+  });
+  const requestAdmission = {
+    bootstrap: createRequestAdmissionMiddleware({
+      capacityGate,
+      policy: {
+        label: "Demo startup",
+        rateLimit: parsedConfig.limits.rateLimit.bootstrapRequests,
+        route: "demo_bootstrap",
+        session: "optional",
+      },
+      rateLimiter,
+    }),
+    cvAnalyze: createRequestAdmissionMiddleware({
+      capacityGate,
+      policy: {
+        capacityRoute: "cv_analyze",
+        label: "CV analysis",
+        rateLimit: parsedConfig.limits.rateLimit.cvAnalyzeRequests,
+        route: "cv_analyze",
+        session: "required",
+      },
+      rateLimiter,
+    }),
+    interviewPrepare: createRequestAdmissionMiddleware({
+      capacityGate,
+      policy: {
+        label: "Interview preparation",
+        rateLimit: parsedConfig.limits.rateLimit.prepareRequests,
+        route: "interview_prepare",
+        session: "required",
+      },
+      rateLimiter,
+    }),
+    interviewSummary: createRequestAdmissionMiddleware({
+      capacityGate,
+      policy: {
+        capacityRoute: "interview_summary",
+        label: "Interview summary",
+        rateLimit: parsedConfig.limits.rateLimit.summaryRequests,
+        route: "interview_summary",
+        session: "required",
+      },
+      rateLimiter,
+    }),
+    voiceToken: createRequestAdmissionMiddleware({
+      capacityGate,
+      policy: {
+        capacityRoute: "voice_token",
+        label: "Voice interview start",
+        rateLimit: parsedConfig.limits.rateLimit.voiceTokenRequests,
+        route: "voice_token",
+        session: "required",
+      },
+      rateLimiter,
+    }),
+  } as const;
   const app = express();
 
   app.disable("x-powered-by");
@@ -146,7 +216,7 @@ export function createApp(options: CreateAppOptions): Express {
   app.use(createRequestIdMiddleware(idGenerator));
   app.use(
     ...createRequestLoggingMiddleware({
-      clockMilliseconds: options.clockMilliseconds ?? Date.now,
+      clockMilliseconds,
       logger,
     }),
   );
@@ -176,6 +246,7 @@ export function createApp(options: CreateAppOptions): Express {
         backendConfigSchema.safeParse(parsedConfig).success &&
         providerAdaptersAreReady(options.providerAdapters),
       prepareConversationFirst,
+      requestAdmission,
     }),
   );
   app.use(notFoundHandler);
