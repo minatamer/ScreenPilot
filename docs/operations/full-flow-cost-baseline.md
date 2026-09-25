@@ -65,8 +65,12 @@ a third bundled-sample flow merely to repeat the CV-assisted branch.
 Before either flow, confirm the exact SP-025A-audited Git revision, canonical
 production hostname, production Turnstile widget/actions, current ElevenLabs
 revision/tools, provider caps, burst-off state, and OpenAI input/output sharing
-**Disabled**. After both flows, restore the paid-demo kill switch and other
-documented safety controls before release approval.
+**Disabled**. After both flows, keep every documented provider and infrastructure
+safety control in place. Leave `PAID_DEMO_ENABLED=true` so the public portfolio
+site remains a working demo only if both flows pass and the dashboard
+usage/cost, retention, privacy, and cleanup review has no unresolved issue. If
+any condition fails or remains unverified, set it back to `false` and verify
+both entry paths are disabled before release approval.
 
 ### Production flow record — CV-assisted
 
@@ -129,4 +133,6 @@ documented safety controls before release approval.
   20%; do not extrapolate a portfolio unit-cost claim from two observations.
 - SP-026 is not complete until both production records above are filled, both
   flows pass, dashboard usage/cost and retention are reviewed, sharing is off,
-  and paid/live safety controls are restored.
+  every provider/infrastructure safety control is confirmed, and the final
+  `PAID_DEMO_ENABLED` state plus its pass/fail rationale is recorded. The switch
+  may remain enabled only for the fully accepted working demo.

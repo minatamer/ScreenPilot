@@ -58,9 +58,11 @@ buttons before navigation or `POST /v1/interview/prepare`.
 - Browser code continues to call only relative `/v1` paths. The frontend server
   owns the production proxy to `BACKEND_ORIGIN`. ElevenLabs WebRTC remains a
   direct browser/provider connection.
-- The first public release uses the stable frontend `run.app` HTTPS URL. A
-  purchased custom domain is deliberately deferred until the deployed demo has
-  passed. It is not required to close SP-026.
+- The first public release used the stable frontend `run.app` HTTPS URL. After
+  that deployment passed its unpaid checkpoint, the owner purchased
+  `tryscreenpilot.com` and accepted direct Cloud Run domain mapping's Preview
+  limitations for this low-traffic portfolio demo. The original `run.app`
+  origin remains an operational fallback.
 - A later custom-domain step may map only the frontend service through Cloud Run
   domain mapping when the selected region supports it. Google labels direct
   Cloud Run domain mapping Preview/limited availability and does not recommend
@@ -126,7 +128,10 @@ SP-026 proceeds in this order:
    code. At this point the application is deployed.
 6. **Test on the deployed website.** Run unpaid routing/security checks first,
    then the exact two owner-controlled paid flows. Fix and redeploy only concrete
-   defects, then close release acceptance and restore the paid-demo switch.
+   defects, then close release acceptance and record the final paid-demo state.
+   Leave `PAID_DEMO_ENABLED=true` so the portfolio site remains a working demo
+   only when both flows and the post-run safety/cost review pass; otherwise set
+   it back to `false` and verify both entry paths are disabled.
 
 Do not interleave a GitHub deployment workflow, domain purchase, custom-domain
 routing, or load balancer with steps 1–6. Those decisions come after the
@@ -137,8 +142,8 @@ routing, or load balancer with steps 1–6. Those decisions come after the
 | Item | Status for this demo | Revisit only when |
 | --- | --- | --- |
 | GitHub deployment CI | **Deferred; unnecessary now.** Keep GitHub Actions quality-only and deploy from the owner's laptop. | Manual releases become frequent, error-prone, or are performed by more than one person. |
-| Purchased domain | **Optional later.** The frontend `run.app` URL is already a deployed HTTPS website. | The deployed application has passed and the owner wants a portfolio-friendly hostname. |
-| Direct Cloud Run custom-domain mapping | **Optional later.** Map only the frontend and retain its `/v1` proxy. | The owner accepts Google's Preview/latency limitations for this low-traffic portfolio demo. |
+| Purchased domain | **Completed post-checkpoint.** The owner purchased `tryscreenpilot.com` through Cloudflare Registrar at a displayed USD 10.46 initial/current annual renewal price before tax, within the USD 15 guardrail. | Renewal pricing changes, the portfolio name changes, or the domain is no longer useful. |
+| Direct Cloud Run custom-domain mapping | **In progress post-checkpoint.** Apex and `www` map only to the frontend with Cloudflare kept DNS-only; Google-managed certificates are pending. | Certificate/custom-origin smokes fail, or production-grade domain routing becomes a real requirement. |
 | Global external Application Load Balancer | **Unnecessary for the expected 1–3 visitors per week.** | Production-grade domain routing, advanced TLS policy, Cloud CDN/Armor, or path routing outside the frontend becomes a real requirement. |
 | Additional hosting layer or CDN/proxy | **Unnecessary.** The frontend Cloud Run service is the public origin. | Measured traffic, latency, or caching requirements justify it. |
 | Infrastructure as code | **Deferred.** Manual `gcloud` plus the runbook is sufficient. | The infrastructure grows, must be recreated regularly, or has multiple operators/environments. |
@@ -191,8 +196,9 @@ misrepresent the CLI-created USD 10 alert budget as a hard cap.
   not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, a
   personal GitHub token, or a registrar credential.
 - Create the production Turnstile widget manually after the frontend `run.app`
-  hostname is known. Restrict it to that hostname initially; add a purchased
-  custom hostname later only if the owner completes the optional domain step.
+  hostname is known. Restrict it to that hostname initially. The owner later
+  completed the optional domain step and added both `tryscreenpilot.com` and
+  `www.tryscreenpilot.com` while retaining the `run.app` hostname for rollback.
 - Add `.env*`, nested `.env*`, downloaded cloud credentials, and private
   deployment-value files to `.dockerignore`; inspect both image histories and
   verify no secret or candidate content entered a build layer.
@@ -260,7 +266,7 @@ misrepresent the CLI-created USD 10 alert budget as a hard cap.
   verify the active account/project/billing state, and stop on any mismatch.
 - [x] Enable only the required APIs, create/select the Artifact Registry
   repository, and configure the regional Docker credential helper.
-- [ ] Configure and verify the USD 5 monthly Cloud Run spend cap when available,
+- [x] Configure and verify the USD 5 monthly Cloud Run spend cap when available,
   the USD 10 whole-project alert budget with the required thresholds, and all
   fallback controls before the first image push or service deployment.
 - [x] Create a least-privilege backend runtime service account with access only
@@ -298,12 +304,24 @@ misrepresent the CLI-created USD 10 alert budget as a hard cap.
 
 Post-checkpoint defect correction required before paid testing:
 
-- [ ] Commit and re-audit the entry-mode kill-switch correction, then build,
+- [x] Commit and re-audit the entry-mode kill-switch correction, then build,
   push, and deploy new exact-SHA frontend and backend images without changing
   the secrets, provider identifiers, or two-service architecture.
-- [ ] Repeat the unpaid frontend smokes and verify a production
+- [x] Repeat the unpaid frontend smokes and verify a production
   `paid_disabled` bootstrap renders both landing and `/demo` choices disabled,
   issues no conversation-preparation request, and exposes no fake flow.
+
+Post-checkpoint custom-domain gate:
+
+- [x] Purchase and verify `tryscreenpilot.com` within the annual renewal-price
+  guardrail; map the apex and `www` hostnames only to the frontend Cloud Run
+  service, retain the managed `run.app` fallback, and keep Cloudflare DNS-only.
+- [x] Add both custom origins/hostnames to the backend and existing Turnstile
+  widget without changing keys, secrets, provider identifiers, service count,
+  image content, or the paid-disabled state.
+- [ ] After Google-managed certificate issuance, run the complete unpaid
+  custom-origin routing, cookie, header, proxy, diagnostics, and disabled-state
+  smoke for both entry paths before enabling any paid operation.
 
 - [ ] Manually run exactly two controlled production flows after every unpaid
   smoke passes: one owner-selected synthetic/licensed materially different
@@ -316,8 +334,10 @@ Post-checkpoint defect correction required before paid testing:
 - [ ] Review provider dashboards after the bounded pair; append connected
   duration, direct OpenAI usage, ElevenLabs minute/live-LLM cost, allowances,
   retention/audio state, and infrastructure overage to
-  `docs/operations/full-flow-cost-baseline.md`, then restore the paid-demo kill
-  switch and provider safety controls.
+  `docs/operations/full-flow-cost-baseline.md`. Keep every provider and
+  infrastructure safety control in place. Leave the paid-demo switch enabled
+  for the working public demo only if both flows and this review pass;
+  otherwise restore it to `false` and re-verify the disabled public state.
 - [ ] Confirm no database, object storage, queue, worker, hosting layer, or
   candidate artifact deployment exists.
 - [ ] Document manual Cloud Run revision rollback and prove final revisions and
@@ -331,7 +351,7 @@ Post-checkpoint defect correction required before paid testing:
 
 ### Technical deployment checkpoint
 
-- [ ] The deployed source exactly matches the candidate closed by SP-025A; any
+- [x] The deployed source exactly matches the candidate closed by SP-025A; any
   material post-audit change was re-audited before deployment.
 - [x] The owner can reproduce the deployment from the documented local checkout
   without GitHub deployment automation or a long-lived cloud key.
@@ -345,7 +365,7 @@ Post-checkpoint defect correction required before paid testing:
 - [x] No backend `run.app` URL appears in visitor UI, metadata, copied summaries,
   or portfolio links.
 - [x] Local timing diagnostics remain unavailable on all deployed hostnames.
-- [ ] With the production kill switch off, both landing and `/demo` entry
+- [x] With the production kill switch off, both landing and `/demo` entry
   choices are visibly disabled and neither path starts preparation, Turnstile,
   microphone, provider SDK, or WebRTC work.
 - [x] Secrets are absent from images, build arguments, local deployment logs,
@@ -363,8 +383,10 @@ Post-checkpoint defect correction required before paid testing:
   flow pass on the deployed audited SHA unless a named defect required a narrow
   documented rerun.
 - [ ] Production Turnstile, sharing-off, provider revision/tools and caps,
-  automatic ending, summary/review, cleanup, dashboard usage/cost, and restored
-  kill switches are evidenced before public release.
+  automatic ending, summary/review, cleanup, and dashboard usage/cost are
+  evidenced before public release. Record the final paid-demo state: enabled
+  when all release checks pass so the portfolio demo works, or disabled when
+  any check fails or remains unresolved.
 - [ ] The preliminary cost baseline is finalized with both production records,
   measured-versus-estimated variance, allowances, and infrastructure overage
   without candidate, account, or secret content.
@@ -388,7 +410,8 @@ Post-checkpoint defect correction required before paid testing:
 - [ ] Audit deployed logs, Artifact Registry, Secret Manager bindings, and cloud
   resources for forbidden persistence or secret exposure.
 - [ ] Review OpenAI, ElevenLabs, and Cloud Billing after the controlled pair;
-  finalize the cost baseline and restore paid/live kill switches.
+  finalize the cost baseline and apply the documented conditional final state
+  for `PAID_DEMO_ENABLED` without relaxing any other safety control.
 
 ## Commit boundary
 
@@ -567,11 +590,112 @@ or the active workflow already authorizes it.
   Node 24.19.0/pnpm 11.24.0 also passed all 6 contracts files / 50 tests, the
   backend and frontend suites above, every package lint/typecheck, and all three
   production builds without a local environment file in the snapshot.
-- Revision `screenpilot-frontend-sp026-606638735bf2` remains safely
-  paid-disabled but is superseded as the final release candidate. The corrected
-  frontend and backend must be committed, affected SP-025A checks re-run, built
-  under their new exact SHA, redeployed, and re-smoked before Phase 5 paid flows
-  begin.
+- Revision `screenpilot-frontend-sp026-606638735bf2` remained safely
+  paid-disabled while the correction was audited. It is now the retained
+  rollback target for the corrected production deployment recorded below.
+
+## Post-correction production deployment evidence — 2026-09-25
+
+- The owner committed the reviewed kill-switch correction as exact Git SHA
+  `67f747fd86b5d5289d00c186ec0b46796692c03b`; the worktree was clean before
+  the image builds. The affected SP-025A gate remained green: contracts passed
+  6 files / 50 tests, backend passed 26 files / 338 tests, frontend passed 41
+  files / 300 tests, and every package lint, typecheck, and production build
+  passed in the isolated Git-tracked snapshot described above.
+- Clean local builds produced only the two full-SHA release tags. Artifact
+  Registry recorded frontend OCI-index digest
+  `sha256:f4aee3b03074fec07b91b83bf86e2ab2d2248b1e96193e77cf0d82346d1213ec`
+  and backend OCI-index digest
+  `sha256:548725001c5c4222df68a1a41f57363ad385d572e6ba3108656233bafd96e277`.
+  Both images run as `node`; filesystem/history inspection found no environment
+  files, provider credentials, signing/cookie secrets, or service-account
+  material.
+- Backend revision `screenpilot-backend-sp026-67f747fd86b5` and frontend
+  revision `screenpilot-frontend-sp026-67f747fd86b5` are ready and each serves
+  100% of its service traffic. Cloud Run resolved their Linux/amd64 children to
+  backend digest
+  `sha256:20550edadd68fc7f1ff1d05471e4323a08f3336d5719a23b7e6a0b778c485446`
+  and frontend digest
+  `sha256:84f339aa9905220a45477c4e7dc7a7ba6beb4690008cad7c68d0660a00f77c0d`.
+  Both revisions carry the full Git-SHA and `sp-026` labels. Their dedicated
+  service accounts, request-based CPU, existing probes, runtime configuration,
+  and secret-reference boundary were preserved.
+- The backend remains `APP_ENV=production`, `PROVIDER_MODE=live`,
+  `PAID_DEMO_ENABLED=false`, and `LIVE_INTERVIEW_ENABLED=true`. Its five
+  backend-only secret bindings remain present without exposing payloads. Both
+  services now explicitly have minimum zero and maximum one instance; the
+  correction also removed observed frontend maximum-instance drift back to the
+  documented cost ceiling. Backend concurrency is four and frontend
+  concurrency is 80.
+- Direct backend `/health/live` and `/health/ready` returned `200`. Bootstrap
+  returned live provider configuration with effective mode `paid_disabled`,
+  paid operations false, and a blank public Turnstile key. A signed first-party
+  conversation-first preparation attempt returned
+  `503/CAPACITY_REACHED`, proving the backend gate rejects a stale or direct
+  client before provider work.
+- Through the public frontend origin, `/`, `/demo`,
+  `?diagnostics=timings`, and `/v1/demo/bootstrap` returned `200`; the proxied
+  conversation-first preparation attempt returned the same
+  `503/CAPACITY_REACHED`. The first-party cookie remained `Secure`, `HttpOnly`,
+  and `SameSite=Lax`; CSP, HSTS, framing protection, and no-store behavior were
+  present. Rendered output contained no backend hostname, Turnstile script, or
+  production diagnostics controls.
+- A browser-level deployed check waited for bootstrap completion on both `/`
+  and `/demo`. Each page visibly rendered two **Paused for this safety check**
+  labels plus disabled **CV analysis unavailable** and
+  **Voice interview unavailable** buttons, with no loading panel left behind.
+  The focused frontend regressions independently assert bootstrap is the only
+  request and neither selection handler can start preparation in this mode;
+  deterministic fake behavior remains local/test-only.
+- The previous `606638735bf2` frontend and backend revisions remain available
+  as identified rollback targets. No traffic rollback was exercised and no
+  paid provider or production Turnstile action was invoked in this unpaid
+  checkpoint. Those items remain explicit Phase 5 release-acceptance gates.
+
+## Custom-domain checkpoint and Sunday release plan — 2026-09-25
+
+- After the `run.app` deployment passed, the owner purchased
+  `tryscreenpilot.com` through Cloudflare Registrar for a displayed USD 10.46
+  initial/current annual renewal price before tax with auto-renew enabled. This
+  is within the documented USD 15/year guardrail; renewal is annual, not
+  monthly, and registry pricing can change.
+- Google Search Console verified the base domain through a retained DNS TXT
+  record. Direct Cloud Run mappings now connect `tryscreenpilot.com` and
+  `www.tryscreenpilot.com` only to `screenpilot-frontend`; no backend hostname,
+  third service, Firebase layer, external load balancer, or Cloudflare HTTP
+  proxy was introduced.
+- Cloudflare publishes the complete Google-provided apex A/AAAA set and the
+  `www` CNAME as DNS-only records. Public resolution returned every expected
+  record, and both Cloud Run mappings reported `DomainRoutable=True`. At the
+  final 2026-09-25 check, both Google-managed certificates remained explicitly
+  `CertificatePending`; HTTPS custom-origin acceptance therefore remains
+  unchecked rather than being treated as a deployment failure.
+- Backend configuration revision
+  `screenpilot-backend-domain-67f747fd86b5` serves 100% of backend traffic from
+  the already-audited application image. It preserves the existing `run.app`
+  origin/hostname and adds the apex plus `www` to `ALLOWED_ORIGINS` and
+  `TURNSTILE_ALLOWED_HOSTNAMES`. The owner added the same two hostnames to the
+  existing Turnstile widget without changing its keys.
+- The domain-only backend revision retained maximum one instance, all five
+  backend-only secret bindings, and `PAID_DEMO_ENABLED=false`; direct liveness
+  and readiness checks returned `200`. No paid OpenAI, ElevenLabs, or Turnstile
+  action was invoked during domain setup.
+- The owner deferred the next release session to Sunday, 2026-09-27. That
+  session must first verify both certificates and run unpaid custom-origin
+  page, `/v1` proxy, cookie, security-header, diagnostics-exclusion, backend-
+  origin non-disclosure, and visibly disabled two-entry-path checks. Only after
+  every unpaid check passes may the production paid-demo switch be enabled
+  for the controlled release tests.
+- The paid session remains exactly two controlled flows: one materially
+  different wholly synthetic/licensed text-PDF CV-assisted flow and one
+  conversation-first flow. After both, inspect Turnstile, OpenAI, ElevenLabs,
+  and Google Cloud usage/cost/retention evidence, document any named defect or
+  rerun, and record the final switch decision. If both flows pass and the
+  safety/cost review has no unresolved issue, leave `PAID_DEMO_ENABLED=true` so
+  `tryscreenpilot.com` remains a working demo. If either flow or review fails,
+  restore it to `false` and re-verify both disabled entry paths. All other
+  safety controls remain enforced in either state. No real candidate data may
+  be used.
 
 ## Precision references
 

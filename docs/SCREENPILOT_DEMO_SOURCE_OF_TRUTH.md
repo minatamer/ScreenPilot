@@ -154,9 +154,10 @@ Do not add infrastructure merely because a production recruiting product would n
 | Live insight persistence | Browser client tools only | Cards update locally; no webhook tool or server write occurs. |
 | Post-call review | Same browser tab/session | No shareable review URL, return-later history, or cross-device access. |
 | Abuse control | Cloudflare Turnstile Free on every provider-backed paid endpoint + best-effort stateless backend rate limits + provider/Cloud Run caps | Turnstile is a separate $0 service and works without buying the domain from Cloudflare or proxying traffic through Cloudflare. No application database, paid WAF, or durable identity ledger is added. |
+| Public paid-demo state | After custom-domain unpaid checks and exactly two controlled production flows, leave `PAID_DEMO_ENABLED=true` only if both flows and the usage/cost, retention, privacy, and cleanup review pass | A successful release remains a working portfolio demo. Any failed or unresolved release check requires `PAID_DEMO_ENABLED=false` and verification that both entry paths are disabled; all other safety controls remain enforced in either state. |
 | Initial public URL | Frontend Cloud Run's stable managed-HTTPS `run.app` URL | Deploy and validate before buying a domain. The backend URL stays operational rather than visitor-facing. |
 | Public routing | The frontend Next.js server proxies relative `/v1` requests to the backend Cloud Run origin | Two Cloud Run services are sufficient: no separate hosting layer, paid load balancer, second browser API origin, or browser-visible backend URL. |
-| Optional custom domain | After the deployment passes, manually map a purchased domain to the frontend Cloud Run service only | Maximum planned renewal is $15/year before tax. Direct Cloud Run domain mapping is Preview/limited availability and an explicit portfolio-demo tradeoff, not a production-readiness claim. |
+| Portfolio custom domain | After the `run.app` checkpoint passed, the owner purchased `tryscreenpilot.com` and mapped its apex plus `www` only to the frontend Cloud Run service | The displayed initial/current renewal is USD 10.46/year before tax, within the USD 15 guardrail. Cloudflare stays DNS-only, the `run.app` origin remains a fallback, and direct Cloud Run domain mapping remains a Preview portfolio-demo tradeoff rather than a production-readiness claim. |
 | Maximum live call | Eight minutes | Bounds cost and keeps the demo focused. |
 | Interview depth | Role-agnostic HR/recruiter screening with at most one broad role-context clarification | No technical, portfolio, competency, roleplay, professional-knowledge, implementation, coding, testing/debugging, architecture, trivia, algorithm, whiteboard, take-home, or suitability assessment in either entry mode. |
 | Provider fallback | None | A provider failure becomes a clear error; do not hide a second voice architecture in the build. |
@@ -4762,10 +4763,12 @@ checkpoint and cannot be interleaved with or block the initial deployment.
 For the expected 1–3 portfolio visitors per week, an external Application Load
 Balancer, third hosting layer, CDN/proxy, infrastructure-as-code stack, custom
 billing-shutdown service, and deployment CI are unnecessary. Revisit them only
-after a measured requirement appears. A custom domain and SP-027 portfolio
-packaging remain optional later improvements; the stateless prohibition on an
-application database, queue, object storage, or worker remains an architecture
-boundary rather than a deferred task.
+after a measured requirement appears. After the `run.app` checkpoint, the owner
+selected the optional custom-domain tradeoff: `tryscreenpilot.com` apex and
+`www` map directly to the frontend with Cloudflare DNS-only, while the managed
+`run.app` origin remains available. SP-027 portfolio packaging remains optional;
+the stateless prohibition on an application database, queue, object storage, or
+worker remains an architecture boundary rather than a deferred task.
 
 **Depends on:** SP-022, SP-023, SP-025A.
 
@@ -4792,7 +4795,7 @@ boundary rather than a deferred task.
    - [ ] Verify the frontend-only `?diagnostics=timings` opt-in remains unavailable on every non-loopback deployment hostname: no diagnostics drawer, raw timing view, **Copy JSON**, or **Reset** controls may render. Do not add or expect a backend diagnostics route.
 5. **Test the deployed website and close release acceptance.**
    - [ ] After unpaid production smokes pass, manually run exactly two controlled paid production flows: one CV-assisted flow using an owner-selected synthetic or explicitly licensed public-template text PDF with no real person's data, materially different from the bundled sample, and one conversation-first flow. Rerun only when a named defect invalidates evidence.
-   - [ ] Within that bounded pair, verify production Turnstile/hostname/actions, sharing-off, current provider revision/tools and caps, automatic `end_call`, summary/review, cleanup/no reconnect, dashboard usage/cost and retention, and restored paid-demo/provider kill switches.
+   - [ ] Within that bounded pair, verify production Turnstile/hostname/actions, sharing-off, current provider revision/tools and caps, automatic `end_call`, summary/review, cleanup/no reconnect, and dashboard usage/cost and retention. Leave `PAID_DEMO_ENABLED=true` for the working portfolio demo only when every release check passes; otherwise restore it to `false` and verify both entry paths are disabled. Do not relax any other provider or infrastructure safety control.
    - [ ] Document Cloud Run revision rollback, verify privacy/retention/cost/latency/abuse configuration, reconcile Cloud Run, Secret Manager, Artifact Registry, Logging, and network billing, retain the required rollback image, and finalize the cost baseline before declaring SP-026 or public release complete.
 
 ### Milestone 6 — optional portfolio packaging
@@ -4910,8 +4913,9 @@ boundary rather than a deferred task.
   025A-audited candidate: one materially different synthetic/licensed text-PDF
   CV-assisted flow and one conversation-first flow. Production Turnstile,
   current provider revision/tools, auto-ending, summary/review, cleanup,
-  dashboard usage/cost, sharing-off, caps, and restored kill switches are all
-  evidenced; only a named defect may justify a narrow rerun.
+  dashboard usage/cost, sharing-off, and caps are all evidenced; the final
+  `PAID_DEMO_ENABLED` state and rationale are recorded under the conditional
+  working-demo release rule. Only a named defect may justify a narrow rerun.
 - [ ] Full phone, tablet, laptop/desktop, and large-monitor flows plus keyboard, reduced-motion, orientation, safe-area, intermediate resizing, and provider failure paths are verified.
 - [ ] Cloudflare Turnstile Free, best-effort backend route/source limits, Cloud Run/provider caps, and the paid-demo kill switch work without a database, paid WAF, or Cloudflare proxy.
 
