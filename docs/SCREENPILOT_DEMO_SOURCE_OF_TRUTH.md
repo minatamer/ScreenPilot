@@ -154,8 +154,9 @@ Do not add infrastructure merely because a production recruiting product would n
 | Live insight persistence | Browser client tools only | Cards update locally; no webhook tool or server write occurs. |
 | Post-call review | Same browser tab/session | No shareable review URL, return-later history, or cross-device access. |
 | Abuse control | Cloudflare Turnstile Free on every provider-backed paid endpoint + best-effort stateless backend rate limits + provider/Cloud Run caps | Turnstile is a separate $0 service and works without buying the domain from Cloudflare or proxying traffic through Cloudflare. No application database, paid WAF, or durable identity ledger is added. |
-| Public custom domain | One manually purchased non-premium domain or a $0 incremental subdomain of an existing portfolio domain | Maximum planned renewal is $15/year before tax. `screenpilot.com` is an active unrelated company and is not a purchase target. |
-| Public routing | Firebase Hosting custom domain and managed HTTPS with ordered same-origin rewrites to both Cloud Run services | Browser API calls use relative `/v1` paths; no second API domain, paid load balancer, or Preview Cloud Run domain mapping. |
+| Initial public URL | Frontend Cloud Run's stable managed-HTTPS `run.app` URL | Deploy and validate before buying a domain. The backend URL stays operational rather than visitor-facing. |
+| Public routing | The frontend Next.js server proxies relative `/v1` requests to the backend Cloud Run origin | Two Cloud Run services are sufficient: no separate hosting layer, paid load balancer, second browser API origin, or browser-visible backend URL. |
+| Optional custom domain | After the deployment passes, manually map a purchased domain to the frontend Cloud Run service only | Maximum planned renewal is $15/year before tax. Direct Cloud Run domain mapping is Preview/limited availability and an explicit portfolio-demo tradeoff, not a production-readiness claim. |
 | Maximum live call | Eight minutes | Bounds cost and keeps the demo focused. |
 | Interview depth | Role-agnostic HR/recruiter screening with at most one broad role-context clarification | No technical, portfolio, competency, roleplay, professional-knowledge, implementation, coding, testing/debugging, architecture, trivia, algorithm, whiteboard, take-home, or suitability assessment in either entry mode. |
 | Provider fallback | None | A provider failure becomes a clear error; do not hide a second voice architecture in the build. |
@@ -257,7 +258,9 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - Human recruiter workflow, notes, approval, rejection, or hiring decisions.
 - Technical-interview features such as coding exercises, live code editors, algorithms, take-home tasks, answer scoring, or technical pass/fail judgments.
 - Provider failover, offline voice, or alternative real-time voice stacks.
-- Cloudflare Bot Fight Mode, Super Bot Fight Mode, Bot Management, a paid WAF, or proxying Firebase Hosting through Cloudflare; the scoped protection is provider-independent Turnstile plus backend/provider caps.
+- Cloudflare Bot Fight Mode, Super Bot Fight Mode, Bot Management, a paid WAF,
+  or proxying the Cloud Run frontend through Cloudflare; the scoped protection
+  is provider-independent Turnstile plus backend/provider caps.
 - Production compliance certification or claims that the demo is suitable for real applicant data.
 - A professional Figma file, Figma prototype, Code Connect setup, Storybook site, or separate design-system application as a required demo artifact.
 - Expanding the HTML reference into a full catalogue of application screens or duplicating the ScreenPilot app inside `docs`.
@@ -1334,7 +1337,16 @@ observation.
   browser's CV, microphone, challenge, token, SDK, and WebRTC entry points while
   live paid operations are disabled. Server-side route gates remain the final
   authority.
-- Cloud Run maximum-instance/concurrency bounds plus provider account spend alerts/caps provide the hard financial ceiling that memory-only limits cannot guarantee.
+- A native monthly **USD 5 Cloud Run spend-cap budget**, when the current
+  Preview feature is available to the billing account, supplements Cloud Run
+  maximum-instance/concurrency bounds. Its enforcement can lag and does not
+  cover other Google Cloud or external-provider charges.
+- A monthly **USD 10 project-wide alert-only budget** uses actual thresholds at
+  25%, 50%, 75%, 90%, and 100% plus forecast thresholds at 50% and 100%. It is
+  notification-only and must never be described as a hard cap.
+- Separate OpenAI/ElevenLabs account limits, Turnstile, backend capacity gates,
+  and the paid-demo kill switch provide the external-provider ceiling that
+  Google Cloud budgets cannot guarantee.
 - Bounded prompt/context/output sizes.
 - Paid smoke tests never run in default CI.
 - Local summary rehearsal cannot run in production and cannot contact
@@ -1517,16 +1529,16 @@ Use plain pnpm workspaces with native recursive and filtered commands.
 
 ```text
 screen-pilot/
-├─ .github/workflows/ci.yml # one quality → build → deploy → smoke pipeline
+├─ .github/workflows/ci.yml # unpaid quality checks only; no deployment identity
+├─ .dockerignore            # SP-026 safe local container-build context
 ├─ AGENTS.md                # scope, privacy, dependency, and completion rules
 ├─ package.json             # root command surface only; no product runtime code
 ├─ pnpm-workspace.yaml
 ├─ pnpm-lock.yaml           # the only dependency lockfile
 ├─ tsconfig.base.json       # shared strictness, not one forced module target
-├─ firebase.json            # added in SP-026; ordered /v1 then frontend rewrites
-├─ .firebaserc              # added in SP-026; non-secret project alias
 ├─ apps/
 │  ├─ frontend/
+│  │  ├─ Dockerfile         # SP-026 minimal non-root Cloud Run image
 │  │  ├─ public/fixtures/   # bundled synthetic sample CV only
 │  │  └─ src/
 │  │     ├─ app/            # Next.js routes/layouts; composition, metadata, boundaries
@@ -1546,6 +1558,7 @@ screen-pilot/
 │  │     │  └─ turnstile/   # reusable managed challenge/token boundary
 │  │     └─ styles/         # tokens and global styles
 │  └─ backend/
+│     ├─ Dockerfile         # SP-026 minimal non-root Cloud Run image
 │     └─ src/
 │        ├─ http/           # routes, middleware, response/error mapping
 │        ├─ use-cases/      # bootstrap, preparation, analysis, token, summary
@@ -1626,18 +1639,16 @@ The comments show the first ticket that owns each file or group. Co-located `*.t
 screen-pilot/
 ├─ .github/
 │  └─ workflows/
-│     └─ ci.yml                                  # SP-002; extended by SP-023/SP-026
+│     └─ ci.yml                                  # SP-002 quality-only workflow
 ├─ .editorconfig                                 # SP-001
 ├─ .gitattributes                                # SP-001
 ├─ .gitignore                                    # SP-001
 ├─ .node-version                                 # SP-001
 ├─ .dockerignore                                 # SP-026
-├─ .firebaserc                                   # SP-026
 ├─ .prettierignore                               # SP-002
 ├─ AGENTS.md                                     # SP-001
 ├─ README.md                                     # SP-001; expanded by optional SP-027
 ├─ eslint.config.mjs                             # SP-002
-├─ firebase.json                                 # SP-026
 ├─ package.json                                  # SP-001
 ├─ pnpm-lock.yaml                                # SP-001
 ├─ pnpm-workspace.yaml                           # SP-001
@@ -1655,7 +1666,7 @@ screen-pilot/
 │  │  ├─ Dockerfile                              # SP-026
 │  │  ├─ package.json                            # SP-001
 │  │  ├─ next-env.d.ts                           # SP-001
-│  │  ├─ next.config.ts                          # SP-001; local /v1 rewrite in SP-003
+│  │  ├─ next.config.ts                          # SP-001; standalone output in SP-026
 │  │  ├─ tsconfig.json                           # SP-001
 │  │  ├─ vitest.config.ts                        # SP-002
 │  │  ├─ public/
@@ -1673,8 +1684,13 @@ screen-pilot/
 │  │     │  ├─ page.tsx                          # SP-001; foundation harness SP-005; landing composition SP-011
 │  │     │  ├─ error.tsx                         # SP-011
 │  │     │  ├─ not-found.tsx                     # SP-011
-│  │     │  └─ demo/
-│  │     │     └─ page.tsx                       # SP-011; staged application host
+│  │     │  ├─ demo/
+│  │     │  │  └─ page.tsx                       # SP-011; staged application host
+│  │     │  └─ v1/
+│  │     │     └─ [...path]/
+│  │     │        ├─ route.ts                    # SP-026; production same-origin API route
+│  │     │        ├─ backend-proxy.ts             # SP-026; bounded server-only proxy
+│  │     │        └─ backend-proxy.test.ts        # SP-026
 │  │     ├─ features/
 │  │     │  ├─ session/
 │  │     │  │  ├─ demo-session.types.ts          # SP-006; frontend-only state
@@ -1964,7 +1980,7 @@ apps/backend  ──┘
 - `tsconfig.base.json` owns shared strictness and safety flags. Frontend, backend, and contracts configs extend it but keep tool-appropriate module settings: Next.js/bundler settings are not forced onto the Node backend, and Node settings are not forced onto the browser.
 - `@screenpilot/contracts` emits runtime JavaScript and declarations before production application builds. Root recursive commands must respect workspace dependency order; development must not rely on stale contract output.
 - SP-001 creates real `build` and `typecheck` commands. SP-002 adds real `lint`, `format:check`, `test:unit`, and `verify:quick` commands. Never add placeholder commands that print success without checking anything.
-- Browser API code always calls relative `/v1/...` URLs. Local development uses a frontend server rewrite/proxy to the backend; production uses Firebase Hosting rewrites. Do not spread environment-specific API base URLs through feature code.
+- Browser API code always calls relative `/v1/...` URLs. In local development and production, the Next.js frontend server proxies those requests to the backend origin configured for that environment. Do not spread environment-specific API base URLs through feature code or expose the backend service URL in browser configuration.
 - Environment examples are application-scoped: `apps/frontend/.env.example` contains only frontend server/runtime-safe settings, while `apps/backend/.env.example` documents backend-only values. No committed `.env*` file may contain a usable secret.
 - Generated output (`.next`, `dist`, coverage, test artifacts, local environment files) is ignored and never imported as source.
 
@@ -2093,7 +2109,7 @@ Both `.env.local` paths must be reported by `git check-ignore` and absent from `
 | `ELEVENLABS_AGENT_ID` | Create the private agent from the [ElevenAgents quickstart](https://elevenlabs.io/docs/eleven-agents/quickstart), publish it, then copy the agent ID from its dashboard/API details. | Server token request and agent-revision verification. | Fake agent ID only inside tests; no live connection. |
 | `ELEVENLABS_VOICE_ID` | Select the approved voice in the same agent's TTS settings and copy/record its voice ID from the ElevenLabs dashboard. | Typed configuration and deployed-agent drift checks. | Agent setup/live voice acceptance remains unchecked. |
 | `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` | In the Cloudflare dashboard, open **Turnstile → Add widget**, choose **Managed**, enter allowed hostnames, create it, and copy both values as described in the [widget guide](https://developers.cloudflare.com/turnstile/get-started/widget-management/dashboard/). The site key is public; the secret is backend-only. Use `appearance: interaction-only` in client rendering. No Cloudflare API token or proxied DNS is required. | All three paid action gates; production setup in SP-026. | Fakes or Cloudflare's [published test-key flow](https://developers.cloudflare.com/turnstile/troubleshooting/testing/) work outside production; real-host validation stays blocked. |
-| `TURNSTILE_ALLOWED_HOSTNAMES` | Enter the exact local/test hostname for non-production or the canonical apex/`www` values created in SP-026. Keep production widgets free of localhost hostnames. | Strict Siteverify hostname checks. | Fake/test verification only. |
+| `TURNSTILE_ALLOWED_HOSTNAMES` | Enter the exact local/test hostname for non-production or the frontend `run.app` hostname created in SP-026. Add a canonical custom hostname only if the optional domain step is completed. Keep production widgets free of localhost hostnames. | Strict Siteverify hostname checks. | Fake/test verification only. |
 | `INTERVIEW_GRANT_SIGNING_SECRET` and `ANONYMOUS_COOKIE_SECRET` | Generate two different values locally, for example by running `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"` twice, and paste them manually only into the ignored backend file or Google Secret Manager. | Stateless grant and content-free cookie signing from SP-009 onward. | Tests inject deterministic values; live startup/readiness fails closed. |
 
 #### Credential runtime-wiring audit (2026-09-14)
@@ -2142,11 +2158,11 @@ The direct `OPENAI_API_KEY` is **not** copied into ElevenLabs for this plan. Ele
 
 #### Production deployment values
 
-SP-026 keeps `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `TURNSTILE_SECRET_KEY`, `INTERVIEW_GRANT_SIGNING_SECRET`, and `ANONYMOUS_COOKIE_SECRET` in Google Secret Manager and exposes each only to the backend runtime. Public/non-secret runtime values—`ELEVENLABS_AGENT_ID`, `ELEVENLABS_VOICE_ID`, `TURNSTILE_SITE_KEY`, `TURNSTILE_ALLOWED_HOSTNAMES`, `PUBLIC_WEB_DOMAIN`, and allowed origins—use normal Cloud Run/GitHub environment configuration but remain blank until the user supplies the real project/domain identifiers.
+SP-026 keeps `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `TURNSTILE_SECRET_KEY`, `INTERVIEW_GRANT_SIGNING_SECRET`, and `ANONYMOUS_COOKIE_SECRET` in Google Secret Manager and exposes each only to the backend runtime. Public/non-secret runtime values—`ELEVENLABS_AGENT_ID`, `ELEVENLABS_VOICE_ID`, `TURNSTILE_SITE_KEY`, `TURNSTILE_ALLOWED_HOSTNAMES`, and allowed origins—use normal Cloud Run environment configuration but remain blank until the user supplies the real identifiers. `PUBLIC_WEB_DOMAIN` is only configured if the later optional domain step is completed.
 
-The deployment workflow uses GitHub OIDC plus Google Cloud Workload Identity Federation. Follow Google's [deployment-pipeline WIF guide](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines) and [Cloud Run Secret Manager guide](https://docs.cloud.google.com/run/docs/configuring/services/secrets). Record these non-secret GitHub `production` environment variables with blank values until the user creates the resources: `GCP_PROJECT_ID`, `GCP_REGION`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_DEPLOY_SERVICE_ACCOUNT`, `ARTIFACT_REGISTRY_REPOSITORY`, `FIREBASE_PROJECT_ID`, `FIREBASE_SITE_ID`, and `PUBLIC_WEB_DOMAIN`.
+The first production deployment is manual from the owner's authenticated laptop. Follow Google's [Artifact Registry Docker authentication guide](https://docs.cloud.google.com/artifact-registry/docs/docker/authentication), [Cloud Run deployment guide](https://docs.cloud.google.com/run/docs/deploying), and [Cloud Run Secret Manager guide](https://docs.cloud.google.com/run/docs/configuring/services/secrets). Keep non-secret project, region, repository, service-name, backend-origin, public-domain, and runtime identifiers as explicit local command placeholders or Cloud Run configuration; do not add GitHub deployment variables.
 
-Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIREBASE_TOKEN`, a personal GitHub token, or a registrar API credential for this architecture. GitHub supplies its job token and OIDC identity; Firebase Hosting is deployed through the same WIF identity and requires no application API key. Repository ignore behavior follows GitHub's [official `.gitignore` guidance](https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files).
+Use `gcloud auth login` and the Artifact Registry credential helper for the manual deployment. Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, a personal GitHub token, or a registrar API credential for this architecture. Repository ignore behavior follows GitHub's [official `.gitignore` guidance](https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files).
 
 #### Ticket credential matrix
 
@@ -2166,7 +2182,7 @@ Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIR
 | SP-022 / SP-023 | Provider dashboard access for caps, retention, and secret audits | Rejection ordering, redaction, and scanning use fakes. |
 | SP-025 | Dashboard access and, only when SP-021B evidence was invalidated, all live provider values plus explicit paid-test permission | Unpaid release checks run first; current SP-021B evidence is reused and only invalidated evidence is narrowly refreshed. |
 | SP-025A | No credential or live account access; tracked repository, ticket, Git, dependency, and deterministic-build evidence only | Runs with explicit fake/paid-disabled test isolation, never reads `.env.local`, and makes no provider call. |
-| SP-026 | All production secrets, non-secret Google/Firebase/domain identifiers, and dashboard access | Pipeline/config can be validated without values; production deploy blocks at the manual gate. |
+| SP-026 | All production secrets, non-secret Google Cloud/domain identifiers, and dashboard access | Container/config can be validated without values; the manual production deploy blocks at the owner-only setup gate. |
 
 ### Stack
 
@@ -2185,35 +2201,60 @@ Do not create `GOOGLE_APPLICATION_CREDENTIALS`, a service-account JSON key, `FIR
 - ElevenLabs React SDK for browser WebRTC/client tools.
 - OpenAI SDK for backend Responses calls.
 - Vitest for fast focused tests, Supertest for in-process HTTP route tests, and Playwright only if optional SP-028 is approved.
-- GitHub Actions for the repository CI/CD pipeline; no GitLab CI configuration.
+- GitHub Actions for unpaid repository quality CI only; deployment is manual for the demo and no GitLab CI configuration is added.
 - Google Artifact Registry for immutable frontend/backend deployment images only; it never contains CVs, transcripts, or other candidate data.
 - Google Cloud Run container hosting for two independently deployable apps.
-- Firebase Hosting as the low-cost custom-domain, managed-HTTPS, and same-origin routing layer in front of both Cloud Run services; it stores no candidate data.
+- The Next.js frontend server as the same-origin `/v1` proxy to the backend Cloud Run service; no third hosting or routing product is required.
 
-### Unified GitHub Actions → Google Cloud pipeline
+### Manual laptop → Google Cloud deployment
 
-ScreenPilot uses GitHub as its source host and GitHub Actions as its only CI/CD runner. GitLab is not part of the demo architecture.
+ScreenPilot uses GitHub Actions only for the existing unpaid quality checks. SP-026 does not add deployment jobs, GitHub deployment secrets, OpenID Connect, or a Google Cloud federation pool. GitLab is not part of the demo architecture.
 
-ScreenPilot has one pipeline definition: `.github/workflows/ci.yml`. SP-002 creates it with the `quality` job; SP-026 extends the same file with production jobs. The job graph is:
+The owner deploys from an authenticated laptop using Docker and the Google Cloud CLI:
 
 ```text
-quality
-  -> build-images
-      -> deploy-backend
-          -> deploy-frontend
-              -> publish-domain-routing
-                  -> production-smoke
+quality checks on the exact candidate commit
+  -> configure budgets, Artifact Registry, identities, and secrets
+      -> build and push exact-SHA frontend image once
+          -> deploy paid-disabled frontend bootstrap revision
+              -> configure Turnstile for the stable frontend hostname
+                  -> build, push, and deploy exact-SHA backend image
+                      -> configure BACKEND_ORIGIN and deploy the same frontend image
+                          -> record the deployed checkpoint
+                              -> run unpaid deployed checks
+                                  -> run the two owner-controlled paid flows
 ```
 
-The workflow runs for pull requests and pushes to `main`. Every run checks out the repository, installs the locked Node.js/pnpm toolchain, restores the pnpm cache, performs a frozen-lockfile install, and executes the fast unpaid gates: lint, typecheck, unit tests, and build. Pull requests stop after `quality`; production jobs use job-level `if` conditions and `needs` dependencies so only a green `main` commit can continue. Failed quality checks and untrusted forks can never authenticate to or deploy into Google Cloud. The GitHub branch rule for `main` requires the named `quality` job before merge.
+The frontend Cloud Run service is the only visitor-facing origin. Its Next.js server proxies relative `/v1/**` requests to the backend Cloud Run service, so a third hosting layer and a second public API hostname are unnecessary. Both services receive stable `run.app` HTTPS URLs. The backend URL is operational configuration only and must not appear in browser bundles, visitor-facing UI, metadata, or portfolio links.
 
-For a green `main` commit, the same workflow builds separately versioned frontend and backend container images, tags them with the immutable Git commit SHA, pushes them to Artifact Registry, deploys the matching backend revision and then frontend revision as `screenpilot-backend` and `screenpilot-frontend` on Cloud Run, publishes the Firebase Hosting routing configuration for the purchased domain, and finally runs health checks plus bounded smoke checks against both the direct service URLs and canonical public URL. This mirrors Cosia's single-file, ordered-stage GitLab approach while using GitHub Actions job dependencies instead of GitLab `stages`.
+Authenticate with `gcloud auth login`, configure the Artifact Registry Docker credential helper, and deploy immutable images tagged with the exact Git commit SHA. Use separate least-privilege runtime service accounts: only the backend service account may read the five runtime secrets from Secret Manager. Cloud Run revision history supplies the rollback path. Do not add a service-account key, Kubernetes, Terraform, a paid load balancer, or a custom deployment controller for this demo.
 
-GitHub authenticates through OpenID Connect and Google Cloud Workload Identity Federation using `id-token: write` and `contents: read`. Use a dedicated least-privilege deployment service account restricted to this repository and production workflow. Do not create, download, or store a long-lived Google service-account JSON key in GitHub. Non-secret identifiers such as project ID, region, workload-identity-provider resource name, service-account email, and Artifact Registry repository belong in GitHub environment variables; OpenAI/ElevenLabs runtime secrets remain in Google Secret Manager/Cloud Run configuration and are never exposed to the build job.
+Follow [`docs/operations/manual-google-cloud-deployment.md`](operations/manual-google-cloud-deployment.md) for the exact bootstrap, build, push, deploy, validation, and rollback sequence.
 
-The production jobs target a protected GitHub `production` environment for auditability and deployment-variable separation. Required human approval may be enabled when supported by the repository's GitHub plan, but the release guarantee does not depend on a paid GitHub feature. Cloud Run revision history supplies the simple rollback path; do not add Kubernetes, Terraform, or a custom deployment controller for this demo.
+The runbook is also the authority for the Windows CLI and operator boundary.
+After explicit approval, Codex may install Google's signed CLI, initiate
+`gcloud` login, create the owner-approved project, link the owner-approved
+billing account, create the alert-only budget, create the repository/runtime
+identities/empty secret resources, and deploy or roll back both services. The
+owner completes browser login/MFA, creates or funds the billing account and
+manages payment details, approves the immutable project ID and billing link,
+enters secret values directly in Secret Manager, and configures the Preview
+Cloud Run spend cap in Cloud Console because the current documented
+`gcloud billing budgets create` command does not expose spend-cap enforcement. No
+charge-enabling mutation, software installation, or traffic change runs without
+the approval defined by the runbook.
 
-### Cheapest custom-domain and HTTPS guide
+Before the first image push or service deployment, configure the cost controls
+in [`docs/operations/google-cloud-cost-controls.md`](operations/google-cloud-cost-controls.md).
+The locked deployment controls are a native monthly USD 5 Cloud Run spend-cap
+budget when the current Preview feature is available and a monthly USD 10
+all-services alert-only budget scoped to the dedicated ScreenPilot project. If
+the native cap is unavailable, record the exact eligibility/UI blocker and
+retain the project alert, scale-to-zero/max-instance ceilings, Turnstile,
+provider caps, and paid-demo kill switch. Do not add a Pub/Sub billing listener
+or automatic project-billing shutdown in SP-026.
+
+### Direct Cloud Run URL and optional custom-domain guide
 
 #### Naming and purchasing decision
 
@@ -2223,10 +2264,10 @@ Use this decision order:
 
 1. **Cheapest overall — existing portfolio domain:** if the owner already has a suitable domain, create a subdomain such as `screenpilot.<portfolio-domain>`. Incremental registration cost is **$0**, and the same parent domain can host future portfolio demos.
 2. **Cheapest credible standalone domain:** buy an available, non-premium alternative such as `screenpilot-demo.com`, `try-screenpilot.com`, or another clearly distinct name. These are naming examples only; availability and final price must be checked immediately before purchase.
-3. **Developer-style fallback:** use an available `.dev` when a reasonable `.com` alternative cannot be found. `.dev` requires HTTPS, which Firebase Hosting supplies automatically.
+3. **Developer-style fallback:** use an available `.dev` when a reasonable `.com` alternative cannot be found. `.dev` requires HTTPS; both the initial `run.app` URL and a successfully mapped Cloud Run custom domain provide managed HTTPS.
 4. **Avoid false bargains:** do not choose solely from a $1–$3 first-year promotion. Compare registration, renewal, transfer, tax, WHOIS privacy, and whether the exact name is classified as premium. Avoid `.ai`, `.io`, or aftermarket domains for this cost-sensitive demo.
 
-Set a purchase guardrail of **no more than $15 USD per renewal year before local tax** unless the user explicitly approves more. Never purchase a domain automatically from CI; the user chooses and buys it manually, then the deployment uses a `PUBLIC_WEB_DOMAIN` variable.
+Set a purchase guardrail of **no more than $15 USD per renewal year before local tax** unless the user explicitly approves more. Do not buy a domain before the `run.app` deployment passes. The user chooses and buys it manually, then the Cloud Run configuration uses a `PUBLIC_WEB_DOMAIN` value.
 
 Current non-premium Porkbun examples checked on **August 26, 2026** are planning references, not guaranteed quotes:
 
@@ -2245,80 +2286,58 @@ Immediately after purchase:
 - Enable auto-renew and add a separate calendar reminder 30 days before expiry.
 - Enable registrar/domain lock.
 - Keep WHOIS privacy enabled where the registry permits it.
-- Enable DNSSEC after the Firebase DNS configuration is stable.
+- Enable DNSSEC after the Cloud Run domain mapping and certificate are stable.
 - Store recovery codes outside the repository; no registrar credential enters GitHub or Google Cloud.
 
-#### Lowest-cost hosting connection
+#### Initial public URL
 
-The locked demo approach is **Firebase Hosting in front of the two existing Cloud Run services**. It provides the custom domain, Google-managed HTTPS certificate, global hosting edge, and path rewrites without a dedicated external Application Load Balancer. Firebase Hosting currently includes custom domains and SSL in its no-cost quotas; normal Firebase data-transfer and Cloud Run usage charges still apply when quotas are exceeded. For this low-traffic portfolio demo, the domain registration should be the only new predictable annual cost.
-
-Cloudflare Turnstile is **not bundled into the domain registration**, but its Free plan is a separate **$0** service in a Cloudflare account. It does not require the domain to be registered with Cloudflare, does not require Cloudflare nameservers, and does not require visitor traffic to pass through Cloudflare. ScreenPilot therefore uses Turnstile while keeping the Firebase records DNS-only. Do not enable Cloudflare Bot Fight Mode or place Cloudflare's proxy in front of Firebase as part of this demo; Turnstile supplies the scoped browser check without changing the hosting route.
-
-Do **not** use direct Cloud Run domain mapping for the final demo. Google currently labels it Preview/limited availability, notes latency issues, and does not recommend it for production. Do not add a global external Application Load Balancer merely for the hostname; that is more infrastructure and cost than this demo needs.
-
-Use one public origin:
+The required SP-026 release uses the managed HTTPS URL of the frontend Cloud Run service:
 
 ```text
-https://<PUBLIC_WEB_DOMAIN>/          -> screenpilot-frontend on Cloud Run
-https://<PUBLIC_WEB_DOMAIN>/v1/**    -> screenpilot-backend on Cloud Run
+https://<frontend-service-id>.run.app/
 ```
 
-This same-origin layout avoids buying or mapping a second `api.` domain, avoids third-party-cookie problems for the anonymous safety cookie, and lets production browser requests use relative `/v1/...` URLs. Direct `run.app` URLs remain operational deployment targets and health-check endpoints, not URLs shown to visitors.
+The Next.js frontend server proxies all relative `/v1/**` requests to the backend Cloud Run origin. This gives the browser one public origin, keeps the anonymous safety cookie first-party, and avoids a second hosting product, an `api.` domain, or a paid external Application Load Balancer. The backend `run.app` URL remains operational configuration and a health-check target, not a visitor-facing link.
 
-The checked-in `firebase.json` uses ordered rewrites, with the backend rule first:
+Cloudflare Turnstile remains a separate **$0** service. It does not require Cloudflare nameservers or proxying. Keep Cloudflare Bot Fight Mode, the Cloudflare HTTP proxy, and paid WAF out of this demo; Turnstile supplies the scoped browser check without changing the hosting route.
 
-```json
-{
-  "hosting": {
-    "rewrites": [
-      {
-        "source": "/v1/**",
-        "run": {
-          "serviceId": "screenpilot-backend",
-          "region": "europe-west1",
-          "pinTag": true
-        }
-      },
-      {
-        "source": "**",
-        "run": {
-          "serviceId": "screenpilot-frontend",
-          "region": "europe-west1",
-          "pinTag": true
-        }
-      }
-    ]
-  }
-}
+#### Optional lowest-complexity custom-domain connection
+
+Only after the deployed `run.app` application passes should the owner consider a domain. The low-complexity demo option is to map one domain directly to the **frontend Cloud Run service only**. Google currently labels direct Cloud Run domain mapping Preview/limited availability, notes added latency, and does not recommend it for production. Accepting those constraints is an explicit portfolio-demo tradeoff, not a production-readiness claim. If the project later needs a production-grade hostname, reassess Google's recommended external Application Load Balancer option at that time rather than adding it to SP-026 now.
+
+Cloud Run domain mapping maps a hostname to the service root rather than dispatching paths between services. That is sufficient here because the frontend server already owns same-origin `/v1/**` proxying. Use a region supported by direct mapping if this optional step is taken.
+
+The optional result still has one public origin:
+
+```text
+https://<PUBLIC_WEB_DOMAIN>/**
+  -> screenpilot-frontend on Cloud Run
+      -> /v1/** server proxy to screenpilot-backend on Cloud Run
 ```
 
-The final region is the latency-tested SP-026 region; if it differs from `europe-west1`, update both rewrite entries together. Firebase Hosting rewrites have a 60-second request timeout, so every ScreenPilot HTTP endpoint must finish or return a controlled timeout within that boundary. Live ElevenLabs WebRTC traffic remains direct and is not proxied through Firebase Hosting.
+Live ElevenLabs WebRTC traffic remains direct and is not proxied through either Cloud Run service.
 
 #### Manual connection steps
 
-1. Choose the final domain using the renewal-price guardrail and buy it manually. Record only the hostname—not registrar credentials—in GitHub's `production` environment as `PUBLIC_WEB_DOMAIN`.
-2. Add Firebase to the same Google Cloud project and initialize one Hosting site. Commit `firebase.json` and the non-secret `.firebaserc` project alias.
-3. Deploy backend and frontend Cloud Run revisions first. Confirm both direct health endpoints pass.
-4. Publish the Firebase Hosting rewrite configuration from the unified GitHub pipeline using the same keyless Workload Identity Federation identity.
-5. In Firebase Hosting, select **Add custom domain**, enter the purchased apex domain, and complete ownership verification.
-6. Copy the exact TXT/A/AAAA/CNAME records Firebase displays into the registrar's DNS dashboard. Do not invent record values from this document. Use a short temporary TTL such as 300 seconds while validating.
-7. If Cloudflare manages DNS, keep the Firebase verification/serving records **DNS only** before and after certificate issuance; do not put a second proxy/CDN in front of Firebase Hosting.
-8. Create one Cloudflare Turnstile Free widget for production, restrict it to the canonical apex and `www` hostnames, and record only its public site key in browser-visible configuration. Store its secret key in Google Secret Manager/Cloud Run; no registrar credential is involved.
-9. Make the apex hostname—`https://<PUBLIC_WEB_DOMAIN>`—canonical and connect `www.<PUBLIC_WEB_DOMAIN>` as a redirect to it. Both must resolve over HTTPS, but only one appears in metadata and portfolio links.
-10. Wait for DNS propagation and the managed certificate. Provisioning often completes in minutes but the release checklist allows up to 24 hours before treating it as failed.
-11. Update the backend allowed-origin and Turnstile-hostname configuration to the canonical HTTPS origin, keep production API calls relative to `/v1`, and verify Secure/SameSite cookie behavior through the public origin.
-12. Run the complete production smoke paths through the custom domain, including real Turnstile-protected CV analysis, voice-token, and summary requests; then verify the generated `run.app` URLs are absent from visible UI, canonical metadata, copied summaries, and portfolio links.
-13. After stability is confirmed, use an ordinary longer DNS TTL, enable DNSSEC, and record registrar, renewal price/date, Firebase site ID, canonical domain, Turnstile widget owner, and recovery owner in a private deployment note—not in public source when it contains account identifiers.
+1. Complete SP-026 and its controlled deployed checks on the frontend `run.app` URL first.
+2. Confirm the chosen region supports direct Cloud Run domain mapping, accept the documented Preview limitations, choose the domain using the renewal-price guardrail, and buy it manually.
+3. In Cloud Run **Manage custom domains**, map the hostname to `screenpilot-frontend`; never map a second hostname directly to the backend.
+4. Copy the exact verification and serving records Google displays into the registrar's DNS dashboard. Do not invent record values from this document. Use a short temporary TTL such as 300 seconds while validating.
+5. Wait for ownership verification, DNS propagation, and the Google-managed certificate before changing the application's canonical configuration.
+6. Add the canonical hostname to the production Turnstile widget, then update backend allowed origins and `TURNSTILE_ALLOWED_HOSTNAMES`. Keep the Turnstile secret in Secret Manager.
+7. Make one hostname canonical. If both apex and `www` are required, verify the exact mapping/redirect support before purchase and do not add a second routing product merely for the redirect.
+8. Re-run the bounded deployed checks through the custom domain and verify Secure/SameSite cookie behavior, canonical metadata, and relative `/v1` proxying.
+9. After stability is confirmed, use an ordinary longer DNS TTL, enable DNSSEC, and record registrar, renewal price/date, canonical domain, mapping owner, Turnstile widget owner, and recovery owner in a private deployment note—not in public source when it contains account identifiers.
 
 #### Domain-specific release checks
 
-- Apex redirects/serves correctly and `www` redirects to the apex without a loop.
+- The chosen canonical hostname resolves to the frontend service without a loop.
 - The certificate is valid, automatically managed, and covers every connected hostname.
-- `/v1/demo/bootstrap`, CV analysis, voice-token issuance, and summary requests route to the backend; application pages and assets route to the frontend.
-- Refreshing any frontend route does not return a Firebase or Cloud Run 404.
+- `/v1/demo/bootstrap`, CV analysis, voice-token issuance, and summary requests pass through the frontend server proxy to the backend; application pages and assets remain on the frontend.
+- Refreshing any frontend route does not return a Cloud Run 404.
 - The anonymous safety cookie works as first-party through the custom origin.
 - CSP, CORS/origin validation, Turnstile hostname/action validation, and backend rate limiting use the canonical domain.
-- No candidate content appears in DNS, URL paths/query strings, Firebase logs, or deployment output.
+- No candidate content appears in DNS, URL paths/query strings, Cloud Run logs, or deployment output.
 - Removing or changing the domain cannot destroy either Cloud Run service; the direct service URLs remain available for rollback diagnostics.
 
 ### Backend-framework rationale
@@ -2696,9 +2715,8 @@ The conversation-first route removes the CV-analysis call, so the comparable bas
 | ElevenLabs Creator | **$22/month with 275 included agent minutes**; the pricing page displayed a $11 first-month promotion when researched. | Up to 34 complete eight-minute interviews fit inside the minute allowance, leaving three minutes, before separate LLM usage. | Treat the discounted first month as a changeable promotion, not the long-term price. |
 | ElevenLabs startup grant | Accepted startups are advertised Scale access for 12 months, 33M characters, and more than 680 hours of Agents usage. | Potentially valuable only if ScreenPilot becomes an eligible product startup. | Application and acceptance are required; agencies, consulting firms, and one-off projects are excluded. A portfolio demo must not budget around this grant. |
 | Cloudflare Turnstile Free | Up to 20 widgets, up to 10 hostnames per widget, and unlimited challenges/verification requests. | All three paid action gates have **$0 marginal cost**. | Stay on Free; no Cloudflare proxy, Registrar purchase, paid WAF, or Bot Management is needed. |
-| Cloud Run request-based free tier | Per billing account/month: 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2M requests in the documented free-tier regions. | Two scale-to-zero, low-traffic services should add **$0 marginal cost per demo flow** while within quota. | Keep minimum instances at zero and still attach a billing account; review billing because free-tier usage is aggregated and region-sensitive. |
-| Firebase Hosting | 10 GB stored and 10 GB/month data transfer at no charge. | The static/routing traffic for a small portfolio demo should remain at **$0** initially; managed SSL is also $0. | The Blaze plan/billing setup can still be required for Cloud Run integration. A no-cost quota is not the same as “no billing account.” |
-| Google Secret Manager | Six active secret versions and 10,000 access operations/month at no charge. | The five planned server secrets fit if only one active version of each is retained. | Disable/destroy superseded versions after safe rotation; otherwise active versions can exceed the free allowance. |
+| Cloud Run request-based free tier | Per billing account/month: 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2M requests in the documented free-tier regions. | Two scale-to-zero, low-traffic services should add **$0 marginal cost per demo flow** while within quota. | Keep minimum instances at zero and still attach a billing account; review billing because free-tier usage is aggregated and region-sensitive. Configure the USD 5 native Cloud Run spend cap when available and record that enforcement may lag. |
+| Google Secret Manager | Six active secret versions and 10,000 access operations/month at no charge. | The five planned server secrets fit if only one active version of each is retained. | A disabled version remains billable as active. Destroy superseded versions only after the safe rotation/rollback window. |
 | Google Artifact Registry | First 0.5 GiB-month of storage is free, then about $0.10/GiB-month at the published hourly rate. | Small images may fit; retained frontend/backend images and revisions can exceed 0.5 GiB. This is deployment storage, not a per-flow charge. | Add image cleanup/retention; do not claim guaranteed $0 hosting until actual image size and billing are checked. |
 | Eligible new Google Cloud account | Google advertises **$300 trial credit** for eligible new customers. | It may cover early Cloud Run/Artifact overages and deployment experimentation. | Account eligibility and expiry apply; do not include the credit in recurring unit economics. |
 
@@ -2789,8 +2807,6 @@ Cloudflare Turnstile therefore adds **$0** to the planned demo cost. It is indep
 - [ElevenLabs startup grants](https://elevenlabs.io/startup-grants)
 - [ElevenLabs retention](https://elevenlabs.io/docs/eleven-agents/customization/privacy/retention)
 - [ElevenLabs audio saving](https://elevenlabs.io/docs/eleven-agents/customization/privacy/audio-saving)
-- [Google Cloud Workload Identity Federation for deployment pipelines](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-deployment-pipelines)
-- [Google Cloud service-account practices for deployment pipelines](https://docs.cloud.google.com/iam/docs/best-practices-for-using-service-accounts-in-deployment-pipelines)
 - [Cloud Run Secret Manager integration](https://docs.cloud.google.com/run/docs/configuring/services/secrets)
 - [Google Cloud Run container deployment](https://docs.cloud.google.com/run/docs/deploying)
 - [Google Cloud Run pricing and free tier](https://cloud.google.com/run/pricing)
@@ -2799,15 +2815,9 @@ Cloudflare Turnstile therefore adds **$0** to the planned demo cost. It is indep
 - [Google Artifact Registry pricing](https://cloud.google.com/artifact-registry/pricing)
 - [Google Secret Manager pricing](https://cloud.google.com/secret-manager/pricing)
 - [Google Cloud free program](https://cloud.google.com/free)
-- [Firebase Hosting custom-domain setup](https://firebase.google.com/docs/hosting/custom-domain)
-- [Firebase Hosting rewrites to Cloud Run](https://firebase.google.com/docs/hosting/cloud-run)
-- [Firebase Hosting usage, quotas, and pricing](https://firebase.google.com/docs/hosting/usage-quotas-pricing)
-- [Firebase plans and eligible trial credit](https://firebase.google.com/pricing)
 - [Cloudflare Registrar at-cost registration and renewal](https://www.cloudflare.com/products/registrar/)
 - [Porkbun registration and renewal price table](https://porkbun.com/products/domains)
-- [GitHub Actions OpenID Connect permissions](https://docs.github.com/en/actions/reference/security/oidc)
 - [GitHub `.gitignore` guidance](https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files)
-- [Google GitHub Action for Cloud Run deployment](https://github.com/google-github-actions/deploy-cloudrun)
 
 ### Supporting implementation and practitioner research
 
@@ -3288,7 +3298,7 @@ Present this as a high-quality UI concept for composition and visual direction. 
 - Paid-demo environment kill switch.
 - Cloud Run deployment target: backend minimum instances `0`, maximum instances `1`, container concurrency `4`; frontend minimum instances `0`, maximum instances `1`, container concurrency `80`. SP-026 applies and verifies these settings because the services do not exist during SP-022. Provider account controls remain independent: the owner-recorded OpenAI USD 5 hard limit/alerts and ElevenLabs 1-call agent concurrency, 5-call daily limit, disabled overage/burst/queue controls bound provider exposure.
 - Clear capacity/rate errors with no provider fallback.
-- Keep Cloudflare Bot Fight Mode and the Cloudflare HTTP proxy out of scope because Firebase Hosting remains the public routing layer and a domain-wide challenge could interfere with API traffic. Turnstile requires neither.
+- Keep Cloudflare Bot Fight Mode and the Cloudflare HTTP proxy out of scope because a domain-wide challenge could interfere with API traffic and the frontend Cloud Run service already supplies the public routing layer. Turnstile requires neither.
 
 ### Honest limitation
 
@@ -3884,7 +3894,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 - [x] Distinguish direct backend GPT access from ElevenLabs' native GPT integration and keep the ScreenPilot OpenAI key out of ElevenLabs and the browser.
 - [x] Document one restricted local Turnstile Managed widget, exact hostname/action/Siteverify ownership, and why Cloudflare hosting, proxying, DNS, WAF, and an API token are unnecessary here.
 - [x] Keep every user-owned value blank, every account/dashboard/local-secret action owner-only, and every paid/microphone check explicitly unverified.
-- [x] Exclude Google Cloud, Firebase, domains, DNS, GitHub deployment identity, and all other SP-026 deployment work.
+- [x] Exclude Google Cloud, domains, DNS, and all other SP-026 deployment work.
 
 **Owner-reported OpenAI setup checkpoint (2026-09-14):** The ScreenPilot API
 project, `gpt-5.4-mini` allow-list, USD 5 initial prepaid credits, disabled
@@ -4720,10 +4730,29 @@ still owns production configuration and its two definitive synthetic flows.
 
 #### [SP-026 — Deploy frontend and backend](tickets/SP-026-deploy-frontend-and-backend.md)
 
-**Outcome:** A green GitHub Actions pipeline securely publishes two independently
-deployable stateless Cloud Run services behind one low-cost custom HTTPS domain
-with secrets and abuse controls, then the exact two controlled production flows
-close paid end-to-end and public-release acceptance.
+**Outcome:** The owner manually builds, pushes, and deploys the exact audited
+candidate from an authenticated laptop as two independently deployable stateless
+Cloud Run services. The frontend `run.app` URL is the first public origin and
+proxies `/v1` to the backend; secrets, budget controls, abuse controls, and the
+exact two controlled production flows close public-release acceptance.
+
+**Sequence lock:** SP-026 first prepares the two images and frontend proxy,
+applies the cost guardrails, creates Artifact Registry plus backend-only Secret
+Manager configuration/runtime identities, and deploys exactly the frontend and
+backend Cloud Run services. The application is technically **deployed** when the
+final frontend `run.app` URL loads, both services are healthy, and frontend-origin
+`/v1` requests reach the backend. Testing then continues on that deployed URL to
+close release acceptance. GitHub deployment automation, domain purchase, direct
+custom-domain mapping, and any external load balancer come only after this
+checkpoint and cannot be interleaved with or block the initial deployment.
+
+For the expected 1–3 portfolio visitors per week, an external Application Load
+Balancer, third hosting layer, CDN/proxy, infrastructure-as-code stack, custom
+billing-shutdown service, and deployment CI are unnecessary. Revisit them only
+after a measured requirement appears. A custom domain and SP-027 portfolio
+packaging remain optional later improvements; the stateless prohibition on an
+application database, queue, object storage, or worker remains an architecture
+boundary rather than a deferred task.
 
 **Depends on:** SP-022, SP-023, SP-025A.
 
@@ -4731,38 +4760,27 @@ close paid end-to-end and public-release acceptance.
 
 **Checklist:**
 
-- [ ] Extend the existing `.github/workflows/ci.yml` into one ordered pipeline with `quality → build-images → deploy-backend → deploy-frontend → publish-domain-routing → production-smoke`; use `needs` plus job-level branch conditions so pull requests stop after quality and only the exact green `main` commit can deploy.
-- [ ] Configure GitHub OIDC → Google Cloud Workload Identity Federation with `id-token: write`, `contents: read`, repository/branch attribute restrictions, and a dedicated least-privilege deployment service account; do not create or store a service-account JSON key.
-- [ ] Add production multi-stage container definitions for `apps/frontend` and `apps/backend` plus a safe `.dockerignore`; use deterministic pnpm workspace builds, minimal non-root runtime images, and no secrets or candidate content in build layers.
-- [ ] Build separate immutable frontend/backend images tagged with the Git commit SHA, push them to Google Artifact Registry, and deploy matching `screenpilot-frontend` and `screenpilot-backend` revisions to Cloud Run in a latency-appropriate region.
-- [ ] Follow the complete custom-domain guide in Section 11: first offer a $0 existing-portfolio subdomain, otherwise manually select a non-premium hostname with renewal no higher than $15/year before tax; never purchase a domain from CI and never pursue `screenpilot.com`.
-- [ ] Add Firebase Hosting to the same project, commit ordered `/v1/**` backend plus catch-all frontend Cloud Run rewrites, publish them from the unified pipeline with the keyless deployment identity, and enforce the 60-second HTTP rewrite boundary.
-- [ ] Connect the purchased apex domain and `www` redirect through Firebase's exact verification/DNS records, wait for managed HTTPS, then enable DNSSEC after stability; keep Cloudflare-managed Firebase records DNS-only permanently for this architecture.
-- [ ] Make the apex domain canonical, make production API requests relative to `/v1`, update backend origin/cookie configuration for the single public origin, and keep direct `run.app` URLs out of visitor-facing UI and metadata.
-- [ ] Use a protected GitHub `production` environment for deployment variables and audit history; keep OpenAI, ElevenLabs, and Turnstile runtime secrets in Google Secret Manager/Cloud Run rather than exposing them to the image-build job.
-- [ ] Configure secrets, origins, headers, health checks, max instances, and paid-demo switch, including the public Turnstile site key, server-only Siteverify secret in Google Secret Manager, canonical allowed hostname, and the three expected actions.
-- [ ] Create/restrict the free production Turnstile widget, configure best-effort backend route/source limits and provider caps, and verify no paid Cloudflare proxy/WAF/Bot Fight Mode dependency was introduced.
-- [ ] Confirm there is no application database, candidate-data object storage, queue, or worker deployment; Artifact Registry contains deployment images only.
-- [ ] Make the workflow run liveness/readiness checks against the direct services and bounded unpaid routing/security smoke checks through the custom domain, including frontend refresh routing, backend `/v1` routing, apex/`www`, certificate, first-party cookie, public Turnstile configuration, and canonical-URL checks. Do not automate a real paid provider flow or introduce a production Turnstile bypass.
-- [ ] After unpaid production smokes pass, manually run exactly two controlled
-  paid production flows: one CV-assisted flow using an owner-selected synthetic
-  or explicitly licensed public-template text PDF with no real person's data,
-  materially different from the bundled sample, and one conversation-first
-  flow. Do not use a random Internet CV or require a third bundled-sample flow;
-  rerun only when a named defect invalidates evidence.
-- [ ] Within that bounded pair, verify production Turnstile/hostname/actions,
-  sharing-off, current provider revision/tools and caps, automatic `end_call`,
-  summary/review, cleanup/no reconnect, dashboard usage/cost and retention, and
-  restored paid-demo/provider kill switches. Finalize the cost baseline before
-  declaring SP-026 or public release complete.
-- [ ] Verify the frontend-only `?diagnostics=timings` opt-in remains unavailable
-  on every non-loopback deployment hostname, including the canonical domain and
-  direct frontend Cloud Run URL: no diagnostics drawer, raw timing view, **Copy
-  JSON**, or **Reset** controls may render. Do not add or expect a backend
-  diagnostics route.
-- [ ] Document Cloud Run revision rollback and verify the deployed revision labels identify the Git commit; do not add Terraform, Kubernetes, or a custom release controller.
-- [ ] Verify privacy, retention, cost, latency, and abuse configuration in deployed state; record Turnstile as $0 rather than bundling it into the domain price.
-- [ ] Verify Cloud Run, Firebase Hosting, Secret Manager, and Artifact Registry billing against their current free quotas; keep Cloud Run minimum instances at zero, prune stale images/secret versions, and record any standing cost separately from the per-flow provider baseline.
+1. **Prepare the candidate and images.**
+   - [ ] Keep `.github/workflows/ci.yml` quality-only. Do not add deployment jobs, GitHub deployment secrets/variables, a deployment environment, OpenID Connect permissions, or a Google Cloud federation pool for this demo.
+   - [ ] Add production multi-stage container definitions for `apps/frontend` and `apps/backend` plus a safe `.dockerignore`; use deterministic pnpm workspace builds, minimal non-root runtime images, and no secrets or candidate content in build layers.
+   - [ ] Make the frontend Cloud Run service the only visitor-facing origin and configure its Next.js server to proxy relative `/v1/**` requests to the backend origin. Keep the backend URL out of browser configuration, visible UI, metadata, and portfolio links.
+2. **Create the minimum Google Cloud foundation.**
+   - [ ] Before the first image push or service deployment, follow the Google Cloud cost-control runbook: configure a monthly USD 5 Cloud Run spend-cap budget when available, configure the monthly USD 10 all-services project alert budget with its locked actual/forecast thresholds, and record any exact Preview/eligibility blocker without misrepresenting alerts as enforcement.
+   - [ ] Check for Google Cloud CLI on the owner's Windows PC; if absent, install Google's signed CLI after approval, verify it in a fresh shell, and let the owner complete browser sign-in/MFA through `gcloud init`.
+   - [ ] After owner approval of the immutable project ID and exact billing account, create/select the project, link billing with `gcloud`, enable only the required APIs, create one Artifact Registry repository, configure its Docker credential helper, and do not create a service-account JSON key or put owner credentials in the repository.
+   - [ ] Create two least-privilege Cloud Run runtime service accounts and five backend-only Secret Manager secrets. Grant secret access only to the backend identity; the frontend receives none.
+3. **Deploy exactly two Cloud Run services.**
+   - [ ] Deploy the paid-disabled frontend bootstrap revision only to obtain its stable `run.app` hostname; this is an earlier revision of the frontend service, not a third service.
+   - [ ] Create/restrict the free production Turnstile widget for that hostname, configure secrets, origins, headers, health checks, minimum/maximum instances, concurrency, and the paid-demo switch, then deploy the backend exact-SHA image.
+   - [ ] Configure the same frontend exact-SHA image with runtime-only `BACKEND_ORIGIN`, deploy it to the existing frontend service, and confirm there is no application database, candidate-data object storage, queue, worker, additional hosting layer, or load balancer.
+4. **Record the technical deployment checkpoint.**
+   - [ ] Run direct backend liveness/readiness checks and unpaid frontend-origin routing, refresh, `/v1`, cookie, public Turnstile configuration, security-header, and canonical-metadata smokes through the frontend `run.app` origin.
+   - [ ] Verify the final revisions identify the audited Git SHA, the frontend loads over managed HTTPS, frontend-origin `/v1` calls reach the backend, and the backend URL does not appear in browser code or visitor-facing output. At this point the app is deployed; GitHub deployment CI and a custom domain remain deferred.
+   - [ ] Verify the frontend-only `?diagnostics=timings` opt-in remains unavailable on every non-loopback deployment hostname: no diagnostics drawer, raw timing view, **Copy JSON**, or **Reset** controls may render. Do not add or expect a backend diagnostics route.
+5. **Test the deployed website and close release acceptance.**
+   - [ ] After unpaid production smokes pass, manually run exactly two controlled paid production flows: one CV-assisted flow using an owner-selected synthetic or explicitly licensed public-template text PDF with no real person's data, materially different from the bundled sample, and one conversation-first flow. Rerun only when a named defect invalidates evidence.
+   - [ ] Within that bounded pair, verify production Turnstile/hostname/actions, sharing-off, current provider revision/tools and caps, automatic `end_call`, summary/review, cleanup/no reconnect, dashboard usage/cost and retention, and restored paid-demo/provider kill switches.
+   - [ ] Document Cloud Run revision rollback, verify privacy/retention/cost/latency/abuse configuration, reconcile Cloud Run, Secret Manager, Artifact Registry, Logging, and network billing, retain the required rollback image, and finalize the cost baseline before declaring SP-026 or public release complete.
 
 ### Milestone 6 — optional portfolio packaging
 
@@ -4868,8 +4886,8 @@ close paid end-to-end and public-release acceptance.
 - [ ] SP-025A's per-ticket audit ledger reconciles every required prior ticket,
   every material finding is fixed or explicitly blocks deployment, and the full
   deterministic gate passes on the exact candidate SP-026 will deploy.
-- [ ] One GitHub `ci.yml` gates pull requests/main with unpaid fast checks, then uses keyless Workload Identity Federation to build and deploy the exact green `main` commit to both Cloud Run services before production smoke verification.
-- [ ] The manually selected custom domain stays under the renewal-price guardrail, Firebase Hosting serves valid managed HTTPS, apex/`www` canonicalization works, and same-origin `/v1` requests reach the backend without exposing direct service URLs to visitors.
+- [ ] One GitHub `ci.yml` gates pull requests/main with unpaid fast checks and remains quality-only; the owner manually builds and deploys the exact audited commit from an authenticated laptop to both Cloud Run services before production smoke verification.
+- [ ] The frontend Cloud Run `run.app` URL serves valid managed HTTPS and same-origin `/v1` requests reach the backend through the frontend server proxy without exposing the backend service URL to visitors. A custom domain is optional after release and stays under the renewal-price guardrail if added.
 - [ ] Optional SP-027 portfolio packaging is explicitly not required for deployment or release approval.
 - [ ] Optional SP-028 automation is explicitly not required for deployment or release approval.
 - [ ] SP-026's exact two controlled production flows pass on the deployed SP-
@@ -4910,7 +4928,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Public bot/abuse control | Turnstile Free + best-effort backend limits + hard provider/Cloud Run caps | Keep the three paid-route checks because they directly protect demo spend. Do not expand this into Bot Fight Mode, a Cloudflare proxy, paid WAF, persistent IP ledger, fingerprinting system, or authentication flow. |
 | Portfolio README/video package | Optional SP-027 | The deployed demo stands on its own. Add the polished README, screenshots, diagram, measured-results write-up, and recorded walkthrough only if they materially improve the Upwork presentation. |
 | Cross-browser matrix | Manual desktop/mobile acceptance is required; comprehensive automation is optional SP-028 | Preserve mobile parity with targeted iPhone Safari, Android Chrome, desktop Chromium, and Firefox checks rather than a commercial device lab. |
-| Cloud-specific infrastructure code | One minimal GitHub Actions → Google Cloud pipeline | Keep one staged `ci.yml`, two container definitions, Artifact Registry, keyless Workload Identity Federation, Cloud Run revisions, and a small Firebase Hosting same-origin routing config for the custom domain. Avoid a second workflow file, paid load balancer, direct Preview domain mapping, Terraform, Kubernetes, service mesh, multi-region failover, or a custom deployment platform. |
+| Cloud-specific infrastructure code | Minimal manual Google Cloud deployment | Keep the existing quality-only `ci.yml`, two container definitions, Artifact Registry, Secret Manager, two Cloud Run services, and the frontend server's same-origin `/v1` proxy. Avoid deployment CI, a third hosting layer, paid load balancer, Terraform, Kubernetes, service mesh, multi-region failover, or a custom deployment platform. Direct custom-domain mapping is optional only after the `run.app` release passes and its Preview limitations are accepted. |
 
 Recommended implementation priority if time tightens:
 

@@ -20,7 +20,7 @@ Provide fast, focused linting, formatting, type, unit-test, and build gates that
 
 - The user prefers frequent manual testing and does not want every ticket blocked by Playwright or a large test folder.
 - This ticket owns the quick default quality layer and the initial GitHub Actions file.
-- The single CI/CD file is `.github/workflows/ci.yml`. It starts with one unpaid `quality` job here and is extended—not replaced—by SP-026.
+- The single CI file is `.github/workflows/ci.yml`. It contains the unpaid `quality` job and remains quality-only; SP-026 deploys manually from the owner's authenticated laptop.
 - Default checks must be incapable of spending OpenAI or ElevenLabs credits.
 - Tests are added selectively for error-prone logic; the complete fast gate runs at milestone/release boundaries rather than after every tiny edit.
 - Unit tests live beside their owning source modules. The root `tests/fixtures` tree is only for reusable synthetic inputs; it is not a parallel test/source architecture.
@@ -88,7 +88,7 @@ Keep SP-002 reviewable as one logical change represented by `chore(quality): add
 ## Precision references
 
 - [Lean verification strategy](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#18-lean-verification-strategy)
-- [Unified GitHub Actions pipeline](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#unified-github-actions--google-cloud-pipeline)
+- [Manual laptop deployment](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#manual-laptop--google-cloud-deployment)
 - [Ticket rules](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#ticket-rules)
 
 ## Completion handoff

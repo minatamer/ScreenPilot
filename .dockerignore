@@ -1,0 +1,47 @@
+# Source-control and local tool state
+.git
+.github
+.agents
+.codex
+.idea
+.vscode
+
+# Dependencies and generated output are rebuilt inside the image
+node_modules
+**/node_modules
+.pnpm-store
+**/.next
+**/dist
+**/coverage
+**/*.tsbuildinfo
+apps/frontend/public/worklets/elevenlabs-raw-audio-processor.js
+apps/frontend/public/worklets/libsamplerate.worklet.js
+
+# Tests, evidence, and public documentation are not runtime inputs
+docs
+tests
+**/*.test.ts
+**/*.test.tsx
+**/test
+**/test/**
+**/vitest.config.ts
+playwright-report
+test-results
+
+# Local environments and credentials must never enter the build context
+.env
+.env.*
+**/.env
+**/.env.*
+**/service-account*.json
+**/*service-account-key*.json
+**/gcp-credentials*.json
+**/application_default_credentials.json
+
+# Local logs and operating-system files
+*.log
+*.pid
+*.pid.lock
+.DS_Store
+Thumbs.db
+

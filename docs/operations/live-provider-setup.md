@@ -1331,8 +1331,8 @@ invalidate it.
 ### Phase G: production and deployment
 
 - [ ] Deferred entirely to SP-026.
-- [ ] No production domain, DNS, Cloud Run, Firebase, Artifact Registry, Secret
-  Manager, GitHub deployment identity, or hosted-secret step is performed from
+- [ ] No production domain, DNS, Cloud Run, Artifact Registry, Secret Manager,
+  owner Google Cloud authentication, or hosted-secret step is performed from
   this local runbook.
 
 An automated coding agent must leave Phase B through Phase G unchecked unless

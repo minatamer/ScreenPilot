@@ -15,7 +15,7 @@ Ticket index: [`README.md`](README.md)
 
 Turn the SP-014 ElevenLabs notes into one authoritative, beginner-friendly setup runbook for every non-deployment account, dashboard setting, credential, identifier, local secret, and spend control required to run ScreenPilot against its approved live providers.
 
-The guide covers OpenAI, ElevenLabs ElevenAgents, Cloudflare Turnstile, and ScreenPilot's two locally generated signing secrets from account creation through a ready-but-disabled local live configuration. It also audits the repository for any other credentialed third-party runtime dependency and records the result. Google Cloud, Cloud Run, Firebase, Artifact Registry, Secret Manager, GitHub deployment identity, domains, and DNS remain SP-026 work and are excluded here.
+The guide covers OpenAI, ElevenLabs ElevenAgents, Cloudflare Turnstile, and ScreenPilot's two locally generated signing secrets from account creation through a ready-but-disabled local live configuration. It also audits the repository for any other credentialed third-party runtime dependency and records the result. Google Cloud, Cloud Run, Artifact Registry, Secret Manager, production domains, and DNS remain SP-026 work and are excluded here.
 
 ## Why this follow-up exists
 
@@ -280,7 +280,7 @@ End with separate checklists for **documentation complete**, **accounts configur
 - Do not add code, SDKs, credential managers, dashboard automation, ElevenLabs CLI files, or a second configuration source.
 - Do not add Custom LLM/BYOK, OpenAI Realtime, another voice provider, telephony, webhooks, analytics, a knowledge base, transfers, or role-specific agents.
 - Do not write SP-017's final prompt, SP-016's final tool schemas, SP-018 tuning, SP-022 final public caps, or SP-025 evidence. Link and defer them.
-- Do not include Google Cloud, Cloud Run, Firebase, Artifact Registry, Secret Manager, GitHub deployment identity, production domains, DNS, registrar setup, or deployment credentials. SP-026 owns them.
+- Do not include Google Cloud, Cloud Run, Artifact Registry, Secret Manager, production domains, DNS, registrar setup, or deployment credentials. SP-026 owns them.
 - Do not weaken fake/default behavior; default development and CI remain unable to spend provider credits.
 
 ## Implementation checklist
@@ -313,7 +313,7 @@ End with separate checklists for **documentation complete**, **accounts configur
 - [x] The fake-to-live sequence cannot accidentally authorize a paid call before credentials, safeguards, and approval exist.
 - [x] No secret enters frontend configuration, docs, committed examples, URLs, logs, screenshots, prompts, storage, or build arguments.
 - [x] Owner account changes, secret entry, paid calls, microphone checks, and deployment were left visibly unchecked during documentation implementation; later owner-reported progress is tracked separately in the runbook.
-- [x] Google Cloud/Firebase/domain/deployment instructions are absent except links to SP-026 ownership.
+- [x] Google Cloud/domain/deployment instructions are absent except links to SP-026 ownership.
 
 ## Focused verification
 

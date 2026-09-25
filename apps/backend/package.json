@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsc --watch --preserveWatchOutput",
     "prebuild": "node ../../scripts/clean-backend-build.mjs",

@@ -18,7 +18,7 @@ If explicitly approved after deployment, package the already-released demo so an
 
 - SP-026 already completes the releasable demo. This ticket is presentation work only and may be skipped.
 - The portfolio story shows two equal entry modes: focused CV-assisted screening and open conversation-first discovery, both converging on the same voice/insight/review experience.
-- Explain the real tool division: Next.js/React frontend, Express backend, browser PDF extraction, OpenAI intelligence, ElevenLabs voice loop, Turnstile abuse check, Cloud Run/Firebase deployment.
+- Explain the real tool division: Next.js/React frontend, Express backend, browser PDF extraction, OpenAI intelligence, ElevenLabs voice loop, Turnstile abuse check, and two-service Cloud Run deployment.
 - Do not publish a latency or unit-cost benchmark from the bounded release
   walkthroughs. Timing diagnostics may be described qualitatively; cost may be
   described only as a bounded observed test expense with its limitations.
@@ -46,7 +46,7 @@ If explicitly approved after deployment, package the already-released demo so an
 - [ ] Explain statelessness, no audio recording, provider processing, Turnstile scope, and no hiring decisions.
 - [ ] Audit every Section 20 definition-of-done item.
 - [ ] Remove dead experiments, stale scope, debug UI, unused dependencies/assets, and accidental secrets/content.
-- [ ] Verify every public link uses the canonical custom domain.
+- [ ] Verify every public link uses the accepted canonical frontend URL: the released `run.app` origin, or the custom domain if the owner adds one later.
 
 ## Acceptance criteria
 
