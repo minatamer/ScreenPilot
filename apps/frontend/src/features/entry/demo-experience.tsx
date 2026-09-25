@@ -157,7 +157,7 @@ export function DemoExperience() {
     [dispatch],
   );
   const selectEntryMode = (entryMode: EntryMode) => {
-    if (entryMode === "cv_assisted" && !providerOperationsEnabled) {
+    if (!providerOperationsEnabled) {
       return;
     }
     dispatch({ type: "SELECT_ENTRY_MODE", entryMode });
@@ -287,7 +287,7 @@ export function DemoExperience() {
           title="Bring a CV, or start with a conversation."
         />
         <EntryModeChooser
-          cvAssistedEnabled={providerOperationsEnabled}
+          entryModesEnabled={providerOperationsEnabled}
           summaryRehearsal={summaryRehearsal}
           onSelect={selectEntryMode}
         />

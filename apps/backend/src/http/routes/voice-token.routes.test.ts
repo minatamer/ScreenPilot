@@ -110,6 +110,30 @@ async function prepareGrant(agent: ReturnType<typeof request.agent>) {
   return prepareInterviewResponseSchema.parse(response.body).interviewGrant;
 }
 
+async function prepareGrantBeforeKillSwitch() {
+  const { app } = createTestApp();
+  const bootstrap = await request(app).get("/v1/demo/bootstrap").expect(200);
+  const setCookie: unknown = bootstrap.headers["set-cookie"];
+  if (!Array.isArray(setCookie) || typeof setCookie[0] !== "string") {
+    throw new TypeError("Expected a signed anonymous-session cookie.");
+  }
+  const cookie = setCookie[0].split(";", 1)[0];
+  if (cookie === undefined) {
+    throw new TypeError("Expected an anonymous-session cookie pair.");
+  }
+  const response = await request(app)
+    .post("/v1/interview/prepare")
+    .set("Cookie", cookie)
+    .set("Origin", ALLOWED_ORIGIN)
+    .send(PREPARE_REQUEST)
+    .expect(200);
+  return {
+    cookie,
+    interviewGrant: prepareInterviewResponseSchema.parse(response.body)
+      .interviewGrant,
+  };
+}
+
 function tokenRequest(interviewGrant: string) {
   return {
     interviewGrant,
@@ -262,16 +286,16 @@ describe("POST /v1/voice/token", () => {
   );
 
   it("keeps live voice disabled while the paid-demo switch is off", async () => {
+    const prepared = await prepareGrantBeforeKillSwitch();
     const providers = providerSpies();
     const { app } = createTestApp(providers, {
       config: disabledLiveConfig(),
     });
-    const agent = request.agent(app);
-    const grant = await prepareGrant(agent);
-    const result = await agent
+    const result = await request(app)
       .post("/v1/voice/token")
+      .set("Cookie", prepared.cookie)
       .set("Origin", ALLOWED_ORIGIN)
-      .send(tokenRequest(grant))
+      .send(tokenRequest(prepared.interviewGrant))
       .expect(503);
 
     expect(apiErrorSchema.parse(result.body).error).toMatchObject({

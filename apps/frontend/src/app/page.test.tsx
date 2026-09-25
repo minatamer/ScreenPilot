@@ -279,4 +279,61 @@ describe("HomePage", () => {
     });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+
+  it("disables both landing choices when the live kill switch is off", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          abuseProtection: {
+            appearance: "interaction-only",
+            provider: "cloudflare_turnstile",
+            siteKey: "",
+          },
+          limits: {
+            callSeconds: 480,
+            cvCharacters: 40_000,
+            pdfBytes: 5_242_880,
+            pdfPages: 8,
+          },
+          effectiveMode: "paid_disabled",
+          paidOperationsEnabled: false,
+          privacyNoticeVersion: "2026-09-11",
+          providerMode: "live",
+          demoContext: {
+            kind: "role_agnostic_first_stage_hr_screen",
+            roleAvailability: "candidate_selected_synthetic_session_vacancy",
+            employerFactsAvailable: false,
+          },
+        }),
+        { headers: { "content-type": "application/json" }, status: 200 },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("matchMedia", () => ({
+      addEventListener: vi.fn(),
+      matches: true,
+      media: "(prefers-reduced-motion: reduce)",
+      removeEventListener: vi.fn(),
+    }));
+
+    render(
+      <DemoSessionProvider>
+        <HomePage />
+      </DemoSessionProvider>,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "CV analysis unavailable" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Voice interview unavailable" }),
+    ).toBeDisabled();
+    expect(screen.getAllByText("Paused for this safety check")).toHaveLength(2);
+    expect(
+      screen.getByText(
+        "Conversation-first entry stays disabled while external actions are paused.",
+      ),
+    ).toBeVisible();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
 });

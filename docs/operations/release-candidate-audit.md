@@ -215,3 +215,41 @@ containing exactly that reviewed diff; its commit hash cannot be recorded until
 the owner separately authorizes a commit. Repository-owned SP-025A work is
 complete, but SP-025's manual matrix and final owner release-candidate approval
 remain deployment blockers.
+
+## SP-026 affected re-audit addendum — 2026-09-25
+
+After the first technical Cloud Run checkpoint, the owner identified a bounded
+release defect: production bootstrap correctly returned `paid_disabled`, but
+only the CV-assisted entry control closed. **Start without a CV** still appeared
+actionable, issued deterministic conversation preparation, and reached a later
+voice-unavailable boundary. No provider call or spend bypass occurred, but the
+behavior contradicted the intended all-or-nothing public kill switch.
+
+The correction is intentionally narrow. Both landing and `/demo` entry controls
+now derive from the freshly validated interactive-operation boundary; both
+selection handlers refuse paid-disabled input. The backend independently
+rejects conversation preparation while `effectiveMode=paid_disabled` before it
+issues an interview grant. Production still requires `PROVIDER_MODE=live`, and
+no deployed fallback can select deterministic fake or summary rehearsal.
+
+The smallest affected re-audit found no dependency-direction, statelessness,
+privacy, provider-call, lifecycle, or dependency change. In an isolated snapshot
+containing only current Git-tracked files, Node 24.19.0 and pnpm 11.24.0 passed
+6 contracts files / 50 tests, 26 backend files / 338 tests, and 41 frontend
+files / 300 tests. All three package lints and typechecks passed; contracts,
+backend, and frontend production builds passed, and the frontend emitted `/`,
+`/demo`, and the same-origin `/v1/[...path]` proxy without detecting a local
+environment file. Changed-file formatting, the 352-file tracked-secret scan,
+the 89-file browser inline-style scan, and `git diff --check` also passed. The
+dependency audit was not repeated because no manifest or lockfile changed.
+
+An earlier in-place frontend build reported the ignored `.env.local` as a
+Next.js environment source, so that build is excluded from the clean release
+evidence; no local value was inspected or logged. Automated tests continued to
+force fake/paid-disabled mode with environment loading disabled, and the final
+isolated snapshot contained no ignored environment file and made no live
+provider call. The required exact-SHA container rebuild remains after the owner
+commits this correction. Until that new commit is re-built, deployed, and
+re-smoked, the earlier
+`606638735bf2d6bfc1d9171738669e8fec111ac9` revisions remain safely
+paid-disabled but are superseded as the final release candidate.

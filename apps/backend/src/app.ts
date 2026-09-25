@@ -110,6 +110,7 @@ export function createApp(options: CreateAppOptions): Express {
   });
   const getDemoBootstrap = createGetDemoBootstrap(parsedConfig.publicRuntime);
   const prepareConversationFirst = createPrepareConversationFirst({
+    enabled: parsedConfig.effectiveMode !== "paid_disabled",
     grantService,
     grantTtlSeconds: parsedConfig.limits.interviewGrantTtlSeconds,
     idGenerator,

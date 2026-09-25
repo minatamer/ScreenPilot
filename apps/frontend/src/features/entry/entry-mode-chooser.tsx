@@ -5,8 +5,8 @@ import { EntryModeBadge } from "@/shared/ui/entry-mode-badge";
 import { EntryModeCard } from "@/shared/ui/entry-mode-card";
 
 type EntryModeChooserProps = Readonly<{
-  cvAssistedEnabled?: boolean;
   disabled?: boolean;
+  entryModesEnabled?: boolean;
   onSelect: (entryMode: EntryMode) => void;
   summaryRehearsal?: boolean;
 }>;
@@ -49,8 +49,8 @@ function ConversationIcon() {
 }
 
 export function EntryModeChooser({
-  cvAssistedEnabled = true,
   disabled = false,
+  entryModesEnabled = true,
   onSelect,
   summaryRehearsal = false,
 }: EntryModeChooserProps) {
@@ -59,17 +59,17 @@ export function EntryModeChooser({
       <EntryModeCard
         actions={
           <Button
-            disabled={disabled || !cvAssistedEnabled}
+            disabled={disabled || !entryModesEnabled}
             onClick={() => {
               onSelect("cv_assisted");
             }}
           >
-            {cvAssistedEnabled ? "Use a CV" : "CV analysis unavailable"}
+            {entryModesEnabled ? "Use a CV" : "CV analysis unavailable"}
           </Button>
         }
         badge={
           <EntryModeBadge>
-            {cvAssistedEnabled
+            {entryModesEnabled
               ? summaryRehearsal
                 ? "Simulated CV analysis"
                 : "More tailored questions"
@@ -77,13 +77,11 @@ export function EntryModeChooser({
           </EntryModeBadge>
         }
         description={
-          cvAssistedEnabled
+          entryModesEnabled
             ? summaryRehearsal
               ? "Use the CV-assisted flow with simulated analysis and interview voice."
               : "Bring a CV for more focused follow-up questions. It stays in this tab."
-            : summaryRehearsal
-              ? "CV analysis is unavailable while this rehearsal is paused."
-              : "CV selection and analysis stay disabled while external actions are paused."
+            : "CV selection and analysis stay disabled while external actions are paused."
         }
         icon={<DocumentIcon />}
         title="Use a CV"
@@ -91,16 +89,28 @@ export function EntryModeChooser({
       <EntryModeCard
         actions={
           <Button
-            disabled={disabled}
+            disabled={disabled || !entryModesEnabled}
             onClick={() => {
               onSelect("conversation_first");
             }}
           >
-            Start without a CV
+            {entryModesEnabled
+              ? "Start without a CV"
+              : "Voice interview unavailable"}
           </Button>
         }
-        badge={<EntryModeBadge>Jump straight in</EntryModeBadge>}
-        description="Skip the document. Pilot starts broadly and learns from your answers."
+        badge={
+          <EntryModeBadge>
+            {entryModesEnabled
+              ? "Jump straight in"
+              : "Paused for this safety check"}
+          </EntryModeBadge>
+        }
+        description={
+          entryModesEnabled
+            ? "Skip the document. Pilot starts broadly and learns from your answers."
+            : "Conversation-first entry stays disabled while external actions are paused."
+        }
         icon={<ConversationIcon />}
         title="Start without a CV"
       />

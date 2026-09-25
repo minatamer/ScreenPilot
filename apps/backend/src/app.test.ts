@@ -83,7 +83,7 @@ function testConfig(
   });
 }
 
-function productionConfig(): BackendConfig {
+function productionConfig(paidDemoEnabled = true): BackendConfig {
   return loadBackendConfig({
     ALLOWED_ORIGINS: "https://demo.screenpilot.invalid",
     ANONYMOUS_COOKIE_SECRET: "production-cookie-secret-000000000000",
@@ -93,7 +93,7 @@ function productionConfig(): BackendConfig {
     ELEVENLABS_VOICE_ID: "screenpilot-voice",
     INTERVIEW_GRANT_SIGNING_SECRET: "production-grant-secret-0000000000000",
     OPENAI_API_KEY: "not-a-real-openai-key",
-    PAID_DEMO_ENABLED: "true",
+    PAID_DEMO_ENABLED: paidDemoEnabled ? "true" : "false",
     PROVIDER_MODE: "live",
     TURNSTILE_ALLOWED_HOSTNAMES: "demo.screenpilot.invalid",
     TURNSTILE_SECRET_KEY: "not-a-real-turnstile-secret",
@@ -249,6 +249,27 @@ describe("ScreenPilot backend application", () => {
       .set("Origin", "https://demo.screenpilot.invalid")
       .expect(200);
     expect(bootstrap.headers["set-cookie"]?.[0]).toMatch(/Secure/i);
+    expectNoProviderCalls(providers.operations);
+  });
+
+  it("rejects conversation preparation when the production kill switch is off", async () => {
+    const { app, providers } = createTestApplication(productionConfig(false));
+    const bootstrap = await request(app)
+      .get("/v1/demo/bootstrap")
+      .set("Origin", "https://demo.screenpilot.invalid")
+      .expect(200);
+
+    const preparation = await request(app)
+      .post("/v1/interview/prepare")
+      .set("Cookie", cookieHeader(bootstrap))
+      .set("Origin", "https://demo.screenpilot.invalid")
+      .send(VALID_PREPARE_REQUEST)
+      .expect(503);
+
+    expect(apiErrorSchema.parse(preparation.body).error).toMatchObject({
+      code: "CAPACITY_REACHED",
+      retryable: true,
+    });
     expectNoProviderCalls(providers.operations);
   });
 

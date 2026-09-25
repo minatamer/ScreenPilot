@@ -604,16 +604,13 @@ describe("DemoExperience preparation paths", () => {
     expect(controlledBrowserBoundaries.elevenLabsBridge).not.toHaveBeenCalled();
   }, 20_000);
 
-  it("keeps live paid-disabled CV and voice actions unavailable", async () => {
+  it("keeps both live paid-disabled entry modes unavailable", async () => {
     const browserFetch = vi.fn<typeof fetch>((input) => {
       const url = requestUrl(input);
       if (url === "/v1/demo/bootstrap") {
         return Promise.resolve(
           jsonResponse(paidDisabledLiveBootstrapResponse()),
         );
-      }
-      if (url === "/v1/interview/prepare") {
-        return Promise.resolve(jsonResponse(preparedResponse()));
       }
       return Promise.reject(new Error(`Unexpected request: ${url}`));
     });
@@ -628,15 +625,11 @@ describe("DemoExperience preparation paths", () => {
     expect(
       await screen.findByRole("button", { name: "CV analysis unavailable" }),
     ).toBeDisabled();
-    expect(screen.queryByLabelText("Choose PDF file")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: "Start without a CV" }));
-
     expect(
-      await screen.findByRole("heading", {
-        name: "Voice interview is unavailable right now.",
-      }),
-    ).toBeVisible();
+      screen.getByRole("button", { name: "Voice interview unavailable" }),
+    ).toBeDisabled();
+    expect(screen.getAllByText("Paused for this safety check")).toHaveLength(2);
+    expect(screen.queryByLabelText("Choose PDF file")).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Check microphone" }),
     ).not.toBeInTheDocument();
@@ -648,7 +641,7 @@ describe("DemoExperience preparation paths", () => {
       document.querySelector('script[src*="challenges.cloudflare.com"]'),
     ).toBeNull();
     expect(browserFetch.mock.calls.map(([input]) => requestUrl(input))).toEqual(
-      ["/v1/demo/bootstrap", "/v1/interview/prepare"],
+      ["/v1/demo/bootstrap"],
     );
   });
 

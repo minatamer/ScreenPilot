@@ -289,6 +289,23 @@ Editor, Artifact Registry Writer, or deployment privileges.
 
 The frontend receives no Secret Manager binding.
 
+Do not copy the whole local `.env.local` file into Secret Manager or Cloud Run.
+Use the committed `.env.example` as the schema and split production settings by
+their actual sensitivity and runtime owner:
+
+| Destination | Configuration |
+| --- | --- |
+| Backend Secret Manager bindings | `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `TURNSTILE_SECRET_KEY`, `INTERVIEW_GRANT_SIGNING_SECRET`, and `ANONYMOUS_COOKIE_SECRET` |
+| Backend ordinary Cloud Run variables | `APP_ENV=production`, `PROVIDER_MODE=live`, `PAID_DEMO_ENABLED=false`, `LIVE_INTERVIEW_ENABLED=true`, `ALLOWED_ORIGINS=<frontend HTTPS origin>`, `ELEVENLABS_AGENT_ID=<owner-selected agent>`, `ELEVENLABS_VOICE_ID=<owner-selected voice>`, `TURNSTILE_SITE_KEY=<public widget key>`, and `TURNSTILE_ALLOWED_HOSTNAMES=<bare frontend hostname>` |
+| Backend explicit guardrail variables | `HTTP_HEADERS_TIMEOUT_MS=10000`, `HTTP_REQUEST_TIMEOUT_MS=30000`, `HTTP_JSON_BODY_MAX_BYTES=65536`, `PROVIDER_REQUEST_TIMEOUT_MS=30000`, `INTERVIEW_GRANT_TTL_SECONDS=900`, `ANONYMOUS_COOKIE_TTL_SECONDS=7200`, `CAPACITY_GLOBAL_CONCURRENT_REQUESTS=4`, `CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS=2`, `CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS=1`, `CAPACITY_SUMMARY_CONCURRENT_REQUESTS=2`, `RATE_LIMIT_WINDOW_SECONDS=60`, `RATE_LIMIT_MAX_ENTRIES=10000`, `RATE_LIMIT_BOOTSTRAP_REQUESTS=120`, `RATE_LIMIT_PREPARE_REQUESTS=30`, `RATE_LIMIT_CV_ANALYZE_REQUESTS=10`, `RATE_LIMIT_VOICE_TOKEN_REQUESTS=3`, and `RATE_LIMIT_SUMMARY_REQUESTS=10` |
+| Cloud Run platform | `PORT`; Cloud Run injects this value, so the operator does not set it |
+| Frontend ordinary Cloud Run variable | `BACKEND_ORIGIN=<backend HTTPS origin>`, added only after the backend service exists |
+
+The parser currently supplies the documented timeout, TTL, capacity, and rate
+limit defaults when those variables are omitted. SP-026 still records them
+explicitly on the backend revision so the deployed cost and abuse ceilings are
+visible in Cloud Run configuration rather than relying on implicit defaults.
+
 ## 5. Build the frontend image and deploy its bootstrap revision
 
 The frontend stable Cloud Run hostname is needed for backend CORS and the

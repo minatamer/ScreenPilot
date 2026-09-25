@@ -369,7 +369,10 @@ completion.
 
 #### Stage 2B — conversation-first preparation
 
-- **Input state:** valid bootstrap configuration and explicit **Start without a CV** choice.
+- **Input state:** freshly validated bootstrap configuration whose `effectiveMode`
+  permits interactive operations, plus an explicit **Start without a CV**
+  choice. A `paid_disabled` runtime disables both entry choices and cannot
+  enter this stage or send the preparation request.
 - **Visible behavior:** a brief truthful **Preparing an open conversation** transition. Do not show document analysis, extracted facts, fake personalization, or a plan-preview detour.
 - **API:** `POST /v1/interview/prepare` with `entryMode: "conversation_first"`.
 - **Backend behavior:** validates the anonymous session and returns a versioned deterministic discovery plan plus a short-lived signed `interviewGrant`. It makes no OpenAI or ElevenLabs call.
@@ -1213,6 +1216,14 @@ fresh real Turnstile check and at most one live metered OpenAI summary request.
 does not initiate provider work. No automatic retry or fake-summary fallback is
 allowed.
 
+Production accepts only `PROVIDER_MODE=live`; deterministic fake and summary
+rehearsal remain local/test-only and cannot become a deployed fallback. After a
+fresh production bootstrap resolves to `paid_disabled`, both the CV-assisted
+and conversation-first controls are visibly disabled on the landing page and
+the `/demo` mode chooser. Neither selection may dispatch, navigate into a
+preparation stage, or issue `POST /v1/interview/prepare`. Re-enabling the paid
+switch reopens both real flows together; it never substitutes fake behavior.
+
 Persisted runtime configuration is never activation authority. A restored
 completed session mounts no summary challenge or request while bootstrap refresh
 is pending or failed. After a successful refresh, only the row above may reopen
@@ -1333,10 +1344,11 @@ observation.
 - Cloudflare Turnstile Free verification immediately before every provider-backed paid request: CV analysis, voice-token issuance, and post-call summary.
 - Best-effort bounded backend route/source limits on bootstrap, conversation preparation, CV analysis, voice token, and summary; counters are memory-only per instance and are not represented as durable identity enforcement.
 - Backend-configured paid-demo kill switch.
-- The same kill switch suppresses the public Turnstile site key and removes the
-  browser's CV, microphone, challenge, token, SDK, and WebRTC entry points while
-  live paid operations are disabled. Server-side route gates remain the final
-  authority.
+- The same kill switch suppresses the public Turnstile site key, visibly
+  disables both landing/mode-chooser entry controls, prevents conversation
+  preparation from starting, and removes the browser's CV, microphone,
+  challenge, token, SDK, and WebRTC entry points while live paid operations are
+  disabled. Server-side route gates remain the final authority.
 - A native monthly **USD 5 Cloud Run spend-cap budget**, when the current
   Preview feature is available to the billing account, supplements Cloud Run
   maximum-instance/concurrency bounds. Its enforcement can lag and does not
@@ -2141,10 +2153,11 @@ explicitly enabled paid live mode exposes it. This keeps the populated local
 file compatible with deterministic, network-free fake mode and makes the
 no-spend live-wiring phase fail closed in the browser as well as the backend.
 
-`PAID_DEMO_ENABLED=false` rejects the currently implemented CV-analysis and
-voice-token use cases before provider calls. In live mode it also disables CV
-selection/analysis, microphone permission, both Turnstile actions, voice-token
-issuance, the ElevenLabs SDK bridge, and WebRTC in the browser. A restored tab
+`PAID_DEMO_ENABLED=false` rejects conversation preparation, CV analysis,
+voice-token issuance, and summary generation before any grant or provider call.
+In live mode it also disables both entry-mode controls before navigation or
+conversation preparation, CV selection/analysis, microphone permission, both
+Turnstile actions, the ElevenLabs SDK bridge, and WebRTC in the browser. A restored tab
 cannot reuse an older capability state: provider controls, including completed-
 session summary preparation, stay disabled until a fresh bootstrap succeeds.
 Only the active refresh generation may apply a
@@ -4835,6 +4848,9 @@ boundary rather than a deferred task.
 ### Product
 
 - [ ] The landing presents CV-assisted and conversation-first as equally important role-agnostic entry modes and discloses that the candidate's role becomes a synthetic session-only demo vacancy, with no fictional employer name or finite role list.
+- [ ] A production `paid_disabled` bootstrap visibly disables both landing and
+  `/demo` entry-mode controls and starts neither preparation path; deployed
+  production never exposes deterministic fake behavior.
 - [ ] Uploaded-CV facts personalize the call without leaking sample placeholders or treating CV alignment as proof of an applied role.
 - [ ] Conversation-first requires no document, skips CV analysis/plan preview, uses only the configured name opener as a fixed question, then generates a natural synthetic-role question or undecided path plus follow-ups that become more focused as answers arrive.
 - [ ] Any bounded candidate-stated role is accepted without redirection, corrections adapt later wording, compound wording remains one label, and undecided candidates complete the same universal HR screen.

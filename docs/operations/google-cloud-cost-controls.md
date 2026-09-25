@@ -65,6 +65,24 @@ repository.
   in the console and review real billing after the two authorized production
   flows.
 
+## Current SP-026 budget-control result — 2026-09-25
+
+- The current billing account did not expose the Preview **Spend cap
+  enforcement** choice. The visible workflow was the standard alerts-only flow,
+  so the native USD 5 Cloud Run hard cap is recorded as
+  `Unavailable — Preview/eligibility`; it must not be represented as configured.
+- A monthly USD 5 **alerts-only** fallback is configured for Cloud Run with
+  actual-spend notifications at 50%, 80%, and 100%. The console offered only
+  `All projects (1)`, so this budget currently has billing-account project scope
+  while the account has exactly one linked project. Revisit or replace it before
+  linking a second project to the billing account.
+- A separate monthly USD 10 alerts-only budget is scoped to the dedicated
+  ScreenPilot project across all services. Its actual thresholds are 25%, 50%,
+  75%, 90%, and 100%; forecast thresholds are 50% and 100%.
+- Neither alerts-only budget stops usage or charges. The Cloud Run instance
+  ceilings, paid-demo kill switch, provider limits, image-retention policy, and
+  post-deployment billing review remain the enforceable fallback set.
+
 ## Prerequisites
 
 Before configuring either budget:

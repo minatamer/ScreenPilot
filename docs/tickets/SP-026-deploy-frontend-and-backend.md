@@ -31,6 +31,13 @@ using the server-only `BACKEND_ORIGIN`; the backend URL never enters browser API
 configuration. This preserves same-origin browser calls and first-party cookie
 behavior without an additional hosting or load-balancing product.
 
+Production is live-only: `APP_ENV=production` requires `PROVIDER_MODE=live`.
+The paid-demo switch chooses between both real provider flows being available
+and both entry flows being closed; it never exposes deterministic fake behavior
+to a deployed visitor. With `PAID_DEMO_ENABLED=false`, the landing page and
+`/demo` mode chooser must visibly disable both CV-assisted and conversation-first
+buttons before navigation or `POST /v1/interview/prepare`.
+
 ## Standalone implementation context
 
 - SP-026 does **not** add deployment jobs to GitHub Actions. The existing
@@ -238,6 +245,9 @@ misrepresent the CLI-created USD 10 alert budget as a hard cap.
   server-only `BACKEND_ORIGIN`; preserve request cancellation, bounded bodies,
   response/status headers, `Set-Cookie`, and no-store behavior without logging
   candidate content.
+- [x] Keep deterministic fake mode local/test-only and make the production
+  paid-demo kill switch disable both entry-mode controls before either flow can
+  navigate or issue a preparation/provider request.
 
 ### Phase 2 — create the minimum Google Cloud foundation
 
@@ -245,46 +255,55 @@ misrepresent the CLI-created USD 10 alert budget as a hard cap.
   obtain approval, install the signed Google installer with bundled Python/PATH
   support, open a fresh shell, verify `gcloud --version`, and let the owner
   complete browser sign-in/MFA through `gcloud init`.
-- [ ] After the owner approves the immutable project ID and exact billing
+- [x] After the owner approves the immutable project ID and exact billing
   account, use `gcloud` to create/select the dedicated project, link billing,
   verify the active account/project/billing state, and stop on any mismatch.
-- [ ] Enable only the required APIs, create/select the Artifact Registry
+- [x] Enable only the required APIs, create/select the Artifact Registry
   repository, and configure the regional Docker credential helper.
 - [ ] Configure and verify the USD 5 monthly Cloud Run spend cap when available,
   the USD 10 whole-project alert budget with the required thresholds, and all
   fallback controls before the first image push or service deployment.
-- [ ] Create a least-privilege backend runtime service account with access only
+- [x] Create a least-privilege backend runtime service account with access only
   to the five required Secret Manager secrets; give the frontend runtime no
   provider-secret access.
 
 ### Phase 3 — deploy exactly two Cloud Run services
 
-- [ ] Build and push exactly one exact-SHA frontend image and one exact-SHA
+- [x] Build and push exactly one exact-SHA frontend image and one exact-SHA
   backend image locally; never use a mutable `latest` release tag.
-- [ ] Deploy the frontend bootstrap revision only as needed to learn its stable
+- [x] Deploy the frontend bootstrap revision only as needed to learn its stable
   `run.app` hostname, then create/restrict Turnstile, deploy the configured
   backend, set runtime-only `BACKEND_ORIGIN` on the same frontend image, and
   deploy final frontend/backend revisions that both identify the audited Git
   SHA.
-- [ ] Configure health checks, graceful startup, origins, headers, runtime
+- [x] Configure health checks, graceful startup, origins, headers, runtime
   secrets, request-based billing, min/max instances, concurrency, paid-demo
   switch, and revision labels.
-- [ ] Keep Cloud Run minimum instances at zero and retain max-instance/provider
+- [x] Keep Cloud Run minimum instances at zero and retain max-instance/provider
   caps independently of free quotas or expired trial credit.
 
 ### Phase 4 — record the deployed checkpoint
 
-- [ ] Run direct backend liveness/readiness checks plus unpaid frontend-origin
+- [x] Run direct backend liveness/readiness checks plus unpaid frontend-origin
   routing, refresh, `/v1`, cookie, public Turnstile configuration, security
   header, and canonical-metadata smokes through the frontend `run.app` URL.
-- [ ] Verify `?diagnostics=timings` exposes no diagnostics drawer, raw timing
+- [x] Verify `?diagnostics=timings` exposes no diagnostics drawer, raw timing
   view, **Copy JSON**, or **Reset** controls on either deployed service URL.
-- [ ] Record that the application is technically deployed only when the final
+- [x] Record that the application is technically deployed only when the final
   frontend and backend revisions identify the audited SHA, the frontend
   `run.app` URL loads, and same-origin `/v1` requests reach the backend. Domain
   purchase and deployment CI are not part of this checkpoint.
 
 ### Phase 5 — test the deployed website and close release acceptance
+
+Post-checkpoint defect correction required before paid testing:
+
+- [ ] Commit and re-audit the entry-mode kill-switch correction, then build,
+  push, and deploy new exact-SHA frontend and backend images without changing
+  the secrets, provider identifiers, or two-service architecture.
+- [ ] Repeat the unpaid frontend smokes and verify a production
+  `paid_disabled` bootstrap renders both landing and `/demo` choices disabled,
+  issues no conversation-preparation request, and exposes no fake flow.
 
 - [ ] Manually run exactly two controlled production flows after every unpaid
   smoke passes: one owner-selected synthetic/licensed materially different
@@ -314,24 +333,27 @@ misrepresent the CLI-created USD 10 alert budget as a hard cap.
 
 - [ ] The deployed source exactly matches the candidate closed by SP-025A; any
   material post-audit change was re-audited before deployment.
-- [ ] The owner can reproduce the deployment from the documented local checkout
+- [x] The owner can reproduce the deployment from the documented local checkout
   without GitHub deployment automation or a long-lived cloud key.
-- [ ] Exact-SHA frontend/backend images produce independently restartable Cloud
+- [x] Exact-SHA frontend/backend images produce independently restartable Cloud
   Run revisions, and rollback targets remain identifiable.
-- [ ] The frontend `run.app` HTTPS URL serves application routes and same-origin
+- [x] The frontend `run.app` HTTPS URL serves application routes and same-origin
   `/v1` calls; browser code receives no backend base URL.
 - [ ] First-party safety cookies, refresh routing, CSP/CORS/origin, Turnstile
   hostname/actions, and the frontend proxy work through the public frontend
   origin.
-- [ ] No backend `run.app` URL appears in visitor UI, metadata, copied summaries,
+- [x] No backend `run.app` URL appears in visitor UI, metadata, copied summaries,
   or portfolio links.
-- [ ] Local timing diagnostics remain unavailable on all deployed hostnames.
-- [ ] Secrets are absent from images, build arguments, local deployment logs,
+- [x] Local timing diagnostics remain unavailable on all deployed hostnames.
+- [ ] With the production kill switch off, both landing and `/demo` entry
+  choices are visibly disabled and neither path starts preparation, Turnstile,
+  microphone, provider SDK, or WebRTC work.
+- [x] Secrets are absent from images, build arguments, local deployment logs,
   and browser responses; only the backend runtime receives the five secrets.
-- [ ] The USD 5 Cloud Run spend-cap budget is configured when eligible or its
+- [x] The USD 5 Cloud Run spend-cap budget is configured when eligible or its
   exact Preview blocker is recorded; the USD 10 project alert budget and every
   fallback ceiling are configured without representing alerts as enforcement.
-- [ ] Domain registration is optional after the deployment passes. No domain,
+- [x] Domain registration is optional after the deployment passes. No domain,
   hosting, CDN, proxy, or paid load-balancer purchase is required to close this
   ticket.
 
@@ -351,15 +373,15 @@ misrepresent the CLI-created USD 10 alert budget as a hard cap.
 
 - [x] Validate both container builds locally and inspect their histories/layers
   for secrets and candidate content.
-- [ ] Review the local deployer's effective IAM roles and both runtime service
+- [x] Review the local deployer's effective IAM roles and both runtime service
   identities; confirm no user-managed service-account key exists.
-- [ ] Review both Google Cloud budget scopes, amounts, statuses, thresholds, and
+- [x] Review both Google Cloud budget scopes, amounts, statuses, thresholds, and
   recipients without intentionally creating spend.
-- [ ] Run direct backend `/health/live` and `/health/ready`, then unpaid routing
+- [x] Run direct backend `/health/live` and `/health/ready`, then unpaid routing
   and security smokes through the frontend origin.
-- [ ] Exercise frontend refresh and every relative `/v1` route; verify proxy
+- [x] Exercise frontend refresh and every relative `/v1` route; verify proxy
   status/body/header/cookie behavior and backend-origin non-disclosure.
-- [ ] Confirm deployed hostnames cannot expose the local timing diagnostics UI.
+- [x] Confirm deployed hostnames cannot expose the local timing diagnostics UI.
 - [ ] Manually complete the exact two-flow production set with controlled usage
   and inspect Turnstile/provider/Cloud Run results.
 - [ ] Exercise/document one rollback and confirm Git SHA labels.
@@ -414,10 +436,142 @@ or the active workflow already authorizes it.
   link, API, registry, identity, secret, image push, or Cloud Run resource was
   created.
 - These are deliberately local `sp026-preflight` images, not immutable release
-  artifacts. Before any push or deployment, the changes still require an
-  owner-authorized commit and clean exact-SHA build plus closure of the remaining
-  owner approval gate. Google Cloud project/billing selection, cost controls,
-  identities, secrets, and deployment phases remain unchecked.
+  artifacts. They were superseded by the committed exact-SHA images recorded in
+  Phase 2; no Phase 1 image was pushed or deployed.
+
+## Phase 2 implementation evidence — 2026-09-25
+
+- The owner committed the reviewed deployment preparation as exact Git SHA
+  `606638735bf2d6bfc1d9171738669e8fec111ac9`. Clean-checkout frontend and backend
+  images tagged with that full SHA passed an isolated two-container readiness,
+  page, and same-origin proxy smoke.
+- The owner-selected dedicated project and open billing account were verified
+  before the explicitly approved billing link. The active account, project,
+  billing-enabled state, and `europe-west1` region were rechecked without
+  recording private account identifiers in the repository.
+- The monthly USD 10 project-wide alerts-only budget was verified at actual
+  thresholds 25%, 50%, 75%, 90%, and 100% plus forecast thresholds 50% and
+  100%. The Preview spend-cap choice was unavailable in the current console;
+  the sanitized blocker and the Cloud Run-only USD 5 alerts fallback are
+  recorded in the cost-control runbook without claiming hard-cap enforcement.
+- Only the Cloud Run, Artifact Registry, Secret Manager, IAM, and Billing
+  Budgets APIs required by this phase are enabled intentionally. The regional
+  `screenpilot` Docker repository exists and contains zero images; the regional
+  Docker credential helper is configured.
+- Separate backend and frontend runtime service accounts exist with zero
+  user-managed keys and no project-wide runtime roles. The five required Secret
+  Manager resources exist with zero versions. Each secret grants accessor only
+  to the backend runtime identity; the frontend identity has no secret access.
+- No image was pushed and no Cloud Run service, secret value/version, provider
+  call, candidate artifact, database, storage bucket, queue, worker, load
+  balancer, domain, or deployment automation was created.
+
+## Phase 3 implementation evidence — 2026-09-25
+
+- The exact-SHA frontend image for commit
+  `606638735bf2d6bfc1d9171738669e8fec111ac9` was pushed to the regional
+  `screenpilot` repository. Artifact Registry reported manifest-list digest
+  `sha256:cd5be81a765f9f9d77d4028c3c79cf0166040094d72f01d2d9c5c2af4e6d1d9f`.
+- The already-verified exact-SHA backend image for the same commit was tagged
+  for the regional repository and pushed without rebuilding or creating a
+  mutable tag. Artifact Registry resolves the Git-SHA tag to digest
+  `sha256:32a5049fc7d09c15b0217dbeb00ea88dcd389aaf82b41ebffb37b2d1ef8f1247`.
+- Backend revision `screenpilot-backend-sp026-606638735bf2` is serving 100% of
+  backend traffic. Cloud Run resolved the exact OCI index above to its verified
+  Linux/amd64 child digest
+  `sha256:0b7fb910703c5780c57d3dc963ac937d015e706b627114badc877def016c81a7`.
+  The revision carries the full audited Git-SHA label, uses the dedicated
+  backend runtime identity, one CPU, 512 MiB memory, request-throttled CPU,
+  minimum zero, maximum one instance, and concurrency four.
+- The backend has explicit startup/liveness checks on `/health/live` and a
+  readiness check on `/health/ready`; both public unpaid checks returned `200`.
+  Its five Secret Manager bindings are pinned to version `1`, all committed
+  timeout/capacity/rate guardrails are explicit, and
+  `PAID_DEMO_ENABLED=false`. Verification inspected resource metadata and
+  secret references only, never secret payloads.
+- The paid-disabled frontend bootstrap revision
+  `screenpilot-frontend-bootstrap-606638735bf2` is serving 100% of the frontend
+  service traffic at its managed HTTPS origin. It uses the frontend runtime
+  identity, one CPU, 512 MiB memory, request-throttled CPU, minimum zero,
+  maximum one instance, concurrency 80, and no provider-secret binding.
+- Unpaid public checks returned `200` for `/` and `/demo`. The server-owned
+  `/v1/demo/bootstrap` route returned the expected content-free `503` while no
+  backend origin is configured. Required security headers were present; the
+  rendered HTML exposed no backend reference, and the production diagnostics
+  query exposed none of the forbidden controls.
+- The owner confirmed that the existing dedicated production Turnstile widget
+  is now restricted to the stable frontend `run.app` hostname. Each of the five
+  Secret Manager resources has exactly one enabled version; verification read
+  only version numbers and states, never secret payloads. The backend is now
+  deployed and healthy; the final frontend wiring and traffic evidence follows
+  in the technical deployment checkpoint.
+
+## Phase 4 technical deployment checkpoint evidence — 2026-09-25
+
+- Final frontend revision `screenpilot-frontend-sp026-606638735bf2` is serving
+  100% of frontend traffic from the already-pushed exact-SHA image. Cloud Run
+  resolved that image to its verified Linux/amd64 child digest
+  `sha256:1f1ccdc6e76b1db4c668fb2cd2c3075ef4a031ef3f329d2977527aaa97d384d0`.
+  The revision has the full audited Git-SHA label, uses the frontend runtime
+  identity, one CPU, 512 MiB memory, request-throttled CPU, minimum zero,
+  maximum one instance, and concurrency 80.
+- The frontend has exactly one runtime variable: server-only `BACKEND_ORIGIN`,
+  matching the backend service's canonical managed origin. It has no Secret
+  Manager binding. The backend origin and hostname were absent from rendered
+  page, bootstrap, preparation, and paid-disabled error responses.
+- Direct backend `/health/live` and `/health/ready` returned `200`. The frontend
+  landing and demo routes returned `200` across repeated refresh requests, and
+  same-origin bootstrap and deterministic conversation preparation returned
+  `200` through the frontend proxy.
+- Every remaining relative API route was exercised with bounded synthetic
+  input while the paid-demo switch remained off. CV analysis and summary
+  returned the expected `503/CAPACITY_REACHED`; voice-token issuance returned
+  `503/VOICE_DISABLED`. The kill switch rejected all three before Turnstile or
+  provider invocation.
+- The frontend proxy preserved no-store behavior, request IDs, and the
+  `Secure`, `HttpOnly`, `SameSite=Lax` first-party anonymous cookie. Required
+  CSP, HSTS, MIME-sniffing, and referrer-policy headers were present. Both
+  deployed hostnames exposed none of the local timing diagnostics controls.
+- The paid-disabled bootstrap correctly reported live provider configuration
+  with effective mode `paid_disabled`, paid operations false, and a blank
+  public Turnstile site key. The production site key and allowed frontend
+  hostname are configured backend-side; actual Turnstile action verification
+  remains part of the two owner-controlled paid flows in Phase 5.
+- This is the technical **deployed** checkpoint. The custom domain, deployment
+  CI, load balancer, and optional portfolio packaging remain outside it. SP-026
+  is not release-complete until the exact two paid production flows and their
+  provider/cost review pass.
+
+## Post-checkpoint kill-switch correction — 2026-09-25
+
+- The owner identified a release-blocking UI inconsistency in the deployed
+  paid-disabled revision: the CV choice was disabled, but **Start without a
+  CV** still appeared actionable and could enter deterministic conversation
+  preparation before the later voice boundary closed. The deployed backend
+  remained fail-closed for paid operations, so this was not a provider-call or
+  spend bypass, but it did not satisfy the intended all-or-nothing public demo
+  switch.
+- The local correction makes a freshly validated production
+  `paid_disabled` bootstrap visibly disable both entry controls on `/` and
+  `/demo`, blocks both selection handlers, and prevents
+  `POST /v1/interview/prepare`. The backend independently rejects that endpoint
+  while paid-disabled, so a stale client cannot bypass the UI boundary.
+  Deterministic fake mode remains available only to local development and
+  tests; production continues to require live mode.
+- The focused frontend run passed all 41 frontend test files and 300 tests,
+  including landing and demo regressions that assert both controls are disabled
+  and bootstrap is the only request in the paid-disabled mode chooser.
+- All 26 backend test files and 338 tests passed, including a production-live
+  regression proving paid-disabled conversation preparation returns `503`
+  before grant issuance or provider work. An isolated Git-tracked snapshot on
+  Node 24.19.0/pnpm 11.24.0 also passed all 6 contracts files / 50 tests, the
+  backend and frontend suites above, every package lint/typecheck, and all three
+  production builds without a local environment file in the snapshot.
+- Revision `screenpilot-frontend-sp026-606638735bf2` remains safely
+  paid-disabled but is superseded as the final release candidate. The corrected
+  frontend and backend must be committed, affected SP-025A checks re-run, built
+  under their new exact SHA, redeployed, and re-smoked before Phase 5 paid flows
+  begin.
 
 ## Precision references
 

@@ -125,6 +125,30 @@ async function prepareGrant(agent: ReturnType<typeof request.agent>) {
   return prepareInterviewResponseSchema.parse(response.body).interviewGrant;
 }
 
+async function prepareGrantBeforeKillSwitch() {
+  const { app } = createTestApp();
+  const bootstrap = await request(app).get("/v1/demo/bootstrap").expect(200);
+  const setCookie: unknown = bootstrap.headers["set-cookie"];
+  if (!Array.isArray(setCookie) || typeof setCookie[0] !== "string") {
+    throw new TypeError("Expected a signed anonymous-session cookie.");
+  }
+  const cookie = setCookie[0].split(";", 1)[0];
+  if (cookie === undefined) {
+    throw new TypeError("Expected an anonymous-session cookie pair.");
+  }
+  const response = await request(app)
+    .post("/v1/interview/prepare")
+    .set("Cookie", cookie)
+    .set("Origin", ALLOWED_ORIGIN)
+    .send(PREPARE_REQUEST)
+    .expect(200);
+  return {
+    cookie,
+    interviewGrant: prepareInterviewResponseSchema.parse(response.body)
+      .interviewGrant,
+  };
+}
+
 function summaryRequest(
   interviewGrant: string,
   input = createSummaryFixtureInput(),
@@ -484,14 +508,15 @@ describe("POST /v1/interview/summary", () => {
   );
 
   it("keeps live summaries disabled while the paid switch is off", async () => {
+    const prepared = await prepareGrantBeforeKillSwitch();
     const providers = providerSpies();
     const { app } = createTestApp(providers, {
       config: disabledLiveConfig(),
     });
-    const agent = request.agent(app);
-    const input = summaryRequest(await prepareGrant(agent));
-    const result = await agent
+    const input = summaryRequest(prepared.interviewGrant);
+    const result = await request(app)
       .post("/v1/interview/summary")
+      .set("Cookie", prepared.cookie)
       .set("Origin", ALLOWED_ORIGIN)
       .send(input)
       .expect(503);

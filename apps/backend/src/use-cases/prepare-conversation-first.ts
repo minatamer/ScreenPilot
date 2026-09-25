@@ -15,6 +15,7 @@ import {
 import { UseCaseError } from "./use-case-error.js";
 
 export function createPrepareConversationFirst(input: {
+  enabled: boolean;
   grantService: InterviewGrantService;
   grantTtlSeconds: number;
   idGenerator: () => string;
@@ -25,6 +26,14 @@ export function createPrepareConversationFirst(input: {
     request: PrepareInterviewRequest,
     anonymousSessionId: string,
   ): PrepareInterviewResponse {
+    if (!input.enabled) {
+      throw new UseCaseError(
+        "CAPACITY_REACHED",
+        "Interview preparation is currently disabled. Try again later.",
+        { retryable: true },
+      );
+    }
+
     try {
       const grant = input.grantService.issue({
         anonymousSessionId,

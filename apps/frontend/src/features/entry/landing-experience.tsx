@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { areInteractiveProviderOperationsEnabled } from "@screenpilot/contracts/api/public-runtime-config";
 import type { EntryMode } from "@screenpilot/contracts/interview/entry-mode";
 
 import { useDemoSession } from "@/features/session/use-demo-session";
@@ -43,10 +44,15 @@ export function LandingExperience() {
   const [clearFailed, setClearFailed] = useState(false);
   const scrollToHowItWorks = useDeliberateAnchorScroll("how-it-works");
   const scrollToStart = useDeliberateAnchorScroll("start");
-  useDemoBootstrap(true);
+  const { runtimeConfigStatus } = useDemoBootstrap(true);
+  const providerOperationsEnabled = Boolean(
+    runtimeConfigStatus === "ready" &&
+    state.runtimeConfig &&
+    areInteractiveProviderOperationsEnabled(state.runtimeConfig),
+  );
 
   const selectEntryMode = (entryMode: EntryMode) => {
-    if (state.stage !== "choosing_entry_mode") {
+    if (state.stage !== "choosing_entry_mode" || !providerOperationsEnabled) {
       return;
     }
     dispatch({ type: "SELECT_ENTRY_MODE", entryMode });
@@ -229,7 +235,10 @@ export function LandingExperience() {
             </Card>
           ) : (
             <EntryModeChooser
-              disabled={isOpeningSession}
+              disabled={isOpeningSession || runtimeConfigStatus !== "ready"}
+              entryModesEnabled={
+                runtimeConfigStatus !== "ready" || providerOperationsEnabled
+              }
               onSelect={selectEntryMode}
             />
           )}
