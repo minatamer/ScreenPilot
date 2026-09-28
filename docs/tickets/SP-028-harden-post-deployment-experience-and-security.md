@@ -1,6 +1,6 @@
 # SP-028 — Harden the post-deployment experience and security boundaries
 
-Status: In progress — Phase 1 complete and owner-approved; Phase 2 application code locally verified and five-minute provider configuration synchronized, Cloud Run/IAM execution gated; Phase 3 not started<br>
+Status: In progress — Phase 1 complete and owner-approved; Phase 2 application code locally verified and five-minute provider configuration synchronized, Cloud Run/IAM execution gated; Phase 3 partially started with one limited local live CV-extractor smoke, while the formal manual matrix remains incomplete<br>
 Milestone: Milestone 7 — post-deployment portfolio hardening  
 Last synchronized: 2026-09-28<br>
 Depends on: SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026<br>
@@ -447,14 +447,17 @@ execution and deployed proof remain a separate owner gate.
 No deployment, paid-provider action, `.env.local` read, Git staging, commit, or
 push was performed. The owner accepted Phase 1 visually on 2026-09-28. Section
 2 application code is now complete and locally verified; its Cloud Run/IAM
-execution remains gated, and Section 3 has not started.
+execution remains gated. Section 3 now contains one limited owner-authorized
+live CV-extractor observation; its formal manual matrix remains incomplete.
 
 ## Section 2 — Security architecture and gated deployment
 
 The security review is complete. SEC-001, SEC-002, and SEC-003 application
 code is implemented and locally verified. Cloud Run/IAM mutation, deployed
-topology proof, deployed fake/unpaid smoke, paid-provider use, and Phase 3
-remain unauthorized and unchecked until the owner separately approves them.
+topology proof, deployed fake/unpaid smoke, and the remaining Phase 3 work
+remain unauthorized and unchecked until the owner separately approves them. A
+single owner-authorized local live OpenAI CV analysis is recorded in Section
+3.4; it did not include voice-token, interview, or summary operations.
 
 This tracked ticket records only the final maintainable architecture, operating
 controls, safe rollout sequence, and non-sensitive verification evidence.
@@ -939,6 +942,34 @@ real person's CV. Use a newly authored synthetic CV or an explicitly licensed,
 public template populated only with fictional data. Verify it is text-based,
 under 5 MB/eight pages/40,000 extracted characters, contains no real contact or
 candidate data, and is materially different from every existing fixture.
+
+#### Privacy-safe local live extractor observation — 2026-09-28
+
+With explicit owner instruction, the production builds were restarted locally
+on ports 3000 and 3001 with the ignored local configuration loading live mode.
+Both backend health endpoints, the frontend demo route, and the same-origin
+bootstrap returned 200 before the test. The owner then selected a previously
+unused, one-page, text-based personal PDF and stopped at the CV-assisted plan;
+the filename, screenshots, candidate content, raw response, and provider
+credentials are deliberately absent from the repository.
+
+- The content-free backend log recorded exactly one `cv_analyze` POST, returning
+  200 in 5,951 ms. No voice-token, interview, or summary operation followed.
+- Source comparison found all seven displayed fact cards grounded in the PDF,
+  with accurate evidence excerpts, an accurate non-binding role suggestion,
+  universal HR plan topics, no sample-fixture leakage, no unsupported hiring
+  judgment, and no observed hallucinated claim. Contact details were not
+  surfaced in the fact cards.
+- The owner accepted the existing language-topic wording, so no product defect
+  or follow-up code change was opened from this observation.
+- The owner was reminded before upload to disable OpenAI project sharing for
+  real data, but the dashboard state was not independently verified or recorded.
+  **Clear & exit** cleanup was requested afterward but is not owner-confirmed.
+- Because this used personal rather than synthetic/fictional data and stopped
+  before role correction, voice, summary, and confirmed cleanup, it is only an
+  additional extractor smoke. It does not satisfy or close any formal Section
+  3.4 acceptance box below, and it must not be repeated merely to fill missing
+  evidence.
 
 - [ ] Record the file's synthetic/licensed provenance without committing the
   PDF or its candidate content.
