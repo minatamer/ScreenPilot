@@ -23,7 +23,8 @@ release only after its bounded production acceptance.
 
 ## Standalone implementation context
 
-- Manual approval is intentionally primary. SP-028 remains optional and cannot block release.
+- Manual approval is intentionally primary. Comprehensive browser/AI automation
+  is outside this release gate and cannot block it.
 - Run the smallest relevant targeted checks while investigating; run the full quick gate once at this release boundary.
 - Current SP-021B evidence supplies one successful post-fix CV-assisted
   controlled live flow. The owner also recalls a conversation-first live path

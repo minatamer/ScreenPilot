@@ -30,7 +30,38 @@ describe("frontend proxy security headers", () => {
   });
 
   it("leaves generated worklets and proxied API routes outside the page matcher", () => {
-    expect(config.matcher[0]?.source).toContain("v1");
-    expect(config.matcher[0]?.source).toContain("worklets");
+    const pageMatcher = config.matcher[1];
+    expect(typeof pageMatcher).toBe("object");
+    if (typeof pageMatcher === "object") {
+      expect(pageMatcher.source).toContain("v1");
+      expect(pageMatcher.source).toContain("worklets");
+    }
+  });
+
+  it("serves the sample CV only through an exact loopback request", () => {
+    const localResponse = proxy(
+      new NextRequest(
+        "http://127.0.0.1:3000/fixtures/screenpilot-sample-cv.pdf",
+        { headers: { host: "127.0.0.1:3000" } },
+      ),
+    );
+    const customHostResponse = proxy(
+      new NextRequest(
+        "http://127.0.0.1:3000/fixtures/screenpilot-sample-cv.pdf",
+        { headers: { host: "screenpilot.example" } },
+      ),
+    );
+    const methodResponse = proxy(
+      new NextRequest(
+        "http://localhost:3000/fixtures/screenpilot-sample-cv.pdf",
+        { headers: { host: "localhost:3000" }, method: "POST" },
+      ),
+    );
+
+    expect(config.matcher[0]).toBe("/fixtures/screenpilot-sample-cv.pdf");
+    expect(localResponse.status).toBe(200);
+    expect(localResponse.headers.get("cache-control")).toBe("no-store");
+    expect(customHostResponse.status).toBe(404);
+    expect(methodResponse.status).toBe(404);
   });
 });

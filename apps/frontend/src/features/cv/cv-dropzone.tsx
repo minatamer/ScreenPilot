@@ -13,13 +13,11 @@ import { Button, ButtonGroup } from "@/shared/ui/button";
 type CvDropzoneProps = Readonly<{
   disabled?: boolean;
   onFilesSelected: (files: readonly File[]) => void;
-  onSampleRequested: () => void;
 }>;
 
 export function CvDropzone({
   disabled = false,
   onFilesSelected,
-  onSampleRequested,
 }: CvDropzoneProps) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -90,13 +88,6 @@ export function CvDropzone({
             variant="secondary"
           >
             Choose PDF
-          </Button>
-          <Button
-            disabled={disabled}
-            onClick={onSampleRequested}
-            variant="quiet"
-          >
-            Use sample CV
           </Button>
         </ButtonGroup>
         <div className="sp-cv-dropzone__notes">

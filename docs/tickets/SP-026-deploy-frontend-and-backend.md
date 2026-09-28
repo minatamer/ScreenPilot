@@ -70,8 +70,8 @@ buttons before navigation or `POST /v1/interview/prepare`.
   tradeoff, not a production architecture claim.
 - No paid external load balancer, CDN/proxy, third hosting product, Terraform,
   Kubernetes, or deployment controller is introduced.
-- SP-026 is the release boundary. SP-027 portfolio packaging and SP-028 extended
-  automation are optional.
+- SP-026 is the first release boundary. SP-027 portfolio packaging is optional;
+  comprehensive browser/AI automation is outside the current backlog.
 - SP-025 deliberately performs no additional paid local flow. After the exact
   SP-025A-audited deployment is reachable, SP-026 owns exactly two controlled
   paid production flows unless a concrete defect narrowly requires a documented

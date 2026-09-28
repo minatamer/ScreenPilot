@@ -14,7 +14,6 @@ export type CvPdfErrorCode =
   | "malformed"
   | "oversized"
   | "protected"
-  | "sample_unavailable"
   | "too_long"
   | "too_many_pages"
   | "wrong_type";
@@ -32,57 +31,45 @@ export const CV_PDF_ERROR_COPY: Readonly<
   },
   empty: {
     title: "No useful text was found",
-    message:
-      "Choose another text-based PDF, use the sample CV, or return to the entry choices.",
+    message: "Choose another text-based PDF or return to the entry choices.",
   },
   file_count: {
     title: "Choose one PDF",
-    message:
-      "This demo reads one CV at a time. Choose a single PDF or use the sample CV.",
+    message: "This demo reads one CV at a time. Choose a single PDF.",
   },
   image_only: {
     title: "This PDF looks scanned",
     message:
-      "OCR is not part of this demo. Choose a text-based PDF, use the sample CV, or return to the entry choices.",
+      "OCR is not part of this demo. Choose a text-based PDF or return to the entry choices.",
   },
   invalid_signature: {
     title: "That file is not a valid PDF",
-    message:
-      "The file does not contain a PDF header. Choose another PDF or use the sample CV.",
+    message: "The file does not contain a PDF header. Choose another PDF.",
   },
   malformed: {
     title: "This PDF could not be read",
-    message:
-      "The document may be damaged or incomplete. Choose another PDF or use the sample CV.",
+    message: "The document may be damaged or incomplete. Choose another PDF.",
   },
   oversized: {
     title: "That PDF is larger than 5 MB",
-    message:
-      "Choose a smaller text-based PDF, use the sample CV, or return to the entry choices.",
+    message: "Choose a smaller text-based PDF or return to the entry choices.",
   },
   protected: {
     title: "Password-protected PDFs are not supported",
-    message:
-      "Remove the password from a synthetic copy, choose another PDF, or use the sample CV.",
-  },
-  sample_unavailable: {
-    title: "The sample CV is unavailable",
-    message: "Try the sample again or choose your own synthetic text PDF.",
+    message: "Remove the password from a synthetic copy or choose another PDF.",
   },
   too_long: {
     title: "This CV contains too much text",
     message:
-      "The extracted text must be 40,000 characters or fewer. Choose a shorter PDF or use the sample CV.",
+      "The extracted text must be 40,000 characters or fewer. Choose a shorter PDF.",
   },
   too_many_pages: {
     title: "This CV has more than 8 pages",
-    message:
-      "Choose a shorter text-based PDF, use the sample CV, or return to the entry choices.",
+    message: "Choose a shorter text-based PDF or return to the entry choices.",
   },
   wrong_type: {
     title: "Choose a PDF file",
-    message:
-      "This demo accepts text-based PDFs only. Choose another file or use the sample CV.",
+    message: "This demo accepts text-based PDFs only. Choose another file.",
   },
 };
 

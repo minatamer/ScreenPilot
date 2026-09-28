@@ -7,10 +7,8 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
   createPdfJsEngine,
   extractPdfTextWithEngine,
-  fetchSampleCvFile,
   normalizeExtractedPdfText,
   type PdfJsEngine,
-  SAMPLE_CV_URL,
   validateExtractedPdfText,
 } from "./extract-pdf-text";
 import {
@@ -64,7 +62,7 @@ describe("browser-only PDF extraction", () => {
     pdfJsEngine = createPdfJsEngine(pdfJs);
   });
 
-  it("extracts the public sample in page order through PDF.js", async () => {
+  it("extracts the synthetic PDF fixture in page order through PDF.js", async () => {
     const phases: string[] = [];
     const sampleInput = await fixtureInput(samplePdfPath);
     const expectedText = await readFile(sampleExpectedTextPath, "utf8");
@@ -94,26 +92,6 @@ describe("browser-only PDF extraction", () => {
         "  First\u0000\t line\r\n\r\n\r\n Second\u00a0line  ",
       ),
     ).toBe("First line\n\nSecond line");
-  });
-
-  it("fetches the public sample with a content-free GET request", async () => {
-    const fetchSample = vi.fn<typeof fetch>();
-    fetchSample.mockResolvedValue(
-      new Response("%PDF-1.7 synthetic sample", {
-        headers: { "Content-Type": "application/pdf" },
-        status: 200,
-      }),
-    );
-    vi.stubGlobal("fetch", fetchSample);
-
-    const sampleFile = await fetchSampleCvFile();
-
-    const fetchCall = fetchSample.mock.calls[0];
-    expect(fetchCall?.[0]).toBe(SAMPLE_CV_URL);
-    expect(fetchCall?.[1]?.method).toBe("GET");
-    expect(fetchCall?.[1]).not.toHaveProperty("body");
-    expect(sampleFile.name).toBe("screenpilot-sample-cv.pdf");
-    expect(sampleFile.type).toBe("application/pdf");
   });
 
   it("rejects multiple files, wrong MIME hints, invalid headers, and oversized data before parsing", async () => {

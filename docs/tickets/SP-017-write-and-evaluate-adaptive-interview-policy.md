@@ -58,7 +58,8 @@ Implement a source-controlled live-interviewer policy that produces natural, con
 - [x] Add checked-in good/bad transcript cases under the filename-level `tests/fixtures/transcripts` tree for both entry modes and every named cross-profession regression branch.
 - [x] Add deterministic graders for length, question count, banned openers/praise, spoken formatting/tool narration, profession-specific assessment questions, unsupported CV/employer/vacancy/source claims, evidence eligibility, and stop.
 - [x] Add narrow semantic checks for direct counterquestion answers, grounded natural follow-ups, neutral tone, and meaning-preserving paraphrases.
-- [ ] Read representative outputs aloud and tune one observed prompt failure at a time without requiring the optional SP-028 suite.
+- [ ] Read representative outputs aloud and tune one observed prompt failure at
+  a time without requiring a comprehensive automation suite.
 
 ## Acceptance criteria
 

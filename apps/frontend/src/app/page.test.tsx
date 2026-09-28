@@ -86,6 +86,12 @@ describe("HomePage", () => {
     const heroFeatures = screen.getByRole("list", {
       name: "ScreenPilot core features",
     });
+    const openingStage = heroFeatures.closest(".sp-landing__opening-stage");
+    const productFrame = document.querySelector(".sp-landing__product-frame");
+
+    expect(openingStage).not.toBeNull();
+    expect(productFrame).not.toBeNull();
+    expect(openingStage?.nextElementSibling).toBe(productFrame);
     expect(within(heroFeatures).getByText("Voice interviews")).toBeVisible();
     expect(within(heroFeatures).getByText("Adaptive follow-ups")).toBeVisible();
     expect(

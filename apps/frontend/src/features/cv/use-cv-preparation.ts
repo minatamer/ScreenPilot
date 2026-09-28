@@ -17,7 +17,6 @@ import {
 
 import {
   extractPdfText,
-  fetchSampleCvFile,
   type CvExtractionPhase,
   type ExtractedPdfText,
 } from "./extract-pdf-text";
@@ -330,10 +329,6 @@ export function useCvPreparation({
     [runExtraction],
   );
 
-  const handleSampleRequested = useCallback(() => {
-    void runExtraction((signal) => fetchSampleCvFile(signal));
-  }, [runExtraction]);
-
   const handleRetryAnalysis = useCallback(() => {
     if (state.status !== "analysis_error") {
       return;
@@ -370,7 +365,6 @@ export function useCvPreparation({
     handleFilesSelected,
     handleRetryAnalysis,
     handleReturnToChoices,
-    handleSampleRequested,
     showIntake,
     state,
   };

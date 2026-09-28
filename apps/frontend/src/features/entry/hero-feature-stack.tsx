@@ -1,3 +1,7 @@
+"use client";
+
+import { useHeroFeatureReveal } from "./use-hero-feature-reveal";
+
 type HeroFeatureIconName = "follow-up" | "human" | "notes" | "voice";
 
 const HERO_FEATURES: readonly {
@@ -70,13 +74,25 @@ function HeroFeatureIcon({ name }: { name: HeroFeatureIconName }) {
 }
 
 export function HeroFeatureStack() {
+  const { registerCard, revealMode, revealedCards } = useHeroFeatureReveal(
+    HERO_FEATURES.length,
+  );
+
   return (
     <div className="sp-hero-feature-stack">
       <ol aria-label="ScreenPilot core features">
         {HERO_FEATURES.map((feature, index) => (
           <li
             className={`sp-hero-feature-stack__card sp-hero-feature-stack__card--${feature.icon}`}
+            data-reveal-state={
+              revealMode === "static"
+                ? "static"
+                : revealedCards.has(index)
+                  ? "revealed"
+                  : "pending"
+            }
             key={feature.title}
+            ref={registerCard(index)}
           >
             <div className="sp-hero-feature-stack__card-heading">
               <span>{String(index + 1).padStart(2, "0")}</span>

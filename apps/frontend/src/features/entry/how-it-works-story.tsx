@@ -27,9 +27,21 @@ const storySteps = [
   },
 ] as const;
 
-function StoryVisual({ activeStep }: Readonly<{ activeStep: number }>) {
+function StoryVisual({
+  active,
+  activeStep,
+  variant,
+}: Readonly<{
+  active: boolean;
+  activeStep: number;
+  variant: "inline" | "shared";
+}>) {
   return (
-    <div aria-hidden="true" className="sp-scroll-story__scene">
+    <div
+      aria-hidden="true"
+      className={`sp-scroll-story__scene sp-scroll-story__scene--${variant}`}
+      data-active={active}
+    >
       <div className="sp-scroll-story__scene-topline">
         <span>How it works</span>
         <span>0{activeStep + 1} / 04</span>
@@ -97,7 +109,9 @@ function StoryVisual({ activeStep }: Readonly<{ activeStep: number }>) {
 }
 
 export function HowItWorksStory() {
-  const { activeStep, registerStep } = useScrollStory(storySteps.length);
+  const { activeStep, registerStep, storyMode } = useScrollStory(
+    storySteps.length,
+  );
 
   return (
     <section
@@ -108,11 +122,11 @@ export function HowItWorksStory() {
       <div className="sp-landing__story-heading">
         <p className="sp-eyebrow">How it works</p>
         <h2 id="how-it-works-title">From first question to clear notes.</h2>
-        <p>Scroll through the four simple steps.</p>
+        <p>Scroll or swipe to watch each step come together.</p>
       </div>
 
-      <div className="sp-scroll-story">
-        <StoryVisual activeStep={activeStep} />
+      <div className="sp-scroll-story" data-story-mode={storyMode}>
+        <StoryVisual active activeStep={activeStep} variant="shared" />
 
         <ol className="sp-scroll-story__steps">
           {storySteps.map(({ copy, label, title }, index) => (
@@ -127,6 +141,11 @@ export function HowItWorksStory() {
               </span>
               <h3>{title}</h3>
               <p>{copy}</p>
+              <StoryVisual
+                active={activeStep === index}
+                activeStep={index}
+                variant="inline"
+              />
               {index === storySteps.length - 1 ? (
                 <div className="sp-scroll-story__privacy">
                   <p>

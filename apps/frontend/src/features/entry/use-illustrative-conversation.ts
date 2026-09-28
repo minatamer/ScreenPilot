@@ -42,7 +42,6 @@ export function useIllustrativeConversation(
   examplesPerBoard: number,
 ) {
   const previewRef = useRef<HTMLElement>(null);
-  const previousMotionPreferenceRef = useRef<MotionPreference>("unknown");
   const initialExample = examples[0];
   const [activeExample, setActiveExample] = useState(0);
   const [phase, setPhase] = useState<ConversationPhase>("note");
@@ -52,10 +51,14 @@ export function useIllustrativeConversation(
   const [visibleAnswerWordCount, setVisibleAnswerWordCount] = useState(
     countWords(initialExample?.answer ?? ""),
   );
-  const [isInView, setIsInView] = useState(true);
+  const [hasEnteredViewport, setHasEnteredViewport] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isInView, setIsInView] = useState(false);
   const [isPageVisible, setIsPageVisible] = useState(true);
   const [isFocusPaused, setIsFocusPaused] = useState(false);
-  const [completedExampleCount, setCompletedExampleCount] = useState(0);
+  const [completedExampleCount, setCompletedExampleCount] = useState(
+    initialExample ? 1 : 0,
+  );
   const [motionPreference, setMotionPreference] =
     useState<MotionPreference>("unknown");
 
@@ -96,9 +99,16 @@ export function useIllustrativeConversation(
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setIsInView(Boolean(entry?.isIntersecting));
+        const intersectsViewport = Boolean(entry?.isIntersecting);
+        setIsInView(intersectsViewport);
+        if (intersectsViewport) {
+          setHasEnteredViewport(true);
+        }
       },
-      { threshold: 0.18 },
+      {
+        rootMargin: "0px 0px -8% 0px",
+        threshold: [0, 0.08],
+      },
     );
     observer.observe(preview);
     return () => {
@@ -119,26 +129,34 @@ export function useIllustrativeConversation(
   }, []);
 
   useEffect(() => {
-    if (previousMotionPreferenceRef.current === motionPreference) {
+    if (
+      !hasEnteredViewport ||
+      hasStarted ||
+      motionPreference === "unknown" ||
+      examples.length === 0
+    ) {
       return;
     }
 
-    previousMotionPreferenceRef.current = motionPreference;
-    if (motionPreference === "unknown") {
-      return;
-    }
-
-    const restartTimeout = window.setTimeout(() => {
+    const activationTimeout = window.setTimeout(() => {
+      setHasStarted(true);
       setCompletedExampleCount(0);
       startExample(0);
     }, 0);
 
     return () => {
-      window.clearTimeout(restartTimeout);
+      window.clearTimeout(activationTimeout);
     };
-  }, [motionPreference, startExample]);
+  }, [
+    examples.length,
+    hasEnteredViewport,
+    hasStarted,
+    motionPreference,
+    startExample,
+  ]);
 
   const isRunning =
+    hasStarted &&
     motionPreference !== "unknown" &&
     examples.length > 0 &&
     isInView &&
@@ -225,6 +243,7 @@ export function useIllustrativeConversation(
   return {
     activeExample,
     completedExampleCount,
+    hasEnteredViewport,
     isRunning,
     phase,
     previewRef,

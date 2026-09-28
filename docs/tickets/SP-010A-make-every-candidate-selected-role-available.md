@@ -163,7 +163,7 @@ Run focused schema/reducer/use-case/route/prompt tests during iteration. Run the
 
 ## Documentation synchronization
 
-When implementation completes, update the parent source of truth, this packet, the ticket index, README, and supersession notes in SP-006/SP-007/SP-009/SP-010. Reconcile downstream SP-011/SP-012/SP-014/SP-016/SP-017/SP-020/SP-021/SP-025/SP-028 requirements and remove any stale fixed-vacancy language discovered elsewhere. Preserve the immutable project specification unchanged.
+When implementation completes, update the parent source of truth, this packet, the ticket index, README, and supersession notes in SP-006/SP-007/SP-009/SP-010. Reconcile downstream SP-011/SP-012/SP-014/SP-016/SP-017/SP-020/SP-021/SP-025 requirements and remove any stale fixed-vacancy language discovered elsewhere. Preserve the immutable project specification unchanged.
 
 ## Commit boundary
 

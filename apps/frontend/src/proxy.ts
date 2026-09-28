@@ -4,8 +4,51 @@ import { createBrowserSecurityPolicy } from "./security/browser-security-policy"
 
 const PERMISSIONS_POLICY =
   "camera=(), geolocation=(), microphone=(self), browsing-topics=()";
+const SAMPLE_CV_PATH = "/fixtures/screenpilot-sample-cv.pdf";
+
+function isLoopbackHostname(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname === "::1" ||
+    hostname === "[::1]"
+  );
+}
+
+function requestHostname(request: NextRequest): string {
+  const requestAuthority = request.headers.get("host");
+  if (!requestAuthority) {
+    return "";
+  }
+
+  try {
+    return new URL(`http://${requestAuthority}`).hostname;
+  } catch {
+    return "";
+  }
+}
 
 export function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === SAMPLE_CV_PATH) {
+    if (
+      (request.method !== "GET" && request.method !== "HEAD") ||
+      !isLoopbackHostname(requestHostname(request))
+    ) {
+      return new NextResponse(null, {
+        headers: {
+          "cache-control": "no-store",
+          "x-content-type-options": "nosniff",
+        },
+        status: 404,
+      });
+    }
+
+    const sampleResponse = NextResponse.next();
+    sampleResponse.headers.set("cache-control", "no-store");
+    sampleResponse.headers.set("x-content-type-options", "nosniff");
+    return sampleResponse;
+  }
+
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const contentSecurityPolicy = createBrowserSecurityPolicy(
     nonce,
@@ -35,6 +78,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/fixtures/screenpilot-sample-cv.pdf",
     {
       source:
         "/((?!v1|_next/static|_next/image|favicon.ico|icon.svg|fixtures|worklets).*)",

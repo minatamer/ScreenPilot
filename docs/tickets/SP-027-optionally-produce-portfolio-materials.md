@@ -30,7 +30,7 @@ If explicitly approved after deployment, package the already-released demo so an
 - Do not change core product behavior, add features, block release, or create a marketing website larger than the demo needs.
 - Do not overstate compliance, accuracy, hiring capability, privacy, bot prevention, latency, or costs.
 - Do not present AI notes as hiring recommendations or use real applicant data.
-- Do not require SP-028 automation or a Figma deliverable.
+- Do not require comprehensive browser/AI automation or a Figma deliverable.
 - Do not leave debug UI, dead experiments, or stale documentation in the portfolio package.
 
 ## Implementation checklist

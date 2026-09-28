@@ -7,8 +7,6 @@ import {
   readValidatedPdfBytes,
 } from "./pdf-validation";
 
-export const SAMPLE_CV_URL = "/fixtures/screenpilot-sample-cv.pdf";
-
 export const CV_EXTRACTION_PROGRESS = {
   reading: "Reading PDF",
   checking: "Extracting text",
@@ -300,32 +298,4 @@ export async function extractPdfText(
 ): Promise<ExtractedPdfText> {
   const pdfJs = await loadBrowserPdfJs();
   return extractPdfTextWithEngine(file, createPdfJsEngine(pdfJs), options);
-}
-
-export async function fetchSampleCvFile(signal?: AbortSignal): Promise<File> {
-  if (typeof window === "undefined" || typeof File === "undefined") {
-    throw new CvPdfError("browser_only");
-  }
-
-  try {
-    const response = await fetch(SAMPLE_CV_URL, {
-      cache: "force-cache",
-      method: "GET",
-      ...(signal ? { signal } : {}),
-    });
-    if (!response.ok) {
-      throw new CvPdfError("sample_unavailable");
-    }
-    const sampleBlob = await response.blob();
-    return new File([sampleBlob], "screenpilot-sample-cv.pdf", {
-      type: sampleBlob.type || "application/pdf",
-    });
-  } catch (error) {
-    if (signal?.aborted) {
-      throw new CvPdfError("aborted", signal.reason);
-    }
-    throw error instanceof CvPdfError
-      ? error
-      : new CvPdfError("sample_unavailable", error);
-  }
 }

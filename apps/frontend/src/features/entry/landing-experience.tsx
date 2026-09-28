@@ -94,7 +94,7 @@ export function LandingExperience() {
           className="sp-landing__hero-field"
         >
           <PageContainer className="sp-landing__hero">
-            <div className="sp-landing__hero-intro">
+            <div className="sp-landing__opening-stage">
               <div className="sp-landing__hero-copy">
                 <h1 id="landing-hero-title">
                   Automate the first interview.{" "}

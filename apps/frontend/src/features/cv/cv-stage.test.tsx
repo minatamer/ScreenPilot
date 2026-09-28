@@ -19,19 +19,13 @@ import {
 } from "@/test/cv-analysis.fixture";
 
 import { CvStage } from "./cv-stage";
-import {
-  extractPdfText,
-  fetchSampleCvFile,
-  type ExtractedPdfText,
-} from "./extract-pdf-text";
-import { CvPdfError } from "./pdf-validation";
+import { extractPdfText, type ExtractedPdfText } from "./extract-pdf-text";
 
 vi.mock("./extract-pdf-text", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./extract-pdf-text")>();
   return {
     ...actual,
     extractPdfText: vi.fn(),
-    fetchSampleCvFile: vi.fn(),
   };
 });
 
@@ -107,11 +101,9 @@ function CvStageHarness({
 
 describe("CvStage", () => {
   const mockedExtractPdfText = vi.mocked(extractPdfText);
-  const mockedFetchSampleCvFile = vi.mocked(fetchSampleCvFile);
 
   beforeEach(() => {
     mockedExtractPdfText.mockReset();
-    mockedFetchSampleCvFile.mockReset();
   });
 
   it("fails closed before CV extraction, Turnstile, or analysis", () => {
@@ -189,10 +181,30 @@ describe("CvStage", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Frontend Developer")).not.toBeInTheDocument();
     expect(screen.queryByText("Backend Developer")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Use sample CV" })).toBeEnabled();
+    expect(
+      screen.queryByRole("button", { name: "Use sample CV" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Change starting option" }),
     ).toBeEnabled();
+  });
+
+  it("keeps sample affordances and sample-specific recovery copy absent", async () => {
+    render(<CvStageHarness />);
+
+    expect(
+      screen.queryByRole("button", { name: "Use sample CV" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.drop(screen.getByTestId("cv-dropzone"), {
+      dataTransfer: {
+        files: [syntheticPdf("first.pdf"), syntheticPdf("second.pdf")],
+      },
+    });
+
+    const recovery = await screen.findByRole("alert");
+    expect(recovery).toHaveTextContent("Choose one PDF");
+    expect(recovery).not.toHaveTextContent(/sample CV/iu);
   });
 
   it("runs upload extraction, one-time challenge, and analysis in order", async () => {
@@ -289,33 +301,6 @@ describe("CvStage", () => {
       "true",
     );
     expect(screen.getByText("CV analysis in progress")).toBeVisible();
-  });
-
-  it("sends the bundled sample through the identical extraction path", async () => {
-    const sample = syntheticPdf("screenpilot-sample-cv.pdf");
-    mockedFetchSampleCvFile.mockResolvedValue(sample);
-    mockedExtractPdfText.mockResolvedValue(extractedResult);
-    const onPrepared = vi.fn();
-    render(
-      <CvStageHarness
-        analyze={() => Promise.resolve(createCvAnalysisResponseFixture())}
-        executeChallenge={() => Promise.resolve("sample-token")}
-        onPrepared={onPrepared}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Use sample CV" }));
-
-    await waitFor(() => {
-      expect(onPrepared).toHaveBeenCalledOnce();
-    });
-    expect(mockedFetchSampleCvFile.mock.calls[0]?.[0]).toBeInstanceOf(
-      AbortSignal,
-    );
-    expect(mockedExtractPdfText.mock.calls[0]?.[0]).toBe(sample);
-    expect(mockedExtractPdfText.mock.calls[0]?.[1]?.signal).toBeInstanceOf(
-      AbortSignal,
-    );
   });
 
   it("gets a fresh challenge token and request ID for a safe analysis retry", async () => {
@@ -434,76 +419,5 @@ describe("CvStage", () => {
 
     unmount();
     expect(analysisSignal?.aborted).toBe(true);
-  });
-
-  it("maps failed sample extraction and keeps picker recovery available", async () => {
-    mockedFetchSampleCvFile.mockRejectedValue(
-      new CvPdfError("sample_unavailable"),
-    );
-    render(<CvStageHarness />);
-
-    fireEvent.click(screen.getByRole("button", { name: "Use sample CV" }));
-
-    expect(
-      await screen.findByText("The sample CV is unavailable"),
-    ).toBeVisible();
-    expect(screen.getByLabelText("Choose PDF file")).toBeEnabled();
-  });
-
-  it("does not carry sample text into a later uploaded-CV attempt", async () => {
-    const sample = syntheticPdf("screenpilot-sample-cv.pdf");
-    const upload = syntheticPdf("uploaded-graphic-design-cv.pdf");
-    const sampleText = "Synthetic sample placeholder context. ".repeat(20);
-    const uploadedText = "Uploaded visual design evidence. ".repeat(20);
-    mockedFetchSampleCvFile.mockResolvedValue(sample);
-    mockedExtractPdfText.mockImplementation((file) => {
-      const text = file.name === sample.name ? sampleText : uploadedText;
-      return Promise.resolve({
-        characterCount: text.length,
-        pageCount: 1,
-        text,
-      });
-    });
-    const uploadedResponse = createCvAnalysisResponseFixture({
-      displayName: "Avery Chen",
-      planFocus: "visual design delivery",
-      suggestedRole: "Graphic Designer",
-    });
-    const analyze = vi
-      .fn<NonNullable<CvStageHarnessProps["analyze"]>>()
-      .mockRejectedValueOnce(
-        new ScreenPilotApiError({
-          code: "OPENAI_TIMEOUT",
-          message: "Analysis took too long.",
-          retryable: true,
-        }),
-      )
-      .mockResolvedValueOnce(uploadedResponse);
-    const onPrepared = vi.fn();
-    render(
-      <CvStageHarness
-        analyze={analyze}
-        executeChallenge={() => Promise.resolve("fresh-token")}
-        onPrepared={onPrepared}
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "Use sample CV" }));
-    expect(await screen.findByText("Analysis took too long.")).toBeVisible();
-    fireEvent.click(screen.getByRole("button", { name: "Use another PDF" }));
-    fireEvent.change(screen.getByLabelText("Choose PDF file"), {
-      target: { files: [upload] },
-    });
-
-    await waitFor(() => {
-      expect(onPrepared).toHaveBeenCalledWith(uploadedResponse);
-    });
-    expect(analyze.mock.calls.map(([input]) => input.cvText)).toEqual([
-      sampleText,
-      uploadedText,
-    ]);
-    expect(analyze.mock.calls[1]?.[0].cvText).not.toContain(
-      "sample placeholder",
-    );
   });
 });

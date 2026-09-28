@@ -232,6 +232,7 @@ export function IllustrativeInterviewPreview() {
   const {
     activeExample,
     completedExampleCount,
+    hasEnteredViewport,
     isRunning,
     phase,
     previewRef,
@@ -260,6 +261,7 @@ export function IllustrativeInterviewPreview() {
       aria-describedby="illustrative-interview-description"
       className="sp-live-conversation"
       data-board={activeBoardIndex + 1}
+      data-entered-viewport={hasEnteredViewport}
       data-example={activeExample + 1}
       data-phase={phase}
       data-running={isRunning}

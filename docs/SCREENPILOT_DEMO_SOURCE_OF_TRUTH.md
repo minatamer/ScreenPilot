@@ -1,7 +1,7 @@
 # ScreenPilot — Stateless Portfolio Demo Source of Truth
 
 Status: authoritative implementation plan  
-Last revised: 2026-09-23<br>
+Last revised: 2026-09-28<br>
 Scope: browser-session portfolio demo, not an MVP or production recruiting platform
 
 ---
@@ -99,6 +99,30 @@ product matrix except to validate a concrete audit correction. It makes no paid
 provider call and performs no deployment. SP-026 depends on SP-025A and may
 deploy only the exact audited candidate; any material later change invalidates
 the affected audit evidence and requires the smallest relevant re-audit.
+
+### 2026-09-28 post-deployment portfolio-hardening reconciliation
+
+The owner reports the first website deployment complete and has opened required
+SP-028 before portfolio presentation. SP-028 is a post-deployment correction
+ticket executed in the fixed order UI/UX, material STRIDE security remediation,
+then manual acceptance. It removes the bundled sample CV from every visible
+entry and recovery path;
+gives the landing opening stage a true viewport boundary and fluid density that
+uses available phone, tablet, laptop, and large-monitor space without clipping
+short viewports; gates hero-card and
+product-preview motion on real visibility; rebuilds the tablet/phone four-step
+scroll story around content pressure; corrects the trusted-source, rate-limit
+churn, and pre-body denial-of-service boundaries; and ends with a never-before-
+used synthetic CV-assisted run.
+
+The initial reconciliation authorized documentation only. The owner's later
+instruction authorized Section 1 UI/UX implementation, including removal of
+the visible sample-CV path from localhost as well as deployed hosts. Section 1
+is complete: it was implemented, agent-verified, and visually approved by the
+owner on 2026-09-28. That approval does not authorize Section 2, another
+deployment, DNS/Cloud Run mutation, paid provider use, or real candidate data. The complete
+affected deterministic and manual evidence must be re-established on the exact
+candidate before the owner may authorize a later deployment.
 
 ### Authority order
 
@@ -216,7 +240,10 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - One unnamed synthetic-demo disclosure with no fictional employer brand or finite vacancy catalogue.
 - Any bounded candidate-stated role becomes the available synthetic demo vacancy for the browser session; an undecided candidate continues role-neutrally.
 - CV-derived candidate context and an optional evidence-linked non-binding role suggestion, followed by conversational confirmation/correction inside the live call.
-- One bundled synthetic sample CV.
+- One unadvertised synthetic PDF fixture for deterministic extraction tests and
+  direct loopback engineering checks only. Every user-facing runtime, including
+  localhost, offers an uploaded synthetic PDF or conversation-first; no sample
+  action, sample recovery copy, or bootstrap capability is exposed.
 - Visitor-supplied synthetic, text-based PDF CVs.
 - A first-class conversation-first path requiring no CV, with candidate context gathered through natural open questions.
 - Local browser PDF validation and text extraction.
@@ -329,7 +356,7 @@ completion.
 #### Stage 1 — landing
 
 - **Input state:** no browser demo session.
-- **Visible behavior:** concise role-neutral product statement, synthetic/session-only vacancy disclosure, privacy summary, and two equally weighted mode cards: **Use a CV** and **Start without a CV**. The CV card contains upload and sample-CV actions; the conversation card explains that ScreenPilot will ask open discovery questions.
+- **Visible behavior:** concise role-neutral product statement, synthetic/session-only vacancy disclosure, privacy summary, and two equally weighted mode cards: **Use a CV** and **Start without a CV**. The CV card leads to upload only; the conversation card explains that ScreenPilot will ask open discovery questions. No runtime exposes a bundled-sample shortcut.
 - **Mutation:** frontend requests `GET /v1/demo/bootstrap`, receives public configuration, and creates a versioned browser session.
 - **Output state:** `cv_input` for CV-assisted or `conversation_preparing` for conversation-first.
 - **Failure:** if bootstrap fails, show retry plus a static explanation of the demo; do not show a fake working session.
@@ -337,7 +364,7 @@ completion.
 #### Stage 2A — CV input
 
 - **Input state:** valid bootstrap configuration.
-- **Visible behavior:** drop zone/file picker, text-based PDF requirement, 5 MB limit, synthetic-data warning, role-neutral demo disclosure, and sample-CV shortcut. There is no pre-call role picker or supported-role list.
+- **Visible behavior:** drop zone/file picker, text-based PDF requirement, 5 MB limit, synthetic-data warning, and role-neutral demo disclosure. There is no bundled-sample shortcut, pre-call role picker, or supported-role list.
 - **Mutation:** selected `File` remains in JavaScript memory only.
 - **Output state:** `local_extracting` after validation.
 - **Failure:** reject wrong type, invalid PDF signature, password-protected file, more than 8 pages, over 5 MB, or no extractable text.
@@ -345,10 +372,12 @@ completion.
 #### Stage 3A — local extraction
 
 - **Input state:** validated in-memory PDF.
-- **Visible behavior:** deterministic progress labels: **Reading PDF**, **Extracting text**, **Preparing interview context**. A compact local-document scan, activity dots, and three-step progress track remain visible for at least 900 ms so even the synthetic sample communicates that extraction is happening; reduced motion collapses the decorative animation without hiding the current label.
+- **Visible behavior:** deterministic progress labels: **Reading PDF**, **Extracting text**, **Preparing interview context**. A compact local-document scan, activity dots, and three-step progress track remain visible for at least 900 ms so extraction progress is understandable; reduced motion collapses the decorative animation without hiding the current label.
 - **Mutation:** browser extracts ordered page text, normalizes whitespace, enforces a 40,000-character ceiling, discards hidden metadata, and releases the original `File` as soon as extraction finishes.
 - **Output state:** bounded CV text remains only in component memory and is sent to the backend.
-- **Failure:** explain that scanned/image CVs are not supported; offer another file or the sample CV.
+- **Failure:** explain that scanned/image CVs are not supported; offer another
+  synthetic text PDF and the conversation-first path without sample-specific
+  recovery copy.
 
 #### Stage 4A — AI CV analysis
 
@@ -399,7 +428,7 @@ completion.
 - **Visible behavior:** one **Start interview** button aligned at the lower right. Clicking it executes Turnstile in managed, interaction-only mode; a legitimate visitor normally moves directly into the connecting animation, while any required interaction appears inline without leaving preflight. This infrastructure detail is not narrated in candidate-facing copy.
 - **API:** `POST /v1/voice/token` verifies the signed grant and one memory-only `turnstileToken`, applies backend/provider capacity gates, and returns a short-lived private conversation token.
 - **Browser behavior:** starts ElevenLabs WebRTC with `entryMode`, role-neutral synthetic-demo disclosure, the universal screening plan, optional normalized CV/fact-linked role suggestion, candidate-stated role or undecided state, and registered client tools. All candidate content is bounded and delimited as untrusted data.
-- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Its bounded synthetic interview trace follows the bundled Riley Vale sample context—junior software-development direction, accessible workflow internship, distributed collaboration, logistics, and onboarding/mentorship priorities—then exercises the same client-tool and evidence-linking paths as live mode. Conversation-first still records Candidate-only provenance, while the sample-CV path confirms/corrects the matching seeded CV insight. The fake summary adapter preserves safe candidate-stated detail in its evidence-linked sections, with a cautious generic fallback if a supplied value would violate the summary boundary. Bootstrap exposes the non-secret provider mode, paid-operation state, and one derived `effectiveMode`; backend route gates and frontend adapter selection consume that same value. `deterministic_fake` keeps deterministic CV/voice/summary paths, `paid_disabled` closes every provider-backed action without substituting fake output, `standard_live` enables the paid live path, and local-only `summary_rehearsal` keeps CV analysis and interview voice deterministic while its summary remains live and metered. Both entry modes remain available in rehearsal, so the synthetic sample CV can exercise the real CV-assisted request shape without buying CV analysis or ElevenLabs work. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
+- **Provider-mode boundary:** deterministic fake/default development uses a browser-local fake session bridge and never loads or mounts the ElevenLabs React session. Its bounded synthetic interview trace follows internal Riley Vale fixture context—junior software-development direction, accessible workflow internship, distributed collaboration, logistics, and onboarding/mentorship priorities—then exercises the same client-tool and evidence-linking paths as live mode. Conversation-first still records Candidate-only provenance, while uploaded synthetic CVs exercise the matching evidence-linked CV path. The fake summary adapter preserves safe candidate-stated detail in its evidence-linked sections, with a cautious generic fallback if a supplied value would violate the summary boundary. Bootstrap exposes the non-secret provider mode, paid-operation state, and one derived `effectiveMode`; backend route gates and frontend adapter selection consume that same runtime boundary. It does not advertise a sample-CV capability. `deterministic_fake` keeps deterministic CV/voice/summary paths, `paid_disabled` closes every provider-backed action without substituting fake output, `standard_live` enables the paid live path, and local-only `summary_rehearsal` keeps CV analysis and interview voice deterministic while its summary remains live and metered. Both entry modes remain available in rehearsal, and an uploaded synthetic CV can exercise the real CV-assisted request shape without buying CV analysis or ElevenLabs work. Restored sessions remain provider-disabled until a fresh bootstrap revalidates that boundary. The active refresh generation alone may update runtime configuration; cleanup-aborted and stale responses are ignored, and a failed refresh requires an explicit fresh retry while controls remain closed. A fake token can never reach ElevenLabs WebRTC.
 - **Output state:** `interviewing` only after the SDK reports connected.
 - **Failure:** Turnstile failure or expiry resets only the challenge and never contacts ElevenLabs. An expired grant reruns only the current mode's preparation step—CV analysis for CV-assisted or deterministic preparation for conversation-first. Capacity/rate/provider errors explain when retry is allowed and never start a substitute provider. A terminal SDK error, rejected conversation identifier, or unrecoverable interruption ends the provider session once and unmounts the session bridge before recovery UI remains available.
 
@@ -547,7 +576,9 @@ Rules:
 
 ### 4.6 Acceptance scenarios
 
-1. Bundled sample CV reaches plan preview and live preflight.
+1. On every runtime, including loopback local hosting, the CV path offers only
+   an uploaded synthetic text PDF and contains no sample action or recovery
+   copy. The unadvertised fixture remains unavailable on deployed hostnames.
 2. **Start without a CV** skips upload, extraction, AI analysis, and plan preview, then reaches the same preflight using deterministic preparation.
 3. Conversation-first asks the candidate's name in plain language and then their open-ended target position without assuming a profession or requiring a choice.
 4. Conversation-first answers progressively create candidate-sourced cards and make later questions more specific.
@@ -1552,7 +1583,6 @@ screen-pilot/
 ├─ apps/
 │  ├─ frontend/
 │  │  ├─ Dockerfile         # SP-026 minimal non-root Cloud Run image
-│  │  ├─ public/fixtures/   # bundled synthetic sample CV only
 │  │  └─ src/
 │  │     ├─ app/            # Next.js routes/layouts; composition, metadata, boundaries
 │  │     ├─ features/
@@ -1590,8 +1620,7 @@ screen-pilot/
 │        ├─ client-tools/   # allow-listed browser tool schemas
 │        └─ ai/             # structured provider-output schemas
 ├─ tests/
-│  ├─ fixtures/            # shared synthetic CV/transcript/provider-event inputs
-│  └─ e2e/                 # created only if optional SP-028 is approved
+│  └─ fixtures/            # shared synthetic CV/transcript/provider-event inputs
 └─ docs/
 ```
 
@@ -1964,7 +1993,7 @@ The tree is intentionally explicit but not a mandate to split trivial logic into
 | Signing, cookies, rate limits, or spend gates | `apps/backend/src/security` | `security/interview-grant.ts`, `security/stateless-rate-limit.ts`, `security/spend-cap.ts` |
 | A test for one module | beside that module | `session-storage.test.ts` |
 | A reusable synthetic/adversarial input | `tests/fixtures/<kind>` | `cv/prompt-injection.txt` |
-| A runtime sample the browser must fetch | `apps/frontend/public/fixtures` | `screenpilot-sample-cv.pdf` |
+| An unadvertised loopback extraction fixture | `apps/frontend/public/fixtures` | `screenpilot-sample-cv.pdf` |
 
 If a file fits two rows, place it with the layer that owns the decision and inject the lower-level capability. For example, `analyze-cv.ts` owns orchestration, while `openai-cv-analyzer.ts` owns OpenAI payload translation.
 
@@ -2214,7 +2243,7 @@ Use `gcloud auth login` and the Artifact Registry credential helper for the manu
 - Helmet, restricted CORS, bounded Express body parsers, and cookie parsing for the content-free anonymous safety cookie.
 - ElevenLabs React SDK for browser WebRTC/client tools.
 - OpenAI SDK for backend Responses calls.
-- Vitest for fast focused tests, Supertest for in-process HTTP route tests, and Playwright only if optional SP-028 is approved.
+- Vitest for fast focused tests and Supertest for in-process HTTP route tests.
 - GitHub Actions for unpaid repository quality CI only; deployment is manual for the demo and no GitLab CI configuration is added.
 - Google Artifact Registry for immutable frontend/backend deployment images only; it never contains CVs, transcripts, or other candidate data.
 - Google Cloud Run container hosting for two independently deployable apps.
@@ -2485,7 +2514,9 @@ Validates required configuration is present without spending provider credits or
 
 Purpose:
 
-- Return the role-agnostic synthetic-demo disclosure, feature flags, limits, and public privacy text version without a finite role list or employer/vacancy facts.
+- Return the role-agnostic synthetic-demo disclosure, feature flags, limits,
+  provider boundary, and public privacy text version without a sample-CV
+  capability, finite role list, or employer/vacancy facts.
 - Set/refresh a signed, short-lived, content-free anonymous safety cookie.
 
 Response:
@@ -2996,18 +3027,46 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 #### Landing
 
 - Use the feedback-led **Conversation in Focus** composition: one continuous Deep Ink/coral/plum atmospheric field carries the full landing. The entry chooser uses layered dark cards rather than white panels, and the page does not abruptly transition from navy to a white document.
-- Use a left-aligned opening masthead: group the company-buyer promise, explanation, and actions at the left edge and keep the complete group close beneath the navbar. Lead immediately with **Automate the first interview. ScreenPilot takes the notes.** without a separate category eyebrow or human-decision reassurance line, and move the group upward to use the recovered vertical space. Supporting copy explains that ScreenPilot runs a consistent, repeatable first-round conversation and prepares clear notes so recruiters do not repeat the same questions all day. Fill the wide-screen right side with a code-native diagonal cascade of four overlapping feature cards: **Voice interviews**, **Adaptive follow-ups**, **Clear interview notes**, and **Human decisions**. Build the cards as one semantic ordered list with custom inline SVG icons, not a raster/external asset. Slide them diagonally into place once from top-left to bottom-right over roughly 1.1 seconds each with a readable near-sequential stagger, then keep them still. Compress the vertical offsets enough for the cards to read as one connected stack without covering their descriptions. While a pointer hovers an exposed card, raise that card above the rest of the stack without turning it into a control. Under reduced motion, retain the reading order with a shorter shallow slide and no scaling rather than the full diagonal travel. At narrower widths, remove overlap and rotation and reflow the same complete list into a readable grid/stack. The later market/story content, `/demo` Privacy dialog, and preflight retain the detailed human-decision and privacy boundaries. Keep the wide code-native interview preview directly beneath the masthead instead of squeezing it beside the copy; it may later be replaced by a truthful capture of the stabilized product UI. Do not use internal phrases such as “reviewable signal,” imply that ScreenPilot replaces recruiter judgment, or publish a ScreenPilot time-savings claim until it is supported by measured product evidence.
+- Use a left-aligned opening masthead: group the company-buyer promise, explanation, and actions at the left edge and keep the complete group close beneath the navbar. Lead immediately with **Automate the first interview. ScreenPilot takes the notes.** without a separate category eyebrow or human-decision reassurance line, and move the group upward to use the recovered vertical space. Supporting copy explains that ScreenPilot runs a consistent, repeatable first-round conversation and prepares clear notes so recruiters do not repeat the same questions all day. Fill the wide-screen right side with a code-native diagonal cascade of four overlapping feature cards: **Voice interviews**, **Adaptive follow-ups**, **Clear interview notes**, and **Human decisions**. Build the cards as one semantic ordered list with custom inline SVG icons, not a raster/external asset. Slide them diagonally into place once from top-left to bottom-right over roughly 1.1 seconds each with a readable near-sequential stagger, then keep them still. Compress the vertical offsets enough for the cards to read as one connected stack without covering their descriptions. While a pointer hovers an exposed card, raise that card above the rest of the stack without turning it into a control. Under reduced motion, retain the visibility-gated reading order with an opacity-only finish and no scaling or spatial travel. At narrower widths, remove overlap and rotation and reflow the same complete list into a readable grid/stack. The later market/story content, `/demo` Privacy dialog, and preflight retain the detailed human-decision and privacy boundaries. Keep the wide code-native interview preview directly beneath the masthead instead of squeezing it beside the copy; it may later be replaced by a truthful capture of the stabilized product UI. Do not use internal phrases such as “reviewable signal,” imply that ScreenPilot replaces recruiter judgment, or publish a ScreenPilot time-savings claim until it is supported by measured product evidence.
+- Give the opening composition an explicit small-viewport-height stage after the
+  normal-flow header. At wide, laptop, and tablet widths that stage contains
+  the copy/actions and complete feature-card composition; the product preview
+  begins after the stage and no preview pixel is visible at scroll position
+  zero. At phone widths the opening stage ends after the second CTA, then the
+  same semantic feature list follows in normal flow. Short landscape, zoom,
+  expanded content, and browser chrome may grow the stage naturally rather than
+  clip content. Use safe-area-aware dynamic viewport units and content-pressure
+  breakpoints, never a fixed screenshot height or duplicated device tree.
 - Follow the hero with a source-linked market-evidence section whose per-card source and sample labels clearly attribute the industry research without a separate disclaimer chip. Center the eyebrow, two-line heading, and one constrained explanation instead of splitting the heading and paragraph into competing columns. Present five findings in an asymmetric five-card evidence board: stack the **37%** current-adoption and **73%** hiring-change expectation cards in the left track so their combined height plus gap matches the right side; give the **20%** reported time-saving signal a wide upper-right card; and pair the **63%** U.S. candidate-exposure and **26%** candidate-trust cards below it. Each card uses the percentage itself as the only metric graphic alongside a plain title, sample/geography, and original-source link; do not add progress bars or meter tracks beneath the statistics. When the asymmetric board reflows into vertically composed tablet or phone cards, left-align every percentage consistently with its card copy rather than retaining desktop-only centering on selected cards. Never turn these survey percentages into an invented worldwide company count or a ScreenPilot result.
 - Place a large semantic interview scene directly below the promise. It combines a polished abstract code-native participant-and-laptop illustration, distinct Pilot/candidate speaker activity, a prominent participant waveform, changing subtitles, synchronized highlighted question/answer evidence, and a matching plain-language interview note. Render the participant with a warm human skin tone and a featureless face rather than white skin or cartoon eyes/mouth. Keep the participant free of ambiguous hand shapes. Because the viewer faces the seated candidate from the opposite side of the desk, center a broad, uninterrupted outer laptop lid over the candidate's lower torso; keep the keyboard deck behind that lid and expose only a thin hinge/base silhouette. Pilot speaking is shown by a gently illuminated ScreenPilot mark and expanding rings on the lid rather than a second mechanical equalizer or a front-facing screen.
 - Play one deliberately paced loop through six clearly fictional role-neutral examples. The first three-column notes board fills salary expectation, relevant experience, and availability; after a readable completed-board hold, the same three slots transition to role preference, work setup, and growth goal. The second completed board then holds before the sequence returns to salary. Questions and answers reveal one spoken word every 200 ms inside a fixed-height subtitle region. After both lines are complete, their relevant phrases receive the same visible left-to-right two-pass marker sweep at the same time; only after that sweep finishes does the matching note appear. The existing inter-phase and completed-board holds keep the overall sequence readable. The figure keeps the accessible name **Example interview** without a redundant visible title/subline or playback/topic controls; deliberate keyboard or click focus pauses it, as does moving it off-screen or hiding the page. Reduced motion keeps the word-by-word timing through opacity-only entrances without spatial movement, changes voice activity to slow opacity-only feedback, and shows the synchronized highlight immediately in its completed painted state without a sweep before the matching note appears.
+- Do not start product-preview timers or motion at page mount. Render one stable
+  truthful frame, begin the first example only when the preview first enters a
+  documented viewport activation zone, and thereafter pause/resume its current
+  phase when it leaves/re-enters view. Page visibility and deliberate focus
+  remain pause controls. Observer/JavaScript fallback stays visible and static.
 - Keep the compact landing header fully transparent, in normal document flow, and inside the edge-to-edge atmospheric field so it scrolls away with the top of the page. Place the enlarged ScreenPilot mark and wordmark at the left edge, with the larger **How it works** and **Start demo** actions at the right. DOM and keyboard order follow that familiar visual order. The page-wide atmosphere owns the top glow and grid; do not restart either effect at the hero boundary.
 - The product mark is a clean `/` home link rather than a `#top` route mutation. Visible same-page landing CTAs—including **How it works**, **See it step by step**, and **Try the screening demo**—scroll smoothly to their targets instead of jumping while keeping the browser address at `/` during ordinary pointer or keyboard activation. The two **How it works** actions share one 0.9-second ease-in/ease-out journey rather than maintaining separate scroll implementations or relying on the browser-controlled default duration; the hero entry action reuses that behavior for the chooser. Keep target IDs and fragment-link markup only as progressive fallback, never push a fragment into history after the controlled journey, and retain user-input cancellation. Keep this direct-click journey active when the operating system reports reduced motion because it is the explicitly requested result of those controls, while passive spatial landing motion continues to honor the system preference. Keep the scroll cue in its own normal-flow row beneath the interview frame so it cannot cover subtitles or collected-note cards at narrower widths.
 - In the hero headline, a slightly informal handwritten SVG version of **notes.** draws letter by letter over about 1.1 seconds, followed immediately by a short imperfect coral underline. The ordinary text remains in the accessible headline, and the decorative writing never loops or changes layout. Reduced-motion mode shows the completed word and limits the emphasis to a gentle opacity finish.
 - Replace the separate context row and ordinary process-card grid with a four-step scroll story: **Choose**, **Talk**, **Notes**, **Review**. A sticky scene and segmented story progress respond to normal scrolling while all step content remains readable without JavaScript or motion.
+- The scroll story changes composition when its content no longer fits, not at
+  a device-label boundary. Wide screens retain the sticky two-column scene;
+  tablet/content-pressure and phone widths use a sequence of self-contained
+  scroll chapters, each pairing one compact scene with its matching narrative
+  in ordinary document flow. Supporting browsers tie a restrained chapter
+  entrance/exit to view progress; observer fallback uses the same markup and
+  reduced motion is static. The one shared step data model and visual vocabulary
+  serve every composition. Active step selection uses a deterministic viewport
+  rule rather than observer callback order. Short landscapes and 200% zoom grow
+  naturally, and vertical document scrolling is never trapped, snapped, or
+  replaced by a mandatory horizontal carousel.
 - Keep trust language concise and contextual. Fold the human-decision and privacy explanation plus the accessible Privacy dialog trigger into the final story step. Remove the standalone privacy slab and landing footer.
 - The header's **Start demo** action routes directly to the first-party `/demo` entry chooser. The hero's **Try the screening demo** action still reveals the same chooser at the end of the landing story. Neither action skips or favors an entry mode.
 - Two equal dark-surface entry-mode cards end the product story: **Use a CV** and **Start without a CV**. Neither is rendered as a small secondary link, and both retain concise plain-language copy, keyboard order, and the same primary action treatment.
-- The CV card previews focused, evidence-grounded discussion areas and contains Upload plus Use sample actions. The conversation card previews fast open discovery and contains one Start action. Neither card promises or displays a fixed question script.
+- The CV card previews focused, evidence-grounded discussion areas and leads to
+  upload without a sample action or sample-specific copy in any runtime. The
+  conversation card previews fast open discovery and contains one Start action.
+  Neither card promises or displays a fixed question script.
 - Comparison copy is concise and non-competitive; it explains preparation differences while promising the same live/review quality.
 - A three-node process strip adapts its first label by selected mode: CV understanding or Conversation discovery → Voice → Review.
 - Privacy remains visible before either entry path through concise trust copy plus an accessible modal trigger in the final story step. Repository/source access is not part of the landing composition.
@@ -3015,7 +3074,10 @@ Use gradients only for the voice signal, selected Pilot accents, and hero atmosp
 #### CV input
 
 - Central dark document well with filename, size, text-based requirement, and privacy copy inside the shared `/demo` workspace.
-- Sample CV appears as a secondary action within the same authored intake composition, not a white upload card or detached panel.
+- Every runtime, including loopback local hosting, presents upload only. The
+  bundled PDF remains an unadvertised loopback engineering fixture for direct
+  extraction checks; it is not an intake action or recovery path, and the same
+  direct route fails closed for non-loopback hosts.
 - Validation errors appear inside the well and preserve the user's next action.
 
 #### Analysis
@@ -3148,11 +3210,11 @@ The step-prefixed shared stage heading reports this sequence but is not navigati
 - Correction: brief border/color morph, not shake.
 - The compact four-bar voice signal responds smoothly but avoids rapid flashing; the static listening microphone and plain reconnect/ending labels do not animate.
 - Reduced-motion mode removes automatic spatial travel and scaling. The end-to-review morph becomes an immediate layout change with a short opacity-only state transition and already-drawn static connectors; no node or column travels, scales, or floats. Voice-status bars remain still while the text label continues to identify the speaking party. Evidence-node selection and minimize/focus return remain immediate.
-- The landing product preview loops slowly through two three-topic boards: salary expectation, relevant experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It starts automatically without playback or topic-switching controls, pauses on deliberate keyboard/click focus and when off-screen or hidden, and holds each completed board before transitioning. Normal motion reveals both questions and answers one spoken word at a time inside fixed-height regions, waits for both complete lines, draws both evidence highlights together from left to right, and then creates the corresponding note. Speaker activity and board/card transitions stay on opacity/transform. Reduced motion keeps the same word-by-word timing through opacity-only entrances, removes spatial movement, resolves the highlight without a sweep, and limits voice activity to slow opacity changes.
+- The landing product preview loops slowly through two three-topic boards: salary expectation, relevant experience, and availability, followed by role preference, work setup, and growth goal, then back to the first board. It presents a stable truthful frame without running timers until it first enters its viewport activation zone, then starts automatically without playback or topic-switching controls. It pauses and resumes the current phase on deliberate keyboard/click focus, when off-screen, or when hidden, and holds each completed board before transitioning. Normal motion reveals both questions and answers one spoken word at a time inside fixed-height regions, waits for both complete lines, draws both evidence highlights together from left to right, and then creates the corresponding note. Speaker activity and board/card transitions stay on opacity/transform. Reduced motion keeps the same visibility gate and word-by-word timing through opacity-only entrances, removes spatial movement, resolves the highlight without a sweep, and limits voice activity to slow opacity changes. Without observer/JavaScript support, the preview remains visible and static.
 - Each newly spoken subtitle word mounts with a short fade-and-rise so the timing reads as speech rather than a whole-line replacement. The compact participant pane contains only the centered speaking illustration and its integrated waveform; it has no redundant lower identity/instruction strip. Preview note cards use only sequence, captured field, captured value, and a quiet completion dot—no “Interview note,” “Added from your answer,” “Waiting,” or “Listening for answer” filler copy.
 - The active-interview caption panel reuses that word-entry language for received Pilot turns, with a restrained caret for tentative Pilot text. Candidate turns use one short right-side chat-bubble entrance instead of per-word spatial motion. Reduced motion resolves Pilot caption words immediately, removes the candidate bubble entrance, and disables repeated waveform travel through the global motion preference contract.
 - Decorative headline motion is one-shot only: the handwritten SVG **notes.** traces its individual pen strokes over about 1.1 seconds and immediately receives a brief imperfect coral underline, then remains static. The ordinary word stays in the accessible headline. Reduced-motion mode keeps the completed word visible and uses an opacity-only finish.
-- The four hero feature cards slide diagonally into place once in reading order over roughly 1.1 seconds each, with a slow near-sequential stagger that lets each title and short description register before the next card arrives. They remain static afterward. On pointer hover, the targeted card rises above the stack and receives a small compositor-only lift; it does not become interactive content. Reduced-motion mode retains the reading order with a shorter shallow horizontal slide and no scaling, while hover keeps only stacking-order and border emphasis; compact layouts keep the same semantic list while removing overlap and fixed rotation.
+- The four hero feature cards slide diagonally into place once in reading order over roughly 1.1 seconds each, with a slow near-sequential stagger that lets each title and short description register before the next card arrives. Their entrance is gated by real viewport visibility rather than page mount; compact phone layouts reveal each card only as that card enters view, while wide/tablet compositions may reveal the intersecting stack once. They remain static afterward and never replay on reverse scrolling. On pointer hover, the targeted card rises above the stack and receives a small compositor-only lift; it does not become interactive content. Reduced-motion mode retains the visibility gate and reading order with a non-spatial opacity finish, while hover keeps only stacking-order and border emphasis; compact layouts keep the same semantic list while removing overlap and fixed rotation. Observer/JavaScript fallback leaves the complete list visible and static.
 
 ### Component inventory
 
@@ -3188,7 +3250,8 @@ The step-prefixed shared stage heading reports this sequence but is not navigati
 
 ### Accessibility
 
-- Keyboard access for both entry choices, upload/sample, consent, Start, mute, End, tabs, evidence chips, and Clear.
+- Keyboard access for both entry choices, upload, consent, Start, mute, End,
+  tabs, evidence chips, and Clear.
 - Any interactive Turnstile fallback remains keyboard reachable, visibly focused, announced with concise surrounding status text, and is not obscured by sticky controls or the virtual keyboard.
 - Visible focus rings.
 - Semantic headings and landmarks.
@@ -3305,10 +3368,36 @@ Present this as a high-quality UI concept for composition and visual direction. 
 - Obtain a fresh action-specific token for each paid request. Keep it in memory only, never put it in `sessionStorage`, and reset the widget after success, expiry, duplicate rejection, or retry.
 - Perform mandatory backend Siteverify validation with the server-only secret, expected production hostname, and expected action before any OpenAI or ElevenLabs call. The client widget alone is never considered protection.
 - Return the public site key through bootstrap; keep the secret in Google Secret Manager/Cloud Run. Use separate production and non-production widgets/test keys.
-- Apply bounded best-effort backend route/source limits using the validated proxy chain and the anonymous safety cookie. Raw source and cookie values are HMAC-fingerprinted with a process-local random secret before entering capped TTL memory. Fixed-window expiry uses a bounded one-node-per-entry min-heap, so ordinary hits never scan the full counter table and expiry/eviction work is incremental. Counters are per Cloud Run instance and reset on restart/scale. Do not log raw IP addresses or pretend the limits are durable identity enforcement.
+- Apply bounded best-effort route/source limits only through one explicitly
+  verified ingress/source contract plus the anonymous safety cookie. The
+  frontend proxy forwards an allow-listed request-header set and strips every
+  caller-supplied forwarding/client-address/internal-platform header. Do not
+  use a numeric `trust proxy` hop assumption across paths with different
+  topology. Prefer an authenticated frontend-to-backend boundary with one
+  canonical internal source signal; if the backend remains publicly invokable,
+  enforce source identity at the frontend and use session/global backend
+  budgets instead of trusting a caller header. Raw source and cookie values are
+  HMAC-fingerprinted with a process-local random secret before entering capped
+  TTL memory. Fixed-window expiry uses a bounded one-node-per-entry min-heap, so
+  ordinary hits never scan the full counter table. A full table never evicts an
+  unexpired enforcement bucket to admit a fresh identity: unseen identities
+  use a bounded overflow/global route budget or fail closed until expiry.
+  Counters are per Cloud Run instance and reset on restart/scale. Do not log raw
+  IP addresses or pretend the limits are durable identity enforcement.
 - Apply tighter limits to voice-token issuance and coarser limits to CV analysis and summary generation; rate-limit deterministic conversation preparation separately even though it is free.
 - Hold bounded per-instance in-flight leases for CV analysis, voice-token issuance, and summary generation until the HTTP response finishes or closes. Default global capacity is `4`, with per-route ceilings `2`, `1`, and `2` respectively; reject excess work before Turnstile/provider invocation.
-- Bound inbound HTTP receipt separately from provider work: complete headers have a 10-second deadline, the complete inbound request has a 30-second receipt deadline, and JSON bodies remain capped at 64 KiB. Node returns `408` and closes an incomplete connection before the Express listener continues. These settings do not masquerade as a whole-handler deadline; each outbound Turnstile/OpenAI/ElevenLabs operation instead has its own abortable 30-second provider timeout, while local handler work operates only on already-bounded inputs.
+- Bound inbound HTTP receipt separately from provider work: reject unsupported
+  methods/content types, disallowed origins, invalid or oversized declared
+  lengths, and exhausted cheap/global admission before body parsing. The Next
+  proxy's bounded stream reader has its own short abortable deadline and cancels
+  on disconnect. Backend JSON parsing is route-scoped after a cheap pre-body
+  admission decision; provider-capacity leases are acquired only after strict
+  body validation. Complete headers retain a 10-second deadline, the complete
+  inbound backend request retains a 30-second outer receipt deadline, and JSON
+  bodies remain capped at 64 KiB. These settings do not masquerade as a whole-
+  handler deadline; each outbound Turnstile/OpenAI/ElevenLabs operation instead
+  has its own abortable 30-second provider timeout, while local handler work
+  operates only on already-bounded inputs.
 - Paid-demo environment kill switch.
 - Cloud Run deployment target: backend minimum instances `0`, maximum instances `1`, container concurrency `4`; frontend minimum instances `0`, maximum instances `1`, container concurrency `80`. SP-026 applies and verifies these settings because the services do not exist during SP-022. Provider account controls remain independent: the owner-recorded OpenAI USD 5 hard limit/alerts and ElevenLabs 1-call agent concurrency, 5-call daily limit, disabled overage/burst/queue controls bound provider exposure.
 - Clear capacity/rate errors with no provider fallback.
@@ -3326,7 +3415,7 @@ Perfect durable one-interview-per-person enforcement is impossible without persi
 
 | Failure | Required behavior |
 | --- | --- |
-| Invalid/scanned PDF | Fail locally; explain text-based PDF requirement; offer another file, sample CV, or conversation-first without demoting any path. |
+| Invalid/scanned PDF | Fail locally; explain the text-based PDF requirement and offer another synthetic file or conversation-first without demoting either path or mentioning a bundled sample. |
 | Browser extraction failure | Keep file in memory for retry; never upload the PDF as a hidden fallback. |
 | CV analysis timeout | Retry once manually; keep extracted text only while the component is mounted. |
 | Conversation-first preparation failure | Retry the deterministic endpoint or return to entry choices; never display AI-analysis copy or require a CV. |
@@ -3373,13 +3462,13 @@ candidate content.
 
 ### Everyday ticket rule
 
-Do not run the complete repository test matrix or Playwright suite after every ticket. Normal ticket verification consists of:
+Do not run the complete repository test matrix after every ticket. Normal ticket verification consists of:
 
 1. The smallest relevant package-level typecheck/test command.
 2. A focused manual check of the behavior changed by that ticket.
 3. A build only when the ticket changes build/runtime configuration or reaches a milestone boundary.
 
-The user may always choose to rely primarily on manual testing during implementation. Expensive or slow extended automation belongs to optional SP-028 and never blocks ordinary ticket completion, deployment, or the demo definition of done.
+The user may always choose to rely primarily on manual testing during implementation. Comprehensive browser/AI automation is outside the current backlog and never blocks ordinary ticket completion, deployment, or the demo definition of done.
 
 ### Essential focused tests
 
@@ -3419,8 +3508,8 @@ These tests run against provider fakes and are invoked by package/file when rele
 
 Before deployment, manually verify:
 
-1. Sample CV → analysis → plan preview.
-2. Uploaded text PDF → materially different facts/topics and an optional non-binding evidence-linked role suggestion.
+1. Previously unused uploaded synthetic text PDF → analysis → plan preview.
+2. A materially different uploaded text PDF → different facts/topics and an optional non-binding evidence-linked role suggestion.
 3. Conversation-first → deterministic preparation → shared preflight with no upload, CV UI, CV analysis charge, or plan preview.
 4. Conversation-first uses the one configured name opener, then generates a plain open role question with synthetic/session-only framing and no catalogue; acceptance is based on intent and tone, not exact wording.
 5. Conversation-first insight board starts open, fills only from candidate turns, and uses learned facts to make later questions less generic.
@@ -3444,41 +3533,6 @@ Before deployment, manually verify:
 23. Verify counterquestions are answered before the interview resumes, unclear audio produces clarification rather than an insight, and timing/interruptions are tuned through ElevenLabs settings rather than prompt filler.
 24. Verify a normal screen fills the prioritized HR fields in roughly 8–10 primary prompts, credits multi-field answers, asks no more than one broad role-context clarification, and never enters a profession-specific assessment chain.
 
-### Optional extended Playwright flows — SP-028
-
-1. Landing → sample CV → analysis → plan preview.
-2. Valid text PDF → different facts/topics and an optional grounded role suggestion.
-3. Landing → conversation-first → deterministic preparation → preflight, proving CV stages and provider preparation calls were skipped.
-4. Conversation-first discovery → preferred name → open synthetic-role question or undecided path → progressively focused follow-ups → Candidate-only review.
-5. Fake voice role scenarios in both modes: Graphic Designer, Customer Support Representative, CV-suggested Product Manager, Backend without technical questions, Full Stack without redirection, correction, compound wording, and undecided.
-6. Missing/incorrect-name conversational recovery.
-7. Invalid/image-only PDF local rejection.
-8. Consent/microphone gates prevent token request.
-9. Fake voice session → captions → insight cards → review.
-10. Candidate correction updates a card.
-11. Mid-call disconnect → partial review.
-12. Summary retry.
-13. Refresh between stages restores safe session data; refresh during call does not reconnect.
-14. Clear session removes browser data.
-15. Complete fake-provider flows for both modes across phone, tablet, compact-laptop, laptop/desktop, and large-monitor anchors, plus intermediate drag-resized widths, including entry, preparation, preflight, interview, insights, review, errors, and Clear session.
-16. Mobile portrait/landscape, safe-area, virtual-keyboard, long-caption, and sticky-control visual checks.
-
-### Optional automated AI eval personas — SP-028
-
-- Conversation-first graduate who supplies a preferred name, chooses Graphic Designer, and answers progressively deeper general-HR questions.
-- Customer Support Representative who receives no competency simulation or professional-knowledge test.
-- Candidate whose CV suggests Product Manager but who corrects the role during the call.
-- Backend Developer who receives no technical questions and Full Stack Developer who receives no redirection.
-- Candidate using compound/multiple-role wording and an undecided candidate who both complete one shared role-neutral screen.
-- Experienced candidate whose CV is vague about recent responsibilities and whose role must be asked neutrally without professional interrogation.
-- Candidate correcting an outdated CV claim.
-- Candidate declining compensation discussion.
-- Conversation-first candidate who later asks an unsupported employer question and receives a human-follow-up boundary.
-- Candidate attempting to redirect the interview through instructions embedded in CV text.
-- Candidate asking to stop.
-
-Each optional automated eval defines expected topics, forbidden questions/claims, tool schema validity, evidence grounding, and acceptable ending behavior. Paid live-provider evals remain manually triggered only.
-
 ### Fast default commands
 
 ```bash
@@ -3489,16 +3543,6 @@ pnpm build
 ```
 
 These are the small core gates, but they still do not all need to run after every ticket. Run the smallest relevant subset during feature work. SP-025 runs its release check after the manual matrix; SP-025A reruns the complete deterministic set on the exact audited candidate after fixing any final findings and before deployment.
-
-### Optional extended commands
-
-```bash
-pnpm test:integration
-pnpm test:e2e
-pnpm test:ai-evals
-```
-
-Extended commands are manual/opt-in. They are never attached to every commit or normal CI event.
 
 ---
 
@@ -3512,10 +3556,10 @@ Extended commands are manual/opt-in. They are never attached to every commit or 
 - Execute in order unless dependencies explicitly allow parallel work.
 - One ticket normally produces one reviewable commit.
 - A ticket is incomplete until its visible success/error states receive a focused manual check and any genuinely relevant targeted logic tests pass.
-- Do not run the complete repository, Playwright, integration, or AI-eval suites after each ticket unless the user explicitly requests it.
+- Do not run the complete repository or invent comprehensive browser/AI-eval
+  suites after each ticket unless the user explicitly requests that new scope.
 - Run the complete fast gate at the documented milestone/release boundaries;
-  SP-025A owns the final exact-candidate deterministic pass, while optional
-  SP-028 owns comprehensive browser/AI automation.
+  SP-025A owns the final exact-candidate deterministic pass.
 - Keep paid provider calls behind explicit environment flags and out of default CI.
 - Update this source of truth when a material scope or architecture decision changes.
 
@@ -3707,7 +3751,8 @@ Every authorized ticket implementation or completion commit begins with the exac
 
 **Checklist:**
 
-- [x] Build `CvDropzone` and sample-CV action.
+- [x] Build `CvDropzone`; the original sample-CV action was retired from every
+  runtime by SP-028.
 - [x] Validate signature, MIME, 5 MB, 8 pages, password state, and text presence.
 - [x] Extract/normalize ordered page text locally.
 - [x] Reject scanned/image-only PDFs with clear recovery.
@@ -3826,7 +3871,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 #### [SP-012 — Build the CV-assisted frontend preparation path](tickets/SP-012-build-cv-assisted-frontend-path.md)
 
-**Outcome:** Uploaded and sample CVs flow through local extraction, grounded analysis, and an explainable plan preview before reaching the same preflight boundary.
+**Outcome:** Uploaded CVs flow through local extraction, grounded analysis, and an explainable plan preview before reaching the same preflight boundary. The original bundled-sample shortcut was retired from every runtime by SP-028.
 
 **Depends on:** SP-005, SP-006, SP-008, SP-010, SP-010A, SP-011, SP-011A.
 
@@ -3834,9 +3879,10 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 
 **Checklist:**
 
-- [x] Connect the landing CV card to upload/sample selection and the SP-008 extraction service.
+- [x] Connect the landing CV card to the SP-008 extraction service; sample
+  selection was later retired from every runtime by SP-028.
 - [x] Implement truthful extraction and AI-analysis progress states.
-- [x] Build the reusable managed Turnstile client boundary with one browser-safe shared action contract for `cv_analyze`, `voice_token`, and `interview_summary`, then execute only `cv_analyze` in this ticket immediately before uploaded/sample CV analysis; bound and cancel script loading with full listener/timer cleanup, keep the response token in memory only, show interaction only when required, and reset it after every attempt.
+- [x] Build the reusable managed Turnstile client boundary with one browser-safe shared action contract for `cv_analyze`, `voice_token`, and `interview_summary`, then execute only `cv_analyze` in this ticket immediately before uploaded CV analysis; bound and cancel script loading with full listener/timer cleanup, keep the response token in memory only, show interaction only when required, and reset it after every attempt.
 - [x] Call `POST /v1/cv/analyze` with the one-time token, then clear raw text after a validated response.
 - [x] Build CV fact cards with evidence excerpts and linked CV-derived/fixed screening-topic cards.
 - [x] Label an evidence-linked role hint as **Suggested from CV — confirm during the call**; allow any bounded profession label and add no pre-call role picker.
@@ -4135,7 +4181,9 @@ without an HTTP request, browser load, provider operation, or paid action.
 - [x] Enforce one question at a time, uncertainty behavior, stop requests, fixed knowledge boundaries, and safety exclusions.
 - [x] Add checked-in good/bad transcript fixtures for every Section 8 regression scenario and deterministic graders for length, question count, banned openers/praise, spoken formatting, source/vacancy claims, tool eligibility, and stop behavior.
 - [x] Add narrow semantic checks for direct counterquestion handling, evidence-grounded follow-ups, natural neutrality, and meaning-preserving insight paraphrases; change one prompt block at a time and rerun the same fixtures.
-- [ ] Read representative outputs aloud, then run focused live text/voice tuning without making the optional full SP-028 AI automation suite a ticket-completion requirement.
+- [ ] Read representative outputs aloud, then run focused live text/voice tuning
+  without making a comprehensive AI-automation suite a ticket-completion
+  requirement.
 
 #### [SP-018 — Tune latency, interruption, and filler behavior](tickets/SP-018-tune-latency-interruption-and-filler.md)
 
@@ -4823,26 +4871,35 @@ worker remains an architecture boundary rather than a deferred task.
 - [ ] Audit every Section 20 definition-of-done item.
 - [ ] Remove dead experiments, stale scope, debug UI, and unused dependencies.
 
-### Milestone 7 — optional extended automation
+### Milestone 7 — post-deployment portfolio hardening
 
-#### [SP-028 — Optionally add comprehensive browser and AI automation](tickets/SP-028-optionally-add-extended-automation.md)
+#### [SP-028 — Harden the post-deployment experience and security boundaries](tickets/SP-028-harden-post-deployment-experience-and-security.md)
 
-**Outcome:** If the extra investment is worthwhile, ScreenPilot gains repeatable full-flow regression coverage without slowing normal feature tickets or commits.
+**Outcome:** Before portfolio presentation or another deployment, ScreenPilot's
+landing behaves intentionally across viewport shapes, sample behavior is absent
+from every runtime surface, material post-deployment security findings are
+remediated, and a genuinely new synthetic CV-assisted flow is manually
+accepted.
 
-**Depends on:** SP-010A, SP-026. SP-027 is independent and optional.
+**Depends on:** SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026.
 
-**Suggested commit:** `SP-028: add optional extended demo automation`
+**Suggested commit:** `SP-028: harden post-deployment experience and security`
 
-**Checklist:**
+**Execution order:**
 
-- [ ] Add Playwright desktop/mobile projects and provider event fixtures.
-- [ ] Automate every optional Section 18 browser flow across the responsive phone, tablet, laptop/desktop, and large-monitor reference anchors.
-- [ ] Add paired desktop/mobile visual-regression snapshots for every major stage and failure state.
-- [ ] Automate the Section 18 cross-profession, correction, compound-role, undecided, unsupported-employer-question, injection, and forbidden-assessment scenarios with deterministic fakes.
-- [ ] Add extended integration coverage for provider errors, event ordering, grants, and privacy boundaries.
-- [ ] Expose extended tests through manual/opt-in commands or CI dispatch only, never every commit.
-- [ ] Keep paid live-provider calls outside automation and default CI.
-- [ ] Publish safe screenshots/traces on optional-suite failure without candidate content.
+1. [x] Complete the sample-CV removal boundary, hero viewport contract,
+   visibility-gated motion, and responsive scroll-story corrections. Agent
+   verification and owner visual approval completed on 2026-09-28.
+2. [ ] Correct the trusted-source/header boundary, churn-resistant bounded
+   rate limiting, and pre-body slow-request admission identified by the STRIDE
+   analysis. Preserve the already-validated origin, cookie, grant, Turnstile,
+   provider-cap, CSP, redaction, and statelessness controls.
+3. [ ] Complete the responsive/motion/security manual matrix and one CV-assisted
+   run using a never-before-used synthetic or licensed public-template text PDF
+   with no real person's data.
+4. [ ] Present the exact candidate and evidence to the owner. Do not deploy,
+   enable paid mode, change Cloud Run/DNS, or make a paid provider call without
+   separate explicit permission.
 
 ---
 
@@ -4858,7 +4915,9 @@ worker remains an architecture boundary rather than a deferred task.
 - [ ] Conversation-first requires no document, skips CV analysis/plan preview, uses only the configured name opener as a fixed question, then generates a natural synthetic-role question or undecided path plus follow-ups that become more focused as answers arrive.
 - [ ] Any bounded candidate-stated role is accepted without redirection, corrections adapt later wording, compound wording remains one label, and undecided candidates complete the same universal HR screen.
 - [ ] No signup, login, phone, invitation, dashboard, job management, or historical workflow exists.
-- [ ] Sample/uploaded CV use the same CV-assisted branch, and both major entry modes converge on the same preflight, interview, review, and Clear-session implementation.
+- [ ] No runtime exposes a sample-CV action or recovery path. Uploaded CV and
+  conversation-first modes converge on the same preflight, interview, review,
+  and Clear-session implementation.
 - [ ] Scanned/unsupported PDFs fail clearly before backend analysis.
 
 ### Stateless data handling
@@ -4908,7 +4967,6 @@ worker remains an architecture boundary rather than a deferred task.
 - [ ] One GitHub `ci.yml` gates pull requests/main with unpaid fast checks and remains quality-only; the owner manually builds and deploys the exact audited commit from an authenticated laptop to both Cloud Run services before production smoke verification.
 - [ ] The frontend Cloud Run `run.app` URL serves valid managed HTTPS and same-origin `/v1` requests reach the backend through the frontend server proxy without exposing the backend service URL to visitors. A custom domain is optional after release and stays under the renewal-price guardrail if added.
 - [ ] Optional SP-027 portfolio packaging is explicitly not required for deployment or release approval.
-- [ ] Optional SP-028 automation is explicitly not required for deployment or release approval.
 - [ ] SP-026's exact two controlled production flows pass on the deployed SP-
   025A-audited candidate: one materially different synthetic/licensed text-PDF
   CV-assisted flow and one conversation-first flow. Production Turnstile,
@@ -4918,6 +4976,11 @@ worker remains an architecture boundary rather than a deferred task.
   working-demo release rule. Only a named defect may justify a narrow rerun.
 - [ ] Full phone, tablet, laptop/desktop, and large-monitor flows plus keyboard, reduced-motion, orientation, safe-area, intermediate resizing, and provider failure paths are verified.
 - [ ] Cloudflare Turnstile Free, best-effort backend route/source limits, Cloud Run/provider caps, and the paid-demo kill switch work without a database, paid WAF, or Cloudflare proxy.
+- [ ] SP-028's opening hero/visibility/scroll-story contract passes the complete
+  responsive and paired-motion matrix; its trusted-source, churn-resistant
+  rate-limit, and pre-body deadline regressions pass; and the owner completes
+  one never-before-used synthetic CV-assisted acceptance run before portfolio
+  presentation or another deployment.
 
 ---
 
@@ -4927,7 +4990,7 @@ The architecture is now demo-sized, but these items should still be challenged b
 
 | Candidate simplification | Current position | Recommendation |
 | --- | --- | --- |
-| User-uploaded CV path | In scope alongside sample CV | Keep for the core personalization proof, but implement after the sample path. Cut it only if PDF reliability threatens polish. |
+| User-uploaded CV path | In scope for every visitor | Keep for the core personalization proof. Visitors use their own synthetic/licensed text PDF or conversation-first; never fall back to the repository fixture. |
 | Conversation-first path | Locked, equal priority with CV-assisted | Keep because it provides the fastest trial and demonstrates live adaptive discovery. Share preflight/interview/review components; do not let it become a separate app or a long manual form. |
 | Candidate-defined synthetic role | Locked, role-agnostic | Accept any bounded candidate-stated label as the synthetic vacancy for that browser session or continue undecided. Keep one universal HR screen; do not add an allow-list, classifier, vacancy CRUD, pre-call picker, profession-specific assessment, or inferred employer facts. |
 | Separate Express backend | In scope | Keep because it protects keys, uses a broadly recognized Node.js API stack, and demonstrates backend/API skill. Collapsing into Next.js route handlers is the largest remaining architectural simplification if schedule becomes tight. |
@@ -4936,18 +4999,17 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Bounded local transcript | In scope as browser-only evidence input, not a full review surface | Keep final text for association, summary retry, and clearing. Show only the selected node's exact evidence excerpt and concise static references; cut the full timeline, word-level timestamps, speaker audio alignment, search, and editing. |
 | GPT post-call summary | In scope | Keep because it completes the story. Do not add recruiter decisions, scoring, regeneration history, or multiple summary formats. |
 | JSON report download | Undecided | First optional cut. Copy summary is enough for the demo unless download materially improves the portfolio video. |
-| Sample-CV path | In scope | Keep because it demonstrates focused CV-grounded behavior with safe fixture data; conversation-first now serves visitors who want no document. Do not add a fully prerecorded sample interview. |
+| Sample-CV path | Retired from every runtime surface | Keep the unadvertised PDF only as a loopback engineering fixture for deterministic extraction/direct-route checks. Do not expose an action or recovery copy, use it as a product fallback, or serve its direct route on a non-loopback host. |
 | Desktop/mobile parity | Locked, non-negotiable | Preserve every core stage, action, state, and visual identity on both; adapt composition rather than hiding features on mobile. |
 | Custom animated voice signal | In scope | Use a restrained CSS/canvas component. Cut advanced audio-reactive shaders or 3D/WebGL work. |
 | Latency filler | Conditional | Keep the policy, but enable the audible filler only if the bounded fake/live walkthroughs show a recurring user-facing wait that warrants it. Do not build a library of filler phrases or require a statistical sample. |
-| Automated AI eval suite | Optional SP-028 | Manual scripted review and narrow safety tests are enough for release; automate the full role-neutral scenario/persona matrix only if the extra confidence is worth the time. |
 | HTML Design System Reference | In scope and intentionally lightweight | Keep fonts, typography, colors, spacing, surfaces, icons, and compact component/state examples; do not turn it into full-screen mockups, Storybook, or another app. |
 | Figma design system/prototype | Future optional, out of demo scope | Do not block implementation or add tickets for Figma. Revisit only if the portfolio later benefits from a formal design artifact. |
 | ImageGen concept | One paired active-interview concept after HTML-reference approval | Keep it because the richest ScreenPilot screen can establish composition and atmosphere for the rest of the implementation. Do not expand it into landing-page variants, every-state mockups, or multiple art directions. |
 | Detailed cost telemetry | Manual release measurement | Use provider dashboards plus one release worksheet; do not build an internal billing/analytics system. |
-| Public bot/abuse control | Turnstile Free + best-effort backend limits + hard provider/Cloud Run caps | Keep the three paid-route checks because they directly protect demo spend. Do not expand this into Bot Fight Mode, a Cloudflare proxy, paid WAF, persistent IP ledger, fingerprinting system, or authentication flow. |
+| Public bot/abuse control | Turnstile Free + trusted-ingress global/source/session limits + hard provider/Cloud Run caps | Keep the three paid-route checks because they directly protect demo spend. SP-028 must remove forwarding-header ambiguity, active-bucket eviction under churn, and pre-admission slow-body exposure without adding Bot Fight Mode, a Cloudflare proxy, paid WAF, persistent IP ledger, fingerprinting system, or end-user authentication flow. |
 | Portfolio README/video package | Optional SP-027 | The deployed demo stands on its own. Add the polished README, screenshots, diagram, measured-results write-up, and recorded walkthrough only if they materially improve the Upwork presentation. |
-| Cross-browser matrix | Manual desktop/mobile acceptance is required; comprehensive automation is optional SP-028 | Preserve mobile parity with targeted iPhone Safari, Android Chrome, desktop Chromium, and Firefox checks rather than a commercial device lab. |
+| Cross-browser matrix | Manual desktop/mobile acceptance is required | Preserve mobile parity with targeted iPhone Safari, Android Chrome, desktop Chromium, and Firefox checks rather than a commercial device lab or a new automation programme. |
 | Cloud-specific infrastructure code | Minimal manual Google Cloud deployment | Keep the existing quality-only `ci.yml`, two container definitions, Artifact Registry, Secret Manager, two Cloud Run services, and the frontend server's same-origin `/v1` proxy. Avoid deployment CI, a third hosting layer, paid load balancer, Terraform, Kubernetes, service mesh, multi-region failover, or a custom deployment platform. Direct custom-domain mapping is optional only after the `run.app` release passes and its Preview limitations are accepted. |
 
 Recommended implementation priority if time tightens:
@@ -4966,7 +5028,6 @@ Cut first:
   elaborate connector animations
   nonessential client-tool categories
   optional SP-027 portfolio packaging
-  optional SP-028 browser/AI automation
 
 Cut only as a last resort:
   user-uploaded CV

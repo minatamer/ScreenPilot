@@ -18,6 +18,37 @@ function stubMotionPreference(matches: boolean) {
   }));
 }
 
+function stubIntersectionObserver() {
+  let callback: IntersectionObserverCallback | undefined;
+  const disconnect = vi.fn();
+  const observe = vi.fn();
+
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      constructor(nextCallback: IntersectionObserverCallback) {
+        callback = nextCallback;
+      }
+
+      disconnect = disconnect;
+      observe = observe;
+      takeRecords = vi.fn(() => []);
+      unobserve = vi.fn();
+    },
+  );
+
+  const setIntersection = (target: Element, isIntersecting: boolean) => {
+    act(() => {
+      callback?.(
+        [{ isIntersecting, target } as IntersectionObserverEntry],
+        {} as IntersectionObserver,
+      );
+    });
+  };
+
+  return { disconnect, observe, setIntersection };
+}
+
 describe("IllustrativeInterviewPreview", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -32,11 +63,12 @@ describe("IllustrativeInterviewPreview", () => {
     { preference: "no-preference", reduced: false },
     { preference: "reduce", reduced: true },
   ])(
-    "finishes both lines, highlights both keywords together, then creates the note with $preference",
+    "waits for real viewport entry, then completes the first note with $preference",
     ({ reduced }) => {
       stubMotionPreference(reduced);
-      render(<IllustrativeInterviewPreview />);
-      advance(0);
+      const observer = stubIntersectionObserver();
+      const { unmount } = render(<IllustrativeInterviewPreview />);
+      advance(10_000);
 
       const preview = screen.getByRole("figure", {
         name: "Example interview",
@@ -50,6 +82,17 @@ describe("IllustrativeInterviewPreview", () => {
       const answer = screen.getByLabelText("Around 25k–30k.");
       const firstNote = screen.getByText("Salary expectation").closest("li");
 
+      expect(observer.observe).toHaveBeenCalledWith(preview);
+      expect(preview).toHaveAttribute("data-entered-viewport", "false");
+      expect(preview).toHaveAttribute("data-running", "false");
+      expect(preview).toHaveAttribute("data-phase", "note");
+      expect(firstNote).toHaveAttribute("data-created", "true");
+
+      observer.setIntersection(preview, true);
+      advance(0);
+
+      expect(preview).toHaveAttribute("data-entered-viewport", "true");
+      expect(preview).toHaveAttribute("data-running", "true");
       expect(preview).toHaveAttribute("data-phase", "question");
       expect(illustration).toHaveAttribute("data-pilot-speaking", "true");
       expect(illustration).toHaveAttribute("data-candidate-speaking", "false");
@@ -83,6 +126,50 @@ describe("IllustrativeInterviewPreview", () => {
       advance(1_100);
       expect(preview).toHaveAttribute("data-phase", "note");
       expect(firstNote).toHaveAttribute("data-created", "true");
+
+      unmount();
+      expect(observer.disconnect).toHaveBeenCalledOnce();
     },
   );
+
+  it("pauses the current phase offscreen and resumes it without resetting", () => {
+    stubMotionPreference(false);
+    const observer = stubIntersectionObserver();
+    render(<IllustrativeInterviewPreview />);
+    const preview = screen.getByRole("figure", { name: "Example interview" });
+
+    observer.setIntersection(preview, true);
+    advance(0);
+    advance(200);
+    const questionBeforePause = screen.getByLabelText(
+      "What are your salary expectations?",
+    ).textContent;
+
+    observer.setIntersection(preview, false);
+    advance(5_000);
+    expect(preview).toHaveAttribute("data-phase", "question");
+    expect(
+      screen.getByLabelText("What are your salary expectations?").textContent,
+    ).toBe(questionBeforePause);
+
+    observer.setIntersection(preview, true);
+    advance(200);
+    expect(
+      screen.getByLabelText("What are your salary expectations?").textContent,
+    ).not.toBe(questionBeforePause);
+  });
+
+  it("keeps the truthful completed static frame when observers are unavailable", () => {
+    stubMotionPreference(false);
+    render(<IllustrativeInterviewPreview />);
+    const preview = screen.getByRole("figure", { name: "Example interview" });
+    const firstNote = screen.getByText("Salary expectation").closest("li");
+
+    advance(30_000);
+
+    expect(preview).toHaveAttribute("data-entered-viewport", "false");
+    expect(preview).toHaveAttribute("data-running", "false");
+    expect(preview).toHaveAttribute("data-phase", "note");
+    expect(firstNote).toHaveAttribute("data-created", "true");
+  });
 });

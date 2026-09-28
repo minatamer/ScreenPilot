@@ -90,7 +90,6 @@ function EnabledCvStage({
     handleFilesSelected,
     handleRetryAnalysis,
     handleReturnToChoices,
-    handleSampleRequested,
     showIntake,
     state,
   } = useCvPreparation({
@@ -106,6 +105,9 @@ function EnabledCvStage({
     ...(requestIdFactory ? { requestIdFactory } : {}),
     stage,
   });
+
+  const pdfErrorCopy =
+    state.status === "pdf_error" ? CV_PDF_ERROR_COPY[state.error.code] : null;
 
   return (
     <Stack className="sp-cv-stage sp-demo-stage--with-footer" gap="medium">
@@ -134,10 +136,7 @@ function EnabledCvStage({
 
       {showIntake ? (
         <div className="sp-cv-stage__body">
-          <CvDropzone
-            onFilesSelected={handleFilesSelected}
-            onSampleRequested={handleSampleRequested}
-          />
+          <CvDropzone onFilesSelected={handleFilesSelected} />
           <Card
             aria-label="Synthetic screening context"
             className="sp-cv-context"
@@ -242,9 +241,9 @@ function EnabledCvStage({
         </Card>
       ) : null}
 
-      {state.status === "pdf_error" ? (
-        <ErrorPanel title={CV_PDF_ERROR_COPY[state.error.code].title}>
-          <p>{CV_PDF_ERROR_COPY[state.error.code].message}</p>
+      {pdfErrorCopy ? (
+        <ErrorPanel title={pdfErrorCopy.title}>
+          <p>{pdfErrorCopy.message}</p>
         </ErrorPanel>
       ) : null}
 

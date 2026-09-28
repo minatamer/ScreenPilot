@@ -59,7 +59,7 @@ repository.
   warns that an alert-only budget does not cap usage or spending.
 - Do not add a Pub/Sub billing listener, Cloud Run function, or automatic
   project-billing shutdown in SP-026. That additional automation and its failure
-  modes require a separate future operations decision; SP-028 does not own
+  modes require a separate future operations decision; no current ticket owns
   production monitoring or billing automation.
 - Do not deliberately incur charges to test either budget. Verify configuration
   in the console and review real billing after the two authorized production

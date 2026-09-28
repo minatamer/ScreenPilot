@@ -1,7 +1,7 @@
 # ScreenPilot standalone ticket index
 
 Status: execution-packet index  
-Last synchronized: 2026-09-23<br>
+Last synchronized: 2026-09-28<br>
 Parent source of truth: [`../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
 
 ---
@@ -40,7 +40,8 @@ The implementation agent should:
 - preserve unrelated user work and avoid implementing later tickets early;
 - keep the change reviewable as one logical commit boundary;
 - run the smallest relevant checks plus the ticket's manual verification;
-- avoid the optional full browser/AI suites unless the ticket is SP-028 or the user asks;
+- avoid inventing or running comprehensive browser/AI suites unless the user
+  explicitly asks for that new scope;
 - never make paid OpenAI or ElevenLabs calls from default tests or CI;
 - keep every missing API/provider field exactly blank, never populate credentials on the user's behalf, and follow the selected packet's manual credential gate plus the parent [credential guide](../SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md#credentials-blank-values-and-manual-setup);
 - verify `apps/backend/.env.local` and `apps/frontend/.env.local` are ignored before the user fills them; if a live value is unavailable, finish with fakes and report the paid/live checklist item as blocked rather than inventing a pass;
@@ -57,6 +58,10 @@ If a dependency is missing or materially different, stop at that boundary and re
 
 - This is a public portfolio demo, not an MVP or production recruiting platform.
 - The two equal paths are **Use a CV** and **Start without a CV**; both converge on shared preflight, interview, review, and Clear-session behavior.
+- The bundled sample CV is an unadvertised loopback engineering fixture only.
+  Every runtime, including localhost, offers upload or conversation-first and
+  contains no sample action or recovery copy. Non-loopback direct fixture
+  requests fail closed.
 - Visible employer wording is **our company** or **the company**. There is no fictional employer brand.
 - ScreenPilot is role-agnostic: any bounded non-empty role label stated by the candidate becomes the available synthetic demo vacancy for that browser session. An undecided candidate continues with an open role-neutral screen.
 - There is no role allow-list, unavailable-vacancy branch, forced Frontend/Backend choice, Full Stack fallback, or profession-specific interview path. Named roles are ordinary fixtures only.
@@ -217,6 +222,14 @@ owner-approved SP-018A scope decision on 2026-09-21:
   duplicate summary request. Conversation-first live completion, injected
   failure/interruption paths, responsive/device coverage, cleanup/privacy,
   provider usage/cost/retention review, and safety restoration remain open.
+- SP-028 was opened from the owner's 2026-09-28 post-deployment visual evidence
+  and a code-backed STRIDE review. Phase 1—sample-path removal and landing
+  responsive-motion work—is complete, agent-verified, and owner-approved.
+  The next phase contains three material security remediations (trusted source
+  headers, churn-resistant bounded rate limiting, and pre-body slow-request
+  admission), followed by focused manual testing with a never-before-used
+  synthetic CV. Security implementation, manual testing, paid calls, and
+  deployment remain unapproved.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 
@@ -258,7 +271,7 @@ Execute in order unless the dependency column proves a later packet can safely p
 | SP-025A | [Audit release-candidate code and ticket completion](SP-025A-audit-release-candidate-code-and-ticket-completion.md) | SP-025 | Required |
 | SP-026 | [Deploy frontend and backend](SP-026-deploy-frontend-and-backend.md) | SP-022, SP-023, SP-025A | Required |
 | SP-027 | [Optionally produce portfolio materials](SP-027-optionally-produce-portfolio-materials.md) | SP-018, SP-021B, SP-025A, SP-026 | Optional |
-| SP-028 | [Optionally add extended automation](SP-028-optionally-add-extended-automation.md) | SP-010A, SP-026 | Optional |
+| SP-028 | [Harden the post-deployment experience and security boundaries](SP-028-harden-post-deployment-experience-and-security.md) | SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026 | Required before portfolio presentation or another deployment |
 
 ## Milestone boundaries
 
@@ -269,13 +282,15 @@ Execute in order unless the dependency column proves a later packet can safely p
 - Milestone 4: SP-022 through SP-025A — public-demo hardening, focused release approval, and the final repository/ticket audit.
 - Milestone 5: SP-026 — deployment.
 - Milestone 6: SP-027 — optional portfolio packaging.
-- Milestone 7: SP-028 — optional extended automation.
+- Milestone 7: SP-028 — post-deployment portfolio hardening.
 
 SP-025A is the final required pre-deployment audit gate and includes one
 deliberate behavior-preserving quality and efficiency iteration across the
 entire first-party codebase after SP-025 establishes the functional baseline.
-SP-026 is the required deployment/release boundary, and it may deploy only the
-exact candidate audited by SP-025A. SP-027 and SP-028 do not block it.
+SP-026 was the first deployment/release boundary and could deploy only the exact
+candidate audited by SP-025A. The owner's post-deployment evidence now makes
+SP-028 required before portfolio presentation or another deployment. SP-027
+remains optional and does not block SP-028.
 
 SP-024 has a mandatory owner gate. Its first execution is a documentation-only
 frontend audit and proposal; application changes begin only after the owner
