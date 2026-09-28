@@ -385,9 +385,7 @@ export async function proxyBackendRequest(
     if (connection.authMode === "google-cloud-oidc") {
       let identityTokenProvider = options.identityTokenProvider;
       if (identityTokenProvider === undefined) {
-        if (
-          defaultIdentityTokenProvider?.audience !== connection.audience
-        ) {
+        if (defaultIdentityTokenProvider?.audience !== connection.audience) {
           defaultIdentityTokenProvider = Object.freeze({
             audience: connection.audience,
             provider: createGoogleCloudIdentityTokenProvider({
