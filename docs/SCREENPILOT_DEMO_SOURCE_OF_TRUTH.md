@@ -4964,15 +4964,19 @@ accepted.
 **Depends on:** SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026.
 
 **Current state (2026-09-28):** Phase 1 is implemented and owner-approved. The
-Phase 2 review and application remediation are complete. Exact commit
-`848c985c3ac4fde72d41a62fbd3854214444b2c1` is deployed to both Cloud Run
-services; backend Invoker is restricted to the frontend runtime identity,
-direct unauthenticated backend access is denied, authenticated health and the
-same-origin OIDC proxy pass, and the paid-disabled production gates passed.
-After those gates, the owner explicitly authorized the public live switch;
-production now reports `standard_live`, `PAID_DEMO_ENABLED=true`, the public
-Turnstile configuration, and a 300-second call limit. The broad manual matrix
-and controlled production CV/voice/summary provider flows remain incomplete.
+Phase 2 review and application remediation are complete. The private backend
+remains on exact commit `848c985c3ac4fde72d41a62fbd3854214444b2c1` through
+revision `screenpilot-backend-sp028live-848c985c3ac`; the portfolio and social-
+metadata frontend follow-up is deployed from exact commit
+`97bc4fcee6b468e8d2d258f5d5446f2f06508ee6` through revision
+`screenpilot-frontend-sp028c-97bc4fcee6b4`. Backend Invoker remains restricted
+to the frontend runtime identity, direct unauthenticated backend access is
+denied, authenticated health and the same-origin OIDC proxy pass, and the
+paid-disabled production gates passed. After those gates, the owner explicitly
+authorized the public live switch; production now reports `standard_live`,
+`PAID_DEMO_ENABLED=true`, the public Turnstile configuration, and a 300-second
+call limit. The broad manual matrix and controlled production CV/voice/summary
+provider flows remain incomplete.
 
 **Suggested commit:** `SP-028: harden post-deployment experience and security`
 

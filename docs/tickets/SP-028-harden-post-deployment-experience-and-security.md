@@ -1,6 +1,6 @@
 # SP-028 — Harden the post-deployment experience and security boundaries
 
-Status: In progress — Phase 1 complete and owner-approved; Phase 2 application and Cloud Run/IAM controls deployed from exact commit `848c985c3ac4fde72d41a62fbd3854214444b2c1`, with unpaid gates passed and the owner-authorized public live switch enabled; Phase 3 partially started with one limited local live CV-extractor smoke, while the formal manual matrix and controlled production provider flows remain incomplete<br>
+Status: In progress — Phase 1 complete and owner-approved; Phase 2 backend and Cloud Run/IAM controls remain deployed from exact commit `848c985c3ac4fde72d41a62fbd3854214444b2c1`, the portfolio/social-metadata frontend follow-up is deployed from exact commit `97bc4fcee6b468e8d2d258f5d5446f2f06508ee6`, unpaid gates passed, and the owner-authorized public live switch remains enabled; Phase 3 partially started with one limited local live CV-extractor smoke, while the formal manual matrix and controlled production provider flows remain incomplete<br>
 Milestone: Milestone 7 — post-deployment portfolio hardening  
 Last synchronized: 2026-09-28<br>
 Depends on: SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026<br>
@@ -691,6 +691,28 @@ trailing slash is not the default audience contract.
   bootstrap/preparation/CV/voice/summary ceilings. The five backend secrets
   remain Secret Manager references; neither image history contains an ignored
   local environment file or secret value.
+
+### Frontend-only portfolio release evidence — 2026-09-28
+
+- Exact commit `97bc4fcee6b468e8d2d258f5d5446f2f06508ee6` was built with the frontend
+  Dockerfile on Node 24.20.0 and pushed under its immutable SHA tag. Artifact
+  Registry reported OCI digest
+  `sha256:fc178091006937fbbc2c16a380d2aecad55274bc764b01dbb22682d4d89521ab`.
+- Frontend revision `screenpilot-frontend-sp028c-97bc4fcee6b4` serves 100 percent
+  of frontend traffic with the existing runtime identity, OIDC backend origin
+  and audience, allowed origins, one-instance ceiling, and concurrency 80.
+  Backend revision `screenpilot-backend-sp028live-848c985c3ac` was not rebuilt,
+  redeployed, or reconfigured.
+- A social-crawler user agent received `200` from the custom-domain root. Its
+  server-rendered HTML contained the absolute canonical URL, Open Graph title,
+  description, URL and image, plus large-card social metadata. The generated
+  Open Graph and social image URLs each returned a public `image/png` response
+  of 1,031,117 bytes.
+- The custom-domain same-origin bootstrap returned `200` after the frontend
+  cutover. No CV analysis, voice token, interview, summary, provider call, or
+  backend mutation was performed for this frontend-only release.
+- The local frontend and backend listener processes were stopped after deployed
+  verification; ports 3000 and 3001 were confirmed clear.
 
 ### Phase 2 remaining gates
 
