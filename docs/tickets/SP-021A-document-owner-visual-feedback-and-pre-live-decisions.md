@@ -298,7 +298,7 @@ Status: **Implemented, deterministically verified, and later live-observed in th
    - Add one reducer-owned `post_interview` or `interview_complete` state between
      active/shutdown behavior and summary/review.
    - Route agent `end_call`, manual **End interview**, and the absolute
-     eight-minute deadline through one idempotent termination path that
+     five-minute deadline through one idempotent termination path that
      preserves the first terminal reason.
    - Immediately terminate provider/WebRTC/media work, release tracks and
      authorization, cancel timers/requests/measurements, and unmount the bridge;
@@ -306,7 +306,7 @@ Status: **Implemented, deterministically verified, and later live-observed in th
      terminal disconnect.
 2. **Render the completed workspace and explicit View summary handoff.**
    - Keep transcript and Insight Board visible but read-only after cleanup.
-   - Freeze elapsed time (`08:00` for the hard stop), remove dynamic voice and
+   - Freeze elapsed time (`05:00` for the hard stop), remove dynamic voice and
      mute controls, state that the microphone is disconnected, and replace
      **End interview** with **View summary**.
    - The original Prompt 2 target kept summary preparation idle after
@@ -347,7 +347,7 @@ Status: **Implemented, deterministically verified, and later live-observed in th
   The bounded two-second local fallback remains when the provider omits its
   terminal callback.
 - The completed workspace keeps the final transcript and Insight Board
-  read-only, freezes elapsed time (`08:00` for the deadline), removes mute and
+  read-only, freezes elapsed time (`05:00` for the deadline), removes mute and
   dynamic voice status, states **Microphone disconnected**, and replaces End
   with **View summary**.
 - The original 2026-09-23 Prompt 2 implementation started its one managed
@@ -379,12 +379,12 @@ Status: **Implemented, deterministically verified, and later live-observed in th
 
 - Add one reducer-owned `post_interview` or `interview_complete` stage between
   shutdown and summary/review.
-- Agent `end_call`, manual End, and the eight-minute deadline must immediately
+- Agent `end_call`, manual End, and the five-minute deadline must immediately
   terminate WebRTC/provider work, release microphone/media tracks, clear
   authorization, cancel timers/requests/measurements, unmount the provider
   bridge, and preserve exactly one first terminal reason.
 - After cleanup, keep the transcript and Insight Board visible and read-only,
-  freeze elapsed time (showing `08:00` for the hard stop), remove dynamic
+  freeze elapsed time (showing `05:00` for the hard stop), remove dynamic
   speaking/listening/reconnect UI and mute, replace **End interview** with
   **View summary**, and state that the microphone is disconnected.
 - **View summary** must never reconnect voice. It reveals the existing organizing

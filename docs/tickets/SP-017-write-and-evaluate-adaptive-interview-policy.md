@@ -146,8 +146,11 @@ Implement a source-controlled live-interviewer policy that produces natural, con
 - On 2026-09-24 SP-021B superseded the deployed prompt with corrected policy
   `sp021b-2026-09-23.1` with built-in `end_call` enabled as the sole active
   system tool on the same private Main branch. Immutable revision
-  `agtvrsn_9501m39701mmet6av5bz53yk6ggp` is the current provider mapping; the
-  earlier revisions remain historical evidence for their stated policies. The
+  `agtvrsn_9501m39701mmet6av5bz53yk6ggp` remains the behavior-publication
+  baseline. SP-028's duration-only publication on 2026-09-28 makes
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk` the current provider mapping with the
+  same policy/tools and a 300-second maximum; earlier revisions remain
+  historical evidence for their stated policies. The
   owner later reconfirmed the exact five saved client-tool configurations and
   separately reopened `end_call` to confirm its custom description exactly
   matches the source-controlled value. Publication and dashboard inspection are

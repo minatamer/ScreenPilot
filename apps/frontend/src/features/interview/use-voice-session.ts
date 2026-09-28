@@ -9,6 +9,7 @@ import type {
   InterviewCompletion,
   InterviewTerminalReason,
 } from "@/features/session/demo-session.types";
+import { describeInterviewTerminalReason } from "@/features/session/interview-completion";
 
 import {
   createFillerPolicyState,
@@ -145,16 +146,6 @@ type UseVoiceSessionOptions = Readonly<{
 }>;
 
 const DEFAULT_END_FALLBACK_MS = 2_000;
-
-function terminalReasonMessage(reason: InterviewTerminalReason): string {
-  if (reason === "agent_completed") {
-    return "Interview completed by the interviewer.";
-  }
-  if (reason === "time_limit") {
-    return "The eight-minute interview limit was reached.";
-  }
-  return "Interview ended by the candidate.";
-}
 
 export function useVoiceSession(options: UseVoiceSessionOptions) {
   const [state, dispatch] = useReducer(
@@ -308,7 +299,9 @@ export function useVoiceSession(options: UseVoiceSessionOptions) {
       {
         ...voiceRef.current,
         endedAt: new Date(currentTime()).toISOString(),
-        endReason: terminalReasonMessage(completionRef.current.reason),
+        endReason: describeInterviewTerminalReason(
+          completionRef.current.reason,
+        ),
         status: "ended",
       },
       completionRef.current,

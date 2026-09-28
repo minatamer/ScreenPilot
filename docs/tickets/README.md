@@ -103,14 +103,18 @@ owner-approved SP-018A scope decision on 2026-09-21:
 - SP-015A's owner-directed landing and `/demo` UI/UX implementation is represented by commit `cab2990`. Motion, illustration, CTA, responsive alignment, preflight hierarchy, the shared stage-heading primitive, typography tokens, and spacing rhythm have focused deterministic coverage; consolidated owner visual acceptance and remaining whole-flow/manual checks stay tracked in that packet.
 - SP-016 is implemented, locally verified without credentials or paid calls, and represented by commit `13fc434`. Its schemas, five-tool dispatcher, evidence validation, correction-history preservation, CV seeding, strict session synchronization, aligned height-matched Insight Board, responsive connector treatment, and safety cases have focused coverage; published-agent callbacks and an owner/browser reduced-motion visual check remain explicitly pending.
 - SP-016A is implemented, locally verified, and represented by commit `08ff846`. Every currently reachable `/demo` step fits practical tablet and laptop browser viewports through height-aware density, responsive composition, concise copy, bottom-anchored action footers, and bounded inner scrolling; the final compact-anchor evidence uses the real `/demo` flow from asserted top-of-page state, reduced motion is computed and checked, and the production build ran in a zero-local-environment snapshot. The fake-mode End interview path now enters a reducer-owned, scrubbed, non-persistable placeholder stage. Remaining owner/live observations are carried by the consolidated live-validation gate.
-- SP-017 is locally implemented and verified at baseline policy version `sp017-2026-09-22.1`. Its source-controlled prompt, eight-variable provider-config wiring, bounded reconnect state/time context, deterministic/semantic fixtures, and synchronization runbook are complete. On 2026-09-22 the owner published that Prompt 1 policy and changed candidate-question/follow-up tool descriptions on the existing private ScreenPilot/Main branch without Preview or a paid conversation; immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped to that policy. SP-021B's corrected `sp021b-2026-09-23.1` policy and sole `end_call` system tool are now the current provider mapping at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`. Historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to `sp017-2026-09-16.1`. Live behavior observation remains in SP-021B.
+- SP-017 is locally implemented and verified at baseline policy version `sp017-2026-09-22.1`. Its source-controlled prompt, eight-variable provider-config wiring, bounded reconnect state/time context, deterministic/semantic fixtures, and synchronization runbook are complete. On 2026-09-22 the owner published that Prompt 1 policy and changed candidate-question/follow-up tool descriptions on the existing private ScreenPilot/Main branch without Preview or a paid conversation; immutable revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped to that policy. SP-021B's corrected `sp021b-2026-09-23.1` policy and sole `end_call` system tool were published at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`; SP-028's duration-only synchronization makes `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk` the current provider mapping with the five-minute maximum. Historical revision `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to `sp017-2026-09-16.1`. Live behavior observation remains in SP-021B.
 - SP-018's core instrumentation and runtime behavior are implemented and
   deterministically verified; SP-018A's no-spend
   caption/termination correction advances the provider-config target to
   `sp018-2026-09-16.1`. Its bounded content-free timing tracker, source-labelled
   raw diagnostics, visual wait states,
   substantive-audio/filler separation, filler review limits, card-render boundary,
-  and exact eight-minute stop are complete without a live call. On 2026-09-23
+  and original eight-minute stop were complete without a live call. SP-028
+  later reduced the current source/application deadline to five minutes from
+  measured aggregate usage; the owner published the matching 300-second
+  provider maximum on 2026-09-28.
+  On 2026-09-23
   the owner removed fixed timing-sample quotas and percentile release gates.
   The accepted pre-SP-021B follow-up is implemented: the existing automatic
   metrics are exposed at `/demo?diagnostics=timings` on loopback hosts as
@@ -227,9 +231,11 @@ owner-approved SP-018A scope decision on 2026-09-21:
   responsive-motion work—is complete, agent-verified, and owner-approved.
   Phase 2 application code now implements the authenticated service boundary,
   strict request forwarding/source contract, bounded admission, and bounded
-  request receipt/parsing with deterministic local verification. Cloud Run/IAM
-  mutation, deployment proof, manual testing with a never-before-used synthetic
-  CV, paid calls, and deployment remain separately gated.
+  request receipt/parsing with deterministic local verification. The matching
+  five-minute provider maximum is published at immutable revision
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`. Cloud Run/IAM mutation, deployment
+  proof, manual testing with a never-before-used synthetic CV, paid calls, and
+  deployment remain separately gated.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

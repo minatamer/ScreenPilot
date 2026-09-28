@@ -17,27 +17,35 @@ import {
   INTERVIEWER_SYSTEM_PROMPT,
 } from "../../ai/prompts/interviewer-prompt.js";
 
-export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp021b-2026-09-23.1";
+export const ELEVENLABS_AGENT_CONFIG_VERSION = "sp028-2026-09-28.1";
 export const ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING = 160;
 export const ELEVENLABS_END_CALL_TOOL_DESCRIPTION =
   "End the conversation immediately after ScreenPilot's brief closing sentence when screening is complete, the final candidate-question opportunity is resolved or declined, or the candidate asks to stop. Never wait for another user turn after closing.";
 export const ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION =
   "sp021b-2026-09-23.1";
+export const ELEVENLABS_LAST_VERIFIED_MAX_DURATION_SECONDS = 300;
 
-function agentPolicyRequiresDashboardSync(
+function agentConfigurationRequiresDashboardSync(
   sourcePolicyVersion: string,
   publishedPolicyVersion: string,
+  sourceMaxDurationSeconds: number,
+  publishedMaxDurationSeconds: number,
 ) {
-  return sourcePolicyVersion !== publishedPolicyVersion;
+  return (
+    sourcePolicyVersion !== publishedPolicyVersion ||
+    sourceMaxDurationSeconds !== publishedMaxDurationSeconds
+  );
 }
 
 export const SCREENPILOT_ELEVENLABS_AGENT_CONFIG = Object.freeze({
   agentConfigVersion: ELEVENLABS_AGENT_CONFIG_VERSION,
-  agentRevisionId: "agtvrsn_9501m39701mmet6av5bz53yk6ggp",
+  agentRevisionId: "agtvrsn_2101m3m80ezpee3bvccqy3ymwamk",
   agentRevisionPolicyVersion: ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
-  dashboardSyncRequired: agentPolicyRequiresDashboardSync(
+  dashboardSyncRequired: agentConfigurationRequiresDashboardSync(
     VOICE_AGENT_POLICY_VERSION,
     ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
+    PUBLIC_RUNTIME_LIMITS.callSeconds,
+    ELEVENLABS_LAST_VERIFIED_MAX_DURATION_SECONDS,
   ),
   clientTools: VOICE_CLIENT_TOOL_NAMES,
   clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,

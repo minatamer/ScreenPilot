@@ -10,6 +10,7 @@ import {
 } from "@/features/abuse-protection/turnstile-client";
 import { PRIVACY_NOTICE_COPY } from "@/features/privacy/privacy-copy";
 import { PrivacyNotice } from "@/features/privacy/privacy-notice";
+import { INTERVIEW_LIMIT_MINUTES } from "@/features/session/interview-completion";
 import { ProviderOperationsUnavailable } from "@/features/session/provider-operations-unavailable";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
@@ -240,7 +241,7 @@ function EnabledPreflightHandoff({
                 Key details become notes for a person to review.
               </PreflightFact>
               <PreflightFact icon="clock">
-                It lasts up to eight minutes; you can stop anytime.
+                {`It lasts up to ${String(INTERVIEW_LIMIT_MINUTES)} minutes; you can stop anytime.`}
               </PreflightFact>
             </div>
           </div>

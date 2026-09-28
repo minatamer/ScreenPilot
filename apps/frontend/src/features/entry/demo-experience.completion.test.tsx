@@ -93,7 +93,7 @@ vi.mock("@/features/session/use-demo-session", () => ({
         ? {
             interviewCompletion: {
               reason: "time_limit",
-              elapsedSeconds: 480,
+              elapsedSeconds: 300,
             },
           }
         : {}),
@@ -224,7 +224,7 @@ describe("DemoExperience completion stage", () => {
       screen.getByRole("heading", { level: 1, name: "Interview complete" }),
     ).toBeVisible();
     expect(screen.getByText("Microphone disconnected")).toBeVisible();
-    expect(screen.getByText("08:00")).toBeVisible();
+    expect(screen.getByText("05:00")).toBeVisible();
     expect(
       screen.getByText("I am looking for a collaborative product team."),
     ).toBeVisible();

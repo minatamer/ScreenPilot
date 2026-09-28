@@ -229,7 +229,7 @@ describe("useVoiceSession", () => {
     );
   });
 
-  it("requests one end when the eight-minute hard stop is reached", () => {
+  it("requests one end when the five-minute hard stop is reached", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T12:00:00.000Z"));
     const events = callbacks();
@@ -249,11 +249,11 @@ describe("useVoiceSession", () => {
       vi.advanceTimersByTime(1);
     });
 
-    expect(result.current.elapsedSeconds).toBe(480);
+    expect(result.current.elapsedSeconds).toBe(300);
     expect(result.current.phase).toBe("ending");
     expect(events.onEnding).toHaveBeenCalledWith({
       reason: "time_limit",
-      elapsedSeconds: 480,
+      elapsedSeconds: 300,
     });
 
     act(() => {
@@ -261,9 +261,9 @@ describe("useVoiceSession", () => {
     });
     expect(events.onEnded).toHaveBeenCalledWith(
       expect.objectContaining({
-        endReason: "The eight-minute interview limit was reached.",
+        endReason: "The 5-minute interview limit was reached.",
       }),
-      { reason: "time_limit", elapsedSeconds: 480 },
+      { reason: "time_limit", elapsedSeconds: 300 },
     );
   });
 
@@ -304,7 +304,7 @@ describe("useVoiceSession", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-14T12:00:00.000Z"));
     const events = callbacks();
-    const hardStopAtMs = Date.now() + 6 * 60 * 1_000;
+    const hardStopAtMs = Date.now() + 3 * 60 * 1_000;
     const { result } = renderHook(() =>
       useVoiceSession({ ...events, hardStopAtMs }),
     );
@@ -321,10 +321,10 @@ describe("useVoiceSession", () => {
     expect(result.current.elapsedSeconds).toBe(150);
 
     act(() => {
-      vi.advanceTimersByTime(5.5 * 60 * 1_000 - 1);
+      vi.advanceTimersByTime(2.5 * 60 * 1_000 - 1);
     });
     expect(result.current.phase).toBe("listening");
-    expect(result.current.elapsedSeconds).toBe(479);
+    expect(result.current.elapsedSeconds).toBe(299);
 
     act(() => {
       vi.advanceTimersByTime(1);

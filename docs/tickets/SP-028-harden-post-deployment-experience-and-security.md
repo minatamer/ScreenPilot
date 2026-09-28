@@ -1,6 +1,6 @@
 # SP-028 — Harden the post-deployment experience and security boundaries
 
-Status: In progress — Phase 1 complete and owner-approved; Phase 2 application code implemented and locally verified, Cloud Run/IAM execution gated; Phase 3 not started<br>
+Status: In progress — Phase 1 complete and owner-approved; Phase 2 application code locally verified and five-minute provider configuration synchronized, Cloud Run/IAM execution gated; Phase 3 not started<br>
 Milestone: Milestone 7 — post-deployment portfolio hardening  
 Last synchronized: 2026-09-28<br>
 Depends on: SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026<br>
@@ -458,6 +458,58 @@ remain unauthorized and unchecked until the owner separately approves them.
 
 This tracked ticket records only the final maintainable architecture, operating
 controls, safe rollout sequence, and non-sensitive verification evidence.
+
+### SP028-SEC-004 — Reduce the live-call exposure ceiling
+
+On 2026-09-28 the owner reviewed the ScreenPilot agent's aggregate 90-day
+dashboard without opening conversation content. Four conversations averaged
+2:39, cost 8.35K credits in total, averaged 2.09K credits each, and incurred
+USD 0.128 of aggregate live-LLM cost. The rounded average implies about 10:36
+of total connected time but does not establish an individual maximum.
+
+The earlier eight-minute maximum was a conservative planning ceiling rather
+than an observed need. The owner selected five minutes to retain more than two
+minutes of headroom above the recorded average while reducing worst-case
+connected time and voice exposure by 37.5 percent.
+
+- [x] Set the public runtime contract and every application-owned deadline,
+  reconnect budget, persisted completion bound, terminal message, preflight
+  disclosure, and timer label to 300 seconds / five minutes.
+- [x] Derive the frontend hard-stop timer and backend ElevenLabs target from the
+  shared runtime contract instead of retaining an independent duration literal.
+- [x] Mark the source-controlled ElevenLabs configuration out of sync while its
+  last owner-verified dashboard maximum remained 480 seconds, then clear the
+  marker only after the owner publishes and reports the 300-second value.
+- [x] Update the source of truth, live-provider runbook, cost formulas, and
+  sanitized aggregate-cost record without adding transcript, CV, audio, account,
+  or secret content.
+- [x] Change **Max conversation duration** to 300 seconds in the private
+  ScreenPilot/Main dashboard and publish it. The owner reported completion on
+  2026-09-28 at immutable revision
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`; source now records 300 seconds as the
+  last verified duration and `dashboardSyncRequired` is false. The
+  `agtvrsn_` value is a revision ID, not the unchanged Main `agtbrch_` identity.
+  This publication is configuration evidence and does not claim a Preview or
+  paid conversation.
+- [x] Confirm one five-minute deterministic deadline reaches the same
+  first-reason-wins completed workspace at `05:00`; a paid five-minute live
+  call is not required merely to prove the timer.
+
+Deterministic verification on 2026-09-28 used fake providers with paid-demo
+access disabled. The focused frontend deadline, reconnect, completion,
+preflight, transport, and provider-adapter suite passed 124 tests; the focused
+backend policy, prompt, and bootstrap suite passed 73 tests; and the contracts
+suite passed 63 tests. An additional entry, preflight, and persisted-session
+suite passed 60 tests. Contracts, backend, and frontend also passed typecheck,
+lint, and production build verification. The local host used Node 22.23.2 and
+therefore emitted the repository's expected Node 24 engine warning; the checks
+themselves completed successfully.
+
+After the owner published the provider change, the focused source-controlled
+ElevenLabs mapping test passed 2 tests with revision
+`agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`, last-verified duration 300, and
+`dashboardSyncRequired: false`. Backend typecheck and zero-warning lint remained
+clean in fake/unpaid mode.
 
 ### Final trust boundary
 

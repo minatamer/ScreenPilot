@@ -25,7 +25,7 @@ function contextForRole(label: string | null) {
     entryMode: "conversation_first",
     insights: [],
     plan: createConversationFirstPlanFixture(),
-    remainingSeconds: 480,
+    remainingSeconds: 300,
     rolePreference:
       label === null
         ? {
@@ -82,7 +82,7 @@ describe("voice session dynamic context", () => {
       entryMode: "cv_assisted",
       insights: [],
       plan: response.plan,
-      remainingSeconds: 480,
+      remainingSeconds: 300,
       topicProgress: [],
     });
 
@@ -156,8 +156,8 @@ describe("voice session dynamic context", () => {
       ],
     });
 
-    expect(remainingSeconds).toBe(360);
-    expect(context.screenpilot_remaining_seconds).toBe(360);
+    expect(remainingSeconds).toBe(180);
+    expect(context.screenpilot_remaining_seconds).toBe(180);
     expect(context.screenpilot_known_state).toContain(
       "[BEGIN_KNOWN_SCREENING_STATE]",
     );
@@ -174,16 +174,16 @@ describe("voice session dynamic context", () => {
   it("clamps remaining time and rejects invalid session timestamps", () => {
     const now = Date.parse("2026-09-15T10:10:00.000Z");
 
-    expect(calculateRemainingVoiceSessionSeconds(undefined, now)).toBe(480);
+    expect(calculateRemainingVoiceSessionSeconds(undefined, now)).toBe(300);
     expect(
       calculateRemainingVoiceSessionMilliseconds(
         "2026-09-15T10:08:00.500Z",
         now,
       ),
-    ).toBe(360_500);
+    ).toBe(180_500);
     expect(
       calculateRemainingVoiceSessionSeconds("2026-09-15T10:11:00.000Z", now),
-    ).toBe(480);
+    ).toBe(300);
     expect(
       calculateRemainingVoiceSessionSeconds("2026-09-15T10:00:00.000Z", now),
     ).toBe(0);
@@ -201,7 +201,7 @@ describe("voice session dynamic context", () => {
         entryMode: "cv_assisted",
         insights: [],
         plan: cvAssisted.plan,
-        remainingSeconds: 480,
+        remainingSeconds: 300,
         topicProgress: [],
       }),
     ).toThrow("requires normalized CV");
@@ -212,7 +212,7 @@ describe("voice session dynamic context", () => {
         entryMode: "conversation_first",
         insights: [],
         plan: createConversationFirstPlanFixture(),
-        remainingSeconds: 480,
+        remainingSeconds: 300,
         topicProgress: [],
       }),
     ).toThrow("cannot include a CV");

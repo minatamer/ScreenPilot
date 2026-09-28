@@ -38,7 +38,9 @@ cost without paying for another partial pre-review smoke test.
   originated in published policy `sp017-2026-09-22.1`; blocker corrections are
   implemented in source policy `sp021b-2026-09-23.1` and owner-published to
   private Main at immutable revision
-  `agtvrsn_9501m39701mmet6av5bz53yk6ggp`; Prompt 2 is implemented and
+  `agtvrsn_9501m39701mmet6av5bz53yk6ggp`, then republished with SP-028's
+  five-minute maximum at current immutable revision
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`; Prompt 2 is implemented and
   deterministically verified locally. SP-021B must not begin while either
   behavior or its record differs from the code/provider revision selected for
   live validation.
@@ -103,6 +105,10 @@ cost without paying for another partial pre-review smoke test.
   remains mapped only to `sp017-2026-09-22.1`; historical revision
   `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to
   `sp017-2026-09-16.1`.
+- [x] On 2026-09-28 the owner changed only the maximum conversation duration to
+  300 seconds and published current immutable revision
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`. This records provider synchronization,
+  not a Preview or paid live-behavior pass.
 - [x] The owner reconfirmed `end_call` as the sole active system tool and all
   five saved client tools as matching their source-controlled descriptions,
   required parameters, enums, character-bound descriptions, and
@@ -234,7 +240,7 @@ only a later successful eligible response may reopen its row.
 - [ ] End all sessions, stop microphone/media tracks, cancel timers and obsolete
   requests, remove temporary object URLs, and confirm no automatic reconnect.
 - [ ] Across focused bounded scenarios, verify agent `end_call`, manual **End
-  interview**, and the absolute eight-minute deadline each disconnect voice
+  interview**, and the absolute five-minute deadline each disconnect voice
   immediately, preserve one terminal reason, enter the same completed workspace,
   and require **View summary**; verify unexpected provider/network interruption
   remains the distinct partial path.
@@ -251,7 +257,7 @@ only a later successful eligible response may reopen its row.
   and record any OpenAI usage/cost separately as summary-only evidence; never
   mix them into ElevenLabs or standard-live timing claims.
 - [ ] Review TTFA, connection, client-tool-to-card, interruption, waiting-state,
-  filler, and eight-minute-stop observations for obvious regressions. Counts and
+  filler, and five-minute-stop observations for obvious regressions. Counts and
   p50/p95 aggregates are informational only; there is no minimum sample count,
   pass/fail percentile, or permission to repeat paid work for metrics.
 - [ ] If useful for debugging, copy a sanitized in-memory JSON snapshot with its
@@ -370,8 +376,10 @@ only a later successful eligible response may reopen its row.
   evidence preserved, no page-refresh claim, fake fallback, automatic reconnect,
   or duplicate operation.
 - [x] Provider publication/synchronization is recorded at immutable revision
-  `agtvrsn_9501m39701mmet6av5bz53yk6ggp`; paid live acceptance items remain
-  individually evidenced and separately authorized.
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`; paid live acceptance items remain
+  individually evidenced and separately authorized. Revision
+  `agtvrsn_9501m39701mmet6av5bz53yk6ggp` remains the historical behavior/live-
+  evidence baseline.
 
 The owner published the corrected policy on 2026-09-24 before completing this
 section's post-fix manual fake rehearsal. The owner subsequently reported every
@@ -654,7 +662,7 @@ authorized by this record.
   token, credential, or audio.
 - This evidence validates one CV-assisted standard-live path only. It does not
   convert the conversation-first live flow, injected interruption and summary-
-  failure/retry paths, manual and eight-minute endings, responsive/device
+  failure/retry paths, manual and five-minute endings, responsive/device
   matrix, raw live diagnostics review, browser-storage/privacy cleanup,
   provider-dashboard usage/cost/retention review, or restored fake/paid-disabled
   safety state into passes. Composite checklist items covering those additional

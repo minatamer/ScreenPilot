@@ -205,7 +205,7 @@ describe("ScreenPilot backend application", () => {
         roleAvailability: "candidate_selected_synthetic_session_vacancy",
         employerFactsAvailable: false,
       },
-      limits: { callSeconds: 480, cvCharacters: 40_000, pdfPages: 8 },
+      limits: { callSeconds: 300, cvCharacters: 40_000, pdfPages: 8 },
     });
     const cookie = cookieHeader(bootstrap);
     expect(cookie).toContain("sp_anonymous_session=");

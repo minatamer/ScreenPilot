@@ -164,7 +164,7 @@ describe("shared voice preflight", () => {
       screen.getByText(/does not record or save your audio/iu),
     ).toBeVisible();
     expect(screen.getByText(/require human review/iu)).toBeVisible();
-    expect(screen.getByText(/lasts up to eight minutes/iu)).toBeVisible();
+    expect(screen.getByText(/lasts up to 5 minutes/iu)).toBeVisible();
     expect(screen.getByText(/only for this demo session/iu)).toBeVisible();
     expect(screen.getByRole("checkbox")).not.toBeChecked();
     expect(

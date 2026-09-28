@@ -16,6 +16,25 @@ screenshots in this file. Record only coarse usage and cost fields.
 
 ## Evidence already available
 
+### Aggregate ElevenLabs observation and duration decision — 2026-09-28
+
+The owner reviewed the ScreenPilot agent's 90-day dashboard without opening or
+copying conversation content. It reported four conversations, average duration
+2:39, total cost 8.35K credits, average cost 2.09K credits, total live-LLM cost
+USD 0.128, and average live-LLM cost USD 0.032. The rounded credit total matches
+the separately displayed 8,349 credits used. The rounded average implies about
+10:36 of aggregate connected time, but the individual durations were not
+retained, so this is not evidence of the longest call or a per-run allocation.
+
+Based on that actual average, the owner reduced the ScreenPilot hard maximum
+from eight minutes to five minutes. The 300-second application contract and
+source-controlled provider target are implemented under SP-028. The provider
+dashboard still showed the previously verified 480 seconds at the time of the
+decision. Later on 2026-09-28 the owner changed it to 300 seconds and published
+private Main at immutable revision `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`.
+This is configuration/cost-control evidence only and does not claim a Preview
+or paid conversation.
+
 ### Local CV-assisted standard-live observation
 
 | Field | Sanitized evidence |

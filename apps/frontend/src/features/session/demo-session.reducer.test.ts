@@ -49,7 +49,7 @@ const runtimeConfig: PublicRuntimeConfig = {
     siteKey: "",
   },
   limits: {
-    callSeconds: 480,
+    callSeconds: 300,
     cvCharacters: 40_000,
     pdfBytes: 5_242_880,
     pdfPages: 8,
@@ -987,7 +987,7 @@ describe("demoSessionReducer", () => {
       type: "VOICE_ENDING",
       completion: {
         reason: "time_limit",
-        elapsedSeconds: 480,
+        elapsedSeconds: 300,
       },
     });
     expect(duplicateEnding).toBe(state);
@@ -1015,7 +1015,7 @@ describe("demoSessionReducer", () => {
       type: "VOICE_ENDED",
       completion: {
         reason: "time_limit",
-        elapsedSeconds: 480,
+        elapsedSeconds: 300,
       },
       voice: {
         conversationId: "conversation-duplicate-end",

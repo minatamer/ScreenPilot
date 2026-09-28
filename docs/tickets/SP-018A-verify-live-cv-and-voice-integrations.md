@@ -59,7 +59,7 @@ cost item for the consolidated SP-021B validation window.
 ### A. Repository and deterministic readiness
 
 - [ ] SP-018's content-free instrumentation, threshold aggregation, latency UI,
-  filler limits, interruption handling, and eight-minute hard stop are
+  filler limits, interruption handling, and five-minute hard stop are
   implemented and pass their focused fake-mode tests.
 - [ ] `git status` contains no `.env.local`, credential file, candidate artifact,
   generated transcript, audio, or live-provider response.
@@ -123,7 +123,7 @@ cost item for the consolidated SP-021B validation window.
   and the configured backend hostname allow-list matches it exactly.
 - [ ] A maximum number and duration of paid calls for this test window are
   agreed before activation. Begin with short one-to-two-minute sessions; run one
-  full-duration session only for the explicit eight-minute hard-stop check.
+  full-duration session only for the explicit five-minute hard-stop check.
 - [x] The owner explicitly authorizes this bounded synthetic paid test. Merely
   completing configuration or this packet does not imply authorization.
 
@@ -239,7 +239,7 @@ cost item for the consolidated SP-021B validation window.
 - [ ] A filler occurs at most once per turn, never on consecutive turns, never
   more than three times per interview, never changes evidence, and never implies
   praise, agreement, comprehension, or hiring judgment.
-- [ ] Run one explicitly authorized eight-minute synthetic session and confirm
+- [ ] Run one explicitly authorized five-minute synthetic session and confirm
   the hard stop ends voice, prevents further tool mutations, releases media,
   and preserves only the bounded partial local result.
 - [ ] Investigate an obvious delay or behavioral regression found during the

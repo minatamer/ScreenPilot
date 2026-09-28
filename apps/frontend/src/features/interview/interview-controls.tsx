@@ -1,4 +1,5 @@
 import { Button, ButtonGroup } from "@/shared/ui/button";
+import { INTERVIEW_LIMIT_MINUTES } from "@/features/session/interview-completion";
 
 import { formatInterviewElapsedTime } from "./interview-timer";
 import { MicrophoneIcon } from "./microphone-icon";
@@ -45,7 +46,7 @@ function InterviewTimer({
       <time dateTime={`PT${String(elapsedSeconds)}S`}>
         {formatInterviewElapsedTime(elapsedSeconds)}
       </time>
-      <small>8-minute session limit</small>
+      <small>{INTERVIEW_LIMIT_MINUTES}-minute session limit</small>
     </div>
   );
 }

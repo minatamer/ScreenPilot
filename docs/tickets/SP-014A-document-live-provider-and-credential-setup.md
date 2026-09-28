@@ -169,7 +169,7 @@ Create one **Blank agent** with a descriptive name such as **ScreenPilot Live In
 | Take turn after silence | 12 seconds | Initial interview-thinking window |
 | Interruptions | Enabled | Verify matching client events |
 | Soft timeout/filler | Disabled | SP-018 may enable one measured static filler |
-| Maximum duration | 480 seconds | Eight-minute hard limit |
+| Maximum duration | 300 seconds | Five-minute hard limit selected in SP-028 and owner-published on 2026-09-28 at immutable revision `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk` |
 | Transport | Private browser WebRTC | No telephony, SIP, PSTN, phone number, or widget embed |
 | Audio saving | Disabled | Privacy contract |
 | Transcript retention | `0` days / scheduled deletion | Shortest locked setting; provider processing still occurs |
@@ -355,6 +355,15 @@ Keep SP-014A as one documentation-only change represented by `SP-014A: document 
   key remains without an IP allow-list and with automatic leak disabling; its
   value was not shared with or read by the coding agent. SP-018A records the
   resulting successful token/WebRTC checkpoint and its remaining live defects.
+- Owner update reported on 2026-09-28: ElevenLabs Starter is active at USD
+  6/month, Auto Top Up is off, a credit-usage email threshold is enabled, and
+  the ScreenPilot agent remains limited to 5 calls/day and 1 concurrent call
+  with burst pricing and queueing off. Four dashboard conversations averaged
+  2:39, so the owner selected a 300-second maximum. Source/application changes
+  belong to SP-028. The owner subsequently changed the dashboard maximum from
+  480 to 300 seconds and published immutable revision
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`; source and provider are now
+  synchronized for this value.
 - The same ElevenLabs checkpoint now includes the exact first message, English-only language, GPT-5.4 Mini with reasoning None and a 160-token ceiling, disabled backup LLM/reasoning summary/soft timeout/parallel tool calling/Expressive Mode, unset temperature, a bounded role-neutral placeholder prompt, and the owner-selected **Bella - Professional, Bright, Warm** voice using the Flash TTS family.
 - The owner also reports that the exact six dynamic-variable names are present with text-only synthetic dashboard-preview defaults; SP-017 still owns their bounded per-session runtime rendering.
 - The owner also reports that the exact five case-sensitive client-tool names are attached as Client tools with placeholder-only descriptions, no parameters, assignments, mocks, or response waiting; every system tool remains off and no webhook, integration, server, code, or MCP tool was added. SP-016 still owns the functional schemas and browser handlers.

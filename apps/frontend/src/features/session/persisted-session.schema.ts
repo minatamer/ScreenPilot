@@ -1,6 +1,9 @@
 import { providerUsageSchema } from "@screenpilot/contracts/api/cv-analysis";
 import { interviewGrantSchema } from "@screenpilot/contracts/api/interview-preparation";
-import { publicRuntimeConfigSchema } from "@screenpilot/contracts/api/public-runtime-config";
+import {
+  PUBLIC_RUNTIME_LIMITS,
+  publicRuntimeConfigSchema,
+} from "@screenpilot/contracts/api/public-runtime-config";
 import { voiceMetadataSchema } from "@screenpilot/contracts/api/voice-token";
 import { isUndecidedRoleValue } from "@screenpilot/contracts/interview/client-tools";
 import {
@@ -104,7 +107,7 @@ export const interviewCompletionSchema = z.strictObject({
     .number()
     .int()
     .min(0)
-    .max(8 * 60),
+    .max(PUBLIC_RUNTIME_LIMITS.callSeconds),
 });
 
 export const persistedDemoSessionSchema = z

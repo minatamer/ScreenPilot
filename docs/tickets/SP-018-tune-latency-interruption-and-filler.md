@@ -12,7 +12,7 @@ Ticket index: [`README.md`](README.md)
 
 ## Objective
 
-Implement and deterministically verify the content-free instrumentation and runtime controls needed to tune latency, interruption, visual waiting states, the single allowed filler, and the eight-minute cap. SP-018A supplied the initial bounded live smoke. The implemented 2026-09-23 follow-up simplifies the original report into fake-first, memory-only informational diagnostics with no fixed sample quota or percentile release gate.
+Implement and deterministically verify the content-free instrumentation and runtime controls needed to tune latency, interruption, visual waiting states, the single allowed filler, and the bounded call cap. SP-028 reduces the current cap from the original eight minutes to five minutes using measured aggregate usage. SP-018A supplied the initial bounded live smoke. The implemented 2026-09-23 follow-up simplifies the original report into fake-first, memory-only informational diagnostics with no fixed sample quota or percentile release gate.
 
 ## Standalone implementation context
 
@@ -56,7 +56,7 @@ Implement and deterministically verify the content-free instrumentation and runt
 - [x] Tune bounded prompt/runtime context, output ceiling, ElevenLabs turn eagerness/interruption settings, audio buffering, and Flash v2.5 delivery.
 - [x] Implement the approved latency feedback with reduced-motion behavior and no dedicated ornament during the initial interval.
 - [x] Implement exactly one static soft-timeout filler path and ensure it does not stop TTFA measurement.
-- [x] Enforce per-turn, consecutive-turn, per-interview filler limits and the eight-minute hard stop.
+- [x] Enforce per-turn, consecutive-turn, per-interview filler limits and the current five-minute hard stop.
 - [x] Provide repeatable content-free aggregation with explicit fake/live source
   metadata.
 - [x] Document the exact metric boundaries, exclusion rules, and fake/live
@@ -90,7 +90,7 @@ Implement and deterministically verify the content-free instrumentation and runt
   remains after the simplification.
 - [x] Interruption-to-audio-stop is measured through the provider listening callback; SP-021B owns audible overlap verification.
 - [x] Fillers are accepted only after the threshold; repeated, consecutive, or excess observations fail local review; filler events never enter captions or evidence.
-- [x] The deterministic call path ends reliably at eight minutes, disconnects immediately, freezes the completed workspace at `08:00`, and waits for explicit **View summary**; unexpected interruption alone uses the partial-review handoff.
+- [x] The deterministic call path ends reliably at five minutes, disconnects immediately, freezes the completed workspace at `05:00`, and waits for explicit **View summary**; unexpected interruption alone uses the partial-review handoff.
 - [x] Fake and live observations retain explicit source metadata and cannot be
   confused with one another.
 
@@ -140,7 +140,7 @@ Keep SP-018 reviewable as one logical change represented by `SP-018: simplify lo
   first-reason-wins shutdown path. Cleanup cancels active timers and
   measurements immediately, so the two-second missing-disconnect fallback does
   not extend elapsed time or create another performance sample. The deadline
-  records exactly 480 seconds in the read-only completed workspace.
+  records exactly 300 seconds in the read-only completed workspace.
 - Owner visual feedback later compressed the redundant large waveform/avatar
   header into the transcript itself. A 44 px polite live-region rail now uses
   four compact bars for **Pilot speaking**, a static microphone for **Listening
@@ -160,7 +160,7 @@ Keep SP-018 reviewable as one logical change represented by `SP-018: simplify lo
   timeout, one maximum per generation, no alternate/randomized messages, and no
   LLM-generated filler. It stays disabled until SP-021B's consolidated deployed evidence
   warrants activation. Early, repeated-turn, consecutive-turn, and fourth
-  filler observations fail local review. The exact eight-minute deadline remains
+  filler observations fail local review. The exact five-minute deadline remains
   anchored to the original session start across reconnect authorization/setup;
   an exhausted budget skips the provider request and enters the same completed-
   interview hold after local cleanup.

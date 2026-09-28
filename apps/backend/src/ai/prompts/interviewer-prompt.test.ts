@@ -1,5 +1,11 @@
 import { readFileSync } from "node:fs";
 
+import { PUBLIC_RUNTIME_LIMITS } from "@screenpilot/contracts/api/public-runtime-config";
+import {
+  VOICE_AGENT_POLICY_VERSION,
+  VOICE_CLIENT_TOOL_NAMES,
+  VOICE_DYNAMIC_VARIABLE_KEYS,
+} from "@screenpilot/contracts/api/voice-token";
 import {
   correctInsightArgumentsSchema,
   markTopicArgumentsSchema,
@@ -10,11 +16,6 @@ import {
   UNSUPPORTED_EMPLOYER_QUESTION_FALLBACK,
 } from "@screenpilot/contracts/interview/client-tools";
 import { UNIVERSAL_TOPIC_KEYS } from "@screenpilot/contracts/interview/screening-plan";
-import {
-  VOICE_AGENT_POLICY_VERSION,
-  VOICE_CLIENT_TOOL_NAMES,
-  VOICE_DYNAMIC_VARIABLE_KEYS,
-} from "@screenpilot/contracts/api/voice-token";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -123,7 +124,11 @@ const assistantTranscriptTurnSchema = assistantExchangeSchema.extend({
 });
 const reconnectCheckpointSchema = z.strictObject({
   afterTurnId: z.string().min(1),
-  remainingSeconds: z.number().int().min(0).max(480),
+  remainingSeconds: z
+    .number()
+    .int()
+    .min(0)
+    .max(PUBLIC_RUNTIME_LIMITS.callSeconds),
   knownInsightCategories: z.array(z.enum(RECORDABLE_INSIGHT_CATEGORIES)),
   coveredTopics: z.array(z.enum(UNIVERSAL_TOPIC_KEYS)),
   resumedAssistantText: z.string().min(1),
@@ -743,7 +748,9 @@ describe("representative transcript fixtures", () => {
         }
         if (fixture.reconnectCheckpoint?.afterTurnId === turn.id) {
           const checkpoint = fixture.reconnectCheckpoint;
-          expect(checkpoint.remainingSeconds).toBeLessThan(480);
+          expect(checkpoint.remainingSeconds).toBeLessThan(
+            PUBLIC_RUNTIME_LIMITS.callSeconds,
+          );
           expect(checkpoint.remainingSeconds).toBeGreaterThan(0);
           expect(insights.map((insight) => insight.category)).toEqual(
             expect.arrayContaining(checkpoint.knownInsightCategories),

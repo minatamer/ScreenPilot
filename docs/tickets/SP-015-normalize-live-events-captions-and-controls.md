@@ -21,7 +21,7 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 - Final user and agent messages become bounded `TranscriptTurn` objects with browser-generated stable IDs.
 - Events may repeat or arrive out of order; normalize them through one adapter/reducer before UI or evidence tools consume them. Tentative events require a usable provider sequence; those sequences finalize message identity and advance captions monotonically, so late tentative callbacks are rejected and older finals can enter sorted evidence without replacing newer captions. An ID-less final receives the next bounded local sequence; only an immediately adjacent final with the same speaker and normalized text is considered an indistinguishable duplicate, while distinct provider IDs or an intervening accepted final preserve legitimate repetitions.
 - The live UI includes voice signal, speaking/listening status, captions, elapsed timer, mute, End interview, and connection/reconnect banner. After normal shutdown, the same transcript workspace becomes read-only, reports the disconnected microphone, freezes elapsed time, and exposes **View summary** without live controls.
-- An eight-minute hard stop ends the call through the same first-reason-wins path as agent/manual completion and freezes the completed timer at `08:00`. Refresh during a call never auto-reconnects the microphone; refresh after normal completion restores the completed workspace without reconnecting.
+- A five-minute hard stop, reduced from the original eight minutes by SP-028, ends the call through the same first-reason-wins path as agent/manual completion and freezes the completed timer at `05:00`. Refresh during a call never auto-reconnects the microphone; refresh after normal completion restores the completed workspace without reconnecting.
 - The transcript is same-tab review evidence, not a certified verbatim recording.
 
 ## Manual credential gate
@@ -46,7 +46,7 @@ Translate ElevenLabs SDK callbacks into one deterministic browser call state, li
 - [x] Create final user/agent transcript turns with stable local IDs, bounded text, speaker, sequence, and local time metadata.
 - [x] Build the approved voice signal, caption line, timer, mute, End, and connection banner from shared components.
 - [x] Make mute/end controls keyboard accessible, safe-area aware, and idempotent.
-- [x] Enforce the eight-minute end, preserve usable final turns, and converge agent/manual/deadline completion on one reducer-owned completed workspace after immediate cleanup.
+- [x] Enforce the current five-minute end, preserve usable final turns, and converge agent/manual/deadline completion on one reducer-owned completed workspace after immediate cleanup.
 - [x] Prevent refresh auto-reconnect; convert an interrupted live state into partial-review eligibility.
 - [x] Bound retained event/transcript data and ignore content-free malformed/late events safely.
 - [x] Test fake normal, tentative-to-final, interruption, duplicate, out-of-order, reconnect, disconnect, repeated-End, time-limit, completed-state restore, and first-terminal-reason traces.

@@ -147,7 +147,7 @@ function bootstrapResponse() {
       siteKey: "",
     },
     limits: {
-      callSeconds: 480,
+      callSeconds: 300,
       cvCharacters: 40_000,
       pdfBytes: 5_242_880,
       pdfPages: 8,

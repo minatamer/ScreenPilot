@@ -486,7 +486,7 @@ control; do not improvise a different behavior.
 | --- | --- |
 | Product and template | ElevenAgents (`elevenagents`), one private Blank agent |
 | First message | `Hi, what's your name?` |
-| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts`. Source policy `sp021b-2026-09-23.1` was owner-published to private Main on 2026-09-24 at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`, with built-in `end_call` enabled as the sole active system tool. The owner later reconfirmed that state, the exact five saved client-tool configurations, and the exact source-controlled `end_call` description. Publication is configuration evidence only; paid/live acceptance remains open. |
+| System prompt | Exact rendered `INTERVIEWER_SYSTEM_PROMPT` from `apps/backend/src/ai/prompts/interviewer-prompt.ts`. Source policy `sp021b-2026-09-23.1` was owner-published to private Main on 2026-09-24 at immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp`, with built-in `end_call` enabled as the sole active system tool. The owner later reconfirmed that state, the exact five saved client-tool configurations, and the exact source-controlled `end_call` description. On 2026-09-28 the same policy/tool configuration was republished with the 300-second maximum at current immutable revision `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`. Publication is configuration evidence only; paid/live acceptance remains open. |
 | Language | English only |
 | Native LLM | GPT-5.4 Mini (`gpt-5.4-mini`) through ElevenLabs |
 | Reasoning | None / reasoning budget 0 |
@@ -502,7 +502,7 @@ control; do not improvise a different behavior.
 | Client events | Exactly `audio`, `interruption`, `user_transcript`, `agent_response`, `agent_response_correction`, `agent_chat_response_part`, and `vad_score`; typed streaming parts drive Pilot captions, final events drive local turns, and VAD scores ≥0.5 define candidate speech |
 | System tools | Enable only **End conversation** (`end_call`) with the source-controlled completion description; every other system tool remains off |
 | Soft timeout | Source target `sp018-2026-09-16.1`: disabled pending deployed evidence; if measurement warrants activation, exactly 1.5 seconds, static `Mm-hm…`, one maximum per generation, no alternate/randomized messages, no LLM-generated message, and disabled before the first user message |
-| Maximum conversation duration | 480 seconds |
+| Maximum conversation duration | 300 seconds |
 | Transport | Private browser WebRTC with a backend-issued conversation token |
 | Save audio | Off |
 | Retention | 0 days |
@@ -533,7 +533,7 @@ Create exactly these eight dynamic variables, preserving case and spelling:
 Use obvious synthetic placeholders while editing the dashboard, for example
 `sp017-pending`, `conversation_first`, `synthetic demo only`,
 `universal HR topics only`, `undecided`, `no CV supplied`,
-`no confirmed facts`, and `480`. Never paste a real CV or candidate transcript
+`no confirmed facts`, and `300`. Never paste a real CV or candidate transcript
 into a dashboard placeholder.
 
 The SP-017 prompt references these names directly. Dynamic-variable names and
@@ -550,9 +550,11 @@ Current synchronization status: source policy `sp021b-2026-09-23.1` passed
 deterministic fake/provider-shaped verification and was owner-published to
 private Main on 2026-09-24 with built-in `end_call` enabled as the sole active
 system tool.
-Immutable revision `agtvrsn_9501m39701mmet6av5bz53yk6ggp` is mapped to this
-policy; Main branch ID `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` is not revision
-evidence. It fixes same-response fallback continuation and final-question
+Current immutable revision `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk` maps this
+policy to the published 300-second maximum. Prior immutable revision
+`agtvrsn_9501m39701mmet6av5bz53yk6ggp` remains the 2026-09-24 behavior baseline;
+Main branch ID `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` is not revision evidence.
+The policy fixes same-response fallback continuation and final-question
 decline → closing + `end_call`. The owner later reconfirmed that `end_call`
 remains the sole active system tool and that all five saved client tools match
 their source-controlled descriptions, parameters, bounds, and Wait-for-response
@@ -695,7 +697,7 @@ not applicable, or deferred to a named later ticket.
 | Silence threshold | 12 seconds; configured now |
 | Interruptions | Enabled, including the required client event if the dashboard separates the controls |
 | Soft timeout | Disabled |
-| Maximum duration / call limit | 480 seconds |
+| Maximum duration / call limit | 300 seconds |
 | Idle prompts or extra timeout messages | Provider default or off; do not add unapproved behavior |
 | Dynamic variables | Exact eight names; configured with synthetic placeholders |
 | Secret dynamic variables and overrides | None; disabled |
@@ -976,11 +978,11 @@ state, not a payment method, account identifier, key, or billing screenshot:
   write access, then saved as `OPENAI_API_KEY` in the ignored backend
   environment file. The key value was never shared with or read by the coding
   agent.
-- [x] The ElevenLabs subscription is owner-verified as Free at USD 0/month,
-  with 15 included agent-call minutes, 4 plan-level concurrent calls, and API
-  access. ScreenPilot's stricter per-agent controls remain 5 calls/day and 1
-  concurrent call. By explicit owner decision, no upgrade, Pay As You Go
-  purchase, or paid overage is enabled at this stage.
+- [x] On 2026-09-28 the owner activated ElevenLabs Starter at USD 6/month,
+  verified Auto Top Up off, and enabled a workspace credit-usage email
+  threshold. ScreenPilot's stricter per-agent controls remain 5 calls/day and
+  1 concurrent call. No Pay As You Go top up or usage-based overage is
+  authorized.
 - [x] The owner reports that the `ScreenPilot local backend` user key was
   created with a 30-day expiry, a 2,500-credit quota, restricted access, only
   `ElevenAgents: Write`, no IP allow-list, and automatic leak disabling enabled,
@@ -999,9 +1001,12 @@ state, not a payment method, account identifier, key, or billing screenshot:
   and required events has not been established.
 - [x] The owner reports that chat mode and file attachments are off, Scribe v2
   Realtime is selected by Turn V3, turn eagerness is Normal, take-turn-after-
-  silence is 12 seconds, end-after-silence is disabled, and maximum
-  conversation duration is 480 seconds. The remaining visible advanced
-  controls are unchanged from the audited disabled/provider-default state.
+  silence is 12 seconds, and end-after-silence is disabled. On 2026-09-28 the
+  owner reverified that the dashboard still used the prior 480-second maximum,
+  reviewed four ScreenPilot conversations averaging 2:39, and selected the new
+  300-second target. The owner then changed the maximum to 300 seconds and
+  published immutable revision `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk` on
+  private Main. Source and provider are synchronized for this duration.
 - [x] The owner selected the single voice labelled **Bella - Professional,
   Bright, Warm** with the **Flash** TTS family. The provider voice ID was later
   copied into the ignored backend environment file; the display label is not
@@ -1071,6 +1076,11 @@ state, not a payment method, account identifier, key, or billing screenshot:
   `agtvrsn_9501m39701mmet6av5bz53yk6ggp`. Main branch ID
   `agtbrch_8401m2ar2j6nfshaa5wg31f0j654` remains branch identity only. No
   Preview or paid/live conversation is claimed by this publication.
+- [x] On 2026-09-28 the owner changed private Main's maximum conversation
+  duration from 480 to 300 seconds and published immutable revision
+  `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`. The prompt policy, tool mapping, and
+  Main branch identity remain unchanged. This records configuration
+  synchronization only; it does not claim Preview or a paid/live conversation.
 - [x] On 2026-09-24 the owner reconfirmed that `end_call` remains the sole active
   system tool and that all five saved client tools match their source-controlled
   descriptions, required parameters, enums, character-bound descriptions, and
@@ -1280,9 +1290,12 @@ conversation. On 2026-09-24 the owner published successor policy
 tool on the same private Main branch at immutable revision
 `agtvrsn_9501m39701mmet6av5bz53yk6ggp`. The owner later reconfirmed that state
 and the exact five saved client-tool configurations, then separately reopened
-`end_call` and confirmed its exact source-controlled custom description. This is
-configuration evidence only; SP-021B observation is still required before this
-behavior can be described as live-validated.
+`end_call` and confirmed its exact source-controlled custom description. On
+2026-09-28 the owner published the same policy/tool configuration with the
+five-minute maximum at current immutable revision
+`agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`. This is configuration evidence only;
+SP-021B observation is still required before this behavior can be described as
+live-validated.
 
 On 2026-09-24 one bounded synthetic sample-CV live interview reached the
 completed workspace with the corrected published agent behavior, but its local
@@ -1330,7 +1343,7 @@ invalidate it.
 - [ ] The owner confirms the first message is audible and candidate speech is
   intelligible.
 - [ ] The owner confirms interruption, the 12-second silence threshold, the
-  eight-minute ceiling, cancellation, disconnect, and media-track cleanup.
+  five-minute ceiling, cancellation, disconnect, and media-track cleanup.
 - [ ] The owner confirms the five required client events arrive once and in the
   expected order without a duplicate voice session.
 - [ ] The owner repeats the relevant UI checks at phone, tablet, laptop/desktop,

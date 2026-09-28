@@ -1,4 +1,6 @@
-export const INTERVIEW_HARD_STOP_MS = 8 * 60 * 1_000;
+import { PUBLIC_RUNTIME_LIMITS } from "@screenpilot/contracts/api/public-runtime-config";
+
+export const INTERVIEW_HARD_STOP_MS = PUBLIC_RUNTIME_LIMITS.callSeconds * 1_000;
 
 export function formatInterviewElapsedTime(elapsedSeconds: number) {
   const boundedSeconds = Math.max(0, Math.floor(elapsedSeconds));

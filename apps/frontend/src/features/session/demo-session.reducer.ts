@@ -38,6 +38,7 @@ import {
   type SessionFailure,
   type SessionRestoreNotice,
 } from "./demo-session.types";
+import { describeInterviewTerminalReason } from "./interview-completion";
 import {
   projectPersistedDemoSession,
   SESSION_LIFETIME_MS,
@@ -290,20 +291,12 @@ function completedEndingSession(
         ? { startedAt: session.voice.startedAt }
         : {}),
       endedAt: new Date(now).toISOString(),
-      endReason: terminalReasonMessage(session.interviewCompletion.reason),
+      endReason: describeInterviewTerminalReason(
+        session.interviewCompletion.reason,
+      ),
       status: "ended",
     },
   };
-}
-
-function terminalReasonMessage(reason: InterviewCompletion["reason"]): string {
-  if (reason === "agent_completed") {
-    return "Interview completed by the interviewer.";
-  }
-  if (reason === "time_limit") {
-    return "The eight-minute interview limit was reached.";
-  }
-  return "Interview ended by the candidate.";
 }
 
 export function restoreDemoSession(

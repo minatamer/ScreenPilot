@@ -19,7 +19,7 @@ Create the shared informed-consent and microphone-readiness boundary so no voice
 
 - Both entry modes arrive with an unexpired `interviewGrant` and use this exact shared preflight.
 - SP-011A's compact in-workspace Privacy/session/human-decision context band remains visible inside the centralized dark `/demo` shell, but it does not replace this ticket's plain-language interview, microphone, and consent explanation immediately before voice begins.
-- Preflight presents exactly two stacked cards in candidate-friendly language: a short explanation of how the interview works, then privacy/consent with the microphone check. It explains microphone use, adaptive questions, human-reviewed notes, no ScreenPilot audio recording, session-only review, the eight-minute maximum, and the expectation to use synthetic data without exposing provider names, tokens, anti-abuse implementation, or other infrastructure details.
+- Preflight presents exactly two stacked cards in candidate-friendly language: a short explanation of how the interview works, then privacy/consent with the microphone check. It explains microphone use, adaptive questions, human-reviewed notes, no ScreenPilot audio recording, session-only review, the five-minute maximum selected in SP-028, and the expectation to use synthetic data without exposing provider names, tokens, anti-abuse implementation, or other infrastructure details.
 - The mode badge explains whether the interviewer has CV-derived context or will learn only from spoken answers.
 - Consent begins unchecked and requires a deliberate action.
 - Microphone readiness includes permission, selected-device label, live input meter, and recovery guidance.

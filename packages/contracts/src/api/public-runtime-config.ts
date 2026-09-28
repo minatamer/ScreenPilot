@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const PUBLIC_RUNTIME_LIMITS = Object.freeze({
-  callSeconds: 480,
+  callSeconds: 300,
   cvCharacters: 40_000,
   pdfBytes: 5_242_880,
   pdfPages: 8,

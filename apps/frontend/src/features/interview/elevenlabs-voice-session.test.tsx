@@ -45,7 +45,7 @@ const dynamicVariables = {
   screenpilot_role_context: "bounded role context",
   screenpilot_cv_context: "bounded empty CV context",
   screenpilot_known_state: "bounded known state",
-  screenpilot_remaining_seconds: 480,
+  screenpilot_remaining_seconds: 300,
 } satisfies VoiceDynamicVariables;
 
 const testClientTools = {

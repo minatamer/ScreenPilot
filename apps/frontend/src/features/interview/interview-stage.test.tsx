@@ -226,7 +226,7 @@ describe("InterviewStage", () => {
     render(
       <InterviewStage
         completed
-        elapsedSeconds={480}
+        elapsedSeconds={300}
         entryMode="conversation_first"
         insights={[]}
         onViewSummary={onViewSummary}
@@ -253,7 +253,7 @@ describe("InterviewStage", () => {
     expect(
       screen.getByText("Keep this final answer visible after disconnect."),
     ).toBeVisible();
-    expect(screen.getByText("08:00")).toBeVisible();
+    expect(screen.getByText("05:00")).toBeVisible();
     expect(
       screen.queryByRole("button", { name: /microphone/iu }),
     ).not.toBeInTheDocument();

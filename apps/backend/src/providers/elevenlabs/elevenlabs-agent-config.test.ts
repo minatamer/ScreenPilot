@@ -8,8 +8,10 @@ import { VOICE_STATIC_FILLER_MESSAGE } from "@screenpilot/contracts/interview/vo
 import { describe, expect, it } from "vitest";
 
 import {
+  ELEVENLABS_AGENT_CONFIG_VERSION,
   ELEVENLABS_END_CALL_TOOL_DESCRIPTION,
   ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION,
+  ELEVENLABS_LAST_VERIFIED_MAX_DURATION_SECONDS,
   ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING,
   SCREENPILOT_ELEVENLABS_AGENT_CONFIG,
 } from "./elevenlabs-agent-config.js";
@@ -21,7 +23,8 @@ import {
 describe("source-controlled ElevenLabs agent configuration", () => {
   it("locks the approved model, transport behavior, privacy, and duration", () => {
     expect(SCREENPILOT_ELEVENLABS_AGENT_CONFIG).toMatchObject({
-      agentRevisionId: "agtvrsn_9501m39701mmet6av5bz53yk6ggp",
+      agentConfigVersion: "sp028-2026-09-28.1",
+      agentRevisionId: "agtvrsn_2101m3m80ezpee3bvccqy3ymwamk",
       agentRevisionPolicyVersion: "sp021b-2026-09-23.1",
       dashboardSyncRequired: false,
       clientToolDefinitions: VOICE_CLIENT_TOOL_DASHBOARD_DEFINITIONS,
@@ -37,7 +40,7 @@ describe("source-controlled ElevenLabs agent configuration", () => {
         ],
         firstMessage: INTERVIEWER_FIRST_MESSAGE,
         interruptionsEnabled: true,
-        maxDurationSeconds: 480,
+        maxDurationSeconds: 300,
         softTimeout: {
           additionalMessages: [],
           disableUntilFirstUserMessage: true,
@@ -78,7 +81,9 @@ describe("source-controlled ElevenLabs agent configuration", () => {
       ttsModel: "eleven_flash_v2_5",
       voiceIdEnvironmentVariable: "ELEVENLABS_VOICE_ID",
     });
+    expect(ELEVENLABS_AGENT_CONFIG_VERSION).toBe("sp028-2026-09-28.1");
     expect(ELEVENLABS_LIVE_OUTPUT_TOKEN_CEILING).toBe(160);
+    expect(ELEVENLABS_LAST_VERIFIED_MAX_DURATION_SECONDS).toBe(300);
     expect(ELEVENLABS_LAST_VERIFIED_AGENT_POLICY_VERSION).toBe(
       VOICE_AGENT_POLICY_VERSION,
     );

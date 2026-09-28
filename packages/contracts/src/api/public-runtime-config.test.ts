@@ -42,7 +42,10 @@ describe("publicRuntimeConfigSchema", () => {
     expect(
       publicRuntimeConfigSchema.safeParse({
         ...validPublicRuntimeConfig,
-        limits: { ...PUBLIC_RUNTIME_LIMITS, callSeconds: 481 },
+        limits: {
+          ...PUBLIC_RUNTIME_LIMITS,
+          callSeconds: PUBLIC_RUNTIME_LIMITS.callSeconds + 1,
+        },
       }).success,
     ).toBe(false);
     expect(

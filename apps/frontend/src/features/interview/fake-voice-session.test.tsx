@@ -61,7 +61,7 @@ describe("FakeVoiceSession", () => {
           entryMode: "conversation_first",
           insights: [],
           plan: createConversationFirstPlanFixture(),
-          remainingSeconds: 480,
+          remainingSeconds: 300,
           topicProgress: [],
         })}
         endRequested={false}

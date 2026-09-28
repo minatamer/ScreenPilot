@@ -23,8 +23,8 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 - The backend validates origin, safety cookie, grant signature/expiry, Turnstile hostname/action, paid-demo flag, request/rate/capacity conditions, then requests the shortest practical private conversation token.
 - The browser supplies bounded dynamic variables: entry mode, role-neutral synthetic-demo disclosure, universal plan, candidate-stated role/undecided state, and optional normalized CV/evidence-linked role suggestion. Every role label is delimited inert data and never replaces or modifies the source-controlled system prompt.
 - Configure one short first-message exception; every later question is model-generated from intent/state.
-- Maximum live duration is eight minutes. ElevenLabs audio saving is off and transcript retention is the shortest locked setting.
-- After included minutes are exhausted, eight standard connected minutes cost **$0.64** before the separate live-model charge; burst minutes would cost **$1.28**. ElevenLabs Free currently includes 15 agent minutes, enough for one complete eight-minute interview, but the native GPT charge still consumes credits separately.
+- Maximum live duration is five minutes after the SP-028 measured-usage decision. ElevenLabs audio saving is off and transcript retention is the shortest locked setting.
+- After included minutes are exhausted, five standard connected minutes cost **$0.40** before the separate live-model charge; burst minutes would cost **$0.80**. Included minutes and native GPT credits remain separate accounting dimensions.
 
 ## Manual credential gate
 
@@ -48,7 +48,7 @@ Configure the one approved ElevenLabs browser WebRTC path and authorize it throu
 
 - [x] Define the source-controlled target for Scribe v2 Realtime, GPT-5.4 mini reasoning none, Flash v2.5, user-selected voice, and private WebRTC transport.
 - [ ] Create/publish the real ElevenLabs agent and apply the target; blocked on the blank user-owned account values.
-- [x] Configure bounded dynamic variables, the five universal client-tool names with safe deferred handlers, initial turn-taking/interruption/timeout settings, eight-minute duration, and one concise first message. SP-016 owns strict tool argument schemas and the mutating dispatcher.
+- [x] Configure bounded dynamic variables, the five universal client-tool names with safe deferred handlers, initial turn-taking/interruption/timeout settings, five-minute duration, and one concise first message. SP-016 owns strict tool argument schemas and the mutating dispatcher; SP-028 owns the duration reduction and current provider-sync gate.
 - [x] Record configuration/model identifiers and a conservative 160-token live output ceiling; the provider revision remains deliberately `null` until publication.
 - [x] Record where SP-025 will read connected duration, standard-versus-burst status, included-minute use, credit deduction, and native-model **Detailed costs**; do not infer the final live-model charge from token estimates once dashboard data exists.
 - [x] Lock ElevenLabs audio saving off and transcript retention to zero/the shortest setting in source.

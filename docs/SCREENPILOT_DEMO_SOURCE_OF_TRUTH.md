@@ -44,9 +44,14 @@ implemented and deterministically verified in the browser lifecycle. On
 2026-09-24 the owner published the exact `sp021b-2026-09-23.1` prompt and enabled
 the built-in `end_call` system tool as the sole active system tool on the
 existing private ScreenPilot/Main branch at immutable revision
-`agtvrsn_9501m39701mmet6av5bz53yk6ggp`; Main branch ID
-`agtbrch_8401m2ar2j6nfshaa5wg31f0j654` remains branch identity only. Previous
-revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1` remains mapped only to
+`agtvrsn_9501m39701mmet6av5bz53yk6ggp`. On 2026-09-28 the owner changed only
+the maximum conversation duration from 480 to 300 seconds and published the
+same policy/tool configuration at current immutable revision
+`agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`; Main branch ID
+`agtbrch_8401m2ar2j6nfshaa5wg31f0j654` remains branch identity only. The prior
+`agtvrsn_9501m39701mmet6av5bz53yk6ggp` revision remains the historical
+eight-minute configuration, revision `agtvrsn_8901m350e924f2ev7t4pwnvq38b1`
+remains mapped only to
 `sp017-2026-09-22.1`, and historical revision
 `agtvrsn_1501m2mwx4ffek39r88ygh1ngxq4` remains mapped only to
 `sp017-2026-09-16.1`. On 2026-09-24 the owner reconfirmed that `end_call` remains
@@ -148,7 +153,7 @@ Do not add infrastructure merely because a production recruiting product would n
 
 | Decision | Locked choice | Consequence |
 | --- | --- | --- |
-| Product type | Public portfolio demo | Optimize for a polished eight-minute experience, not multi-tenant operations. |
+| Product type | Public portfolio demo | Optimize for a polished five-minute experience, not multi-tenant operations. |
 | Primary user | One anonymous visitor playing the candidate and then viewing the result | No recruiter account, candidate account, organization, or permissions system. |
 | Product boundary | Two equally important role-agnostic HR-screening entry paths: CV-assisted after a simulated upstream CV handoff, or conversation-first with no CV | Both paths use the same universal HR intents, converge before the live call, and remain outside job-board/application-form scope. |
 | Employer wording | **our company** / **the company** | Deliberately use no fictional company name or brand; choose the natural form for each sentence. |
@@ -157,7 +162,7 @@ Do not add infrastructure merely because a production recruiting product would n
 | Location and work pattern | No universal employer fact | Gather the candidate's location/work-arrangement preferences unless explicit server-owned context exists. |
 | Compensation context | No universal employer range | Gather the candidate's expectation or decline; do not infer an employer budget from the role label. |
 | Sample candidate | Bundled synthetic CV fixture with no name hardcoded into product configuration | Any candidate name is treated only as CV-derived fixture content, exactly like an uploaded CV. |
-| Entry modes | **Use a CV** (upload or sample) and **Start without a CV** | CV-assisted analysis produces focused questions; conversation-first starts faster and learns the same candidate context through open questions during the call. Neither path is secondary. |
+| Entry modes | **Use a CV** (upload only) and **Start without a CV** | CV-assisted analysis produces focused questions; conversation-first starts faster and learns the same candidate context through open questions during the call. Neither path is secondary. The checked-in synthetic CV is an unadvertised loopback engineering fixture, not a product path. |
 | Visible authentication | None | No signup, login, password, invitation token, or account UI. |
 | Anonymous safety session | Short-lived signed HttpOnly cookie containing no CV/interview content | Provides coarse request correlation without a user record or server session store. |
 | Application state | Current browser tab only | Entry mode, optional normalized CV facts, plan, transcript, insights, and summary live in `sessionStorage`; closing or clearing the tab ends the demo. |
@@ -185,7 +190,7 @@ Do not add infrastructure merely because a production recruiting product would n
 | Initial public URL | Frontend Cloud Run's stable managed-HTTPS `run.app` URL | Deploy and validate before buying a domain. The backend URL stays operational rather than visitor-facing. |
 | Public routing | The frontend Next.js server proxies relative `/v1` requests to the backend Cloud Run origin | Two Cloud Run services are sufficient: no separate hosting layer, paid load balancer, second browser API origin, or browser-visible backend URL. |
 | Portfolio custom domain | After the `run.app` checkpoint passed, the owner purchased `tryscreenpilot.com` and mapped its apex plus `www` only to the frontend Cloud Run service | The displayed initial/current renewal is USD 10.46/year before tax, within the USD 15 guardrail. Cloudflare stays DNS-only, the `run.app` origin remains a fallback, and direct Cloud Run domain mapping remains a Preview portfolio-demo tradeoff rather than a production-readiness claim. |
-| Maximum live call | Eight minutes | Bounds cost and keeps the demo focused. |
+| Maximum live call | Five minutes | Bounds cost and keeps the demo focused. The 2026-09-28 owner decision follows four recorded ScreenPilot conversations averaging 2:39; five minutes keeps meaningful headroom without retaining the earlier eight-minute worst-case exposure. |
 | Interview depth | Role-agnostic HR/recruiter screening with at most one broad role-context clarification | No technical, portfolio, competency, roleplay, professional-knowledge, implementation, coding, testing/debugging, architecture, trivia, algorithm, whiteboard, take-home, or suitability assessment in either entry mode. |
 | Provider fallback | None | A provider failure becomes a clear error; do not hide a second voice architecture in the build. |
 
@@ -261,7 +266,7 @@ ScreenPilot runs an adaptive browser voice screening from either a submitted CV 
 - Provisional and final live captions.
 - Client-side tools that create and correct insight cards.
 - Minimal unnamed-demo answers grounded only in explicit server-owned content; unsupported employer/vacancy questions are recorded for human follow-up.
-- Eight-minute limit, graceful ending, interruption, and measured latency.
+- Five-minute limit, graceful ending, interruption, and measured latency.
 - One restrained non-evaluative latency filler when genuinely needed.
 - Browser-local transcript and evidence references.
 - Stateless post-call GPT summary.
@@ -417,7 +422,7 @@ completion.
 #### Stage 6 — shared disclosure and preflight
 
 - **Input state:** an unexpired `interviewGrant` from either entry path.
-- **Visible behavior:** show exactly two stacked cards in plain candidate language: one short explanation of the interview and one privacy/consent card containing the microphone check. Explain microphone use, adaptive AI questions, local notes for human review, the eight-minute limit, no ScreenPilot audio recording, session-only review, and the synthetic-data expectation. Do not expose provider names, tokens, anti-abuse implementation, or other infrastructure details in preflight copy.
+- **Visible behavior:** show exactly two stacked cards in plain candidate language: one short explanation of the interview and one privacy/consent card containing the microphone check. Explain microphone use, adaptive AI questions, local notes for human review, the five-minute limit, no ScreenPilot audio recording, session-only review, and the synthetic-data expectation. Do not expose provider names, tokens, anti-abuse implementation, or other infrastructure details in preflight copy.
 - **Consent:** unchecked box plus the deliberate **Check microphone** action; checking the microphone accepts the already-selected consent before requesting browser permission.
 - **Microphone:** permission request, input-level meter, selected device label, and retry guidance. When the browser exposes microphone permission state, distinguish permission revocation from physical track/device removal; otherwise use conservative device-unavailable recovery copy and require a fresh check.
 - **Mutation:** consent and device status remain local; the Turnstile client may preload but does not store a verification token, and ElevenLabs is not contacted yet.
@@ -450,8 +455,8 @@ completion.
 #### Stage 9 — end and summarize
 
 - **Input state:** local final transcript and insight state; no recording artifact is expected.
-- **Termination:** agent `end_call`, candidate-selected **End interview**, and the absolute eight-minute deadline enter one idempotent shutdown path. The first terminal reason wins. Provider/WebRTC/media work, authorization, timers, requests, and content-free measurements are released immediately; the provider bridge unmounts, while the existing bounded two-second fallback completes local shutdown if no terminal disconnect arrives. During that short pending interval, manual End loses its stop icon, shows a continuous spinner, and cannot be clicked again; mute is disabled.
-- **Completed workspace:** after normal shutdown the reducer enters `interview_complete`, retaining the transcript and Insight Board read-only. Elapsed time is frozen (`08:00` for the hard stop), the status rail says **Interview complete** and **Microphone disconnected**, speaking/listening/reconnect UI and mute are absent, and **View summary** replaces End. Every freshly validated summary-capable mode may prepare one summary in the background while this hold remains visible. During that work, **View summary** stays disabled and shows a continuous spinner without replacing its label; passive anti-abuse checking copy is hidden so it cannot be mistaken for voice reconnection. A genuinely required Turnstile interaction remains visible. Fake voice emits its agent-owned disconnect only after every final transcript and client-tool event. A restored completed session remains completed and never requests a voice token or reconnects.
+- **Termination:** agent `end_call`, candidate-selected **End interview**, and the absolute five-minute deadline enter one idempotent shutdown path. The first terminal reason wins. Provider/WebRTC/media work, authorization, timers, requests, and content-free measurements are released immediately; the provider bridge unmounts, while the existing bounded two-second fallback completes local shutdown if no terminal disconnect arrives. During that short pending interval, manual End loses its stop icon, shows a continuous spinner, and cannot be clicked again; mute is disabled.
+- **Completed workspace:** after normal shutdown the reducer enters `interview_complete`, retaining the transcript and Insight Board read-only. Elapsed time is frozen (`05:00` for the hard stop), the status rail says **Interview complete** and **Microphone disconnected**, speaking/listening/reconnect UI and mute are absent, and **View summary** replaces End. Every freshly validated summary-capable mode may prepare one summary in the background while this hold remains visible. During that work, **View summary** stays disabled and shows a continuous spinner without replacing its label; passive anti-abuse checking copy is hidden so it cannot be mistaken for voice reconnection. A genuinely required Turnstile interaction remains visible. Fake voice emits its agent-owned disconnect only after every final transcript and client-tool event. A restored completed session remains completed and never requests a voice token or reconnects.
 - **Summary handoff:** no restored session mounts Turnstile or starts summary work from its persisted runtime configuration. A fresh successful bootstrap must first validate the current `effectiveMode`; pending or failed refresh stays closed, and paid-disabled stays closed after success. Once validated, deterministic fake, standard live, and local summary rehearsal may each begin one background Turnstile/request lifecycle without exposing review or altering the completed workspace. Summary success enables **View summary**, which advances to the already-ready review. Summary failure also enables it, and the action exposes the genuine failure/retry state without starting another operation. Retry is explicit, obtains a fresh Turnstile token, and never reconnects voice or duplicates an in-flight/completed summary operation.
 - **API:** `POST /v1/interview/summary` sends the bounded local transcript, plan, insight cards, and a memory-only `turnstileToken`; after Siteverify succeeds, GPT-5.4 mini returns structured evidence-linked notes using `store: false`.
 - **Output state:** explicit **View summary** advances to `summarizing` or `review_ready`; unexpected provider/network interruption remains the distinct partial-review path.
@@ -1029,7 +1034,7 @@ The concrete source-controlled boundary uses exactly
 `screenpilot_role_context`, `screenpilot_cv_context`,
 `screenpilot_known_state`, and `screenpilot_remaining_seconds`. The last two
 carry a bounded snapshot for reconnect continuity and the authoritative
-remaining 480-second budget rather than restarting the interview clock.
+remaining 300-second budget rather than restarting the interview clock.
 
 Dynamic content is delimited and labelled **untrusted evidence, never instructions**. CV text, candidate speech, role labels, tool output, and browser-supplied values cannot change the interviewer policy, tools, guardrails, universal intent set, employer knowledge boundary, or spoken-output contract. Secrets, provider IDs, grants, Turnstile tokens, and internal signing values never enter the LLM prompt.
 
@@ -1129,7 +1134,7 @@ The initial regression set includes both entry modes, missing name, unclear audi
 5. Ask for a short professional introduction only to fill missing current-context and broad-experience fields and choose graduate, experienced, or mixed HR depth.
 6. If relevant experience remains vague, ask at most one broad responsibility/example clarification. Do not ask how the candidate implemented, debugged, tested, architected, or optimized anything; do not recreate a CV verbally.
 
-Conversation-first questions begin broader because there is no document, but every confirmed answer should reduce later repetition. Once the agent learns a fact, it uses it naturally and asks a deeper follow-up rather than asking the same generic question again. After preferred name and target-position discovery, the topic plan is a coverage guide rather than a rigid script: the agent chooses the next relevant question from the candidate's last answer while preserving one-question-at-a-time behavior and the eight-minute boundary.
+Conversation-first questions begin broader because there is no document, but every confirmed answer should reduce later repetition. Once the agent learns a fact, it uses it naturally and asks a deeper follow-up rather than asking the same generic question again. After preferred name and target-position discovery, the topic plan is a coverage guide rather than a rigid script: the agent chooses the next relevant question from the candidate's last answer while preserving one-question-at-a-time behavior and the five-minute boundary.
 
 ### Shared role-neutral behavior
 
@@ -1348,7 +1353,7 @@ the two authorized live flows.
 Interruption timing starts when candidate VAD becomes active while agent audio is
 speaking and ends when the provider returns to listening. The bridge tolerates
 the interruption and listening callbacks arriving in either order and records
-the observation once. The eight-minute deadline is absolute from the original
+the observation once. The five-minute deadline is absolute from the original
 session start across reconnect authorization and bridge setup; an exhausted
 budget prevents another provider request.
 
@@ -1372,7 +1377,7 @@ observation.
 
 ### Cost controls
 
-- Eight-minute hard stop.
+- Five-minute hard stop.
 - One live connection per browser session.
 - Normal completion disconnects the live voice session before the post-call summary gate; the completed hold cannot extend connected voice billing or reconnect the provider.
 - Summary preparation is single-flight across the completed hold and **View summary** transition so one completion cannot create duplicate paid summary operations. A restored session cannot mount the summary challenge or request until fresh bootstrap validation succeeds; pending, failed, and paid-disabled states remain closed.
@@ -2574,7 +2579,7 @@ type BootstrapResponse = {
     pdfBytes: 5_242_880;
     pdfPages: 8;
     cvCharacters: 40_000;
-    callSeconds: 480;
+    callSeconds: 300;
   };
   abuseProtection: {
     provider: "cloudflare_turnstile";
@@ -2729,7 +2734,7 @@ The cost unit is one successful **CV-assisted** visitor journey:
 
 1. local PDF text extraction, which has no provider cost;
 2. one protected backend GPT-5.4 Mini CV-analysis and screening-plan call;
-3. one private ElevenLabs WebRTC interview connected for eight minutes, using Scribe v2 Realtime, Flash v2.5, and native GPT-5.4 Mini;
+3. one private ElevenLabs WebRTC interview connected for five minutes, using Scribe v2 Realtime, Flash v2.5, and native GPT-5.4 Mini;
 4. one protected backend GPT-5.4 Mini post-call summary call;
 5. three Turnstile verifications and the necessary frontend/backend requests; and
 6. no telephone number, PSTN/SIP minutes, database, candidate object storage, queue, analytics product, or human review.
@@ -2755,7 +2760,7 @@ The initial estimate conservatively prices all GPT input as uncached. Cached inp
 
 ### Token-budget assumptions
 
-These are engineering budgets based on the plan's bounded CV text, prompt, transcript, structured schemas, and 8–10-question interview. They are not provider quotes. In particular, live-agent input is cumulative because the model can receive instructions and conversation history again on later turns.
+These are engineering budgets based on the plan's bounded CV text, prompt, transcript, structured schemas, and five-minute interview. They are not provider quotes. In particular, live-agent input is cumulative because the model can receive instructions and conversation history again on later turns; the token budgets remain conservative rather than assuming every call reaches the deadline.
 
 | Workload | Optimized | Base planning case | Heavy but in-scope |
 | --- | ---: | ---: | ---: |
@@ -2768,13 +2773,13 @@ The direct ScreenPilot OpenAI account pays for the CV and summary rows: **$0.016
 
 ### Full-flow estimates
 
-| Billing situation for one eight-minute CV-assisted flow | Optimized | Base | Heavy |
+| Billing situation for one five-minute CV-assisted flow | Optimized | Base | Heavy |
 | --- | ---: | ---: | ---: |
-| Standard voice minutes charged: model usage + `8 × $0.08` | **$0.68020** | **$0.70405** | **$0.75025** |
-| Burst voice minutes charged: model usage + `8 × $0.16` | **$1.32020** | **$1.34405** | **$1.39025** |
+| Standard voice minutes charged: model usage + `5 × $0.08` | **$0.44020** | **$0.46405** | **$0.51025** |
+| Burst voice minutes charged: model usage + `5 × $0.16` | **$0.84020** | **$0.86405** | **$0.91025** |
 | Included ElevenLabs voice minutes: model usage only, before ElevenLabs credit coverage | **$0.04020** | **$0.06405** | **$0.11025** |
 
-The working answer is therefore **about $0.70 for one normal paid full flow**, with a practical standard planning range of **$0.68–$0.75**. Reserve **$0.80 per standard live acceptance flow** so token variance does not exhaust the test budget. If burst capacity is deliberately enabled, reserve **$1.40 per flow** instead.
+The working answer is therefore **about $0.46 for one normal paid full flow**, with a practical standard planning range of **$0.44–$0.51**. Reserve **$0.60 per standard live acceptance flow** so token variance does not exhaust the test budget. If burst capacity is deliberately enabled, reserve **$1.00 per flow** instead.
 
 For the base case, the arithmetic is:
 
@@ -2782,11 +2787,11 @@ For the base case, the arithmetic is:
 CV analysis, direct OpenAI                               = $0.01140
 Live GPT through ElevenLabs, planning proxy              = $0.03675
 Post-call summary, direct OpenAI                         = $0.01590
-Eight standard ElevenAgents minutes                     = $0.64000
-Estimated variable provider total                       = $0.70405
+Five standard ElevenAgents minutes                      = $0.40000
+Estimated variable provider total                       = $0.46405
 ```
 
-The conversation-first route removes the CV-analysis call, so the comparable base estimate is **$0.69265** after included voice minutes are exhausted. The **$0.01140** saving confirms that conversation-first is mainly a faster UX path, not a major cost optimization.
+The conversation-first route removes the CV-analysis call, so the comparable base estimate is **$0.45265** after included voice minutes are exhausted. The **$0.01140** saving confirms that conversation-first is mainly a faster UX path, not a major cost optimization.
 
 ### Free plans, included allowances, and promotional credits
 
@@ -2795,9 +2800,9 @@ The conversation-first route removes the CV-analysis call, so the comparable bas
 | Provider/plan | Current allowance | ScreenPilot impact | Planning rule |
 | --- | --- | --- | --- |
 | OpenAI GPT-5.4 Mini API | The model page lists the API **Free tier as not supported**. The quickstart may offer an account a free test request, but it publishes no durable token amount for this model. | CV analysis and summary should be expected to need a funded API account. | Treat the ongoing allowance as **$0** and check the account billing/usage page before a live test. Never make release depend on a trial banner. |
-| ElevenLabs Free | **$0/month, 15 included agent call minutes, and four concurrent calls**. The main pricing page also advertises 10,000 monthly credits; native third-party LLM fees are deducted from credits separately from call minutes. | One complete eight-minute interview fits in the monthly call-minute allowance, leaving seven minutes. Its live-LLM charge may consume free credits; direct ScreenPilot OpenAI calls remain separate. | The first flow can avoid the $0.64 voice charge, but do not call the whole flow free. Confirm remaining minutes, credits, and **Detailed costs** in the dashboard. |
-| ElevenLabs Starter | **$6/month with 75 included agent minutes**. | Up to nine complete eight-minute interviews fit inside the minute allowance, leaving three minutes, before separate LLM usage. | This is a paid subscription with included usage, not free tokens. Compare the subscription with expected monthly flow count before upgrading. |
-| ElevenLabs Creator | **$22/month with 275 included agent minutes**; the pricing page displayed a $11 first-month promotion when researched. | Up to 34 complete eight-minute interviews fit inside the minute allowance, leaving three minutes, before separate LLM usage. | Treat the discounted first month as a changeable promotion, not the long-term price. |
+| ElevenLabs Free | **$0/month, 15 included agent call minutes, and four concurrent calls**. The main pricing page also advertises 10,000 monthly credits; native third-party LLM fees are deducted from credits separately from call minutes. | Up to three complete five-minute interviews fit in the monthly call-minute allowance. Their live-LLM charges may consume free credits; direct ScreenPilot OpenAI calls remain separate. | Included voice minutes do not make the whole flow free. Confirm remaining minutes, credits, and **Detailed costs** in the dashboard. |
+| ElevenLabs Starter | **$6/month with 75 included agent minutes**. | Up to 15 complete five-minute interviews fit inside the minute allowance before separate LLM usage. | The owner activated Starter on 2026-09-28 with Auto Top Up off. This is a paid subscription with included usage, not free tokens; credit/LLM consumption can become the tighter bound. |
+| ElevenLabs Creator | **$22/month with 275 included agent minutes**; the pricing page displayed a $11 first-month promotion when researched. | Up to 55 complete five-minute interviews fit inside the minute allowance before separate LLM usage. | Treat the discounted first month as a changeable promotion, not the long-term price. |
 | ElevenLabs startup grant | Accepted startups are advertised Scale access for 12 months, 33M characters, and more than 680 hours of Agents usage. | Potentially valuable only if ScreenPilot becomes an eligible product startup. | Application and acceptance are required; agencies, consulting firms, and one-off projects are excluded. A portfolio demo must not budget around this grant. |
 | Cloudflare Turnstile Free | Up to 20 widgets, up to 10 hostnames per widget, and unlimited challenges/verification requests. | All three paid action gates have **$0 marginal cost**. | Stay on Free; no Cloudflare proxy, Registrar purchase, paid WAF, or Bot Management is needed. |
 | Cloud Run request-based free tier | Per billing account/month: 180,000 vCPU-seconds, 360,000 GiB-seconds, and 2M requests in the documented free-tier regions. | Two scale-to-zero, low-traffic services should add **$0 marginal cost per demo flow** while within quota. | Keep minimum instances at zero and still attach a billing account; review billing because free-tier usage is aggregated and region-sensitive. Configure the USD 5 native Cloud Run spend cap when available and record that enforcement may lag. |
@@ -3203,7 +3208,7 @@ The step-prefixed shared stage heading reports this sequence but is not navigati
 #### Review
 
 - Keep the shared Deep Ink/plum/coral workspace for completion and clarity; use calmer spacing, quieter borders, and restrained coral rather than returning to a light canvas.
-- Preserve spatial continuity without an ending interstitial. During a manual shutdown, keep the existing interview and insight layout stable and show progress only in the disabled End interview control. After a normal provider disconnect or bounded fallback, keep that same transcript and Insight Board visible as the read-only completed workspace, replace live controls with the frozen timer and **View summary**, and state that the microphone is disconnected. Provider-owned automatic completion and the eight-minute deadline enter the same hold. Only the deliberate **View summary** action exposes the organizing/ready review surface; do not add a blank page, fade/collapse sequence, or route-like page swap.
+- Preserve spatial continuity without an ending interstitial. During a manual shutdown, keep the existing interview and insight layout stable and show progress only in the disabled End interview control. After a normal provider disconnect or bounded fallback, keep that same transcript and Insight Board visible as the read-only completed workspace, replace live controls with the frozen timer and **View summary**, and state that the microphone is disconnected. Provider-owned automatic completion and the five-minute deadline enter the same hold. Only the deliberate **View summary** action exposes the organizing/ready review surface; do not add a blank page, fade/collapse sequence, or route-like page swap.
 - Turn that expanded surface into a deterministic evidence map. The central organizing card becomes the summary overview; every retained insight card becomes one connected node arranged around it on capable wide screens. This is not a graph engine: nodes are not draggable, zoomable, physics-driven, editable, or permitted to disappear off canvas.
 - Once organized notes are available, place a two-option **Evidence map** / **Organized notes** tab switch opposite and vertically centered against the review heading, replacing the redundant header tags; stack it below the heading only when responsive space requires it. On phones it becomes a compact full-width segmented control with two single-line, minimum-44 px tabs and content-sized height; desktop width sizing must not become vertical flex growth after the heading changes axis. Keep the evidence map selected by default, preserve each mounted view while switching, and remove the inactive panel from page flow so the two complete review surfaces never stack into an unnecessarily tall page. Within Organized notes, any section with four or more entries spans the two-column notes grid as one combined panel and balances its items into two internal columns; **Coverage and gaps** also places its gaps beneath its balanced covered-topic list. Pack compact panels into complete two-card rows across those full-width sections: when two compact panels would otherwise be stranded alone, pair them in the earlier available row and render the DOM in that visual order. This prevents sparse Clarifications/Limitations-style sections from leaving separate half-empty rows. Collapse every balanced internal list back to one column at narrow widths.
 - Selecting a node keeps the map context visible and replaces the center overview with a stable preview containing four explicitly separated layers: the nearest preceding final Pilot question only when the relationship is unambiguous, the cited final candidate answer, an **Interview evidence** source/local-time label, and each summary item whose `evidenceTurnIds` contains that candidate turn. Selecting a different node swaps the preview; selecting the active node again or minimizing restores the overview and focus to the node. Show **Question unavailable**, **Evidence unavailable**, or **No connected summary note** when appropriate; never invent an association.
@@ -3977,7 +3982,7 @@ SP-010 provides an injected fail-closed admission boundary and proves denials oc
 **Checklist:**
 
 - [x] Lock the source-controlled Scribe v2 Realtime, GPT-5.4 mini reasoning-none, and Flash v2.5 target configuration.
-- [x] Define entry mode, synthetic/session-only disclosure, bounded untrusted role context, bounded optional CV plus universal plan context, the five universal tool names, selected-voice environment ownership, turn-taking, interruption, timeout, and 8-minute duration through dynamic variables rather than browser prompt replacement.
+- [x] Define entry mode, synthetic/session-only disclosure, bounded untrusted role context, bounded optional CV plus universal plan context, the five universal tool names, selected-voice environment ownership, turn-taking, interruption, timeout, and five-minute duration through dynamic variables rather than browser prompt replacement.
 - [x] Lock the single short ElevenLabs first message; SP-017 still owns and must verify every later model-generated question from topic intent/state.
 - [x] Record the model identifiers, reasoning setting, configuration version, and conservative 160-token live output ceiling for SP-017/SP-018 calibration.
 - [ ] Create/publish the real provider agent, apply the recorded configuration, select the user-owned voice, and replace the deliberately blank agent-revision record; blocked on account access and credentials.
@@ -4032,18 +4037,26 @@ initiation/post-call webhook; 5 calls per day; 1 concurrent call; no burst
 pricing or queueing; no stored call audio; 0-day scheduled retention with
 transcript/derived-field and audio deletion enabled; chat mode and file
 attachments off; Scribe v2 Realtime with Turn V3; Normal eagerness; a 12-second
-take-turn silence threshold; no end-after-silence cutoff; and a 480-second
-maximum duration. The owner selected the single voice labelled **Bella -
+take-turn silence threshold; and no end-after-silence cutoff. On 2026-09-28 the
+owner reverified the dashboard's existing 480-second maximum, reviewed four
+ScreenPilot conversations averaging 2:39, and selected a 300-second maximum.
+The source-controlled application and provider target now use 300 seconds. The
+owner then updated private Main, published immutable revision
+`agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`, and reported the 300-second dashboard
+value complete; `dashboardSyncRequired` is now false. This configuration
+publication is not a Preview or paid-conversation result. The owner selected
+the single voice labelled **Bella -
 Professional, Bright, Warm** with the Flash TTS family; its provider ID is
 populated only in the ignored backend environment file. The exact first
 message, English-only language, GPT-5.4 Mini,
 reasoning None, 160-token ceiling, disabled backup LLM/reasoning summary/soft
 timeout/parallel tool calling/Expressive Mode, unset temperature, and bounded
 role-neutral placeholder prompt are configured. Zero Retention Mode remains off
-pending compatibility. The subscription is owner-verified as Free at USD
-0/month with 15 included agent-call minutes and no upgrade, Pay As You Go
-purchase, or paid overage enabled. Live token/WebRTC verification remains
-unchecked. The safe ledger is maintained in
+pending compatibility. On 2026-09-28 the owner activated ElevenLabs Starter at
+USD 6/month, verified Auto Top Up off, enabled a credit-usage email threshold,
+and reverified the stricter ScreenPilot agent limits of 5 calls/day and 1
+concurrent call with burst pricing and call queueing off. No Pay As You Go top
+up or usage-based overage is authorized. The safe ledger is maintained in
 `docs/operations/live-provider-setup.md`.
 
 The owner reports that the six pre-SP-017 dynamic-variable names are present in
@@ -4114,7 +4127,7 @@ suppresses its real Turnstile site key from public bootstrap.
 - [x] Prevent refresh auto-reconnect and preserve partial local evidence.
 - [x] Test fake normal, interruption, duplicate, stale/out-of-order control events, disconnect, and time-limit traces.
 
-**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the eight-minute stop without loading a live provider. SP-018A supplied the initial active-session smoke; its unperformed responsive, reduced-motion, callback, cleanup, and post-fix observations move unchanged to the consolidated SP-021B live gate after review exists.
+**Implementation evidence (2026-09-14):** deterministic adapter, hook, bridge, reducer, and component coverage verifies final/tentative evidence separation, final-only mapping from the installed ElevenLabs typed `onMessage` callback, monotonic caption ordering, provider-sequence finalization, conservative ID-less duplicate suppression, bounded transcript ordering, legal status/mode/reconnect transitions, terminal idempotency, and the then-current eight-minute stop without loading a live provider. SP-028 supersedes that duration with the current five-minute contract and focused deterministic coverage. SP-018A supplied the initial active-session smoke; its unperformed responsive, reduced-motion, callback, cleanup, and post-fix observations move unchanged to the consolidated SP-021B live gate after review exists.
 
 #### [SP-015A — Polish the landing and demo flow after visual review](tickets/SP-015A-polish-landing-and-demo-flow-after-visual-review.md)
 
@@ -4249,7 +4262,7 @@ without an HTTP request, browser load, provider operation, or paid action.
 - [x] Instrument conversation-preparation response, browser TTFA, connect, interruption, and card timings without content logs.
 - [x] Tune prompt size, context bounds, turn eagerness, and TTS settings.
 - [x] Implement bounded latency feedback and one static soft-timeout filler; the initial interval uses the integrated transcript status rail without a separate ornament.
-- [x] Enforce filler frequency rules and 8-minute hard stop.
+- [x] Enforce filler frequency rules and the current five-minute hard stop; SP-028 supersedes the original eight-minute value.
 - [x] Provide bounded content-free aggregation with explicit fake/live source
   metadata and no candidate content.
 - [x] Apply the 2026-09-23 simplification before SP-021B: remove fixed sample
@@ -4269,7 +4282,8 @@ p50/p95 values directly through the loopback-only diagnostics drawer. TTFA begin
 provider-VAD speech-end transition rather than the final-transcript callback and
 is omitted when that boundary is unavailable. Interruption callback ordering,
 the visual 0/800 ms states, substantive-audio/filler separation, static-filler
-review limits, and the absolute original-session eight-minute deadline have
+review limits, and the absolute original-session deadline—reduced from eight
+minutes to five minutes by SP-028—have
 deterministic coverage. The provider
 target keeps the bounded prompt/context, 160-token ceiling, normal eagerness,
 interruptions, provider-default buffering, and Flash v2.5 explicit; the static
@@ -4489,8 +4503,10 @@ implemented and reconciled, one consolidated owner-authorized paid window
 validates both entry modes through corrected voice behavior, summary, evidence-
 linked review, retry behavior, cleanup, provider evidence, and fake-first
 informational timing diagnostics. The corrected source policy is synchronized
-to private Main at immutable revision
-`agtvrsn_9501m39701mmet6av5bz53yk6ggp`; publication is not live acceptance.
+to private Main; its 2026-09-24 behavior baseline is immutable revision
+`agtvrsn_9501m39701mmet6av5bz53yk6ggp`, and its current five-minute provider
+configuration is immutable revision `agtvrsn_2101m3m80ezpee3bvccqy3ymwamk`.
+Configuration publication is not live acceptance.
 Owner-reported user-facing post-fix fake flows and the corrected summary
 boundary now pass. One later synthetic sample-CV standard-live run also passed
 the corrected candidate-question and Team/work-style flows, provider-owned
@@ -4587,7 +4603,7 @@ duplicate local run; SP-026 owns the definitive production observation.
 - [x] Rate-limit conversation preparation even though it is free, and ensure only voice/AI provider operations consume paid-demo capacity.
 - [x] Add the backend body limit, explicit Node header/request-receipt deadlines, separately abortable provider deadlines, paid-demo switch, and safe `Retry-After` errors.
 - [x] Record owner-confirmed OpenAI/ElevenLabs account controls and define intended Cloud Run ceilings without performing deployment work. SP-026 alone applies/verifies minimum/maximum instances, service concurrency, billing alerts, and the production-domain Turnstile widget after those resources exist.
-- [x] Use the Section 13 baseline to reserve $0.80 per standard eight-minute acceptance flow or $1.40 when burst is deliberately enabled; keep `PAID_DEMO_ENABLED=false` unless the user-approved live window and owner-confirmed provider controls cover the planned runs.
+- [x] Use the Section 13 baseline to reserve $0.60 per standard five-minute acceptance flow or $1.00 when burst is deliberately enabled; keep `PAID_DEMO_ENABLED=false` unless the user-approved live window and owner-confirmed provider controls cover the planned runs.
 - [x] Document that Turnstile Free costs $0, is independent of registrar/DNS/proxy choice, and is not a unique-person or durable one-interview guarantee; keep Bot Fight Mode, Cloudflare proxying, paid WAF, and persistent counter storage out of scope.
 - [x] Test successful, missing, invalid, expired, duplicated, wrong-hostname, wrong-action, Siteverify-timeout, route-rate, capacity, and kill-switch paths with fakes; every pre-provider failure asserts zero OpenAI/ElevenLabs calls. Owner evidence confirms successful local real-widget requests for all three actions; production-host verification belongs to SP-026.
 
@@ -5009,7 +5025,7 @@ frontend-runtime invocation, and the deployed fake/unpaid smoke remain gated.
 ### Review
 
 - [ ] Same-session review works without provider artifact retrieval.
-- [ ] Agent, manual, and eight-minute endings clean up immediately, preserve the first terminal reason, and enter the same read-only completed workspace with frozen elapsed time, microphone-disconnected copy, retained transcript/insights, and **View summary**; unexpected interruption remains partial.
+- [ ] Agent, manual, and five-minute endings clean up immediately, preserve the first terminal reason, and enter the same read-only completed workspace with frozen elapsed time, microphone-disconnected copy, retained transcript/insights, and **View summary**; unexpected interruption remains partial.
 - [ ] Each evidence-map node can replace the center overview with an unambiguous Pilot question, cited candidate answer, evidence metadata, and related evidence-citing summary notes, with explicit unavailable states and no invented links; switching/minimizing restores the intended center state.
 - [ ] The review heading exposes keyboard-operable Evidence map and Organized notes tabs once a summary exists, with only the selected complete view occupying page flow.
 - [ ] Review identifies the entry mode and accurately distinguishes CV-supported from candidate-only evidence.

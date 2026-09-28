@@ -163,7 +163,7 @@ describe("VoiceConnectionStage", () => {
       "KNOWN_SCREENING_STATE",
     );
     expect(bridge).toHaveAttribute("data-policy", VOICE_AGENT_POLICY_VERSION);
-    expect(bridge).toHaveAttribute("data-remaining-seconds", "480");
+    expect(bridge).toHaveAttribute("data-remaining-seconds", "300");
     expect(bridge).toHaveAttribute(
       "data-tools",
       "recordInsight,correctInsight,markTopic,recordCandidateQuestion,requestFollowup",
@@ -183,7 +183,7 @@ describe("VoiceConnectionStage", () => {
 
   it("does not request or mount a provider after the original deadline", async () => {
     vi.spyOn(Date, "now").mockReturnValue(
-      Date.parse("2026-09-15T10:08:00.000Z"),
+      Date.parse("2026-09-15T10:05:00.000Z"),
     );
     const requestToken = vi.fn<VoiceTokenRequester>().mockResolvedValue({
       conversationId: "must-not-start",
