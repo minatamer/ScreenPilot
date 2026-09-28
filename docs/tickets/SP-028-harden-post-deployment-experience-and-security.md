@@ -357,6 +357,22 @@ relevant to the viewport, so resize and boundary crossings can jump state.
 - [x] Keyboard and no-JavaScript reading order is complete; privacy and CTA
   controls remain reachable with visible focus.
 
+### Post-approval portfolio metadata follow-up — 2026-09-28
+
+- The public frontend previously supplied a browser icon, title, and
+  description but no canonical URL, Open Graph metadata, or social preview
+  image. Messaging clients such as WhatsApp therefore had no product image to
+  display for a shared link.
+- The root Next.js metadata boundary now owns the canonical
+  `https://tryscreenpilot.com` URL, concise product title/description, Open
+  Graph website fields, and large-card social metadata.
+- File-based Open Graph and social-card images reuse the approved static
+  ScreenPilot portfolio thumbnail with explicit alternative text. The assets
+  contain synthetic UI only and never use candidate/session/provider data.
+- Deployment verification must fetch the deployed HTML and preview-image URLs
+  anonymously, confirm absolute custom-domain metadata, and account for client
+  preview caching when re-testing an already-shared URL.
+
 ### UI implementation order and quality guardrails
 
 1. Remove the sample capability from every runtime surface and retain only the

@@ -2409,6 +2409,15 @@ https://<PUBLIC_WEB_DOMAIN>/**
 
 Live ElevenLabs WebRTC traffic remains direct and is not proxied through either Cloud Run service.
 
+The canonical public metadata points to `https://tryscreenpilot.com` and uses
+the approved ScreenPilot product thumbnail as its Open Graph and large-card
+social preview. The existing code-native ScreenPilot mark remains the browser
+icon. Both assets are static, synthetic product artwork: they contain no CV,
+transcript, candidate identity, generated review, or runtime/provider data.
+Next.js owns the canonical, title, description, Open Graph, and social-card
+tags through its root metadata boundary so messaging and social crawlers do not
+depend on client-side rendering.
+
 #### Manual connection steps
 
 1. Complete SP-026 and its controlled deployed checks on the frontend `run.app` URL first.
