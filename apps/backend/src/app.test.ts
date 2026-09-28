@@ -10,6 +10,7 @@ import {
 } from "@screenpilot/contracts/api/interview-preparation";
 import { summarizeInterviewResponseSchema } from "@screenpilot/contracts/api/interview-summary";
 import { voiceTokenResponseSchema } from "@screenpilot/contracts/api/voice-token";
+import { SCREENPILOT_CLIENT_SOURCE_HEADER } from "@screenpilot/contracts/security/request-source";
 import request from "supertest";
 import { describe, expect, it, vi } from "vitest";
 
@@ -83,7 +84,10 @@ function testConfig(
   });
 }
 
-function productionConfig(paidDemoEnabled = true): BackendConfig {
+function productionConfig(
+  paidDemoEnabled = true,
+  overrides: Readonly<Record<string, string>> = {},
+): BackendConfig {
   return loadBackendConfig({
     ALLOWED_ORIGINS: "https://demo.screenpilot.invalid",
     ANONYMOUS_COOKIE_SECRET: "production-cookie-secret-000000000000",
@@ -98,6 +102,7 @@ function productionConfig(paidDemoEnabled = true): BackendConfig {
     TURNSTILE_ALLOWED_HOSTNAMES: "demo.screenpilot.invalid",
     TURNSTILE_SECRET_KEY: "not-a-real-turnstile-secret",
     TURNSTILE_SITE_KEY: "not-a-real-turnstile-site-key",
+    ...overrides,
   });
 }
 
@@ -232,7 +237,7 @@ describe("ScreenPilot backend application", () => {
     expectNoProviderCalls(providers.operations);
   });
 
-  it("trusts one production proxy hop and marks the anonymous cookie secure", async () => {
+  it("disables Express proxy trust and marks the production cookie secure", async () => {
     const config = productionConfig();
     const providers = createProviderSpies();
     const app = createApp({
@@ -243,12 +248,41 @@ describe("ScreenPilot backend application", () => {
       providerAdapters: providers.adapters,
     });
 
-    expect(app.get("trust proxy")).toBe(1);
+    expect(app.get("trust proxy")).toBe(false);
     const bootstrap = await request(app)
       .get("/v1/demo/bootstrap")
       .set("Origin", "https://demo.screenpilot.invalid")
       .expect(200);
     expect(bootstrap.headers["set-cookie"]?.[0]).toMatch(/Secure/i);
+    expectNoProviderCalls(providers.operations);
+  });
+
+  it("uses only the canonical production source signal for independent rate buckets", async () => {
+    const { app, providers } = createTestApplication(
+      productionConfig(false, {
+        RATE_LIMIT_BOOTSTRAP_REQUESTS: "1",
+        RATE_LIMIT_GLOBAL_BOOTSTRAP_REQUESTS: "10",
+      }),
+    );
+    const firstSource = request(app)
+      .get("/v1/demo/bootstrap")
+      .set("Origin", "https://demo.screenpilot.invalid")
+      .set(SCREENPILOT_CLIENT_SOURCE_HEADER, "198.51.100.10")
+      .set("X-Forwarded-For", "192.0.2.1");
+    const repeatedSource = request(app)
+      .get("/v1/demo/bootstrap")
+      .set("Origin", "https://demo.screenpilot.invalid")
+      .set(SCREENPILOT_CLIENT_SOURCE_HEADER, "198.51.100.10")
+      .set("X-Forwarded-For", "192.0.2.200");
+    const secondSource = request(app)
+      .get("/v1/demo/bootstrap")
+      .set("Origin", "https://demo.screenpilot.invalid")
+      .set(SCREENPILOT_CLIENT_SOURCE_HEADER, "198.51.100.11")
+      .set("X-Forwarded-For", "192.0.2.1");
+
+    await firstSource.expect(200);
+    await repeatedSource.expect(429);
+    await secondSource.expect(200);
     expectNoProviderCalls(providers.operations);
   });
 
@@ -515,6 +549,43 @@ describe("ScreenPilot backend application", () => {
     expectNoProviderCalls(providers.operations);
   });
 
+  it("enforces a route-global budget independently of the identity allowance", async () => {
+    const { app, providers } = createTestApplication(
+      testConfig({
+        RATE_LIMIT_GLOBAL_PREPARE_REQUESTS: "2",
+        RATE_LIMIT_PREPARE_REQUESTS: "2",
+      }),
+    );
+    const agent = request.agent(app);
+
+    await agent.get("/v1/demo/bootstrap").expect(200);
+    for (let index = 0; index < 2; index += 1) {
+      await agent
+        .post("/v1/interview/prepare")
+        .set("Origin", ALLOWED_ORIGIN)
+        .send({
+          ...VALID_PREPARE_REQUEST,
+          clientRequestId: `00000000-0000-4000-8000-00000000001${String(index)}`,
+        })
+        .expect(200);
+    }
+    const rejected = await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        ...VALID_PREPARE_REQUEST,
+        clientRequestId: "00000000-0000-4000-8000-000000000019",
+      })
+      .expect(429);
+
+    expect(apiErrorSchema.parse(rejected.body).error).toMatchObject({
+      code: "RATE_LIMITED",
+      retryAfterSeconds: 60,
+    });
+    expect(rejected.headers["retry-after"]).toBe("60");
+    expectNoProviderCalls(providers.operations);
+  });
+
   it("rejects excess in-flight work before another challenge or provider call", async () => {
     const config = testConfig({
       CAPACITY_GLOBAL_CONCURRENT_REQUESTS: "1",
@@ -568,6 +639,19 @@ describe("ScreenPilot backend application", () => {
     await vi.waitFor(() => {
       expect(providers.createVoiceToken).toHaveBeenCalledOnce();
     });
+
+    const invalidWhileProviderBusy = await agent
+      .post("/v1/voice/token")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({
+        interviewGrant,
+        turnstileToken: "invalid-shape-challenge",
+        unexpected: "must fail validation before provider capacity",
+      })
+      .expect(400);
+    expect(apiErrorSchema.parse(invalidWhileProviderBusy.body).error.code).toBe(
+      "INVALID_REQUEST",
+    );
 
     const rejected = await agent
       .post("/v1/voice/token")
@@ -673,12 +757,41 @@ describe("ScreenPilot backend application", () => {
     );
 
     const oversized = await agent
-      .post("/v1/interview/prepare")
+      .post("/v1/cv/analyze")
       .set("Origin", ALLOWED_ORIGIN)
       .send({ ...VALID_PREPARE_REQUEST, padding: "x".repeat(2_000) })
       .expect(413);
     expect(apiErrorSchema.parse(oversized.body).error.code).toBe(
       "PAYLOAD_TOO_LARGE",
+    );
+
+    const recovered = await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(VALID_PREPARE_REQUEST)
+      .expect(200);
+    expect(
+      prepareInterviewResponseSchema.safeParse(recovered.body).success,
+    ).toBe(true);
+
+    const wrongContentType = await agent
+      .post("/v1/cv/analyze")
+      .set("Content-Type", "text/plain")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send("candidate content must not be parsed")
+      .expect(415);
+    expect(apiErrorSchema.parse(wrongContentType.body).error.code).toBe(
+      "UNSUPPORTED_MEDIA_TYPE",
+    );
+
+    const unsupportedMethod = await agent
+      .put("/v1/interview/prepare")
+      .set("Content-Type", "application/json")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send({ padding: "x".repeat(2_000) })
+      .expect(404);
+    expect(apiErrorSchema.parse(unsupportedMethod.body).error.code).toBe(
+      "NOT_FOUND",
     );
 
     const missing = await request(bounded.app).get("/missing").expect(404);
@@ -687,7 +800,11 @@ describe("ScreenPilot backend application", () => {
   });
 
   it("logs content-safe request metadata without bodies, cookies, grants, or raw IPs", async () => {
-    const config = testConfig({ APP_ENV: "local" });
+    const config = testConfig({
+      APP_ENV: "local",
+      RATE_LIMIT_GLOBAL_PREPARE_REQUESTS: "1",
+      RATE_LIMIT_PREPARE_REQUESTS: "1",
+    });
     const destination = new PassThrough();
     destination.setEncoding("utf8");
     const logChunks: string[] = [];
@@ -713,12 +830,19 @@ describe("ScreenPilot backend application", () => {
         candidatePrivateValue: "PRIVATE CANDIDATE VALUE",
       })
       .expect(400);
+    await agent
+      .post("/v1/interview/prepare")
+      .set("Origin", ALLOWED_ORIGIN)
+      .send(VALID_PREPARE_REQUEST)
+      .expect(429);
     await new Promise<void>((resolve) => setImmediate(resolve));
 
     const logs = logChunks.join("");
     expect(logs).toContain("request_completed");
     expect(logs).toContain("interview_prepare");
     expect(logs).toContain("INVALID_REQUEST");
+    expect(logs).toContain("rate_limit_rejected");
+    expect(logs).toContain("global_budget_exhausted");
     expect(logs).not.toContain("PRIVATE CANDIDATE VALUE");
     expect(logs).not.toContain(cookie);
     expect(logs).not.toContain("127.0.0.1");

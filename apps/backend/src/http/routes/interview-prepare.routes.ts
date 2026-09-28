@@ -16,7 +16,9 @@ import {
 export function createInterviewPrepareRoutes(input: {
   allowedOrigins: readonly string[];
   prepareConversationFirst: PrepareConversationFirst;
+  requestBody: RequestHandler;
   requestAdmission: RequestHandler;
+  requireJsonRequest: RequestHandler;
 }): Router {
   const router = Router();
 
@@ -25,7 +27,9 @@ export function createInterviewPrepareRoutes(input: {
     markRoute("interview_prepare"),
     requireAllowedOrigin(input.allowedOrigins),
     requireAnonymousSession(),
+    input.requireJsonRequest,
     input.requestAdmission,
+    input.requestBody,
     validateJsonBody(
       prepareInterviewRequestSchema,
       (_request, response, validatedBody) => {

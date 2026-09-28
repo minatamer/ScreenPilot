@@ -1,21 +1,19 @@
-import { isIP } from "node:net";
-
 import type { Request, RequestHandler } from "express";
 
 import {
   ANONYMOUS_SESSION_COOKIE_NAME,
   parseAnonymousSessionId,
 } from "../../security/anonymous-session-cookie.js";
-import type { SpendCapacityGate } from "../../security/spend-cap.js";
 import type {
   RateLimitedRoute,
   StatelessRateLimiter,
 } from "../../security/stateless-rate-limit.js";
+import type { RequestSourceResolver } from "../../security/request-source.js";
 import { UseCaseError } from "../../use-cases/use-case-error.js";
 import { getAnonymousSessionId } from "./validate-request.js";
 
 type RequestAdmissionPolicy = Readonly<{
-  capacityRoute?: "cv_analyze" | "interview_summary" | "voice_token";
+  globalRateLimit: number;
   label: string;
   rateLimit: number;
   route: RateLimitedRoute;
@@ -31,17 +29,10 @@ function optionalAnonymousSessionId(request: Request): string | undefined {
   return parseAnonymousSessionId(cookieValue) ?? undefined;
 }
 
-function validatedRequestSource(request: Request): string {
-  const source = request.ip;
-  return typeof source === "string" && isIP(source) !== 0
-    ? source.toLowerCase()
-    : "unresolved";
-}
-
 export function createRequestAdmissionMiddleware(input: {
-  capacityGate: SpendCapacityGate;
   policy: RequestAdmissionPolicy;
   rateLimiter: StatelessRateLimiter;
+  requestSource: RequestSourceResolver;
 }): RequestHandler {
   return (request, response, next) => {
     const anonymousSessionId =
@@ -50,9 +41,10 @@ export function createRequestAdmissionMiddleware(input: {
         : optionalAnonymousSessionId(request);
     const rateLimitDecision = input.rateLimiter.consume({
       ...(anonymousSessionId === undefined ? {} : { anonymousSessionId }),
+      globalLimit: input.policy.globalRateLimit,
       limit: input.policy.rateLimit,
       route: input.policy.route,
-      source: validatedRequestSource(request),
+      source: input.requestSource(request),
     });
     if (!rateLimitDecision.allowed) {
       next(
@@ -67,35 +59,6 @@ export function createRequestAdmissionMiddleware(input: {
       );
       return;
     }
-
-    if (input.policy.capacityRoute === undefined) {
-      next();
-      return;
-    }
-    const lease = input.capacityGate.acquire(input.policy.capacityRoute);
-    if (lease === null) {
-      next(
-        new UseCaseError(
-          "CAPACITY_REACHED",
-          `${input.policy.label} is temporarily at capacity. Try again later.`,
-          { retryable: true },
-        ),
-      );
-      return;
-    }
-
-    let released = false;
-    const release = () => {
-      if (released) {
-        return;
-      }
-      released = true;
-      response.off("finish", release);
-      response.off("close", release);
-      lease.release();
-    };
-    response.once("finish", release);
-    response.once("close", release);
     next();
   };
 }

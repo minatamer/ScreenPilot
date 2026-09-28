@@ -108,6 +108,11 @@
       "types": "./src/interview/voice-performance-policy.ts",
       "development": "./src/interview/voice-performance-policy.ts",
       "default": "./dist/interview/voice-performance-policy.js"
+    },
+    "./security/request-source": {
+      "types": "./src/security/request-source.ts",
+      "development": "./src/security/request-source.ts",
+      "default": "./dist/security/request-source.js"
     }
   },
   "files": [

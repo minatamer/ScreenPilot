@@ -223,13 +223,13 @@ owner-approved SP-018A scope decision on 2026-09-21:
   failure/interruption paths, responsive/device coverage, cleanup/privacy,
   provider usage/cost/retention review, and safety restoration remain open.
 - SP-028 was opened from the owner's 2026-09-28 post-deployment visual evidence
-  and a code-backed STRIDE review. Phase 1—sample-path removal and landing
+  and a code-backed security review. Phase 1—sample-path removal and landing
   responsive-motion work—is complete, agent-verified, and owner-approved.
-  The next phase contains three material security remediations (trusted source
-  headers, churn-resistant bounded rate limiting, and pre-body slow-request
-  admission), followed by focused manual testing with a never-before-used
-  synthetic CV. Security implementation, manual testing, paid calls, and
-  deployment remain unapproved.
+  Phase 2 application code now implements the authenticated service boundary,
+  strict request forwarding/source contract, bounded admission, and bounded
+  request receipt/parsing with deterministic local verification. Cloud Run/IAM
+  mutation, deployment proof, manual testing with a never-before-used synthetic
+  CV, paid calls, and deployment remain separately gated.
 
 Execute in order unless the dependency column proves a later packet can safely proceed.
 

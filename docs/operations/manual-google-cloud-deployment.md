@@ -1,8 +1,16 @@
 # Manual ScreenPilot deployment to Google Cloud Run
 
-Status: Required SP-026 operator runbook  
-Last reviewed: 2026-09-25  
+Status: Required SP-026 operator runbook; SP-028 security application code complete, IAM execution gated<br>
+Last reviewed: 2026-09-28<br>
 Scope: Owner-run deployment from the audited local checkout
+
+> **Approval gate:** SP-028's SEC-001, SEC-002, and SEC-003 application code is
+> implemented locally. No Cloud Run/IAM mutation, deployment, or live smoke is
+> authorized. Do not run the SP-028 IAM/deployment commands until deterministic
+> checks pass on an exact candidate commit and the owner separately approves the
+> live change. The canonical PowerShell,
+> verification, rollback, and Console sequence is in the
+> [SP-028 Google Cloud execution runbook](../tickets/SP-028-harden-post-deployment-experience-and-security.md#google-cloud-execution-runbook--separate-owner-approval-required).
 
 ## Architecture
 
@@ -13,7 +21,8 @@ browser
   -> screenpilot-frontend.run.app
        -> Next.js pages/assets
        -> relative /v1/** server proxy
-            -> screenpilot-backend.run.app
+            -> audience-bound frontend runtime identity
+                 -> IAM-authenticated screenpilot-backend.run.app
                  -> OpenAI / ElevenLabs / Turnstile
 
 local Docker build
@@ -297,9 +306,9 @@ their actual sensitivity and runtime owner:
 | --- | --- |
 | Backend Secret Manager bindings | `OPENAI_API_KEY`, `ELEVENLABS_API_KEY`, `TURNSTILE_SECRET_KEY`, `INTERVIEW_GRANT_SIGNING_SECRET`, and `ANONYMOUS_COOKIE_SECRET` |
 | Backend ordinary Cloud Run variables | `APP_ENV=production`, `PROVIDER_MODE=live`, `PAID_DEMO_ENABLED=false`, `LIVE_INTERVIEW_ENABLED=true`, `ALLOWED_ORIGINS=<frontend HTTPS origin>`, `ELEVENLABS_AGENT_ID=<owner-selected agent>`, `ELEVENLABS_VOICE_ID=<owner-selected voice>`, `TURNSTILE_SITE_KEY=<public widget key>`, and `TURNSTILE_ALLOWED_HOSTNAMES=<bare frontend hostname>` |
-| Backend explicit guardrail variables | `HTTP_HEADERS_TIMEOUT_MS=10000`, `HTTP_REQUEST_TIMEOUT_MS=30000`, `HTTP_JSON_BODY_MAX_BYTES=65536`, `PROVIDER_REQUEST_TIMEOUT_MS=30000`, `INTERVIEW_GRANT_TTL_SECONDS=900`, `ANONYMOUS_COOKIE_TTL_SECONDS=7200`, `CAPACITY_GLOBAL_CONCURRENT_REQUESTS=4`, `CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS=2`, `CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS=1`, `CAPACITY_SUMMARY_CONCURRENT_REQUESTS=2`, `RATE_LIMIT_WINDOW_SECONDS=60`, `RATE_LIMIT_MAX_ENTRIES=10000`, `RATE_LIMIT_BOOTSTRAP_REQUESTS=120`, `RATE_LIMIT_PREPARE_REQUESTS=30`, `RATE_LIMIT_CV_ANALYZE_REQUESTS=10`, `RATE_LIMIT_VOICE_TOKEN_REQUESTS=3`, and `RATE_LIMIT_SUMMARY_REQUESTS=10` |
+| Backend explicit guardrail variables | `HTTP_HEADERS_TIMEOUT_MS=10000`, `HTTP_REQUEST_TIMEOUT_MS=30000`, `HTTP_JSON_BODY_MAX_BYTES=65536`, `HTTP_BODY_RECEIPT_CONCURRENT_REQUESTS=2`, `PROVIDER_REQUEST_TIMEOUT_MS=30000`, `INTERVIEW_GRANT_TTL_SECONDS=900`, `ANONYMOUS_COOKIE_TTL_SECONDS=7200`, `CAPACITY_GLOBAL_CONCURRENT_REQUESTS=4`, `CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS=2`, `CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS=1`, `CAPACITY_SUMMARY_CONCURRENT_REQUESTS=2`, `RATE_LIMIT_WINDOW_SECONDS=60`, `RATE_LIMIT_MAX_ENTRIES=10000`, `RATE_LIMIT_BOOTSTRAP_REQUESTS=120`, `RATE_LIMIT_PREPARE_REQUESTS=30`, `RATE_LIMIT_CV_ANALYZE_REQUESTS=10`, `RATE_LIMIT_VOICE_TOKEN_REQUESTS=3`, `RATE_LIMIT_SUMMARY_REQUESTS=10`, `RATE_LIMIT_GLOBAL_BOOTSTRAP_REQUESTS=600`, `RATE_LIMIT_GLOBAL_PREPARE_REQUESTS=150`, `RATE_LIMIT_GLOBAL_CV_ANALYZE_REQUESTS=50`, `RATE_LIMIT_GLOBAL_VOICE_TOKEN_REQUESTS=15`, and `RATE_LIMIT_GLOBAL_SUMMARY_REQUESTS=50` |
 | Cloud Run platform | `PORT`; Cloud Run injects this value, so the operator does not set it |
-| Frontend ordinary Cloud Run variable | `BACKEND_ORIGIN=<backend HTTPS origin>`, added only after the backend service exists |
+| Frontend ordinary Cloud Run variables | `BACKEND_ORIGIN=<backend run.app HTTPS origin>`, `BACKEND_AUTH_MODE=google-cloud-oidc`, and `BACKEND_AUTH_AUDIENCE=<same backend run.app HTTPS origin>`, added only after the backend service exists. Local code uses explicit unauthenticated loopback mode. |
 
 The parser currently supplies the documented timeout, TTL, capacity, and rate
 limit defaults when those variables are omitted. SP-026 still records them
@@ -342,7 +351,14 @@ version only through the console if the secret value was not already final.
 Keep pre-clearance off and use the three application actions already defined by
 SP-022. Do not enable Cloudflare proxying, DNS, WAF, or Bot Fight Mode.
 
-## 7. Build and deploy the backend
+## 7. Build the backend image and prepare the safe IAM transition
+
+The SP-028 hardening order is universal: save rollback state, grant the
+frontend runtime identity service-level backend Invoker, deploy and verify the
+auth-capable frontend while the backend remains public, deploy the private
+backend, remove `allUsers`, then verify. Creating a first paid-disabled public
+backend service solely to obtain its stable URL is bootstrap—not the hardening
+cutover—and must not enable the Invoker IAM check early.
 
 Build and push the exact-SHA backend image:
 
@@ -353,7 +369,12 @@ docker build --file apps/backend/Dockerfile --tag $screenPilotBackendImage .
 docker push $screenPilotBackendImage
 ```
 
-Deploy `screenpilot-backend` with:
+If `screenpilot-backend` does not exist yet, create its paid-disabled
+transitional public revision through Cloud Run's **Variables & secrets** form so
+the stable backend `run.app` URL exists. If the service already exists, leave
+its currently serving public revision unchanged at this stage and confirm its
+paid switch remains disabled. Do not require the new backend image to serve
+until Section 8. A newly created public bootstrap revision uses:
 
 - the exact image above and full Git-SHA revision label;
 - `screenpilot-backend-runtime` as its runtime identity;
@@ -376,28 +397,78 @@ After deployment, record the stable backend URL privately:
 $screenPilotBackendOrigin = (gcloud run services describe screenpilot-backend --format="value(status.url)").Trim()
 ```
 
-Run only direct unpaid health checks at this point.
-
-## 8. Configure and deploy the final frontend revision
-
-Configure the already-pushed exact-SHA frontend image with the backend Cloud Run
-origin as its server-only runtime proxy destination. `BACKEND_ORIGIN` is not a
-secret, must not be a Docker build argument, and must not be exposed as a
-`NEXT_PUBLIC_*` variable.
+Before changing IAM or traffic on an existing deployment, save both current
+100-percent revision names and export the backend IAM policy with its `etag` to
+the ignored rollback path. Use the exact snapshot commands in the
+[SP-028 execution runbook](../tickets/SP-028-harden-post-deployment-experience-and-security.md#1-set-explicit-non-secret-variables-and-inspect-current-state).
+Then grant the frontend runtime identity service-level backend invocation while
+the backend is still public:
 
 ```powershell
-gcloud run deploy screenpilot-frontend --image $screenPilotFrontendImage --service-account "screenpilot-frontend-runtime@$screenPilotProject.iam.gserviceaccount.com" --set-env-vars "BACKEND_ORIGIN=$screenPilotBackendOrigin" --min 0 --max 1 --concurrency 80 --allow-unauthenticated
+gcloud run services add-iam-policy-binding screenpilot-backend `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --member "serviceAccount:$screenPilotFrontendIdentity" `
+  --role "roles/run.invoker"
 ```
 
-SP-026 must make the Dockerfile/runtime contract explicit and test that the
-final Next.js server forwards `/v1/**` to this origin while browser JavaScript
-still uses only relative URLs.
+Do not enable the Invoker IAM check or remove `allUsers` yet. The OIDC-capable
+frontend revision must become ready before the backend is made private.
+
+## 8. Deploy the auth-capable frontend, then harden the backend
+
+Configure the already-pushed exact-SHA frontend image with the backend Cloud Run
+origin as its server-only runtime proxy destination. Configure explicit
+`google-cloud-oidc` mode and the same stable backend
+`run.app` URL as the audience. These values are not secrets, must not be Docker
+build arguments, and must not be exposed as `NEXT_PUBLIC_*` variables.
+
+```powershell
+gcloud run deploy screenpilot-frontend --image $screenPilotFrontendImage --service-account "screenpilot-frontend-runtime@$screenPilotProject.iam.gserviceaccount.com" --update-env-vars "BACKEND_ORIGIN=$screenPilotBackendOrigin,BACKEND_AUTH_MODE=google-cloud-oidc,BACKEND_AUTH_AUDIENCE=$screenPilotBackendOrigin" --min 0 --max 1 --concurrency 80 --allow-unauthenticated
+```
+
+Wait for the frontend revision to become ready and confirm its same-origin
+bootstrap reaches the still-public backend. Only then deploy the exact-SHA
+backend revision with IAM invocation required. Preserve its existing ordinary
+variables and Secret Manager mappings; never replace them with values from a
+local environment file or command line.
+
+```powershell
+gcloud run deploy screenpilot-backend `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --image $screenPilotBackendImage `
+  --service-account $screenPilotBackendIdentity `
+  --update-labels "git-sha=$screenPilotSha" `
+  --min 0 `
+  --max 1 `
+  --concurrency 4 `
+  --invoker-iam-check `
+  --no-allow-unauthenticated
+
+gcloud run services remove-iam-policy-binding screenpilot-backend `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --member "allUsers" `
+  --role "roles/run.invoker" `
+  --all
+```
+
+If no `allUsers` binding exists, the removal may report that nothing matched.
+The required end state is still an enabled Invoker IAM check, the frontend
+runtime identity holding service-level `roles/run.invoker`, and no public
+principal. Browser JavaScript continues to use only relative `/v1/**` URLs.
+Unauthenticated direct backend health must now return `401`/`403`; the owner
+uses a logged-in identity token for direct `200` health checks, Cloud Run probes
+remain supported, and ordinary visitor checks go through the frontend proxy.
 
 ## 9. Unpaid deployment verification
 
-Before enabling paid operations:
+Before enabling paid operations after SP-028:
 
-1. Verify backend `/health/live` and `/health/ready` directly.
+1. Verify unauthenticated backend `/health/live` returns `401`/`403`; obtain the
+   logged-in owner's identity token and verify authenticated `/health/live` and
+   `/health/ready` return `200` without printing the token.
 2. Verify the same API health/bootstrap behavior through
    `$screenPilotFrontendOrigin/v1/...`.
 3. Refresh every frontend route and confirm there is no Cloud Run 404.
@@ -412,6 +483,10 @@ Before enabling paid operations:
    either service hostname.
 8. Inspect both image histories and Cloud Run revision configuration for secrets
    or ignored local files.
+9. Run SP-028's documented fake/unpaid security boundary suite. Confirm the
+   request-header/source contract, bounded admission, request receipt/parsing,
+   validation ordering, cancellation and lease cleanup, zero provider calls
+   before valid admission, and unchanged legitimate CV/interview/UI behavior.
 
 Only after every unpaid check passes may the owner temporarily enable the paid
 demo for the exact two production flows.
@@ -420,12 +495,17 @@ demo for the exact two production flows.
 
 For later approved releases, the stable service URLs remain unchanged:
 
-1. verify the new audited clean Git SHA;
+1. verify the new audited clean Git SHA, record the current frontend/backend
+   revisions, and save the current backend IAM policy for rollback;
 2. build and push new backend and frontend images tagged with that SHA;
-3. deploy backend, verify readiness, then deploy frontend;
-4. run unpaid smoke checks;
-5. manually run paid acceptance only when a ticket explicitly requires it; and
-6. retain the previous known-good revisions/images for rollback.
+3. verify the frontend runtime identity still has service-level backend
+   `roles/run.invoker`;
+4. deploy the auth-capable frontend first and verify it against the still-
+   serving backend;
+5. deploy the backend, preserve the Invoker IAM check, confirm `allUsers` is
+   absent, and then run the unpaid smoke checks;
+6. manually run paid acceptance only when a ticket explicitly requires it; and
+7. retain the previous known-good revisions/images and IAM policy for rollback.
 
 Do not overwrite a Git-SHA tag with different bytes. Use a new audited SHA.
 
@@ -436,6 +516,14 @@ revision through Cloud Run's **Revisions** tab or the current documented
 `gcloud run services update-traffic` command. Roll back backend and frontend as
 a recorded pair when their boundary changed together. Re-run unpaid health and
 routing checks after rollback.
+
+For the SP-028 trust-boundary change, save the pre-change backend IAM policy
+with its `etag` in `docs/operations/private/` before changing it. On failure,
+restore that policy with `gcloud run services set-iam-policy` before routing
+traffic to the previous backend/frontend revision pair. This order prevents the
+previous unauthenticated frontend revision from being stranded behind the new
+private backend. Use the exact commands in the gated SP-028 runbook; do not
+manually reconstruct a partial IAM policy.
 
 Never delete the image needed by the active or designated rollback revision.
 

@@ -71,9 +71,17 @@ billing and ElevenLabs billing as separate accounts and separate budgets.
    `ANONYMOUS_COOKIE_SECRET`. They must each be at least 32 characters and must
    not be equal. They are not obtained from a provider.
 
-5. Keep `apps/frontend/.env.local` limited to:
+5. Keep `apps/frontend/.env.local` limited to the three non-secret local
+   connection values from `apps/frontend/.env.example`:
 
-   `BACKEND_ORIGIN=http://127.0.0.1:3001`
+   ```dotenv
+   BACKEND_AUTH_MODE=local
+   BACKEND_ORIGIN=http://127.0.0.1:3001
+   BACKEND_AUTH_AUDIENCE=
+   ```
+
+   The blank audience is deliberate. Local mode accepts only the canonical
+   loopback backend on port `3001` and never contacts Google metadata.
 
    Provider keys stay in `apps/backend/.env.local`. The browser receives only
    bounded bootstrap data, a Turnstile site key, and short-lived provider

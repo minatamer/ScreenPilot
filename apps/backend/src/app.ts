@@ -11,6 +11,11 @@ import {
 import { createApiRouter } from "./http/api-router.js";
 import { notFoundHandler, terminalErrorHandler } from "./http/map-api-error.js";
 import { createAllowedOriginMiddleware } from "./http/middleware/allowed-origin.js";
+import {
+  createBoundedJsonBodyParser,
+  requireBoundedJsonRequest,
+} from "./http/middleware/bounded-json-body.js";
+import { createProviderCapacityGuard } from "./http/middleware/provider-capacity.js";
 import { createRequestAdmissionMiddleware } from "./http/middleware/request-admission.js";
 import { createRequestIdMiddleware } from "./http/middleware/request-id.js";
 import {
@@ -21,6 +26,8 @@ import { createSecurityHeadersMiddleware } from "./http/middleware/security-head
 import type { ProviderAdapters } from "./providers/provider-adapters.js";
 import { createAnonymousSessionCookieOptions } from "./security/anonymous-session-cookie.js";
 import { createInterviewGrantService } from "./security/interview-grant.js";
+import { createRequestBodyCapacityGate } from "./security/request-body-capacity.js";
+import { createRequestSourceResolver } from "./security/request-source.js";
 import { createSpendCapacityGate } from "./security/spend-cap.js";
 import { createStatelessRateLimiter } from "./security/stateless-rate-limit.js";
 import { createGetDemoBootstrap } from "./use-cases/get-demo-bootstrap.js";
@@ -138,9 +145,37 @@ export function createApp(options: CreateAppOptions): Express {
     summarizer: options.providerAdapters.interviewSummarizer,
     verifier: options.providerAdapters.challengeVerifier,
   });
+  const rateLimitRejectionCounters = new Map<
+    string,
+    { count: number; nextReportAt: number }
+  >();
   const rateLimiter = createStatelessRateLimiter({
     clockMilliseconds,
     maxEntries: parsedConfig.limits.rateLimit.maxEntries,
+    onRejection: (event) => {
+      const counterKey = `${event.route}:${event.reason}`;
+      const counter = rateLimitRejectionCounters.get(counterKey) ?? {
+        count: 0,
+        nextReportAt: 1,
+      };
+      counter.count += 1;
+      rateLimitRejectionCounters.set(counterKey, counter);
+      if (counter.count < counter.nextReportAt) {
+        return;
+      }
+      logger.warn(
+        {
+          event: "rate_limit_rejected",
+          rejectionCount: counter.count,
+          ...event,
+        },
+        "rate_limit_rejected",
+      );
+      counter.nextReportAt = Math.min(
+        Number.MAX_SAFE_INTEGER,
+        counter.nextReportAt * 2,
+      );
+    },
     windowSeconds: parsedConfig.limits.rateLimit.windowSeconds,
   });
   const capacityGate = createSpendCapacityGate({
@@ -151,68 +186,115 @@ export function createApp(options: CreateAppOptions): Express {
       voice_token: parsedConfig.limits.capacity.voiceTokenConcurrentRequests,
     },
   });
+  const requestSource = createRequestSourceResolver(
+    parsedConfig.appEnvironment,
+  );
   const requestAdmission = {
     bootstrap: createRequestAdmissionMiddleware({
-      capacityGate,
       policy: {
+        globalRateLimit: parsedConfig.limits.rateLimit.globalBootstrapRequests,
         label: "Demo startup",
         rateLimit: parsedConfig.limits.rateLimit.bootstrapRequests,
         route: "demo_bootstrap",
         session: "optional",
       },
       rateLimiter,
+      requestSource,
     }),
     cvAnalyze: createRequestAdmissionMiddleware({
-      capacityGate,
       policy: {
-        capacityRoute: "cv_analyze",
+        globalRateLimit: parsedConfig.limits.rateLimit.globalCvAnalyzeRequests,
         label: "CV analysis",
         rateLimit: parsedConfig.limits.rateLimit.cvAnalyzeRequests,
         route: "cv_analyze",
         session: "required",
       },
       rateLimiter,
+      requestSource,
     }),
     interviewPrepare: createRequestAdmissionMiddleware({
-      capacityGate,
       policy: {
+        globalRateLimit: parsedConfig.limits.rateLimit.globalPrepareRequests,
         label: "Interview preparation",
         rateLimit: parsedConfig.limits.rateLimit.prepareRequests,
         route: "interview_prepare",
         session: "required",
       },
       rateLimiter,
+      requestSource,
     }),
     interviewSummary: createRequestAdmissionMiddleware({
-      capacityGate,
       policy: {
-        capacityRoute: "interview_summary",
+        globalRateLimit: parsedConfig.limits.rateLimit.globalSummaryRequests,
         label: "Interview summary",
         rateLimit: parsedConfig.limits.rateLimit.summaryRequests,
         route: "interview_summary",
         session: "required",
       },
       rateLimiter,
+      requestSource,
     }),
     voiceToken: createRequestAdmissionMiddleware({
-      capacityGate,
       policy: {
-        capacityRoute: "voice_token",
+        globalRateLimit: parsedConfig.limits.rateLimit.globalVoiceTokenRequests,
         label: "Voice interview start",
         rateLimit: parsedConfig.limits.rateLimit.voiceTokenRequests,
         route: "voice_token",
         session: "required",
       },
       rateLimiter,
+      requestSource,
+    }),
+  } as const;
+  const bodyCapacityGate = createRequestBodyCapacityGate({
+    maximum: parsedConfig.limits.bodyReceiptConcurrentRequests,
+  });
+  const requireJsonRequest = requireBoundedJsonRequest({
+    maximumBytes: parsedConfig.limits.httpJsonBodyBytes,
+  });
+  const requestBody = {
+    cvAnalyze: createBoundedJsonBodyParser({
+      capacityGate: bodyCapacityGate,
+      label: "CV analysis request receipt",
+      maximumBytes: parsedConfig.limits.httpJsonBodyBytes,
+    }),
+    interviewPrepare: createBoundedJsonBodyParser({
+      capacityGate: bodyCapacityGate,
+      label: "Interview preparation request receipt",
+      maximumBytes: parsedConfig.limits.httpJsonBodyBytes,
+    }),
+    interviewSummary: createBoundedJsonBodyParser({
+      capacityGate: bodyCapacityGate,
+      label: "Interview summary request receipt",
+      maximumBytes: parsedConfig.limits.httpJsonBodyBytes,
+    }),
+    voiceToken: createBoundedJsonBodyParser({
+      capacityGate: bodyCapacityGate,
+      label: "Voice-token request receipt",
+      maximumBytes: parsedConfig.limits.httpJsonBodyBytes,
+    }),
+  } as const;
+  const providerCapacity = {
+    cvAnalyze: createProviderCapacityGuard({
+      capacityGate,
+      label: "CV analysis",
+      route: "cv_analyze",
+    }),
+    interviewSummary: createProviderCapacityGuard({
+      capacityGate,
+      label: "Interview summary",
+      route: "interview_summary",
+    }),
+    voiceToken: createProviderCapacityGuard({
+      capacityGate,
+      label: "Voice interview start",
+      route: "voice_token",
     }),
   } as const;
   const app = express();
 
   app.disable("x-powered-by");
-  app.set(
-    "trust proxy",
-    parsedConfig.appEnvironment === "production" ? 1 : false,
-  );
+  app.set("trust proxy", false);
 
   app.use(createRequestIdMiddleware(idGenerator));
   app.use(
@@ -223,13 +305,6 @@ export function createApp(options: CreateAppOptions): Express {
   );
   app.use(createSecurityHeadersMiddleware());
   app.use(createAllowedOriginMiddleware(parsedConfig.origins.allowed));
-  app.use(
-    express.json({
-      limit: parsedConfig.limits.httpJsonBodyBytes,
-      strict: true,
-      type: "application/json",
-    }),
-  );
   app.use(cookieParser(securitySecrets.anonymousCookieSecret));
   app.use(
     createApiRouter({
@@ -247,7 +322,10 @@ export function createApp(options: CreateAppOptions): Express {
         backendConfigSchema.safeParse(parsedConfig).success &&
         providerAdaptersAreReady(options.providerAdapters),
       prepareConversationFirst,
+      providerCapacity,
+      requestBody,
       requestAdmission,
+      requireJsonRequest,
     }),
   );
   app.use(notFoundHandler);

@@ -1,6 +1,6 @@
 # SP-028 — Harden the post-deployment experience and security boundaries
 
-Status: In progress — Phase 1 UI/UX complete and owner-approved; Phase 2 security work not yet authorized<br>
+Status: In progress — Phase 1 complete and owner-approved; Phase 2 application code implemented and locally verified, Cloud Run/IAM execution gated; Phase 3 not started<br>
 Milestone: Milestone 7 — post-deployment portfolio hardening  
 Last synchronized: 2026-09-28<br>
 Depends on: SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026<br>
@@ -16,7 +16,7 @@ Correct the post-deployment issues that block ScreenPilot from being presented
 as a finished portfolio project. Execute the ticket in this fixed order:
 
 1. repair the landing page and remove the sample-CV product path;
-2. remediate the confirmed, material threats from a complete STRIDE review;
+2. implement and verify the final security architecture and controls;
 3. finish focused manual testing, including a previously unused synthetic CV.
 
 The result must remain one stateless, role-neutral application with the existing
@@ -63,8 +63,7 @@ Evidence came from:
   1600 × 900, 1920 × 1080, and 2560 × 1440;
 - a production-dependency audit reporting no known vulnerability and the
   repository's tracked-secret and browser inline-style scans passing;
-- the official [Microsoft STRIDE categories](https://learn.microsoft.com/en-us/azure/security/develop/threat-modeling-tool-threats),
-  [Express proxy guidance](https://expressjs.com/en/guide/behind-proxies.html),
+- the official [Express proxy guidance](https://expressjs.com/en/guide/behind-proxies.html),
   [Next.js backend-for-frontend guidance](https://nextjs.org/docs/app/guides/backend-for-frontend),
   [Google Cloud forwarding-header behavior](https://docs.cloud.google.com/load-balancing/docs/https),
   and [Cloud Run service-to-service authentication](https://docs.cloud.google.com/run/docs/authenticating/service-to-service).
@@ -378,7 +377,8 @@ hard-coded viewport heights.
 ### Phase 1 implementation and verification evidence
 
 Implementation, agent verification, and owner visual approval completed on
-2026-09-28. Section 2 remains a separate explicit owner gate.
+2026-09-28. Phase 2 application code was completed afterward; its Cloud Run/IAM
+execution and deployed proof remain a separate owner gate.
 
 - The owner superseded the local-only sample exception. Public bootstrap no
   longer contains `sampleCvAvailable`; the CV surface contains only **Choose
@@ -446,208 +446,386 @@ Implementation, agent verification, and owner visual approval completed on
 
 No deployment, paid-provider action, `.env.local` read, Git staging, commit, or
 push was performed. The owner accepted Phase 1 visually on 2026-09-28. Section
-2 and Section 3 remain intentionally untouched until the owner explicitly asks
-to continue.
+2 application code is now complete and locally verified; its Cloud Run/IAM
+execution remains gated, and Section 3 has not started.
 
-## Section 2 — Material STRIDE security review and remediation
+## Section 2 — Security architecture and gated deployment
 
-### Threat model boundary
+The security review is complete. SEC-001, SEC-002, and SEC-003 application
+code is implemented and locally verified. Cloud Run/IAM mutation, deployed
+topology proof, deployed fake/unpaid smoke, paid-provider use, and Phase 3
+remain unauthorized and unchecked until the owner separately approves them.
 
-The security review covers these real boundaries:
+This tracked ticket records only the final maintainable architecture, operating
+controls, safe rollout sequence, and non-sensitive verification evidence.
+
+### Final trust boundary
 
 ```text
 anonymous browser
   -> public Next.js/Cloud Run frontend and same-origin /v1 proxy
-  -> Express/Cloud Run backend
-  -> Cloudflare Turnstile, OpenAI, and ElevenLabs
+      -> audience-bound frontend runtime identity
+          -> IAM-authenticated Express/Cloud Run backend
+              -> Cloudflare Turnstile, OpenAI, and ElevenLabs
 
 browser-only PDF/microphone/session state
   -> bounded API and provider inputs
   -> browser-only transcript/insight/review state
 ```
 
-Assets are provider credentials and spend, Turnstile tokens, the signed
-anonymous cookie and interview grant, candidate CV/transcript/audio/summary
-content, evidence integrity, service availability, and the interview/tool
-policy. The system has no user accounts, recruiter roles, database, or durable
-candidate records; the threat model must not pretend those assets exist.
+- The frontend is the only unauthenticated visitor-facing origin. Browser code
+  uses relative `/v1/**` URLs and never receives the backend origin or service
+  token.
+- Production frontend-to-backend calls use a Google-signed ID token with the
+  stable backend `run.app` origin as the exact audience. The backend Cloud Run
+  service requires the Invoker IAM check and grants service-level
+  `roles/run.invoker` only to the existing frontend runtime identity.
+- Local frontend-to-backend development is explicitly unauthenticated only for
+  the canonical loopback backend on port 3001, leaves the audience blank, and
+  never contacts Google metadata.
+- The system remains stateless: candidate CV, transcript, audio, and summary
+  content stays inside the active browser/request lifecycle. No database,
+  durable session, candidate registry, analytics payload, queue, cache, or
+  object store is introduced.
 
-### Finding summary
+### Final application controls
 
-Only threats with a concrete path and a useful correction are implementation
-findings. Severity accounts for the existing maximum-one-instance/provider-cap
-controls and the deliberately small anonymous portfolio audience.
+- The proxy forwards only `Accept`, `Content-Type`, `Cookie`, and `Origin`,
+  recalculates `Content-Length` from the bounded body, creates the internal
+  source signal server-side, and preserves upstream `Set-Cookie` plus the
+  server-generated `X-Request-Id`. The backend disables Express proxy trust and
+  accepts the internal source signal only across the production service hop.
+- Request admission remains bounded and per-instance. Fixed route-global,
+  source, and signed-session windows are evaluated atomically; identity tables
+  never discard active enforcement state to admit new state, memory remains
+  bounded, and saturation telemetry is content-free.
+- Unsupported request shapes are rejected before body work. Frontend receipt
+  has a ten-second whole-body deadline, disconnect cancellation, and a 64 KiB
+  maximum. Backend mutation routes use cheap pre-body gates, route-scoped JSON
+  parsing, a two-lease body-receipt limit, strict Zod validation, and only then
+  acquire provider capacity.
+- Readers, timers, listeners, requests, body-receipt leases, provider-capacity
+  leases, media tracks, and provider sessions touched by these paths must be
+  released on every success, rejection, timeout, disconnect, and unmount path.
+- Signed anonymous cookies and interview grants, exact allowed-origin checks,
+  action-specific Turnstile verification, CSP/security headers, no-store
+  responses, provider timeouts/output limits, content-free redacted logs, the
+  paid kill switch, and Cloud Run/provider caps remain mandatory.
+- Legitimate CV upload, conversation-first preparation, interview, review,
+  Turnstile, provider, and responsive UI behavior remains unchanged.
 
-| ID | STRIDE | Severity | Confidence | Concrete risk |
-| --- | --- | --- | --- | --- |
-| SP028-SEC-001 | Spoofing, Tampering, DoS | High | High | The frontend forwards client-controlled forwarding headers while Express trusts a numeric one-hop topology. Cloud forwarding chains can therefore resolve the source bucket to a shared proxy or another unintended hop, allowing one actor to exhaust a bucket for unrelated visitors and making abuse attribution unreliable. |
-| SP028-SEC-002 | DoS, Elevation of resource use | High | High | A stream of fresh source/session identities evicts active rate-limit buckets. Existing tests prove 2,000 fresh sources are all accepted with a two-entry table and an evicted source is immediately accepted again. Attackers can churn identity to bypass the intended request window and pressure paid routes. |
-| SP028-SEC-003 | DoS | High | High | The frontend can wait indefinitely while buffering a bounded but slow request stream, and Express parses the complete JSON body before route admission. A few slow bodies can occupy the configured frontend/backend concurrency before rate or provider-capacity gates run. |
+### Required frontend connection schema
 
-#### SP028-SEC-001 — Establish one trustworthy request-source boundary
+Local `apps/frontend/.env.local` follows the committed blank schema without
+placing credentials in the frontend:
 
-**Evidence**
+```dotenv
+BACKEND_AUTH_MODE=local
+BACKEND_ORIGIN=http://127.0.0.1:3001
+BACKEND_AUTH_AUDIENCE=
+```
 
-- `backend-proxy.ts` clones all incoming request headers and removes only Host
-  and standard hop-by-hop headers. It does not remove `Forwarded`,
-  `X-Forwarded-*`, `X-Real-IP`, or provider-specific client-address headers.
-- Production Express uses `trust proxy = 1`; admission keys `request.ip`.
-- Google documents that a forwarding chain may include an unverified supplied
-  prefix followed by the client and load-balancer addresses. Express warns that
-  numeric hop counts are safe only when every route has the same verified proxy
-  distance and the last trusted proxy overwrites forwarding values.
-- ScreenPilot has at least frontend-proxied and operational direct-backend paths,
-  so a one-hop assumption is not an adequate trust contract.
+The production Cloud Run frontend uses:
 
-**Correction**
+```dotenv
+BACKEND_AUTH_MODE=google-cloud-oidc
+BACKEND_ORIGIN=<stable backend run.app HTTPS origin>
+BACKEND_AUTH_AUDIENCE=<same stable backend run.app HTTPS origin>
+```
 
-- Replace clone-and-delete proxying with an explicit allow-list of headers the
-  backend actually needs: content type/length, Origin, Cookie, accepted request
-  tracing, and nothing else. Strip all inbound forwarding, host/proto, internal
-  authentication, platform, and connection headers before constructing the
-  upstream request.
-- Choose and document exactly one production ingress/source model. Preferred:
-  make the backend invokable only by the frontend runtime identity, authenticate
-  service-to-service calls, and propagate a canonical client source in an
-  internal header that public callers cannot forge. If that infrastructure
-  change is rejected, move the source-keyed edge limiter to the frontend and
-  let the backend enforce session/global budgets without trusting a client-
-  supplied address. Do not invent a magic `trust proxy` number.
-- Keep direct backend health operations compatible with the chosen private
-  ingress through an authenticated operational path. Do not expose a second
-  visitor-facing API origin.
-- Centralize source parsing and test Google-documented chains, malformed values,
-  IPv4/IPv6, multiple values, direct/proxied requests, and hostile forwarding
-  headers. Never log the source address or raw headers.
+The audience must equal the backend origin exactly. A custom domain, path, or
+trailing slash is not the default audience contract.
 
-**Acceptance**
+### Local implementation and acceptance
 
-- [ ] A public request cannot select the address used for a source rate bucket.
-- [ ] Two legitimate sources do not share a bucket merely because the final hop
-  is Cloud Run or the Next service.
-- [ ] Direct and proxied paths have one explicit, tested policy; ambiguous paths
-  fail closed or omit source identity rather than trusting a caller string.
-- [ ] Frontend proxy tests enumerate every forwarded request header and prove
-  forwarding/client-IP/internal-platform headers are absent.
+- [x] Production and local connection modes fail closed outside their explicit
+  origin/audience contracts. The token client validates audience and expiry,
+  deduplicates retrieval, caches with a refresh margin, uses a three-second
+  metadata timeout, and never exposes token content in errors or logs.
+- [x] Focused tests cover request-header allow-listing, canonical IPv4/IPv6
+  source normalization, the production/local trust adapters, independent
+  source buckets, and preserved cookie/request-ID behavior.
+- [x] Admission tests cover route-global/source/session decisions, bounded
+  saturation, stable retry behavior, content-free telemetry, and cleanup.
+- [x] Request-body tests cover supported route shapes, declared/observed size,
+  receipt timeout, disconnect cancellation, route-scoped parsing, lease
+  cleanup, strict validation, and provider-call exclusion before admission.
+- [ ] Unauthenticated direct backend calls return `401`/`403`, the
+  audience-bound frontend runtime succeeds, owner-token health returns `200`,
+  and Cloud Run probes remain healthy. **Blocked by the separately approved
+  Cloud Run/IAM change.**
+- [ ] The deployed fake/unpaid path confirms the configured platform source
+  contract, bounded admission behavior, request receipt limits, cleanup, and
+  unchanged legitimate CV/interview/UI behavior. **Blocked by deployment and
+  cloud approval.**
 
-#### SP028-SEC-002 — Make bounded rate limiting resistant to identity churn
+### Deterministic verification evidence
 
-**Evidence**
+- Focused fake/unpaid contract, frontend, and backend suites passed for the
+  connection boundary, proxy behavior, source normalization, bounded admission,
+  request-body handling, validation ordering, and cleanup.
+- The existing full fake/unpaid frontend and backend suites, affected-workspace
+  typechecks, zero-warning lints, production builds, tracked-secret and browser-
+  style scans, and production dependency audit passed at their recorded local
+  checkpoints.
+- Automated verification did not read `.env.local`, call a live provider, use
+  paid mode, contact Google metadata or Cloud Run, or mutate external state.
+- No Cloud Run/IAM change, deployment, Git staging, commit, or push was part of
+  the local security implementation.
 
-`stateless-rate-limit.ts` evicts the soonest-expiring unrelated active entry
-when `maxEntries` is full. Its unit tests intentionally accept 2,000 unique
-sources into a two-entry limiter and then show that the first evicted source can
-start a fresh window. This bounds memory by deleting enforcement state.
+### Phase 2 remaining gates
 
-**Correction**
+- [x] SEC-001, SEC-002, and SEC-003 application code is implemented and locally
+  verified.
+- [ ] Apply the Cloud Run service-level Invoker policy and deploy the exact
+  audited frontend/backend revisions in the safe order below. **Requires
+  separate owner approval.**
+- [ ] Prove unauthenticated backend denial, authenticated frontend-runtime and
+  owner health access, deployed source topology, and the complete fake/unpaid
+  production smoke. **Blocked by Cloud Run/IAM and deployment approval.**
+- [ ] Complete Section 3 manual testing. Paid-provider use remains separately
+  gated.
 
-- Never evict an unexpired bucket merely to admit a new identity. Expire entries
-  normally. When the table is saturated, route unseen identities through a
-  bounded overflow/global bucket or reject them with a stable retry window.
-- Add a per-route global request budget ahead of the source/session budgets so
-  identity rotation cannot create unbounded aggregate operations. Paid-route
-  provider/concurrency caps remain the final backstop, not the primary request
-  limiter.
-- Preserve atomic admission when one request needs both source and session keys;
-  it must not increment one and fail to create the other.
-- Emit only content-free counters/events for saturation and rejections. Never
-  log fingerprints, raw IPs, cookies, grants, or candidate content.
-- Preserve bounded memory and the current efficient expiry index. Do not add a
-  database, Redis, browser fingerprinting, or a persistent IP ledger.
+### Google Cloud execution runbook — separate owner approval required
 
-**Acceptance**
+This runbook documents the later infrastructure step; **do not run it as part
+of local implementation or documentation work**. Run it only after the code,
+focused tests, production builds, and exact candidate commit exist and the
+owner explicitly authorizes Cloud Run/IAM changes. Keep
+`PAID_DEMO_ENABLED=false`. The commands follow Google's current Cloud Run IAM,
+service-to-service authentication, environment-variable, and traffic-rollback
+syntax:
 
-- [ ] A churn test cannot reset an existing actor's window or obtain one allowed
-  request per new identity indefinitely.
-- [ ] Table saturation is bounded and observable without disclosing identity.
-- [ ] Global, source, and session decisions have stable `Retry-After` behavior
-  and route-specific limits.
-- [ ] Existing Turnstile, paid kill switch, Cloud Run maximum instance, provider
-  credit/usage caps, and fail-closed provider behavior remain intact.
+- [Cloud Run service-to-service authentication](https://docs.cloud.google.com/run/docs/authenticating/service-to-service)
+- [Cloud Run IAM access management](https://docs.cloud.google.com/run/docs/securing/managing-access)
+- [`gcloud run deploy`](https://docs.cloud.google.com/sdk/gcloud/reference/run/deploy)
+- [`gcloud run services update-traffic`](https://docs.cloud.google.com/sdk/gcloud/reference/run/services/update-traffic)
 
-#### SP028-SEC-003 — Bound work before reading/parsing request bodies
+The stable backend `run.app` URL is both `BACKEND_ORIGIN` and
+`BACKEND_AUTH_AUDIENCE`; a custom domain is not a valid default token audience.
+No command below contains or prints a provider secret.
 
-**Evidence**
+#### 1. Set explicit non-secret variables and inspect current state
 
-- The Next proxy checks a 64 KiB size ceiling but each `reader.read()` can wait
-  without a route-owned deadline.
-- Express installs the global JSON parser before cookie parsing and route-level
-  request admission. A direct request can therefore consume the complete body
-  read/parse path before rate and capacity decisions.
-- The backend request timeout is 30 seconds and production backend concurrency
-  is four. Repeated slow bodies can occupy all four slots even though no paid
-  provider operation starts.
+Run from the repository root in PowerShell after replacing every angle-bracket
+placeholder. Do not use an uncommitted SHA.
 
-**Correction**
+```powershell
+$screenPilotProject = '<GCP_PROJECT_ID>'
+$screenPilotRegion = '<GCP_REGION>'
+$screenPilotRepository = '<ARTIFACT_REGISTRY_REPOSITORY>'
+$screenPilotSha = '<AUDITED_FULL_GIT_SHA>'
+$screenPilotRevisionSuffix = 'sp028-' + $screenPilotSha.Substring(0, 12)
+$screenPilotFrontendService = 'screenpilot-frontend'
+$screenPilotBackendService = 'screenpilot-backend'
+$screenPilotFrontendRuntimeSa = "screenpilot-frontend-runtime@${screenPilotProject}.iam.gserviceaccount.com"
+$screenPilotBackendRuntimeSa = "screenpilot-backend-runtime@${screenPilotProject}.iam.gserviceaccount.com"
+$screenPilotFrontendImage = "${screenPilotRegion}-docker.pkg.dev/${screenPilotProject}/${screenPilotRepository}/screenpilot-frontend:${screenPilotSha}"
+$screenPilotBackendImage = "${screenPilotRegion}-docker.pkg.dev/${screenPilotProject}/${screenPilotRepository}/screenpilot-backend:${screenPilotSha}"
 
-- Reject unsupported methods, content types, invalid/oversized Content-Length,
-  and disallowed origins before reading a body.
-- Give the frontend stream reader an explicit short deadline and combined abort
-  signal; cancel the reader and upstream work on timeout or disconnect.
-- Add a cheap pre-body admission layer at the backend, then use route-scoped
-  bounded JSON parsing/validation. Keep the provider-capacity lease after strict
-  body validation so malformed/slow bodies do not hold scarce paid-operation
-  capacity. A separate small body-read concurrency gate is acceptable.
-- Keep the 64 KiB maximum, strict JSON, typed terminal error mapping, no retries,
-  and content-free logs. Choose timeout values from measured local/Cloud Run
-  behavior and document them in `.env.example` if configurable.
+$screenPilotBackendOrigin = (gcloud run services describe $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --format 'value(status.url)').Trim()
 
-**Acceptance**
+gcloud run services describe $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --format 'yaml(metadata.name,metadata.annotations,spec.template.spec.serviceAccountName,status.url,status.latestReadyRevisionName,status.traffic)'
 
-- [ ] Never-ending, slow-chunked, missing-length, invalid-length, oversized,
-  wrong-content-type, aborted, and disconnected requests terminate within the
-  documented bound and never contact a provider.
-- [ ] Admission occurs before expensive body parsing while provider capacity is
-  acquired only for a validated paid operation.
-- [ ] The frontend and backend release readers, listeners, timers, and leases on
-  every success/error/abort path.
+gcloud run services get-iam-policy $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion
 
-### Complete STRIDE disposition
+gcloud run revisions list `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --service $screenPilotBackendService
+```
 
-| Category | Disposition after code review |
-| --- | --- |
-| Spoofing | Actionable through SP028-SEC-001: the source identity used for rate limiting does not have a trustworthy ingress contract. The signed anonymous cookie and HMAC interview grant otherwise provide the intended anonymous-session binding. |
-| Tampering | Actionable where forwarded address metadata changes enforcement identity (SEC-001). Candidate/provider payload tampering is already constrained by strict Zod boundaries, grant/session/plan binding, evidence IDs, local summary reconciliation, and client-tool schemas; no separate defect was found. |
-| Repudiation | No separate actionable defect. The app makes no real-world identity or hiring-decision claim. Server-generated request IDs and content-free structured result/error logs provide appropriate operational evidence. SEC-002 adds saturation counters without candidate/IP logging. |
-| Information disclosure | No new actionable defect found. Secrets remain backend-only; candidate content is absent from logs/URLs; CSP/no-store/redaction and browser-only state are present. The synthetic sample PDF is not confidential and UX-001 must not be mislabeled as a leak. |
-| Denial of service | Actionable through all three findings: shared/incorrect source buckets, active-bucket eviction under churn, and pre-admission slow-body work. |
-| Elevation of privilege | There is no account/role privilege model. SEC-002 is the relevant elevation of anonymous resource allowance: rotating identity can exceed the rate window. Existing provider caps limit impact but do not make the bypass acceptable. |
+Privately record the two current 100-percent revisions and save the backend IAM
+policy with its `etag` for exact rollback. The chosen directory is already
+ignored by Git.
 
-### Controls validated and deliberately not filed as “findings”
+```powershell
+$screenPilotPreviousFrontendRevision = '<CURRENT_100_PERCENT_FRONTEND_REVISION>'
+$screenPilotPreviousBackendRevision = '<CURRENT_100_PERCENT_BACKEND_REVISION>'
+$screenPilotRollbackDirectory = Join-Path (Get-Location) 'docs/operations/private/sp028-rollback'
+New-Item -ItemType Directory -Force -Path $screenPilotRollbackDirectory | Out-Null
+$screenPilotBackendIamBackup = Join-Path $screenPilotRollbackDirectory 'backend-iam-before.json'
 
-Do not pad the audit with generic checklist observations. The following controls
-were inspected and should be preserved, not rewritten without evidence:
+gcloud run services get-iam-policy $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --format json | Set-Content -LiteralPath $screenPilotBackendIamBackup -Encoding utf8
+```
 
-- exact allowed-origin enforcement on mutations, signed HttpOnly/SameSite
-  anonymous cookies, HMAC grants bound to session/plan/entry mode and expiry;
-- Turnstile action and hostname verification before paid operations;
-- strict bounded request/provider schemas, provider timeouts and output limits,
-  abort propagation, one-operation summary behavior, and no retry of validation,
-  authentication, rate-limit, or non-retryable failures;
-- CSP nonce, no broad script `unsafe-inline`, exact provider origins, security
-  headers, `Cache-Control: no-store`, and content-free redacted logs;
-- prompt-injection instructions, untrusted-data boundaries, strict client tools,
-  evidence grounding, and deterministic local reconciliation;
-- stateless browser-only candidate state, explicit Clear session, no raw PDF/CV
-  persistence, and no server candidate registry;
-- passing tracked-secret scan and no known production dependency vulnerability
-  on the audited revision.
+#### 2. Grant only the frontend runtime identity backend invocation
 
-The audit intentionally rejects low-value claims such as “add authentication”
-to an anonymous demo, “encrypt the public synthetic fixture,” “add a database
-for rate limits,” “sessionStorage is always insecure,” or generic reminders to
-use HTTPS/CSP/secure cookies that the product already uses. New security work
-must identify an exploitable boundary, precondition, impact, and regression.
+```powershell
+gcloud run services add-iam-policy-binding $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --member "serviceAccount:$screenPilotFrontendRuntimeSa" `
+  --role 'roles/run.invoker'
+```
 
-### Security implementation order
+This is a service-level grant. Do not grant frontend invocation project-wide,
+do not create a service-account key, and do not grant the frontend access to
+backend provider secrets.
 
-1. Fix and test the header allow-list and choose the production ingress/source
-   identity model. Any Cloud Run IAM change requires separate owner approval.
-2. Replace active-entry eviction with overflow/global fail-closed admission and
-   expand adversarial churn coverage.
-3. Add pre-body checks, read deadline/cancellation, and route-scoped parsing.
-4. Rerun focused backend/frontend tests, the secret scans, production dependency
-   audit, and an unpaid local negative-request smoke. Do not deploy.
+#### 3. Deploy the exact audited, auth-capable revisions
+
+Deploy the frontend revision first. Its OIDC-capable proxy can call the still-
+public backend during the short transition. `--update-env-vars` is deliberate:
+it preserves unrelated existing variables. The frontend remains the public
+visitor origin.
+
+```powershell
+gcloud run deploy $screenPilotFrontendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --image $screenPilotFrontendImage `
+  --service-account $screenPilotFrontendRuntimeSa `
+  --revision-suffix $screenPilotRevisionSuffix `
+  --update-labels "git-sha=$screenPilotSha" `
+  --update-env-vars "BACKEND_ORIGIN=$screenPilotBackendOrigin,BACKEND_AUTH_MODE=google-cloud-oidc,BACKEND_AUTH_AUDIENCE=$screenPilotBackendOrigin" `
+  --min 0 `
+  --max 1 `
+  --concurrency 80 `
+  --allow-unauthenticated
+```
+
+Then deploy the backend exact-SHA image with IAM invocation required. Preserve
+its existing ordinary variables and Secret Manager mappings; do not use
+`--set-env-vars` or put a secret on the command line.
+
+```powershell
+gcloud run deploy $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --image $screenPilotBackendImage `
+  --service-account $screenPilotBackendRuntimeSa `
+  --revision-suffix $screenPilotRevisionSuffix `
+  --update-labels "git-sha=$screenPilotSha" `
+  --min 0 `
+  --max 1 `
+  --concurrency 4 `
+  --invoker-iam-check `
+  --no-allow-unauthenticated
+
+gcloud run services remove-iam-policy-binding $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --member 'allUsers' `
+  --role 'roles/run.invoker' `
+  --all
+```
+
+If inspection showed no `allUsers` binding, the final removal can report that
+nothing matched; the required end state is still an enabled Invoker IAM check,
+no public principal, and the frontend runtime service account holding
+`roles/run.invoker`.
+
+#### 4. Verify the private boundary and unpaid behavior
+
+The logged-in owner must already have `run.routes.invoke` through an existing
+owner/admin or explicit operational role. Never paste or document the token.
+
+```powershell
+$screenPilotUnauthenticatedStatus = (& curl.exe --silent --output NUL --write-out '%{http_code}' "${screenPilotBackendOrigin}/health/live").Trim()
+if ($screenPilotUnauthenticatedStatus -notin @('401', '403')) {
+  throw "Expected unauthenticated backend health to return 401/403, received $screenPilotUnauthenticatedStatus."
+}
+
+$screenPilotOwnerIdentityToken = (gcloud auth print-identity-token).Trim()
+$screenPilotOwnerHeaders = @{ Authorization = "Bearer $screenPilotOwnerIdentityToken" }
+$screenPilotLiveStatus = (Invoke-WebRequest -Uri "${screenPilotBackendOrigin}/health/live" -Headers $screenPilotOwnerHeaders).StatusCode
+$screenPilotReadyStatus = (Invoke-WebRequest -Uri "${screenPilotBackendOrigin}/health/ready" -Headers $screenPilotOwnerHeaders).StatusCode
+if ($screenPilotLiveStatus -ne 200 -or $screenPilotReadyStatus -ne 200) {
+  throw 'Authenticated backend health verification failed.'
+}
+Remove-Variable screenPilotOwnerIdentityToken, screenPilotOwnerHeaders
+
+$screenPilotFrontendOrigin = (gcloud run services describe $screenPilotFrontendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --format 'value(status.url)').Trim()
+$screenPilotBootstrapResponse = Invoke-WebRequest -Uri "${screenPilotFrontendOrigin}/v1/demo/bootstrap" -SessionVariable screenPilotWebSession
+if ($screenPilotBootstrapResponse.StatusCode -ne 200) {
+  throw 'Same-origin frontend bootstrap verification failed.'
+}
+```
+
+With `PAID_DEMO_ENABLED=false`, run the documented fake/unpaid boundary suite
+through the frontend. Confirm the request-header/source contract, bounded
+admission, body receipt/parsing limits, validation ordering, cancellation and
+lease cleanup, stable content-free errors, zero provider calls before valid
+admission, no backend URL in visitor output, preserved cookie/request-ID
+behavior, and normal CV/interview/UI behavior. This is unpaid platform
+validation, not authorization for a paid flow.
+
+#### 5. Roll back both revisions and IAM together if any check fails
+
+Restore the saved IAM policy first so the previously public frontend revision
+can reach the previous backend, then move both services to the recorded known-
+good revisions. The saved `etag` prevents overwriting an IAM policy that changed
+after the snapshot; stop and investigate rather than deleting it.
+
+```powershell
+gcloud run services set-iam-policy $screenPilotBackendService $screenPilotBackendIamBackup `
+  --project $screenPilotProject `
+  --region $screenPilotRegion
+
+gcloud run services update-traffic $screenPilotBackendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --to-revisions "${screenPilotPreviousBackendRevision}=100"
+
+gcloud run services update-traffic $screenPilotFrontendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --to-revisions "${screenPilotPreviousFrontendRevision}=100"
+```
+
+After rollback, rerun the previous revision's documented unpaid health and
+same-origin routing checks. Do not delete the failed or rollback image until the
+owner has reviewed the incident and selected the retained recovery revision.
+
+#### Cloud Console fallback
+
+The CLI above is canonical; Google changes Console labels occasionally. If the
+CLI is unavailable after separate owner approval:
+
+1. Before changing a service or permission, record the current 100-percent
+   frontend and backend revision names and export the backend IAM policy with
+   its `etag` to the ignored rollback location documented above. Then open the
+   backend service **Permissions** panel and add
+   `screenpilot-frontend-runtime@<project>.iam.gserviceaccount.com` as a
+   service-level **Cloud Run Invoker** principal. Leave the current backend
+   revision public and leave its existing `allUsers` binding in place during
+   this transition. Do not change the backend runtime service account's
+   separate Secret Manager grants.
+2. Open **screenpilot-frontend → Containers / Variables & Secrets**. Deploy the
+   exact-SHA frontend revision with the non-secret server-only values
+   `BACKEND_ORIGIN=<backend run.app URL>`,
+   `BACKEND_AUTH_MODE=google-cloud-oidc`, and
+   `BACKEND_AUTH_AUDIENCE=<same backend run.app URL>`. Keep the frontend public,
+   on its existing runtime service account, maximum one instance, and
+   concurrency 80. Confirm the new frontend revision is ready and its
+   same-origin bootstrap can still reach the not-yet-private backend.
+3. Only after the auth-capable frontend is ready, open **Cloud Run →
+   screenpilot-backend → Security**, select **Require authentication → Identity
+   and Access Management (IAM)**, and deploy the exact-SHA backend revision with
+   the existing backend runtime service account, variables, secret mappings,
+   minimum zero, maximum one, and concurrency four. Then remove `allUsers` from
+   **Cloud Run Invoker** and confirm the frontend runtime service account retains
+   its service-level Invoker grant.
+4. Verify the revision image digests and IAM principals, unauthenticated backend
+   `401`/`403`, authenticated owner health `200`, same-origin frontend bootstrap,
+   the documented fake/unpaid boundary checks, and preserved legitimate
+   CV/interview/UI behavior. Use the saved IAM policy and previous revision
+   names for rollback.
 
 ## Section 3 — Manual testing and release evidence
 
@@ -684,19 +862,17 @@ and defect link. A screenshot alone is not a pass.
 - [ ] Confirm an ordinary uploaded synthetic PDF still validates/extracts and
   conversation-first remains available.
 
-### 3.3 Security-negative matrix
+### 3.3 Security-control verification
 
-- [ ] Exercise hostile forwarding-header chains through frontend-proxied and
-  direct test paths; record the trusted source decision without recording an IP.
-- [ ] Exercise source/session churn beyond the entry ceiling; existing buckets
-  remain enforced, aggregate overflow closes, memory stays bounded, and no
-  provider fake is called after rejection.
-- [ ] Exercise slow/chunked/aborted/oversized/invalid JSON and unsupported
-  method/content-type requests against both boundaries; verify deadlines,
-  cleanup, `Retry-After` where applicable, and content-safe errors.
+- [ ] Verify the deployed request-header and canonical-source contract through
+  frontend and authenticated operational paths without recording source values.
+- [ ] Verify configured route/source/session admission, bounded memory,
+  deterministic retry behavior, and zero provider calls after rejection.
+- [ ] Verify request-shape, receipt, parsing, cancellation, and cleanup limits
+  with content-safe errors and no provider work before valid admission.
 - [ ] Rerun existing origin, cookie, grant, Turnstile replay/action/hostname,
   capacity, paid-kill-switch, CSP/header, log-redaction, and provider-call-count
-  regressions to prove the fixes did not weaken working controls.
+  regressions to prove the final controls preserve established behavior.
 
 ### 3.4 New-CV assisted path — mandatory owner reminder
 

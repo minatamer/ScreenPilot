@@ -158,6 +158,10 @@ export const backendEnvironmentSchema = z
     HTTP_HEADERS_TIMEOUT_MS: integerEnvironmentValue(1_000, 60_000).default(
       10_000,
     ),
+    HTTP_BODY_RECEIPT_CONCURRENT_REQUESTS: integerEnvironmentValue(
+      1,
+      100,
+    ).default(2),
     HTTP_JSON_BODY_MAX_BYTES: integerEnvironmentValue(1_024, 1_048_576).default(
       65_536,
     ),
@@ -183,6 +187,26 @@ export const backendEnvironmentSchema = z
     RATE_LIMIT_CV_ANALYZE_REQUESTS: integerEnvironmentValue(1, 1_000).default(
       10,
     ),
+    RATE_LIMIT_GLOBAL_BOOTSTRAP_REQUESTS: integerEnvironmentValue(
+      1,
+      100_000,
+    ).default(600),
+    RATE_LIMIT_GLOBAL_CV_ANALYZE_REQUESTS: integerEnvironmentValue(
+      1,
+      100_000,
+    ).default(50),
+    RATE_LIMIT_GLOBAL_PREPARE_REQUESTS: integerEnvironmentValue(
+      1,
+      100_000,
+    ).default(150),
+    RATE_LIMIT_GLOBAL_SUMMARY_REQUESTS: integerEnvironmentValue(
+      1,
+      100_000,
+    ).default(50),
+    RATE_LIMIT_GLOBAL_VOICE_TOKEN_REQUESTS: integerEnvironmentValue(
+      1,
+      100_000,
+    ).default(15),
     RATE_LIMIT_MAX_ENTRIES: integerEnvironmentValue(100, 100_000).default(
       10_000,
     ),
@@ -231,6 +255,29 @@ export const backendEnvironmentSchema = z
           message:
             "Per-route capacity cannot exceed the global concurrent-request capacity.",
           path: [field],
+        });
+      }
+    }
+
+    for (const [globalField, identityField] of [
+      ["RATE_LIMIT_GLOBAL_BOOTSTRAP_REQUESTS", "RATE_LIMIT_BOOTSTRAP_REQUESTS"],
+      [
+        "RATE_LIMIT_GLOBAL_CV_ANALYZE_REQUESTS",
+        "RATE_LIMIT_CV_ANALYZE_REQUESTS",
+      ],
+      ["RATE_LIMIT_GLOBAL_PREPARE_REQUESTS", "RATE_LIMIT_PREPARE_REQUESTS"],
+      ["RATE_LIMIT_GLOBAL_SUMMARY_REQUESTS", "RATE_LIMIT_SUMMARY_REQUESTS"],
+      [
+        "RATE_LIMIT_GLOBAL_VOICE_TOKEN_REQUESTS",
+        "RATE_LIMIT_VOICE_TOKEN_REQUESTS",
+      ],
+    ] as const) {
+      if (environment[globalField] < environment[identityField]) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "A route-global rate limit cannot be lower than its identity rate limit.",
+          path: [globalField],
         });
       }
     }
@@ -406,6 +453,7 @@ export const backendConfigSchema = z.strictObject({
   effectiveMode: z.enum(EFFECTIVE_RUNTIME_MODES),
   limits: z.strictObject({
     anonymousCookieTtlSeconds: z.number().int().min(300).max(86_400),
+    bodyReceiptConcurrentRequests: z.number().int().min(1).max(100),
     capacity: z.strictObject({
       cvAnalyzeConcurrentRequests: z.number().int().min(1).max(100),
       globalConcurrentRequests: z.number().int().min(1).max(100),
@@ -420,6 +468,11 @@ export const backendConfigSchema = z.strictObject({
     rateLimit: z.strictObject({
       bootstrapRequests: z.number().int().min(1).max(10_000),
       cvAnalyzeRequests: z.number().int().min(1).max(1_000),
+      globalBootstrapRequests: z.number().int().min(1).max(100_000),
+      globalCvAnalyzeRequests: z.number().int().min(1).max(100_000),
+      globalPrepareRequests: z.number().int().min(1).max(100_000),
+      globalSummaryRequests: z.number().int().min(1).max(100_000),
+      globalVoiceTokenRequests: z.number().int().min(1).max(100_000),
       maxEntries: z.number().int().min(100).max(100_000),
       prepareRequests: z.number().int().min(1).max(10_000),
       summaryRequests: z.number().int().min(1).max(1_000),
@@ -483,6 +536,8 @@ export const createBackendConfigCandidate = (
     effectiveMode,
     limits: {
       anonymousCookieTtlSeconds: environment.ANONYMOUS_COOKIE_TTL_SECONDS,
+      bodyReceiptConcurrentRequests:
+        environment.HTTP_BODY_RECEIPT_CONCURRENT_REQUESTS,
       capacity: {
         cvAnalyzeConcurrentRequests:
           environment.CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS,
@@ -501,6 +556,14 @@ export const createBackendConfigCandidate = (
       rateLimit: {
         bootstrapRequests: environment.RATE_LIMIT_BOOTSTRAP_REQUESTS,
         cvAnalyzeRequests: environment.RATE_LIMIT_CV_ANALYZE_REQUESTS,
+        globalBootstrapRequests:
+          environment.RATE_LIMIT_GLOBAL_BOOTSTRAP_REQUESTS,
+        globalCvAnalyzeRequests:
+          environment.RATE_LIMIT_GLOBAL_CV_ANALYZE_REQUESTS,
+        globalPrepareRequests: environment.RATE_LIMIT_GLOBAL_PREPARE_REQUESTS,
+        globalSummaryRequests: environment.RATE_LIMIT_GLOBAL_SUMMARY_REQUESTS,
+        globalVoiceTokenRequests:
+          environment.RATE_LIMIT_GLOBAL_VOICE_TOKEN_REQUESTS,
         maxEntries: environment.RATE_LIMIT_MAX_ENTRIES,
         prepareRequests: environment.RATE_LIMIT_PREPARE_REQUESTS,
         summaryRequests: environment.RATE_LIMIT_SUMMARY_REQUESTS,

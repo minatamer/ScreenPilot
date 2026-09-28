@@ -129,7 +129,12 @@ process when a compiled change must be loaded:
 pnpm dev:backend
 ```
 
-The frontend can proxy relative `/v1` requests to a local backend origin. The example value is `http://127.0.0.1:3001` in [`apps/frontend/.env.example`](apps/frontend/.env.example).
+The frontend can proxy relative `/v1` requests to the local backend only when
+`BACKEND_AUTH_MODE=local`, `BACKEND_ORIGIN=http://127.0.0.1:3001`, and
+`BACKEND_AUTH_AUDIENCE=` is blank. Copy those non-secret values from
+[`apps/frontend/.env.example`](apps/frontend/.env.example) into the ignored
+`apps/frontend/.env.local`; local mode accepts only the canonical loopback port
+and never contacts Google metadata.
 
 ## Configuration and provider modes
 

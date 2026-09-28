@@ -104,7 +104,7 @@ the affected audit evidence and requires the smallest relevant re-audit.
 
 The owner reports the first website deployment complete and has opened required
 SP-028 before portfolio presentation. SP-028 is a post-deployment correction
-ticket executed in the fixed order UI/UX, material STRIDE security remediation,
+ticket executed in the fixed order UI/UX, security architecture remediation,
 then manual acceptance. It removes the bundled sample CV from every visible
 entry and recovery path;
 gives the landing opening stage a true viewport boundary and fluid density that
@@ -112,17 +112,20 @@ uses available phone, tablet, laptop, and large-monitor space without clipping
 short viewports; gates hero-card and
 product-preview motion on real visibility; rebuilds the tablet/phone four-step
 scroll story around content pressure; corrects the trusted-source, rate-limit
-churn, and pre-body denial-of-service boundaries; and ends with a never-before-
+admission, and bounded request-receipt boundaries; and ends with a never-before-
 used synthetic CV-assisted run.
 
 The initial reconciliation authorized documentation only. The owner's later
 instruction authorized Section 1 UI/UX implementation, including removal of
 the visible sample-CV path from localhost as well as deployed hosts. Section 1
 is complete: it was implemented, agent-verified, and visually approved by the
-owner on 2026-09-28. That approval does not authorize Section 2, another
-deployment, DNS/Cloud Run mutation, paid provider use, or real candidate data. The complete
-affected deterministic and manual evidence must be re-established on the exact
-candidate before the owner may authorize a later deployment.
+owner on 2026-09-28. The owner later authorized the code-level SEC-001,
+SEC-002, and SEC-003 work inside Section 2. All three application corrections
+are implemented and locally verified; the live Cloud Run/IAM boundary and
+deployed fake/unpaid smoke remain gated. None of these approvals authorize another
+deployment, DNS mutation, paid provider use, Phase 3, or real candidate data.
+The complete affected deterministic and manual evidence must be re-established
+on the exact candidate before the owner may authorize a later deployment.
 
 ### Authority order
 
@@ -1730,9 +1733,12 @@ screen-pilot/
 │  │     │  │  └─ page.tsx                       # SP-011; staged application host
 │  │     │  └─ v1/
 │  │     │     └─ [...path]/
-│  │     │        ├─ route.ts                    # SP-026; production same-origin API route
-│  │     │        ├─ backend-proxy.ts             # SP-026; bounded server-only proxy
-│  │     │        └─ backend-proxy.test.ts        # SP-026
+│  │     │        ├─ route.ts                     # SP-026; production same-origin API route
+│  │     │        ├─ backend-connection.ts        # SP-028; local/OIDC boundary
+│  │     │        ├─ google-cloud-identity-token.ts # SP-028; metadata ID token
+│  │     │        ├─ trusted-client-source.ts     # SP-028; verified Google suffix
+│  │     │        ├─ backend-proxy.ts             # SP-026/SP-028; authenticated bounded proxy
+│  │     │        └─ backend-proxy.test.ts        # SP-026/SP-028
 │  │     ├─ features/
 │  │     │  ├─ session/
 │  │     │  │  ├─ demo-session.types.ts          # SP-006; frontend-only state
@@ -1856,7 +1862,10 @@ screen-pilot/
 │        │  │  ├─ request-logging.ts             # SP-009/SP-023
 │        │  │  ├─ security-headers.ts            # SP-009/SP-023
 │        │  │  ├─ allowed-origin.ts              # SP-009
-│        │  │  └─ validate-request.ts            # SP-009
+│        │  │  ├─ validate-request.ts            # SP-009
+│        │  │  ├─ request-admission.ts           # SP-022/SP-028
+│        │  │  ├─ bounded-json-body.ts           # SP-028
+│        │  │  └─ provider-capacity.ts           # SP-028
 │        │  └─ routes/
 │        │     ├─ health.routes.ts               # SP-009
 │        │     ├─ bootstrap.routes.ts            # SP-009
@@ -1899,8 +1908,10 @@ screen-pilot/
 │        │  ├─ anonymous-session-cookie.ts       # SP-009
 │        │  ├─ interview-grant.ts                # SP-009
 │        │  ├─ interview-grant.test.ts           # SP-009
-│        │  ├─ stateless-rate-limit.ts           # SP-022
-│        │  └─ spend-cap.ts                      # SP-022
+│        │  ├─ stateless-rate-limit.ts           # SP-022/SP-028
+│        │  ├─ request-body-capacity.ts           # SP-028
+│        │  ├─ request-source.ts                  # SP-028; production/local trust adapter
+│        │  └─ spend-cap.ts                       # SP-022
 │        └─ ai/
 │           └─ prompts/
 │              ├─ interviewer-prompt.ts          # SP-017
@@ -1928,6 +1939,8 @@ screen-pilot/
 │        │  ├─ insight-card.ts                   # SP-006
 │        │  ├─ topic-progress.ts                 # SP-006
 │        │  └─ screening-summary.ts              # SP-006/SP-010A
+│        ├─ security/
+│        │  └─ request-source.ts                  # SP-028; cross-boundary normalization
 │        ├─ client-tools/
 │        │  └─ insight-tools.ts                  # SP-016
 │        └─ ai/
@@ -2051,13 +2064,22 @@ This is the authoritative credential contract for every implementation ticket. T
 
 #### Canonical local files and values
 
-`apps/frontend/.env.example` contains only the server-side origin used by the Next.js development rewrite:
+The current `apps/frontend/.env.example` contains only the server-side backend
+connection contract used by the Next.js proxy:
 
 ```dotenv
 BACKEND_ORIGIN=http://127.0.0.1:3001
+BACKEND_AUTH_MODE=local
+BACKEND_AUTH_AUDIENCE=
 ```
 
-It contains no provider key and no public API-base variable. The browser continues to call relative `/v1/...` paths.
+Production sets
+`BACKEND_AUTH_MODE=google-cloud-oidc` and uses the stable backend `run.app` URL
+for both `BACKEND_ORIGIN` and `BACKEND_AUTH_AUDIENCE`. Local mode requires a
+loopback backend, remains unauthenticated, and never contacts Google metadata.
+These values are server-only and non-secret. The frontend contains no provider
+key and no public API-base variable. The browser continues to call relative
+`/v1/...` paths.
 
 `apps/backend/.env.example` is committed with this ownership shape. Safe local defaults may be present, but every user-supplied credential/identifier stays blank:
 
@@ -2089,6 +2111,7 @@ ANONYMOUS_COOKIE_SECRET=
 HTTP_HEADERS_TIMEOUT_MS=10000
 HTTP_REQUEST_TIMEOUT_MS=30000
 HTTP_JSON_BODY_MAX_BYTES=65536
+HTTP_BODY_RECEIPT_CONCURRENT_REQUESTS=2
 PROVIDER_REQUEST_TIMEOUT_MS=30000
 INTERVIEW_GRANT_TTL_SECONDS=900
 ANONYMOUS_COOKIE_TTL_SECONDS=7200
@@ -2103,6 +2126,11 @@ RATE_LIMIT_PREPARE_REQUESTS=30
 RATE_LIMIT_CV_ANALYZE_REQUESTS=10
 RATE_LIMIT_VOICE_TOKEN_REQUESTS=3
 RATE_LIMIT_SUMMARY_REQUESTS=10
+RATE_LIMIT_GLOBAL_BOOTSTRAP_REQUESTS=600
+RATE_LIMIT_GLOBAL_PREPARE_REQUESTS=150
+RATE_LIMIT_GLOBAL_CV_ANALYZE_REQUESTS=50
+RATE_LIMIT_GLOBAL_VOICE_TOKEN_REQUESTS=15
+RATE_LIMIT_GLOBAL_SUMMARY_REQUESTS=50
 ```
 
 The LLM/STT/TTS model identifiers and the three Turnstile actions are source-controlled locked constants, not extra secret fields. `ELEVENLABS_AGENT_ID` and `ELEVENLABS_VOICE_ID` are non-secret provider identifiers but remain blank until the user creates/selects them. `TURNSTILE_SITE_KEY` is browser-safe but is returned through bootstrap from backend configuration; it does not belong in the frontend environment.
@@ -2261,16 +2289,28 @@ quality checks on the exact candidate commit
       -> build and push exact-SHA frontend image once
           -> deploy paid-disabled frontend bootstrap revision
               -> configure Turnstile for the stable frontend hostname
-                  -> build, push, and deploy exact-SHA backend image
-                      -> configure BACKEND_ORIGIN and deploy the same frontend image
-                          -> record the deployed checkpoint
-                              -> run unpaid deployed checks
-                                  -> run the two owner-controlled paid flows
+                  -> build and push exact-SHA backend image
+                      -> grant backend Invoker only to the frontend runtime identity
+                          -> deploy the auth-capable frontend with backend origin/audience
+                              -> deploy the IAM-authenticated backend exact-SHA revision
+                                  -> record the deployed checkpoint
+                                      -> run authenticated/unpaid deployed checks
+                                          -> run the two owner-controlled paid flows
 ```
 
-The frontend Cloud Run service is the only visitor-facing origin. Its Next.js server proxies relative `/v1/**` requests to the backend Cloud Run service, so a third hosting layer and a second public API hostname are unnecessary. Both services receive stable `run.app` HTTPS URLs. The backend URL is operational configuration only and must not appear in browser bundles, visitor-facing UI, metadata, or portfolio links.
+The frontend Cloud Run service is the only unauthenticated visitor-facing
+origin. Its Next.js server proxies relative `/v1/**` requests to the backend
+Cloud Run service, so a third hosting layer and a second public API hostname are
+unnecessary. Both services receive stable `run.app` HTTPS URLs. SP-028's chosen
+target requires the backend Cloud Run Invoker IAM check, grants
+`roles/run.invoker` on that service only to the existing frontend runtime
+service account, and has the frontend attach an audience-bound Google ID token.
+The backend keeps ordinary Cloud Run HTTPS ingress—no VPC, load balancer, or WAF
+is added—but unauthenticated direct calls fail before Express. The backend URL
+is operational configuration only and must not appear in browser bundles,
+visitor-facing UI, metadata, or portfolio links.
 
-Authenticate with `gcloud auth login`, configure the Artifact Registry Docker credential helper, and deploy immutable images tagged with the exact Git commit SHA. Use separate least-privilege runtime service accounts: only the backend service account may read the five runtime secrets from Secret Manager. Cloud Run revision history supplies the rollback path. Do not add a service-account key, Kubernetes, Terraform, a paid load balancer, or a custom deployment controller for this demo.
+Authenticate with `gcloud auth login`, configure the Artifact Registry Docker credential helper, and deploy immutable images tagged with the exact Git commit SHA. Use separate least-privilege runtime service accounts: only the backend service account may read the five runtime secrets from Secret Manager, while the frontend service account receives only service-level backend Invoker. Cloud Run revision history plus a private IAM-policy snapshot supplies the rollback path. Do not add a service-account key, Kubernetes, Terraform, a paid load balancer, or a custom deployment controller for this demo.
 
 Follow [`docs/operations/manual-google-cloud-deployment.md`](operations/manual-google-cloud-deployment.md) for the exact bootstrap, build, push, deploy, validation, and rollback sequence.
 
@@ -2340,7 +2380,7 @@ The required SP-026 release uses the managed HTTPS URL of the frontend Cloud Run
 https://<frontend-service-id>.run.app/
 ```
 
-The Next.js frontend server proxies all relative `/v1/**` requests to the backend Cloud Run origin. This gives the browser one public origin, keeps the anonymous safety cookie first-party, and avoids a second hosting product, an `api.` domain, or a paid external Application Load Balancer. The backend `run.app` URL remains operational configuration and a health-check target, not a visitor-facing link.
+The Next.js frontend server proxies all relative `/v1/**` requests to the backend Cloud Run origin. This gives the browser one public origin, keeps the anonymous safety cookie first-party, and avoids a second hosting product, an `api.` domain, or a paid external Application Load Balancer. The backend `run.app` URL remains operational configuration and an authenticated owner/Cloud Run probe health target, not a visitor-facing link. An unauthenticated direct backend request must return `401` or `403`; ordinary unpaid visitor checks go through the frontend proxy.
 
 Cloudflare Turnstile remains a separate **$0** service. It does not require Cloudflare nameservers or proxying. Keep Cloudflare Bot Fight Mode, the Cloudflare HTTP proxy, and paid WAF out of this demo; Turnstile supplies the scoped browser check without changing the hosting route.
 
@@ -3368,33 +3408,43 @@ Present this as a high-quality UI concept for composition and visual direction. 
 - Obtain a fresh action-specific token for each paid request. Keep it in memory only, never put it in `sessionStorage`, and reset the widget after success, expiry, duplicate rejection, or retry.
 - Perform mandatory backend Siteverify validation with the server-only secret, expected production hostname, and expected action before any OpenAI or ElevenLabs call. The client widget alone is never considered protection.
 - Return the public site key through bootstrap; keep the secret in Google Secret Manager/Cloud Run. Use separate production and non-production widgets/test keys.
-- Apply bounded best-effort route/source limits only through one explicitly
-  verified ingress/source contract plus the anonymous safety cookie. The
-  frontend proxy forwards an allow-listed request-header set and strips every
-  caller-supplied forwarding/client-address/internal-platform header. Do not
-  use a numeric `trust proxy` hop assumption across paths with different
-  topology. Prefer an authenticated frontend-to-backend boundary with one
-  canonical internal source signal; if the backend remains publicly invokable,
-  enforce source identity at the frontend and use session/global backend
-  budgets instead of trusting a caller header. Raw source and cookie values are
-  HMAC-fingerprinted with a process-local random secret before entering capped
-  TTL memory. Fixed-window expiry uses a bounded one-node-per-entry min-heap, so
-  ordinary hits never scan the full counter table. A full table never evicts an
-  unexpired enforcement bucket to admit a fresh identity: unseen identities
-  use a bounded overflow/global route budget or fail closed until expiry.
-  Counters are per Cloud Run instance and reset on restart/scale. Do not log raw
-  IP addresses or pretend the limits are durable identity enforcement.
-- Apply tighter limits to voice-token issuance and coarser limits to CV analysis and summary generation; rate-limit deterministic conversation preparation separately even though it is free.
+- Apply bounded best-effort route/source limits only through the fixed SP-028
+  ingress contract plus the anonymous safety cookie. The backend Cloud Run
+  service requires the Invoker IAM check and grants service-level
+  `roles/run.invoker` only to the existing frontend runtime service account.
+  Production frontend calls use a Google-signed ID token whose audience is the
+  stable backend `run.app` URL; the server-only metadata client validates token
+  audience/expiry, deduplicates retrieval, caches with a refresh margin, and
+  times out after three seconds. Local calls are explicitly unauthenticated,
+  limited to loopback port 3001, and never contact Google metadata. The frontend strips every
+  inbound forwarding/client-address/auth/internal-platform header, forwards
+  only the application allow-list, and creates one canonical normalized
+  `X-ScreenPilot-Client-Source` signal by validating the final Google-appended
+  `<client-ip>,<load-balancer-ip>` suffix and selecting only its next-to-last
+  client position. Malformed chains use the unresolved safety identity. The
+  backend disables Express proxy trust and trusts that source header only
+  across the IAM-authenticated production boundary.
+  Raw source and cookie values are HMAC-fingerprinted with a process-local
+  random secret before entering capped TTL memory. Fixed-window expiry uses a
+  bounded one-node-per-entry min-heap, so ordinary hits never scan the full
+  counter table. A full table preserves all unexpired enforcement buckets;
+  fixed route-global budgets plus a bounded overflow/fail-closed path handle
+  unseen identities until expiry. Counters are per
+  Cloud Run instance and reset on restart/scale. Do not log raw IP addresses or
+  pretend the limits are durable identity enforcement.
+- Apply tighter limits to voice-token issuance and coarser limits to CV analysis and summary generation; rate-limit deterministic conversation preparation separately even though it is free. The default 60-second per-instance route-global budgets are bootstrap 600, preparation 150, CV analysis 50, voice token 15, and summary 50. A route-global budget cannot be configured below its source/session allowance.
 - Hold bounded per-instance in-flight leases for CV analysis, voice-token issuance, and summary generation until the HTTP response finishes or closes. Default global capacity is `4`, with per-route ceilings `2`, `1`, and `2` respectively; reject excess work before Turnstile/provider invocation.
 - Bound inbound HTTP receipt separately from provider work: reject unsupported
   methods/content types, disallowed origins, invalid or oversized declared
   lengths, and exhausted cheap/global admission before body parsing. The Next
-  proxy's bounded stream reader has its own short abortable deadline and cancels
-  on disconnect. Backend JSON parsing is route-scoped after a cheap pre-body
-  admission decision; provider-capacity leases are acquired only after strict
-  body validation. Complete headers retain a 10-second deadline, the complete
-  inbound backend request retains a 30-second outer receipt deadline, and JSON
-  bodies remain capped at 64 KiB. These settings do not masquerade as a whole-
+  proxy's bounded stream reader has a 10-second whole-receipt deadline, cancels
+  on disconnect, timeout, or observed oversize, and releases its lock once the
+  one-shot cancellation settles. Backend JSON parsing is route-scoped after a
+  cheap pre-body admission decision and holds one of two independent
+  body-receipt leases only while parsing; provider-capacity leases are acquired
+  only after strict body validation. Complete headers retain a 10-second deadline, the
+  complete inbound backend request retains a 30-second outer receipt deadline,
+  and JSON bodies remain capped at 64 KiB. These settings do not masquerade as a whole-
   handler deadline; each outbound Turnstile/OpenAI/ElevenLabs operation instead
   has its own abortable 30-second provider timeout, while local handler work
   operates only on already-bounded inputs.
@@ -3441,7 +3491,8 @@ Frontend and backend logs remain separate by service. Backend structured logs ma
 - Turnstile verification outcome/action as a sanitized category, never its token, secret, hostname supplied by the client, or raw Siteverify payload;
 - retry category and sanitized error code;
 - token/minute usage totals where returned;
-- rate-limit outcome without raw IP.
+- rate-limit route/reason plus logarithmically sampled aggregate rejection
+  count without raw IP, cookie, grant, fingerprint, or candidate content.
 
 They may not contain CV text, transcript text, insight values, names, salary values, cookies, grants, provider tokens, full URLs, or raw request/response bodies.
 
@@ -4835,10 +4886,10 @@ worker remains an architecture boundary rather than a deferred task.
    - [ ] Create two least-privilege Cloud Run runtime service accounts and five backend-only Secret Manager secrets. Grant secret access only to the backend identity; the frontend receives none.
 3. **Deploy exactly two Cloud Run services.**
    - [ ] Deploy the paid-disabled frontend bootstrap revision only to obtain its stable `run.app` hostname; this is an earlier revision of the frontend service, not a third service.
-   - [ ] Create/restrict the free production Turnstile widget for that hostname, configure secrets, origins, headers, health checks, minimum/maximum instances, concurrency, and the paid-demo switch, then deploy the backend exact-SHA image.
-   - [ ] Configure the same frontend exact-SHA image with runtime-only `BACKEND_ORIGIN`, deploy it to the existing frontend service, and confirm there is no application database, candidate-data object storage, queue, worker, additional hosting layer, or load balancer.
+   - [ ] Create/restrict the free production Turnstile widget for that hostname, configure secrets, origins, headers, health checks, minimum/maximum instances, concurrency, and the paid-demo switch, then build and push the backend exact-SHA image without changing traffic.
+   - [ ] Grant backend Cloud Run Invoker only to the existing frontend runtime service account; deploy the auth-capable frontend exact-SHA revision with server-only `BACKEND_ORIGIN`, `BACKEND_AUTH_MODE=google-cloud-oidc`, and `BACKEND_AUTH_AUDIENCE`; then deploy the same-candidate backend revision with the Invoker IAM check required and `allUsers` removed. Confirm there is no application database, candidate-data object storage, queue, worker, VPC, additional hosting layer, load balancer, or WAF.
 4. **Record the technical deployment checkpoint.**
-   - [ ] Run direct backend liveness/readiness checks and unpaid frontend-origin routing, refresh, `/v1`, cookie, public Turnstile configuration, security-header, and canonical-metadata smokes through the frontend `run.app` origin.
+   - [ ] Verify unauthenticated direct backend health returns `401`/`403`, authenticated owner liveness/readiness returns `200`, and unpaid frontend-origin routing, refresh, `/v1`, cookie, public Turnstile configuration, security headers, canonical source handling, bounded admission, request receipt/parsing limits, and cleanup pass through the frontend `run.app` origin.
    - [ ] Verify the final revisions identify the audited Git SHA, the frontend loads over managed HTTPS, frontend-origin `/v1` calls reach the backend, and the backend URL does not appear in browser code or visitor-facing output. At this point the app is deployed; GitHub deployment CI and a custom domain remain deferred.
    - [ ] Verify the frontend-only `?diagnostics=timings` opt-in remains unavailable on every non-loopback deployment hostname: no diagnostics drawer, raw timing view, **Copy JSON**, or **Reset** controls may render. Do not add or expect a backend diagnostics route.
 5. **Test the deployed website and close release acceptance.**
@@ -4883,6 +4934,12 @@ accepted.
 
 **Depends on:** SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026.
 
+**Current state (2026-09-28):** Phase 1 is implemented and owner-approved. The
+Phase 2 review is complete and SEC-001, SEC-002, and SEC-003 application-code
+remediation is implemented and locally verified. No IAM
+mutation or deployment is authorized, so unauthenticated backend denial,
+frontend-runtime invocation, and the deployed fake/unpaid smoke remain gated.
+
 **Suggested commit:** `SP-028: harden post-deployment experience and security`
 
 **Execution order:**
@@ -4890,10 +4947,16 @@ accepted.
 1. [x] Complete the sample-CV removal boundary, hero viewport contract,
    visibility-gated motion, and responsive scroll-story corrections. Agent
    verification and owner visual approval completed on 2026-09-28.
-2. [ ] Correct the trusted-source/header boundary, churn-resistant bounded
-   rate limiting, and pre-body slow-request admission identified by the STRIDE
-   analysis. Preserve the already-validated origin, cookie, grant, Turnstile,
-   provider-cap, CSP, redaction, and statelessness controls.
+2. [ ] Complete the trusted-source/header boundary with the fixed
+   IAM-authenticated frontend-to-backend contract, audience-bound service token,
+   canonical internal source signal, explicit local mode, bounded admission,
+   and bounded request receipt/parsing.
+   Preserve legitimate CV/interview/UI/provider behavior plus the already-
+   validated origin, cookie, grant, Turnstile, provider-cap, CSP, redaction, and
+   statelessness controls. **Partial status:** all three application-code
+   corrections are complete and locally verified; the Cloud Run/IAM execution
+   and deployed fake/unpaid smoke remain gated, so this combined phase item
+   remains unchecked.
 3. [ ] Complete the responsive/motion/security manual matrix and one CV-assisted
    run using a never-before-used synthetic or licensed public-template text PDF
    with no real person's data.
@@ -4965,7 +5028,7 @@ accepted.
   every material finding is fixed or explicitly blocks deployment, and the full
   deterministic gate passes on the exact candidate SP-026 will deploy.
 - [ ] One GitHub `ci.yml` gates pull requests/main with unpaid fast checks and remains quality-only; the owner manually builds and deploys the exact audited commit from an authenticated laptop to both Cloud Run services before production smoke verification.
-- [ ] The frontend Cloud Run `run.app` URL serves valid managed HTTPS and same-origin `/v1` requests reach the backend through the frontend server proxy without exposing the backend service URL to visitors. A custom domain is optional after release and stays under the renewal-price guardrail if added.
+- [ ] The frontend Cloud Run `run.app` URL serves valid managed HTTPS and same-origin `/v1` requests reach the IAM-authenticated backend through the frontend runtime identity without exposing the backend service URL or ID token to visitors. Unauthenticated direct backend calls fail before Express; authenticated owner health checks and Cloud Run probes remain supported. A custom domain is optional after release and stays under the renewal-price guardrail if added.
 - [ ] Optional SP-027 portfolio packaging is explicitly not required for deployment or release approval.
 - [ ] SP-026's exact two controlled production flows pass on the deployed SP-
   025A-audited candidate: one materially different synthetic/licensed text-PDF
@@ -4975,10 +5038,10 @@ accepted.
   `PAID_DEMO_ENABLED` state and rationale are recorded under the conditional
   working-demo release rule. Only a named defect may justify a narrow rerun.
 - [ ] Full phone, tablet, laptop/desktop, and large-monitor flows plus keyboard, reduced-motion, orientation, safe-area, intermediate resizing, and provider failure paths are verified.
-- [ ] Cloudflare Turnstile Free, best-effort backend route/source limits, Cloud Run/provider caps, and the paid-demo kill switch work without a database, paid WAF, or Cloudflare proxy.
+- [ ] Cloudflare Turnstile Free, IAM-authenticated frontend-to-backend invocation, best-effort global/source/session limits, Cloud Run/provider caps, and the paid-demo kill switch work without a database, VPC, paid WAF, load balancer, or Cloudflare proxy.
 - [ ] SP-028's opening hero/visibility/scroll-story contract passes the complete
-  responsive and paired-motion matrix; its trusted-source, churn-resistant
-  rate-limit, and pre-body deadline regressions pass; and the owner completes
+  responsive and paired-motion matrix; its trusted-source, bounded-admission,
+  request-receipt, and cleanup regressions pass; and the owner completes
   one never-before-used synthetic CV-assisted acceptance run before portfolio
   presentation or another deployment.
 
@@ -5007,10 +5070,10 @@ The architecture is now demo-sized, but these items should still be challenged b
 | Figma design system/prototype | Future optional, out of demo scope | Do not block implementation or add tickets for Figma. Revisit only if the portfolio later benefits from a formal design artifact. |
 | ImageGen concept | One paired active-interview concept after HTML-reference approval | Keep it because the richest ScreenPilot screen can establish composition and atmosphere for the rest of the implementation. Do not expand it into landing-page variants, every-state mockups, or multiple art directions. |
 | Detailed cost telemetry | Manual release measurement | Use provider dashboards plus one release worksheet; do not build an internal billing/analytics system. |
-| Public bot/abuse control | Turnstile Free + trusted-ingress global/source/session limits + hard provider/Cloud Run caps | Keep the three paid-route checks because they directly protect demo spend. SP-028 must remove forwarding-header ambiguity, active-bucket eviction under churn, and pre-admission slow-body exposure without adding Bot Fight Mode, a Cloudflare proxy, paid WAF, persistent IP ledger, fingerprinting system, or end-user authentication flow. |
+| Public bot/abuse control | Turnstile Free + IAM-authenticated frontend-to-backend ingress + global/source/session limits + hard provider/Cloud Run caps | Keep the three paid-route checks because they directly protect demo spend. SP-028 requires backend Invoker IAM for the frontend runtime identity, an audience-bound token, a strict request-header allow-list and canonical internal source signal, bounded global/source/session admission, bounded request receipt/parsing, and complete cleanup without adding a VPC, load balancer, Bot Fight Mode, Cloudflare proxy, paid WAF, persistent IP ledger, fingerprinting system, or end-user authentication flow. |
 | Portfolio README/video package | Optional SP-027 | The deployed demo stands on its own. Add the polished README, screenshots, diagram, measured-results write-up, and recorded walkthrough only if they materially improve the Upwork presentation. |
 | Cross-browser matrix | Manual desktop/mobile acceptance is required | Preserve mobile parity with targeted iPhone Safari, Android Chrome, desktop Chromium, and Firefox checks rather than a commercial device lab or a new automation programme. |
-| Cloud-specific infrastructure code | Minimal manual Google Cloud deployment | Keep the existing quality-only `ci.yml`, two container definitions, Artifact Registry, Secret Manager, two Cloud Run services, and the frontend server's same-origin `/v1` proxy. Avoid deployment CI, a third hosting layer, paid load balancer, Terraform, Kubernetes, service mesh, multi-region failover, or a custom deployment platform. Direct custom-domain mapping is optional only after the `run.app` release passes and its Preview limitations are accepted. |
+| Cloud-specific infrastructure code | Minimal manual Google Cloud deployment | Keep the existing quality-only `ci.yml`, two container definitions, Artifact Registry, Secret Manager, two Cloud Run services, and the frontend server's same-origin `/v1` proxy. The backend uses Cloud Run IAM service-to-service authentication over its default HTTPS origin; no VPC or extra routing product is required. Avoid deployment CI, a third hosting layer, paid load balancer, Terraform, Kubernetes, service mesh, multi-region failover, or a custom deployment platform. Direct custom-domain mapping is optional only after the `run.app` release passes and its Preview limitations are accepted. |
 
 Recommended implementation priority if time tightens:
 

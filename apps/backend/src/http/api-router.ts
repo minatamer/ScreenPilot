@@ -5,6 +5,7 @@ import type { AnalyzeCv } from "../use-cases/analyze-cv.js";
 import type { GenerateInterviewSummary } from "../use-cases/generate-interview-summary.js";
 import type { PrepareConversationFirst } from "../use-cases/prepare-conversation-first.js";
 import type { CreateVoiceToken } from "../use-cases/create-voice-token.js";
+import type { ProviderCapacityGuard } from "./middleware/provider-capacity.js";
 import { createBootstrapRoutes } from "./routes/bootstrap.routes.js";
 import { createCvAnalyzeRoutes } from "./routes/cv-analyze.routes.js";
 import { createHealthRoutes } from "./routes/health.routes.js";
@@ -23,6 +24,17 @@ export function createApiRouter(input: {
   isReady: () => boolean;
   issueVoiceToken: CreateVoiceToken;
   prepareConversationFirst: PrepareConversationFirst;
+  providerCapacity: Readonly<{
+    cvAnalyze: ProviderCapacityGuard;
+    interviewSummary: ProviderCapacityGuard;
+    voiceToken: ProviderCapacityGuard;
+  }>;
+  requestBody: Readonly<{
+    cvAnalyze: RequestHandler;
+    interviewPrepare: RequestHandler;
+    interviewSummary: RequestHandler;
+    voiceToken: RequestHandler;
+  }>;
   requestAdmission: Readonly<{
     bootstrap: RequestHandler;
     cvAnalyze: RequestHandler;
@@ -30,6 +42,7 @@ export function createApiRouter(input: {
     interviewSummary: RequestHandler;
     voiceToken: RequestHandler;
   }>;
+  requireJsonRequest: RequestHandler;
 }): Router {
   const router = Router();
 
@@ -48,7 +61,10 @@ export function createApiRouter(input: {
     createCvAnalyzeRoutes({
       allowedOrigins: input.allowedOrigins,
       analyzeCv: input.analyzeCv,
+      providerCapacity: input.providerCapacity.cvAnalyze,
+      requestBody: input.requestBody.cvAnalyze,
       requestAdmission: input.requestAdmission.cvAnalyze,
+      requireJsonRequest: input.requireJsonRequest,
     }),
   );
   router.use(
@@ -56,7 +72,9 @@ export function createApiRouter(input: {
     createInterviewPrepareRoutes({
       allowedOrigins: input.allowedOrigins,
       prepareConversationFirst: input.prepareConversationFirst,
+      requestBody: input.requestBody.interviewPrepare,
       requestAdmission: input.requestAdmission.interviewPrepare,
+      requireJsonRequest: input.requireJsonRequest,
     }),
   );
   router.use(
@@ -64,7 +82,10 @@ export function createApiRouter(input: {
     createInterviewSummaryRoutes({
       allowedOrigins: input.allowedOrigins,
       generateInterviewSummary: input.generateInterviewSummary,
+      providerCapacity: input.providerCapacity.interviewSummary,
+      requestBody: input.requestBody.interviewSummary,
       requestAdmission: input.requestAdmission.interviewSummary,
+      requireJsonRequest: input.requireJsonRequest,
     }),
   );
   router.use(
@@ -72,7 +93,10 @@ export function createApiRouter(input: {
     createVoiceTokenRoutes({
       allowedOrigins: input.allowedOrigins,
       createVoiceToken: input.issueVoiceToken,
+      providerCapacity: input.providerCapacity.voiceToken,
+      requestBody: input.requestBody.voiceToken,
       requestAdmission: input.requestAdmission.voiceToken,
+      requireJsonRequest: input.requireJsonRequest,
     }),
   );
 

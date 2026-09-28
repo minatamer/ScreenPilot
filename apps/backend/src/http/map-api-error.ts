@@ -15,6 +15,7 @@ import { TurnstileVerificationError } from "../providers/turnstile/cloudflare-tu
 import { InterviewGrantError } from "../security/interview-grant.js";
 import { UseCaseError } from "../use-cases/use-case-error.js";
 import { OriginNotAllowedError } from "./middleware/allowed-origin.js";
+import { JsonRequestBoundaryError } from "./middleware/bounded-json-body.js";
 import { getRequestId } from "./middleware/request-id.js";
 import {
   AnonymousSessionRequiredError,
@@ -147,6 +148,14 @@ function mapApiError(error: unknown, requestId: string): MappedApiError {
       message: error.message,
       retryable: false,
       status: 401,
+    });
+  }
+  if (error instanceof JsonRequestBoundaryError) {
+    return createMappedError(requestId, {
+      code: error.code,
+      message: error.message,
+      retryable: false,
+      status: error.status,
     });
   }
   if (error instanceof RequestValidationError) {

@@ -87,11 +87,20 @@ describe("loadBackendConfig", () => {
     expect(config.providers.elevenLabs.ttsModel).toBe("eleven_flash_v2_5");
     expect(config.limits.httpHeadersTimeoutMs).toBe(10_000);
     expect(config.limits.httpRequestTimeoutMs).toBe(30_000);
+    expect(config.limits.bodyReceiptConcurrentRequests).toBe(2);
     expect(config.limits.capacity).toEqual({
       cvAnalyzeConcurrentRequests: 2,
       globalConcurrentRequests: 4,
       summaryConcurrentRequests: 2,
       voiceTokenConcurrentRequests: 1,
+    });
+    expect(config.limits.rateLimit).toMatchObject({
+      globalBootstrapRequests: 600,
+      globalCvAnalyzeRequests: 50,
+      globalPrepareRequests: 150,
+      globalSummaryRequests: 50,
+      globalVoiceTokenRequests: 15,
+      maxEntries: 10_000,
     });
   });
 
@@ -307,6 +316,10 @@ describe("loadBackendConfig", () => {
     ["invalid live-interview flag", { LIVE_INTERVIEW_ENABLED: "sometimes" }],
     ["malformed port", { PORT: "three-thousand" }],
     ["out-of-range body limit", { HTTP_JSON_BODY_MAX_BYTES: "1023" }],
+    [
+      "out-of-range body receipt capacity",
+      { HTTP_BODY_RECEIPT_CONCURRENT_REQUESTS: "0" },
+    ],
     ["out-of-range headers timeout", { HTTP_HEADERS_TIMEOUT_MS: "999" }],
     ["out-of-range request timeout", { HTTP_REQUEST_TIMEOUT_MS: "4999" }],
     [
@@ -317,6 +330,13 @@ describe("loadBackendConfig", () => {
       },
     ],
     ["out-of-range rate limit", { RATE_LIMIT_VOICE_TOKEN_REQUESTS: "0" }],
+    [
+      "global rate limit below identity limit",
+      {
+        RATE_LIMIT_GLOBAL_VOICE_TOKEN_REQUESTS: "2",
+        RATE_LIMIT_VOICE_TOKEN_REQUESTS: "3",
+      },
+    ],
     [
       "out-of-range capacity",
       { CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS: "0" },
