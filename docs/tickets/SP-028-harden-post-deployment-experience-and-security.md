@@ -1,6 +1,6 @@
 # SP-028 — Harden the post-deployment experience and security boundaries
 
-Status: In progress — Phase 1 complete and owner-approved; Phase 2 application code locally verified and five-minute provider configuration synchronized, Cloud Run/IAM execution gated; Phase 3 partially started with one limited local live CV-extractor smoke, while the formal manual matrix remains incomplete<br>
+Status: In progress — Phase 1 complete and owner-approved; Phase 2 application and Cloud Run/IAM controls deployed from exact commit `848c985c3ac4fde72d41a62fbd3854214444b2c1`, with unpaid gates passed and the owner-authorized public live switch enabled; Phase 3 partially started with one limited local live CV-extractor smoke, while the formal manual matrix and controlled production provider flows remain incomplete<br>
 Milestone: Milestone 7 — post-deployment portfolio hardening  
 Last synchronized: 2026-09-28<br>
 Depends on: SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026<br>
@@ -613,14 +613,15 @@ trailing slash is not the default audience contract.
 - [x] Request-body tests cover supported route shapes, declared/observed size,
   receipt timeout, disconnect cancellation, route-scoped parsing, lease
   cleanup, strict validation, and provider-call exclusion before admission.
-- [ ] Unauthenticated direct backend calls return `401`/`403`, the
+- [x] Unauthenticated direct backend calls return `401`/`403`, the
   audience-bound frontend runtime succeeds, owner-token health returns `200`,
-  and Cloud Run probes remain healthy. **Blocked by the separately approved
-  Cloud Run/IAM change.**
+  and Cloud Run probes remain healthy. Verified against the deployed exact-SHA
+  revisions on 2026-09-28.
 - [ ] The deployed fake/unpaid path confirms the configured platform source
   contract, bounded admission behavior, request receipt limits, cleanup, and
-  unchanged legitimate CV/interview/UI behavior. **Blocked by deployment and
-  cloud approval.**
+  unchanged legitimate CV/interview/UI behavior. The deployed paid-disabled
+  origin, routing, cookie/header, sample-removal, preparation, and schema-valid
+  CV gates passed; the broader manual matrix remains in Section 3.
 
 ### Deterministic verification evidence
 
@@ -631,21 +632,60 @@ trailing slash is not the default audience contract.
   typechecks, zero-warning lints, production builds, tracked-secret and browser-
   style scans, and production dependency audit passed at their recorded local
   checkpoints.
-- Automated verification did not read `.env.local`, call a live provider, use
-  paid mode, contact Google metadata or Cloud Run, or mutate external state.
-- No Cloud Run/IAM change, deployment, Git staging, commit, or push was part of
-  the local security implementation.
+- The local automated verification did not read `.env.local`, call a live
+  provider, use paid mode, or contact Google metadata. The later separately
+  authorized deployment used only committed configuration schemas, exact-SHA
+  images, Secret Manager references, and non-secret Cloud Run values.
+
+### Deployed release evidence — 2026-09-28
+
+- Commit `848c985c3ac4fde72d41a62fbd3854214444b2c1` is deployed through frontend
+  revision `screenpilot-frontend-sp028b-848c985c3ac` and backend revision
+  `screenpilot-backend-sp028live-848c985c3ac`; both revision images resolve to
+  that exact immutable Git-SHA tag.
+- A first paid-disabled deployment smoke exposed that Cloud Run reconstructed
+  the Next.js request URL with an internal service origin. The original
+  `Origin === request.url.origin` comparison therefore rejected legitimate
+  custom-domain mutations. The committed fix uses the bounded server-only
+  `FRONTEND_ALLOWED_ORIGINS` policy; regression coverage reproduces the internal
+  URL/public browser-origin difference, while cross-site origins still fail.
+- The backend Invoker policy contains only
+  `screenpilot-frontend-runtime@try-screenpilot.iam.gserviceaccount.com`;
+  `allUsers` and `allAuthenticatedUsers` are absent. Unauthenticated direct
+  health returned `403`; an owner identity token returned `200` for liveness and
+  readiness; same-origin frontend bootstrap and mutations reached the private
+  backend through audience-bound OIDC.
+- Before enabling paid mode, production bootstrap returned `paid_disabled`, a
+  valid conversation-first preparation and a schema-valid synthetic CV request
+  both stopped at `503 CAPACITY_REACHED`, the public Turnstile key was blank,
+  and no provider call was initiated. `/`, `/demo`, and diagnostics-query route
+  refreshes returned `200`; the removed sample fixture returned `404`; the
+  backend URL was absent from rendered HTML; no-store, CSP, cookie, nosniff, and
+  referrer controls were present.
+- After those gates passed, the owner explicitly authorized
+  `PAID_DEMO_ENABLED=true`. Production bootstrap now returns `standard_live`,
+  `paidOperationsEnabled: true`, a non-empty public Turnstile site key, and the
+  five-minute limit. A provider-free conversation-first preparation returned
+  `200` with a signed grant through the apex and `www` custom origins. This
+  deployment verification did not submit a CV, request an ElevenLabs token, or
+  generate a summary against production providers; those controlled flows
+  remain manual Section 3 evidence.
+- Runtime limits remain frontend concurrency 80, backend concurrency 4, maximum
+  one instance each, body-receipt concurrency 2, and the documented global
+  bootstrap/preparation/CV/voice/summary ceilings. The five backend secrets
+  remain Secret Manager references; neither image history contains an ignored
+  local environment file or secret value.
 
 ### Phase 2 remaining gates
 
 - [x] SEC-001, SEC-002, and SEC-003 application code is implemented and locally
   verified.
-- [ ] Apply the Cloud Run service-level Invoker policy and deploy the exact
-  audited frontend/backend revisions in the safe order below. **Requires
-  separate owner approval.**
+- [x] Apply the Cloud Run service-level Invoker policy and deploy the exact
+  audited frontend/backend revisions in the safe order below.
 - [ ] Prove unauthenticated backend denial, authenticated frontend-runtime and
   owner health access, deployed source topology, and the complete fake/unpaid
-  production smoke. **Blocked by Cloud Run/IAM and deployment approval.**
+  production smoke. Infrastructure denial, identity, topology, and core unpaid
+  gates passed; the remaining broad manual matrix stays in Section 3.
 - [ ] Complete Section 3 manual testing. Paid-provider use remains separately
   gated.
 
@@ -947,6 +987,33 @@ and defect link. A screenshot alone is not a pass.
 - [ ] Rerun existing origin, cookie, grant, Turnstile replay/action/hostname,
   capacity, paid-kill-switch, CSP/header, log-redaction, and provider-call-count
   regressions to prove the final controls preserve established behavior.
+
+### 3.3A — Responsive final-review regression — 2026-09-28
+
+An owner screenshot exposed the final review content extending beyond the right
+edge of its workspace card. The defect was an intrinsic-sizing interaction: the
+large-screen heading rule kept the review title on one unbroken line, the
+30-rem review-view switcher competed for the same flex row, and the review
+stage's automatic grid minimum expanded to satisfy both children. The evidence
+map then inherited that oversized track even though its own branches were
+otherwise responsive.
+
+The correction gives the review stage an explicit `minmax(0, 1fr)` track,
+allows the heading and tab switcher to shrink within the card, limits the
+large-screen switcher to 24 rem, and moves the stacked header composition to a
+74-rem content-pressure breakpoint. The title now remains on one line whenever
+the available header width can contain it and wraps naturally on smaller
+screens. No device-specific component or alternate review state was added.
+
+Agent verification covered 375 × 667, 390 × 844, 768 × 1024, 820 × 1180,
+1024 × 600/768, the 1184/1185 breakpoint boundary, 1280 × 800, 1366 × 768,
+1440 × 900, 1600 × 900, 1920 × 1080, and 2560 × 1440. The evidence map,
+expanded evidence preview, and organized-notes view all reported zero document,
+stage, and child horizontal overflow; the stage remained inside the workspace
+at every checked size. The production frontend build, frontend typecheck,
+frontend lint, stylesheet format check, and 352-test frontend unit suite passed,
+and the browser console reported no warnings or errors. This targeted check does
+not close the broader manual matrix or replace owner visual approval.
 
 ### 3.4 New-CV assisted path — mandatory owner reminder
 

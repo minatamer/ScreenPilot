@@ -4955,10 +4955,15 @@ accepted.
 **Depends on:** SP-015A, SP-022, SP-023, SP-024, SP-025A, SP-026.
 
 **Current state (2026-09-28):** Phase 1 is implemented and owner-approved. The
-Phase 2 review is complete and SEC-001, SEC-002, and SEC-003 application-code
-remediation is implemented and locally verified. No IAM
-mutation or deployment is authorized, so unauthenticated backend denial,
-frontend-runtime invocation, and the deployed fake/unpaid smoke remain gated.
+Phase 2 review and application remediation are complete. Exact commit
+`848c985c3ac4fde72d41a62fbd3854214444b2c1` is deployed to both Cloud Run
+services; backend Invoker is restricted to the frontend runtime identity,
+direct unauthenticated backend access is denied, authenticated health and the
+same-origin OIDC proxy pass, and the paid-disabled production gates passed.
+After those gates, the owner explicitly authorized the public live switch;
+production now reports `standard_live`, `PAID_DEMO_ENABLED=true`, the public
+Turnstile configuration, and a 300-second call limit. The broad manual matrix
+and controlled production CV/voice/summary provider flows remain incomplete.
 
 **Suggested commit:** `SP-028: harden post-deployment experience and security`
 
@@ -4974,9 +4979,9 @@ frontend-runtime invocation, and the deployed fake/unpaid smoke remain gated.
    Preserve legitimate CV/interview/UI/provider behavior plus the already-
    validated origin, cookie, grant, Turnstile, provider-cap, CSP, redaction, and
    statelessness controls. **Partial status:** all three application-code
-   corrections are complete and locally verified; the Cloud Run/IAM execution
-   and deployed fake/unpaid smoke remain gated, so this combined phase item
-   remains unchecked.
+   corrections and Cloud Run/IAM topology are deployed, and the core unpaid
+   production gates passed. The broader Section 3 security/manual matrix keeps
+   this combined phase item unchecked.
 3. [ ] Complete the responsive/motion/security manual matrix and one CV-assisted
    run using a never-before-used synthetic or licensed public-template text PDF
    with no real person's data.

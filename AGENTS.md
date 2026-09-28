@@ -2,6 +2,15 @@
 
 These instructions apply to the entire repository. The implementation authority is `docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md`; work from the relevant `docs/tickets/SP-*.md` packet and update both when a material architecture or product decision changes.
 
+## Documentation ownership
+
+- The root `README.md` is the public, portfolio-facing product overview. Keep it concise, visual, and useful to a first-time visitor; do not turn it into an operations manual or expose private audit material there.
+- `apps/frontend/README.md` owns human-facing frontend responsibilities, configuration schema, local commands, verification, and browser-specific guardrails.
+- `apps/backend/README.md` owns human-facing backend responsibilities, API routes, configuration schema, local commands, verification, and server-specific guardrails.
+- This `AGENTS.md` owns agent-only operating constraints, including sandbox/network requirements, stale-process cleanup, detached Windows launches, log capture, test isolation, Git authorization, and repository-wide engineering rules. Its canonical startup rules override abbreviated convenience guidance in the human-facing READMEs.
+- `docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md` remains the product and architecture authority, while `docs/tickets/SP-*.md` records scoped implementation decisions and evidence.
+- Update the narrowest owning document when behavior changes. Update the root README only when the public product story, high-level architecture, or first-time onboarding changes; link to detailed guidance instead of duplicating it.
+
 ## Canonical local app startup
 
 - When the owner asks to run or restart the local frontend or backend for live-provider testing, run **both applications outside the restricted sandbox with unrestricted network access**. Sandboxed execution remains the default for deterministic tests and CI, not for these long-lived local app processes.

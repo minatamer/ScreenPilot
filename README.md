@@ -1,187 +1,115 @@
-# ScreenPilot
+<h1 align="center">ScreenPilot</h1>
 
-> Pilot conducts the first screen. Humans make the decision.
+<p align="center">
+  <strong>Automate the first interview. Keep the hiring decision human.</strong>
+</p>
 
-ScreenPilot is a stateless, privacy-minded, role-agnostic demonstration of AI-assisted first-stage HR screening. It gives candidates a disclosed voice conversation with **Pilot**, organizes candidate-sourced facts into evidence-linked insights, and prepares a structured review for a human recruiter.
+<p align="center">
+  <a href="https://tryscreenpilot.com"><strong>Try the live demo</strong></a>
+  ·
+  <a href="docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md">Product architecture</a>
+  ·
+  <a href="docs/SCREENPILOT_DESIGN_SYSTEM.html">Design system</a>
+</p>
 
-ScreenPilot supports recruiter judgment. It does not rank candidates, issue pass/fail decisions, or automate hiring decisions.
+<p align="center">
+  <img
+    src="docs/assets/screenpilot-overview.png"
+    alt="ScreenPilot AI-assisted first-round interview workflow"
+    width="900"
+  />
+</p>
 
-Any non-empty role label the candidate states becomes the available **synthetic demo vacancy for that browser session**. There is no supported-role allow-list or unavailable-vacancy path: Graphic Designer, Customer Support Representative, Product Manager, Backend Developer, Full Stack Developer, multiple-role wording, and other bounded labels are handled by the same general HR screen. An undecided candidate can complete an open role-neutral screen.
+ScreenPilot is a privacy-minded AI screening experience that conducts a disclosed first-round voice interview, adapts to what the candidate says, and turns the conversation into an evidence-linked review for a recruiter.
 
-Role labels and CV suggestions are untrusted candidate context, not employer facts. ScreenPilot never invents responsibilities, qualifications, compensation, benefits, reporting lines, team size, work pattern, location requirements, or hiring timelines for a candidate-selected role. It gathers the candidate's preferences and records unsupported employer/vacancy questions for human follow-up. Every role stays inside the same universal HR scope—name, requested role, current context, high-level experience/responsibilities, collaboration preferences, motivation, work arrangement/location preferences, availability, compensation expectation, relevant candidate-stated English use, questions, follow-ups, and close—and never becomes a technical, portfolio, competency, roleplay, professional-knowledge, or suitability assessment.
+It is intentionally a decision-support tool—not a hiring engine. ScreenPilot never scores, ranks, rejects, or recommends candidates.
 
-## What the product does
+## Why ScreenPilot
 
-Candidates can enter the same screening experience in two ways:
+| Grounded conversations                                                                                          | Reviewable evidence                                                                                                  | Human control                                                                                                 |
+| --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Start from an optional CV or a role-neutral conversation, then adapt follow-ups to the candidate's own answers. | Connect every review insight to the CV or transcript evidence behind it instead of producing an unexplained verdict. | Keep recruiters responsible for judgment while candidates can inspect the experience and clear their session. |
 
-- **CV-assisted:** upload a text-based CV so Pilot can prepare grounded discussion areas.
-- **Conversation-first:** begin without a CV and let Pilot discover relevant context through broader opening questions.
+## From introduction to review
 
-The intended flow is:
+1. **Choose a starting point** — upload a text-based CV or begin without one.
+2. **Prepare safely** — disclose the AI interviewer, confirm consent, and check the microphone.
+3. **Have the conversation** — Pilot runs a bounded general-HR interview with live captions and adaptive follow-ups.
+4. **Review the evidence** — ScreenPilot organizes candidate-sourced facts into a structured, evidence-linked handoff.
+
+Any bounded role label supplied by a candidate is treated as an untrusted, synthetic demo vacancy for that browser session. It changes the label—not the standard of assessment—and never becomes a technical or hiring-suitability test.
+
+## Built for trust
+
+- **Stateless by design:** candidate content remains in the active browser/request lifecycle; there is no candidate database, durable transcript store, background queue, or hidden server session.
+- **Evidence before inference:** CV suggestions remain provisional, candidate speech is authoritative, and unsupported employer facts are never invented.
+- **Private provider boundary:** OpenAI and ElevenLabs credentials stay server-side; the browser uses relative `/v1` endpoints and short-lived access.
+- **Safe development defaults:** local development and automated checks use deterministic fake providers and cannot spend provider credits by default.
+
+## Under the hood
+
+| Layer            | Technology                                                   |
+| ---------------- | ------------------------------------------------------------ |
+| Experience       | Next.js 16, React 19, TypeScript                             |
+| API              | Node.js 24, Express 5                                        |
+| Contracts        | Shared Zod schemas                                           |
+| AI and voice     | OpenAI Responses API, ElevenLabs Agents/WebRTC               |
+| Abuse protection | Cloudflare Turnstile, bounded admission controls             |
+| Delivery         | Docker, Artifact Registry, Google Cloud Run                  |
+| Quality          | ESLint, Prettier, strict TypeScript, Vitest, Testing Library |
 
 ```text
-candidate-selected synthetic demo vacancy or open role-neutral context
-  -> optional CV understanding or conversation-first preparation
-  -> disclosure, consent, and microphone preflight
-  -> live voice interview with captions and candidate-sourced insights
-  -> evidence-linked human review
-  -> explicit session clearing
+Browser
+  └─ Next.js experience + same-origin /v1 proxy
+       ├─ shared, browser-safe Zod contracts
+       └─ Express API
+            ├─ OpenAI adapter
+            └─ ElevenLabs adapter
 ```
 
-Candidate content stays in the active browser/request lifecycle. The architecture deliberately has no candidate database, durable transcript store, analytics payload, background queue, or hidden server session.
-
-## Technology stack
-
-| Area                  | Technology                                                                 | How ScreenPilot uses it                                                                                                                                  |
-| --------------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web application       | Next.js 16 App Router, React 19, TypeScript                                | Renders the responsive candidate flow and keeps browser-only session, microphone, transcript, and workflow behavior behind explicit client boundaries.   |
-| API                   | Node.js 24 and Express 5                                                   | Exposes a separately deployable REST boundary, validates requests, keeps provider credentials server-side, and coordinates stateless use cases.          |
-| Shared contracts      | Zod                                                                        | Defines browser-safe request, response, provider-output, and public-runtime schemas used by both applications.                                           |
-| Voice interview       | ElevenLabs WebRTC / Agents                                                 | Provides real-time speech, transcription, turn-taking, and Pilot's voice through short-lived server-issued access.                                       |
-| AI processing         | OpenAI Responses API                                                       | Performs bounded CV analysis and post-interview organization through backend-only provider adapters.                                                     |
-| Abuse protection      | Cloudflare Turnstile                                                       | Protects paid provider operations while keeping the managed widget inside a stable, accessible surrounding layout.                                       |
-| Monorepo tooling      | pnpm workspaces                                                            | Keeps the frontend, backend, and shared contracts independently buildable with one locked dependency graph.                                              |
-| Quality               | ESLint, Prettier, TypeScript strict mode, Vitest, Testing Library          | Provides deterministic formatting, linting, typechecking, unit tests, and production builds before provider or deployment checks.                        |
-| Delivery architecture | Manual Docker/gcloud deployment, Artifact Registry, two Cloud Run services | Keeps the demo simple: the frontend is the public origin and proxies `/v1` to the independently deployable backend without adding a third hosting layer. |
-
-Provider integrations remain behind small typed adapters. Local development and automated checks use deterministic fake providers by default, so ordinary work cannot spend OpenAI or ElevenLabs credits.
-
-## Repository structure
-
-```text
-apps/frontend       @screenpilot/frontend  Next.js browser application
-apps/backend        @screenpilot/backend   Node.js API and provider adapters
-packages/contracts  @screenpilot/contracts Browser-safe cross-boundary schemas
-docs                                      Product, design, and ticket documentation
-```
-
-The internal dependency direction is intentionally narrow:
+The dependency direction stays deliberately narrow:
 
 ```text
 frontend -> contracts <- backend
 ```
 
-The applications never import one another, and the contracts package cannot import browser UI, backend framework code, provider SDKs, or Node-only configuration.
+## Explore the repository
 
-## Prerequisites
+| Area                 | What lives there                                                                                       | Guide                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| `apps/frontend`      | Responsive candidate journey, browser session state, PDF extraction, microphone and voice UI           | [Frontend guide](apps/frontend/README.md)                 |
+| `apps/backend`       | Stateless HTTP API, admission controls, provider adapters, interview preparation and review generation | [Backend guide](apps/backend/README.md)                   |
+| `packages/contracts` | Browser-safe schemas shared across the API boundary                                                    | [Source tree](packages/contracts/src)                     |
+| `docs`               | Product decisions, design language, delivery notes, and implementation tickets                         | [Documentation](docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md) |
 
-- Git
-- Node.js **24.20.0**, declared in [`.node-version`](.node-version)
-- Corepack with pnpm **11.24.0**, locked by `packageManager`
+## Run it locally
 
-## Install
-
-From the repository root:
+Requirements: Git, Node.js **24.20.0** (see [`.node-version`](.node-version)), and Corepack with pnpm **11.24.0**.
 
 ```bash
 corepack enable
-pnpm install --frozen-lockfile
+corepack pnpm install --frozen-lockfile
 ```
 
-No provider credentials are required for the default fake mode.
+No provider credentials are required for the default fake mode. Continue with the [backend setup](apps/backend/README.md#run-locally), then the [frontend setup](apps/frontend/README.md#run-locally). Contributors using an automated coding agent should follow the process and safety rules in [`AGENTS.md`](AGENTS.md).
 
-## Run locally
+Run the unpaid workspace quality gate with explicit safe provider settings:
 
-> **Local runtime rule:** run both long-lived application processes outside any
-> restricted sandbox, with unrestricted network access. This is required even
-> when the frontend and backend are started separately: the frontend must reach
-> the local API/provider browser endpoints, and a live backend must reach
-> Turnstile, OpenAI, and ElevenLabs. Automated tests remain sandboxed,
-> fake-provider, paid-disabled, and network-denied.
-
-Stop the previous frontend and backend processes first so ports `3000` and
-`3001` have no stale listeners. Then use two terminals from the repository root.
-
-Terminal 1 — build and start the backend with the ignored local environment
-file:
-
-```bash
-corepack pnpm build:backend
-corepack pnpm start:backend:local
+```powershell
+$env:PROVIDER_MODE = "fake"
+$env:PAID_DEMO_ENABLED = "false"
+corepack pnpm verify:quick
 ```
 
-`start:backend:local` uses Node's built-in `--env-file` support to load
-`apps/backend/.env.local` into the backend process. The production `start`
-script remains environment-injection only and never depends on a local file.
+## Project documentation
 
-Wait for the backend to report that it is listening on port `3001`.
-
-Terminal 2 — build and start the production-like Next.js application:
-
-```bash
-corepack pnpm build:frontend
-corepack pnpm --filter @screenpilot/frontend start
-```
-
-Next.js loads `apps/frontend/.env.local` automatically. Then open
-[http://localhost:3000/demo](http://localhost:3000/demo).
-
-For an edit/watch loop, `corepack pnpm dev:frontend` may replace the frontend
-build/start pair. The canonical clean verification run remains build then start
-for both applications, outside the sandbox and with unrestricted network
-access. Never place environment values in startup commands.
-
-When editing backend modules, the backend workspace can compile changes in
-TypeScript watch mode in an additional terminal. Restart the local backend
-process when a compiled change must be loaded:
-
-```bash
-pnpm dev:backend
-```
-
-The frontend can proxy relative `/v1` requests to the local backend only when
-`BACKEND_AUTH_MODE=local`, `BACKEND_ORIGIN=http://127.0.0.1:3001`, and
-`BACKEND_AUTH_AUDIENCE=` is blank. Copy those non-secret values from
-[`apps/frontend/.env.example`](apps/frontend/.env.example) into the ignored
-`apps/frontend/.env.local`; local mode accepts only the canonical loopback port
-and never contacts Google metadata.
-
-## Configuration and provider modes
-
-Configuration templates live at:
-
-- [`apps/frontend/.env.example`](apps/frontend/.env.example)
-- [`apps/backend/.env.example`](apps/backend/.env.example)
-
-The backend supports two provider modes:
-
-- `PROVIDER_MODE=fake` is the safe local and CI default. Provider secrets remain blank and `PAID_DEMO_ENABLED=false`.
-- `PROVIDER_MODE=live` requires the documented OpenAI, ElevenLabs, Turnstile, and signing values. Live or paid testing must be explicitly authorized and configured before use.
-
-Never expose OpenAI, ElevenLabs, Turnstile secret, cookie, or signing values to browser code. The frontend calls relative `/v1` endpoints and receives only allow-listed public runtime configuration.
-
-## Verify the workspace
-
-Run the complete unpaid quality gate:
-
-```bash
-pnpm verify:quick
-```
-
-It runs formatting checks, linting, strict typechecking, unit tests, and production builds across the workspace.
-
-Individual checks are also available:
-
-```bash
-pnpm format:check
-pnpm lint
-pnpm typecheck
-pnpm test:unit
-pnpm build
-```
-
-Focused package commands follow the same pattern, for example:
-
-```bash
-pnpm typecheck:frontend
-pnpm test:unit:backend
-pnpm build:contracts
-```
-
-## Design and documentation
-
-- [Signal Canvas HTML design-system reference](docs/SCREENPILOT_DESIGN_SYSTEM.html)
 - [ScreenPilot demo source of truth](docs/SCREENPILOT_DEMO_SOURCE_OF_TRUTH.md)
+- [Signal Canvas design-system reference](docs/SCREENPILOT_DESIGN_SYSTEM.html)
 - [Implementation ticket index](docs/tickets/README.md)
+- [Repository agent instructions](AGENTS.md)
 
-Committed examples use synthetic content only. Never commit a real CV, transcript, interview audio, generated candidate summary, API key, service-account file, or provider secret.
+ScreenPilot is a portfolio demonstration, not a production applicant-tracking system. Committed examples use synthetic content only; real CVs, transcripts, audio, generated candidate summaries, credentials, and service-account files must never enter version control.
+
+<p align="center">
+  Built and maintained by <a href="https://github.com/minatamer">Mina Tamer</a>.
+</p>
