@@ -11,6 +11,7 @@ const LOCAL_BACKEND_OPTIONS = {
   backendAuthAudience: "",
   backendAuthMode: "local",
   backendOrigin: "http://127.0.0.1:3001",
+  frontendAllowedOrigins: [FRONTEND_ORIGIN],
 } as const;
 const VALID_MUTATION_HEADERS = {
   "content-type": "application/json",
@@ -139,6 +140,7 @@ describe("proxyBackendRequest", () => {
       backendAuthAudience: "https://screenpilot-backend-123.region.run.app",
       backendAuthMode: "google-cloud-oidc",
       backendOrigin: "https://screenpilot-backend-123.region.run.app",
+      frontendAllowedOrigins: [FRONTEND_ORIGIN],
       identityTokenProvider,
       upstreamFetch,
     });
@@ -168,6 +170,31 @@ describe("proxyBackendRequest", () => {
       "sp_anonymous_session=signed",
     );
     expect(response.headers.get("x-request-id")).toBe("request-oidc");
+  });
+
+  it("accepts an allow-listed browser origin when Cloud Run reconstructs an internal request URL", async () => {
+    const upstreamFetch = vi.fn<typeof fetch>(() =>
+      Promise.resolve(Response.json({ ok: true })),
+    );
+    const request = new Request(
+      "https://internal-frontend.run.app/v1/interview/prepare",
+      {
+        body: "{}",
+        headers: VALID_MUTATION_HEADERS,
+        method: "POST",
+      },
+    );
+
+    const response = await proxyBackendRequest(request, {
+      ...LOCAL_BACKEND_OPTIONS,
+      upstreamFetch,
+    });
+
+    expect(response.status).toBe(200);
+    expect(upstreamFetch).toHaveBeenCalledOnce();
+    expect(
+      new Headers(upstreamFetch.mock.calls[0]?.[1]?.headers).get("origin"),
+    ).toBe(FRONTEND_ORIGIN);
   });
 
   it("rejects an oversized streaming body before contacting the backend", async () => {
@@ -453,6 +480,7 @@ describe("proxyBackendRequest", () => {
       backendAuthAudience: "",
       backendAuthMode: "local",
       backendOrigin: "https://user:password@backend.example/private",
+      frontendAllowedOrigins: [FRONTEND_ORIGIN],
       upstreamFetch,
     });
 

@@ -550,6 +550,12 @@ browser-only PDF/microphone/session state
   source signal server-side, and preserves upstream `Set-Cookie` plus the
   server-generated `X-Request-Id`. The backend disables Express proxy trust and
   accepts the internal source signal only across the production service hop.
+- Frontend mutation requests validate `Origin` against the bounded server-only
+  `FRONTEND_ALLOWED_ORIGINS` policy. They do not compare it with the framework's
+  reconstructed request URL because Cloud Run can reconstruct that URL with an
+  internal service origin when the visitor used a custom domain. Missing,
+  malformed, duplicate, credential-bearing, path-bearing, or unsupported origin
+  policies fail closed before the backend is contacted.
 - Request admission remains bounded and per-instance. Fixed route-global,
   source, and signed-session windows are evaluated atomically; identity tables
   never discard active enforcement state to admit new state, memory remains
@@ -578,6 +584,7 @@ placing credentials in the frontend:
 BACKEND_AUTH_MODE=local
 BACKEND_ORIGIN=http://127.0.0.1:3001
 BACKEND_AUTH_AUDIENCE=
+FRONTEND_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 The production Cloud Run frontend uses:
@@ -586,6 +593,7 @@ The production Cloud Run frontend uses:
 BACKEND_AUTH_MODE=google-cloud-oidc
 BACKEND_ORIGIN=<stable backend run.app HTTPS origin>
 BACKEND_AUTH_AUDIENCE=<same stable backend run.app HTTPS origin>
+FRONTEND_ALLOWED_ORIGINS=<stable frontend run.app origin and supported custom origins>
 ```
 
 The audience must equal the backend origin exactly. A custom domain, path, or
@@ -682,6 +690,11 @@ $screenPilotBackendOrigin = (gcloud run services describe $screenPilotBackendSer
   --project $screenPilotProject `
   --region $screenPilotRegion `
   --format 'value(status.url)').Trim()
+$screenPilotFrontendOrigin = (gcloud run services describe $screenPilotFrontendService `
+  --project $screenPilotProject `
+  --region $screenPilotRegion `
+  --format 'value(status.url)').Trim()
+$screenPilotFrontendAllowedOrigins = "$screenPilotFrontendOrigin,https://tryscreenpilot.com,https://www.tryscreenpilot.com"
 
 gcloud run services describe $screenPilotBackendService `
   --project $screenPilotProject `
@@ -744,12 +757,16 @@ gcloud run deploy $screenPilotFrontendService `
   --service-account $screenPilotFrontendRuntimeSa `
   --revision-suffix $screenPilotRevisionSuffix `
   --update-labels "git-sha=$screenPilotSha" `
-  --update-env-vars "BACKEND_ORIGIN=$screenPilotBackendOrigin,BACKEND_AUTH_MODE=google-cloud-oidc,BACKEND_AUTH_AUDIENCE=$screenPilotBackendOrigin" `
+  --update-env-vars "^@^BACKEND_ORIGIN=$screenPilotBackendOrigin@BACKEND_AUTH_MODE=google-cloud-oidc@BACKEND_AUTH_AUDIENCE=$screenPilotBackendOrigin@FRONTEND_ALLOWED_ORIGINS=$screenPilotFrontendAllowedOrigins" `
   --min 0 `
   --max 1 `
   --concurrency 80 `
   --allow-unauthenticated
 ```
+
+The custom `^@^` delimiter is required because the frontend origin allowlist is
+itself comma-separated. Inspect each deployed variable independently before the
+backend IAM transition.
 
 Then deploy the backend exact-SHA image with IAM invocation required. Preserve
 its existing ordinary variables and Secret Manager mappings; do not use
@@ -865,7 +882,9 @@ CLI is unavailable after separate owner approval:
    exact-SHA frontend revision with the non-secret server-only values
    `BACKEND_ORIGIN=<backend run.app URL>`,
    `BACKEND_AUTH_MODE=google-cloud-oidc`, and
-   `BACKEND_AUTH_AUDIENCE=<same backend run.app URL>`. Keep the frontend public,
+   `BACKEND_AUTH_AUDIENCE=<same backend run.app URL>`, plus
+   `FRONTEND_ALLOWED_ORIGINS=<stable frontend run.app origin and supported custom origins>`.
+   Keep the frontend public,
    on its existing runtime service account, maximum one instance, and
    concurrency 80. Confirm the new frontend revision is ready and its
    same-origin bootstrap can still reach the not-yet-private backend.

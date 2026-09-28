@@ -10,6 +10,10 @@ import {
   createGoogleCloudIdentityTokenProvider,
   type GoogleCloudIdentityTokenProvider,
 } from "./google-cloud-identity-token";
+import {
+  FrontendOriginConfigurationError,
+  parseFrontendAllowedOrigins,
+} from "./frontend-origin-policy";
 import { resolveGoogleAppendedClientSource } from "./trusted-client-source";
 
 export const MAX_PROXY_REQUEST_BODY_BYTES = 65_536;
@@ -50,6 +54,7 @@ type ProxyOptions = Readonly<{
   backendAuthMode?: string;
   backendOrigin?: string;
   bodyReceiptTimeoutMs?: number;
+  frontendAllowedOrigins?: readonly string[];
   identityTokenProvider?: Pick<GoogleCloudIdentityTokenProvider, "getToken">;
   upstreamFetch?: BackendFetch;
 }>;
@@ -130,7 +135,10 @@ function hasAnonymousSessionCookie(request: Request): boolean {
   });
 }
 
-function requireSupportedRequest(request: Request): void {
+function requireSupportedRequest(
+  request: Request,
+  frontendAllowedOrigins: readonly string[],
+): void {
   const url = new URL(request.url);
   const supportedMethod = PROXY_ROUTES.get(url.pathname);
   if (supportedMethod === undefined) {
@@ -167,7 +175,7 @@ function requireSupportedRequest(request: Request): void {
     );
   }
   const origin = request.headers.get("origin");
-  if (origin === null || origin !== url.origin) {
+  if (origin === null || !frontendAllowedOrigins.includes(origin)) {
     throw new ProxyRequestError(
       "ORIGIN_NOT_ALLOWED",
       "This request origin is not allowed.",
@@ -363,7 +371,10 @@ export async function proxyBackendRequest(
   options: ProxyOptions = {},
 ): Promise<Response> {
   try {
-    requireSupportedRequest(request);
+    const frontendAllowedOrigins =
+      options.frontendAllowedOrigins ??
+      parseFrontendAllowedOrigins(process.env["FRONTEND_ALLOWED_ORIGINS"]);
+    requireSupportedRequest(request, frontendAllowedOrigins);
     const connection = resolveBackendConnection({
       authAudience:
         options.backendAuthAudience ?? process.env["BACKEND_AUTH_AUDIENCE"],
@@ -415,7 +426,10 @@ export async function proxyBackendRequest(
     );
     return createProxyResponse(upstreamResponse);
   } catch (error: unknown) {
-    if (error instanceof BackendConnectionConfigurationError) {
+    if (
+      error instanceof BackendConnectionConfigurationError ||
+      error instanceof FrontendOriginConfigurationError
+    ) {
       return createErrorResponse(
         new ProxyRequestError("BACKEND_UNAVAILABLE", error.message, 503, true),
       );

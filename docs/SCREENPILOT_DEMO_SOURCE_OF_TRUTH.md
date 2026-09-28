@@ -2076,15 +2076,19 @@ connection contract used by the Next.js proxy:
 BACKEND_ORIGIN=http://127.0.0.1:3001
 BACKEND_AUTH_MODE=local
 BACKEND_AUTH_AUDIENCE=
+FRONTEND_ALLOWED_ORIGINS=http://localhost:3000
 ```
 
 Production sets
 `BACKEND_AUTH_MODE=google-cloud-oidc` and uses the stable backend `run.app` URL
-for both `BACKEND_ORIGIN` and `BACKEND_AUTH_AUDIENCE`. Local mode requires a
-loopback backend, remains unauthenticated, and never contacts Google metadata.
-These values are server-only and non-secret. The frontend contains no provider
-key and no public API-base variable. The browser continues to call relative
-`/v1/...` paths.
+for both `BACKEND_ORIGIN` and `BACKEND_AUTH_AUDIENCE`.
+`FRONTEND_ALLOWED_ORIGINS` is a bounded, server-only list of the exact public
+frontend origins permitted to submit browser mutations. It does not rely on the
+platform-reconstructed internal request URL, which may differ from the visitor's
+custom-domain origin on Cloud Run. Local mode requires a loopback backend,
+remains unauthenticated, and never contacts Google metadata. These values are
+server-only and non-secret. The frontend contains no provider key and no public
+API-base variable. The browser continues to call relative `/v1/...` paths.
 
 `apps/backend/.env.example` is committed with this ownership shape. Safe local defaults may be present, but every user-supplied credential/identifier stays blank:
 

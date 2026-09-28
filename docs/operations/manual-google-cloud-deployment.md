@@ -308,7 +308,7 @@ their actual sensitivity and runtime owner:
 | Backend ordinary Cloud Run variables | `APP_ENV=production`, `PROVIDER_MODE=live`, `PAID_DEMO_ENABLED=false`, `LIVE_INTERVIEW_ENABLED=true`, `ALLOWED_ORIGINS=<frontend HTTPS origin>`, `ELEVENLABS_AGENT_ID=<owner-selected agent>`, `ELEVENLABS_VOICE_ID=<owner-selected voice>`, `TURNSTILE_SITE_KEY=<public widget key>`, and `TURNSTILE_ALLOWED_HOSTNAMES=<bare frontend hostname>` |
 | Backend explicit guardrail variables | `HTTP_HEADERS_TIMEOUT_MS=10000`, `HTTP_REQUEST_TIMEOUT_MS=30000`, `HTTP_JSON_BODY_MAX_BYTES=65536`, `HTTP_BODY_RECEIPT_CONCURRENT_REQUESTS=2`, `PROVIDER_REQUEST_TIMEOUT_MS=30000`, `INTERVIEW_GRANT_TTL_SECONDS=900`, `ANONYMOUS_COOKIE_TTL_SECONDS=7200`, `CAPACITY_GLOBAL_CONCURRENT_REQUESTS=4`, `CAPACITY_CV_ANALYZE_CONCURRENT_REQUESTS=2`, `CAPACITY_VOICE_TOKEN_CONCURRENT_REQUESTS=1`, `CAPACITY_SUMMARY_CONCURRENT_REQUESTS=2`, `RATE_LIMIT_WINDOW_SECONDS=60`, `RATE_LIMIT_MAX_ENTRIES=10000`, `RATE_LIMIT_BOOTSTRAP_REQUESTS=120`, `RATE_LIMIT_PREPARE_REQUESTS=30`, `RATE_LIMIT_CV_ANALYZE_REQUESTS=10`, `RATE_LIMIT_VOICE_TOKEN_REQUESTS=3`, `RATE_LIMIT_SUMMARY_REQUESTS=10`, `RATE_LIMIT_GLOBAL_BOOTSTRAP_REQUESTS=600`, `RATE_LIMIT_GLOBAL_PREPARE_REQUESTS=150`, `RATE_LIMIT_GLOBAL_CV_ANALYZE_REQUESTS=50`, `RATE_LIMIT_GLOBAL_VOICE_TOKEN_REQUESTS=15`, and `RATE_LIMIT_GLOBAL_SUMMARY_REQUESTS=50` |
 | Cloud Run platform | `PORT`; Cloud Run injects this value, so the operator does not set it |
-| Frontend ordinary Cloud Run variables | `BACKEND_ORIGIN=<backend run.app HTTPS origin>`, `BACKEND_AUTH_MODE=google-cloud-oidc`, and `BACKEND_AUTH_AUDIENCE=<same backend run.app HTTPS origin>`, added only after the backend service exists. Local code uses explicit unauthenticated loopback mode. |
+| Frontend ordinary Cloud Run variables | `BACKEND_ORIGIN=<backend run.app HTTPS origin>`, `BACKEND_AUTH_MODE=google-cloud-oidc`, `BACKEND_AUTH_AUDIENCE=<same backend run.app HTTPS origin>`, and `FRONTEND_ALLOWED_ORIGINS=<comma-separated exact public frontend origins>`, added only after the backend service exists. The frontend list must cover the stable frontend `run.app` origin and every supported custom origin; it is server-only and must not be derived from Cloud Run's reconstructed internal request URL. Local code uses explicit unauthenticated loopback mode. |
 
 The parser currently supplies the documented timeout, TTL, capacity, and rate
 limit defaults when those variables are omitted. SP-026 still records them
@@ -420,12 +420,18 @@ frontend revision must become ready before the backend is made private.
 Configure the already-pushed exact-SHA frontend image with the backend Cloud Run
 origin as its server-only runtime proxy destination. Configure explicit
 `google-cloud-oidc` mode and the same stable backend
-`run.app` URL as the audience. These values are not secrets, must not be Docker
-build arguments, and must not be exposed as `NEXT_PUBLIC_*` variables.
+`run.app` URL as the audience. Also set `FRONTEND_ALLOWED_ORIGINS` to the stable
+frontend `run.app` origin and every supported custom origin. These values are
+not secrets, must not be Docker build arguments, and must not be exposed as
+`NEXT_PUBLIC_*` variables.
 
 ```powershell
-gcloud run deploy screenpilot-frontend --image $screenPilotFrontendImage --service-account "screenpilot-frontend-runtime@$screenPilotProject.iam.gserviceaccount.com" --update-env-vars "BACKEND_ORIGIN=$screenPilotBackendOrigin,BACKEND_AUTH_MODE=google-cloud-oidc,BACKEND_AUTH_AUDIENCE=$screenPilotBackendOrigin" --min 0 --max 1 --concurrency 80 --allow-unauthenticated
+gcloud run deploy screenpilot-frontend --image $screenPilotFrontendImage --service-account "screenpilot-frontend-runtime@$screenPilotProject.iam.gserviceaccount.com" --update-env-vars "^@^BACKEND_ORIGIN=$screenPilotBackendOrigin@BACKEND_AUTH_MODE=google-cloud-oidc@BACKEND_AUTH_AUDIENCE=$screenPilotBackendOrigin@FRONTEND_ALLOWED_ORIGINS=$screenPilotFrontendAllowedOrigins" --min 0 --max 1 --concurrency 80 --allow-unauthenticated
 ```
+
+The custom `^@^` delimiter is required because the frontend origin allowlist is
+itself comma-separated. After deployment, inspect each variable independently;
+do not accept one value containing the names of the following variables.
 
 Wait for the frontend revision to become ready and confirm its same-origin
 bootstrap reaches the still-public backend. Only then deploy the exact-SHA
